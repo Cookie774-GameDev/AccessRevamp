@@ -7,9 +7,13 @@ import { isIP } from 'node:net';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 
-const USER_AGENT = 'AccessRevampAudit/1.0 (+public-homepage-review; no form submission)';
+const USER_AGENT = 'AccessRevampAudit/1.1 (+public-homepage-review; no form submission)';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_NODES_PER_RULE = 20;
+const MAX_COLLECTION_ITEMS = 250;
+const MAX_DOM_ELEMENTS = 50_000;
+const MAX_MAIN_DOCUMENT_BYTES = 12_000_000;
+const MAX_SCREENSHOT_HEIGHT = 6_000;
 
 function parseArgs(argv) {
   const args = { out: '', url: '' };
@@ -37,7 +41,7 @@ function usage() {
 function isPrivateIpv4(address) {
   const parts = address.split('.').map(Number);
   if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return true;
-  const [a, b] = parts;
+  const [a, b, c] = parts;
   return a === 0
     || a === 10
     || a === 127
@@ -45,18 +49,72 @@ function isPrivateIpv4(address) {
     || (a === 169 && b === 254)
     || (a === 172 && b >= 16 && b <= 31)
     || (a === 192 && b === 0)
+    || (a === 192 && b === 88 && c === 99)
     || (a === 192 && b === 168)
     || (a === 198 && (b === 18 || b === 19))
+    || (a === 198 && b === 51 && c === 100)
+    || (a === 203 && b === 0 && c === 113)
     || a >= 224;
 }
 
+function ipv4ToHextets(address) {
+  const parts = address.split('.').map(Number);
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return null;
+  return [((parts[0] << 8) | parts[1]).toString(16), ((parts[2] << 8) | parts[3]).toString(16)];
+}
+
+function parseIpv6(address) {
+  let normalized = address.toLowerCase().split('%')[0].replace(/^\[|\]$/g, '');
+  if (normalized.includes('.')) {
+    const finalColon = normalized.lastIndexOf(':');
+    const hextets = ipv4ToHextets(normalized.slice(finalColon + 1));
+    if (!hextets) return null;
+    normalized = `${normalized.slice(0, finalColon)}:${hextets.join(':')}`;
+  }
+
+  const halves = normalized.split('::');
+  if (halves.length > 2) return null;
+  const left = halves[0] ? halves[0].split(':') : [];
+  const right = halves[1] ? halves[1].split(':') : [];
+  const missing = 8 - left.length - right.length;
+  if ((halves.length === 1 && missing !== 0) || missing < 0) return null;
+
+  const parts = halves.length === 2
+    ? [...left, ...Array(missing).fill('0'), ...right]
+    : left;
+  if (parts.length !== 8 || parts.some((part) => !/^[0-9a-f]{1,4}$/.test(part))) return null;
+
+  return parts.reduce((value, part) => (value << 16n) | BigInt(`0x${part}`), 0n);
+}
+
+function ipv6InCidr(addressValue, prefixValue, prefixLength) {
+  const shift = 128n - BigInt(prefixLength);
+  return (addressValue >> shift) === (prefixValue >> shift);
+}
+
+const BLOCKED_IPV6_CIDRS = [
+  ['::', 128],
+  ['::1', 128],
+  ['::', 96],
+  ['::ffff:0:0', 96],
+  ['64:ff9b::', 96],
+  ['64:ff9b:1::', 48],
+  ['100::', 64],
+  ['2001::', 23],
+  ['2001:db8::', 32],
+  ['2002::', 16],
+  ['3fff::', 20],
+  ['5f00::', 16],
+  ['fc00::', 7],
+  ['fe80::', 10],
+  ['fec0::', 10],
+  ['ff00::', 8],
+].map(([prefix, length]) => [parseIpv6(prefix), length]);
+
 function isPrivateIpv6(address) {
-  const normalized = address.toLowerCase().split('%')[0];
-  if (normalized === '::' || normalized === '::1') return true;
-  if (normalized.startsWith('fc') || normalized.startsWith('fd') || normalized.startsWith('fe8') || normalized.startsWith('fe9') || normalized.startsWith('fea') || normalized.startsWith('feb')) return true;
-  if (normalized.startsWith('ff') || normalized.startsWith('2001:db8:')) return true;
-  if (normalized.startsWith('::ffff:')) return isPrivateIpv4(normalized.slice(7));
-  return false;
+  const value = parseIpv6(address);
+  if (value === null) return true;
+  return BLOCKED_IPV6_CIDRS.some(([prefix, length]) => prefix !== null && ipv6InCidr(value, prefix, length));
 }
 
 function isPrivateAddress(address) {
@@ -66,7 +124,7 @@ function isPrivateAddress(address) {
   return true;
 }
 
-const hostnameCache = new Map();
+const inFlightHostnameLookups = new Map();
 async function assertPublicHostname(hostname) {
   const normalized = hostname.toLowerCase().replace(/\.$/, '');
   if (!normalized || normalized === 'localhost' || /\.(?:localhost|local|internal|test|example|invalid)$/.test(normalized)) {
@@ -76,8 +134,10 @@ async function assertPublicHostname(hostname) {
     if (isPrivateAddress(normalized)) throw new Error(`Blocked private or reserved address: ${hostname}`);
     return;
   }
-  if (!hostnameCache.has(normalized)) {
-    hostnameCache.set(normalized, (async () => {
+
+  let lookupPromise = inFlightHostnameLookups.get(normalized);
+  if (!lookupPromise) {
+    lookupPromise = (async () => {
       const records = await lookup(normalized, { all: true, verbatim: true });
       if (!records.length) throw new Error(`No public DNS records were found for ${hostname}`);
       for (const record of records) {
@@ -85,9 +145,17 @@ async function assertPublicHostname(hostname) {
           throw new Error(`Blocked ${hostname}: DNS resolved to a private or reserved address.`);
         }
       }
-    })());
+    })();
+    inFlightHostnameLookups.set(normalized, lookupPromise);
   }
-  await hostnameCache.get(normalized);
+
+  try {
+    await lookupPromise;
+  } finally {
+    if (inFlightHostnameLookups.get(normalized) === lookupPromise) {
+      inFlightHostnameLookups.delete(normalized);
+    }
+  }
 }
 
 async function assertPublicUrl(rawUrl) {
@@ -183,7 +251,12 @@ try {
     }
   });
 
+  await context.routeWebSocket('**/*', (webSocket) => webSocket.close());
+
   const page = await context.newPage();
+  context.on('page', (candidate) => {
+    if (candidate !== page) candidate.close().catch(() => {});
+  });
   page.setDefaultNavigationTimeout(DEFAULT_TIMEOUT_MS);
   page.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
   page.on('dialog', (dialog) => dialog.dismiss().catch(() => {}));
@@ -193,18 +266,64 @@ try {
   const finalUrl = await assertPublicUrl(page.url());
   if (response.status() >= 400) throw new Error(`The homepage returned HTTP ${response.status()}.`);
 
+  const contentLength = Number.parseInt(response.headers()['content-length'] || '0', 10);
+  if (Number.isFinite(contentLength) && contentLength > MAX_MAIN_DOCUMENT_BYTES) {
+    throw new Error(`The homepage document exceeds the ${MAX_MAIN_DOCUMENT_BYTES}-byte scan limit.`);
+  }
+
   await page.waitForTimeout(750);
+  const pageShape = await page.evaluate(() => ({
+    domElementCount: document.getElementsByTagName('*').length,
+    documentHeight: Math.max(
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight,
+      document.body?.scrollHeight || 0,
+      document.body?.offsetHeight || 0,
+      window.innerHeight,
+    ),
+  }));
+  if (pageShape.domElementCount > MAX_DOM_ELEMENTS) {
+    throw new Error(`The homepage contains more than ${MAX_DOM_ELEMENTS} elements and exceeds the bounded scan limit.`);
+  }
+
   const screenshotPath = resolve(outputDirectory, 'homepage.png');
-  await page.screenshot({ path: screenshotPath, fullPage: true, animations: 'disabled' });
+  const capturedHeight = Math.min(MAX_SCREENSHOT_HEIGHT, Math.max(1, pageShape.documentHeight));
+  await page.screenshot({
+    path: screenshotPath,
+    clip: { x: 0, y: 0, width: 1440, height: capturedHeight },
+    animations: 'disabled',
+    caret: 'hide',
+  });
 
   const axe = pruneAxeResult(await new AxeBuilder({ page }).analyze());
-  const deterministic = await page.evaluate(() => {
+  const deterministic = await page.evaluate(({ maxItems }) => {
     const visibleText = (element) => (element.getAttribute('aria-label') || element.textContent || '').trim();
-    const controls = [...document.querySelectorAll('input, select, textarea')].map((element) => ({
+    const collect = (selector, mapper) => {
+      const nodes = document.querySelectorAll(selector);
+      const items = [];
+      for (let index = 0; index < Math.min(nodes.length, maxItems); index += 1) {
+        items.push(mapper(nodes[index]));
+      }
+      return { items, total: nodes.length, omitted: Math.max(0, nodes.length - items.length) };
+    };
+
+    const headings = collect('h1,h2,h3,h4,h5,h6', (element) => ({
+      level: Number(element.tagName.slice(1)),
+      text: visibleText(element).slice(0, 300),
+    }));
+    const landmarks = collect('header,nav,main,aside,footer,[role="banner"],[role="navigation"],[role="main"],[role="complementary"],[role="contentinfo"]', (element) => (
+      element.getAttribute('role') || element.tagName.toLowerCase()
+    ));
+    const images = collect('img', (image) => ({
+      src: String(image.currentSrc || image.src || '').slice(0, 2_048),
+      altPresent: image.hasAttribute('alt'),
+      alt: image.getAttribute('alt')?.slice(0, 1_000) ?? null,
+    }));
+    const controls = collect('input, select, textarea', (element) => ({
       tag: element.tagName.toLowerCase(),
-      type: element.getAttribute('type') || '',
-      id: element.id || '',
-      name: element.getAttribute('name') || '',
+      type: (element.getAttribute('type') || '').slice(0, 80),
+      id: (element.id || '').slice(0, 200),
+      name: (element.getAttribute('name') || '').slice(0, 200),
       hasAccessibleName: Boolean(
         element.getAttribute('aria-label')
         || element.getAttribute('aria-labelledby')
@@ -212,24 +331,28 @@ try {
         || element.closest('label'),
       ),
     }));
+
+    let unnamedLinks = 0;
+    for (const link of document.querySelectorAll('a[href]')) if (!visibleText(link)) unnamedLinks += 1;
+    let unnamedButtons = 0;
+    for (const button of document.querySelectorAll('button')) if (!visibleText(button)) unnamedButtons += 1;
+
     const navigation = performance.getEntriesByType('navigation')[0];
     return {
-      title: document.title,
-      lang: document.documentElement.lang || '',
-      headings: [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((element) => ({
-        level: Number(element.tagName.slice(1)),
-        text: visibleText(element).slice(0, 300),
-      })),
-      landmarks: [...document.querySelectorAll('header,nav,main,aside,footer,[role="banner"],[role="navigation"],[role="main"],[role="complementary"],[role="contentinfo"]')]
-        .map((element) => element.getAttribute('role') || element.tagName.toLowerCase()),
-      images: [...document.images].map((image) => ({
-        src: image.currentSrc || image.src,
-        altPresent: image.hasAttribute('alt'),
-        alt: image.getAttribute('alt'),
-      })),
-      controls,
-      unnamedLinks: [...document.querySelectorAll('a[href]')].filter((link) => !visibleText(link)).length,
-      unnamedButtons: [...document.querySelectorAll('button')].filter((button) => !visibleText(button)).length,
+      title: document.title.slice(0, 300),
+      lang: (document.documentElement.lang || '').slice(0, 40),
+      headings: headings.items,
+      landmarks: landmarks.items,
+      images: images.items,
+      controls: controls.items,
+      omittedItems: {
+        headings: headings.omitted,
+        landmarks: landmarks.omitted,
+        images: images.omitted,
+        controls: controls.omitted,
+      },
+      unnamedLinks,
+      unnamedButtons,
       timing: navigation ? {
         domContentLoadedMs: Math.round(navigation.domContentLoadedEventEnd),
         loadEventMs: Math.round(navigation.loadEventEnd),
@@ -238,19 +361,31 @@ try {
         decodedBodySize: navigation.decodedBodySize,
       } : null,
     };
-  });
+  }, { maxItems: MAX_COLLECTION_ITEMS });
 
   const report = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     requestedUrl: requestedUrl.toString(),
     finalUrl: finalUrl.toString(),
     httpStatus: response.status(),
     screenshot: basename(screenshotPath),
+    screenshotCapture: {
+      capturedHeight,
+      documentHeight: pageShape.documentHeight,
+      truncated: pageShape.documentHeight > capturedHeight,
+    },
+    boundedScan: {
+      domElementCount: pageShape.domElementCount,
+      maxDomElements: MAX_DOM_ELEMENTS,
+      maxCollectionItems: MAX_COLLECTION_ITEMS,
+      maxMainDocumentBytes: MAX_MAIN_DOCUMENT_BYTES,
+    },
     reviewStatus: 'candidate_needs_human_review',
     limitations: [
       'Automated results are leads, not customer-facing conclusions.',
-      'No forms were submitted, no links were clicked, and no authenticated or checkout area was tested.',
+      'No forms were submitted, no links were clicked, no WebSocket connection was allowed, and no authenticated or checkout area was tested.',
+      'Large documents, DOMs, screenshots, and extracted collections are intentionally bounded for safe review.',
       'A qualified person must verify context, severity, affected users, WCAG mapping, and proposed repairs.',
     ],
     page: deterministic,
@@ -264,6 +399,7 @@ try {
     finalUrl: report.finalUrl,
     candidateViolationCount: report.axe.violations.length,
     reviewStatus: report.reviewStatus,
+    screenshotTruncated: report.screenshotCapture.truncated,
   }, null, 2));
 } finally {
   await browser.close();
