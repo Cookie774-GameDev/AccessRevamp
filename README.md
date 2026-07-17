@@ -18,8 +18,9 @@ There are no monthly plans, hidden implementation tiers, or recurring AccessReva
 - Supabase Auth client and row-level-security-aware dashboard
 - Rate-limited contact function
 - Stripe one-time Checkout Session function and signature-verified webhook
-- Idempotent order recording
-- Supabase migration for customers, orders, projects, reviewed findings, prospects, outreach queue, permanent suppression, and audit records
+- Retry-safe Stripe event recording with synchronous and delayed-payment handling
+- Paid-order linking only after a confirmed matching Supabase Auth email
+- Supabase migrations for customers, orders, projects, reviewed findings, prospects, outreach queue, permanent suppression, and audit records
 - Database-enforced maximum of 20 queued/scheduled/sent outreach items per UTC day
 - Human approval, public contact provenance, verified-finding, sender identity, opt-out, 30-day spacing, and suppression gates
 - Optional Google Sheets review bridge that **does not send mail**
@@ -29,46 +30,46 @@ There are no monthly plans, hidden implementation tiers, or recurring AccessReva
 
 The repository points to the AccessRevamp Stripe **sandbox** catalog created for this project:
 
-- Homepage Reveal price: \`price_1TuGoNLzyGRcyGQJRjtGsiMV\`
-- Quick Fix price: \`price_1TuGoTLzyGRcyGQJfdkqoE3f\`
+- Homepage Reveal price: `price_1TuGoNLzyGRcyGQJRjtGsiMV`
+- Quick Fix price: `price_1TuGoTLzyGRcyGQJfdkqoE3f`
 
-The default payment URLs are test links. Replace them with live-mode links only after the Stripe account is activated, business details are complete, and live checkout is tested. Never put a Stripe secret key in a \`VITE_\` variable.
+The default payment URLs are test links. Replace them with live-mode links only after the Stripe account is activated, business details are complete, and live checkout is tested. Never put a Stripe secret key in a `VITE_` variable.
 
 ## Local development
 
-\`\`\`bash
+```bash
 cp .env.example .env
 npm install
 npm run dev
-\`\`\`
+```
 
 Run the full quality gate:
 
-\`\`\`bash
+```bash
 npm run check
 npm audit --audit-level=high
-\`\`\`
+```
 
 ## Supabase setup
 
-1. Confirm you are in the dedicated AccessRevamp Supabase project. Do not apply this migration to a different application's database.
-2. Apply \`supabase/migrations/202607170001_accessrevamp.sql\` with the Supabase CLI or dashboard.
-3. Copy the project URL and publishable key into the two public \`VITE_SUPABASE_*\` variables.
-4. Add the service-role key only as the server-only \`SUPABASE_SERVICE_ROLE_KEY\` variable in Netlify.
+1. Confirm you are in the dedicated AccessRevamp Supabase project. Do not apply these migrations to a different application's database.
+2. Apply **every** SQL file in `supabase/migrations/` in filename order. The migrations are cumulative; the later files add confirmed-email ownership and hardened payment fulfillment.
+3. Copy the project URL and publishable key into the two public `VITE_SUPABASE_*` variables.
+4. Add the service-role key only as the server-only `SUPABASE_SERVICE_ROLE_KEY` variable in Netlify.
 5. Configure Auth site and redirect URLs for the final Netlify URL.
-6. Run Supabase security and performance advisors after the migration.
+6. Run Supabase security and performance advisors after the complete migration set has been applied.
 
 ## Netlify deployment (free URL)
 
 1. Import this GitHub repository into Netlify.
-2. Netlify reads \`netlify.toml\`; no build settings need to be guessed.
-3. Add all required variables from \`.env.example\` in the Netlify environment UI.
-4. Generate a random \`CONTACT_RATE_LIMIT_SECRET\` of at least 24 characters.
-5. Deploy and confirm \`/.netlify/functions/health\` reports the expected services as configured.
-6. Add the deployed Stripe webhook URL: \`https://YOUR-SITE.netlify.app/.netlify/functions/stripe-webhook\`.
-7. Subscribe the endpoint to \`checkout.session.completed\` at minimum.
+2. Netlify reads `netlify.toml`; no build settings need to be guessed.
+3. Add all required variables from `.env.example` in the Netlify environment UI.
+4. Generate a random `CONTACT_RATE_LIMIT_SECRET` of at least 24 characters.
+5. Deploy and confirm `/.netlify/functions/health` reports the expected services as configured.
+6. Add the deployed Stripe webhook URL: `https://YOUR-SITE.netlify.app/.netlify/functions/stripe-webhook`.
+7. Subscribe the endpoint to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`.
 
-The initial free address will be a \`*.netlify.app\` URL. Buy a custom domain only after the business is ready.
+The initial free address will be a `*.netlify.app` URL. Buy a custom domain only after the business is ready.
 
 ## Outreach is intentionally approval-gated
 
