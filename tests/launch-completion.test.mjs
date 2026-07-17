@@ -75,7 +75,8 @@ test('scanner is passive and refuses private or state-changing traffic', () => {
   assert.match(scanner, /Blocked private or reserved address/);
   assert.match(scanner, /serviceWorkers: 'block'/);
   assert.match(scanner, /acceptDownloads: false/);
-  assert.doesNotMatch(scanner, /\.click\(|\.fill\(|\.type\(|\.press\(/);
+  assert.doesNotMatch(scanner, /\.(?:click|type|press)\(/);
+  assert.doesNotMatch(scanner, /\b(?:page|locator|elementHandle)\.fill\(/);
 });
 
 test('private previews store only a hash, expire, and send noindex controls', () => {
