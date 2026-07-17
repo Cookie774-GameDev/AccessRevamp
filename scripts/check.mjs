@@ -51,6 +51,10 @@ if ((config.match(/cadence:\s*'one-time'/g) || []).length !== 2) {
 
 const migrationPath = 'supabase/migrations/202607170001_accessrevamp.sql';
 const migration = await readFile(migrationPath, 'utf8');
+const reviewMigration = await readFile(
+  'supabase/migrations/202607170002_review_attribution.sql',
+  'utf8',
+);
 const requiredMigrationPatterns = [
   [/create table if not exists public\.ar_orders/, 'Isolated order table is missing.'],
   [/create table if not exists public\.ar_suppression_list/, 'Permanent suppression list is missing.'],
@@ -68,6 +72,18 @@ for (const [pattern, message] of requiredMigrationPatterns) {
   if (!pattern.test(migration)) failures.push(message);
 }
 
+const requiredReviewPatterns = [
+  [/human_reviewed_by uuid references auth\.users/, 'Verified findings need reviewer attribution.'],
+  [/human_approved_by uuid references auth\.users/, 'Approved previews need approver attribution.'],
+  [/preview approver must be an active AccessRevamp staff member/i, 'Active-staff preview approval is missing.'],
+  [/finding_staff\.active = true/, 'Verified finding reviewer must remain active staff.'],
+  [/drop trigger if exists ar_preview_guardrails/, 'Private preview trigger is missing.'],
+  [/approved outreach requires an active-staff-reviewed finding and private preview/i, 'Outreach review chain is incomplete.'],
+];
+for (const [pattern, message] of requiredReviewPatterns) {
+  if (!pattern.test(reviewMigration)) failures.push(message);
+}
+
 const forbiddenGenericDeclarations = [
   /create table if not exists public\.profiles\b/,
   /create table if not exists public\.orders\b/,
@@ -78,12 +94,14 @@ const forbiddenGenericDeclarations = [
   /create table if not exists public\.stripe_events\b/,
 ];
 for (const pattern of forbiddenGenericDeclarations) {
-  if (pattern.test(migration)) failures.push(`Migration contains a non-isolated declaration: ${pattern}`);
+  if (pattern.test(`${migration}\n${reviewMigration}`)) {
+    failures.push(`Migration contains a non-isolated declaration: ${pattern}`);
+  }
 }
 
 const operationalFiles = files.filter((file) =>
   file.startsWith('netlify/functions/') || file.startsWith('scripts/'));
-const legacyRuntimeQuery = /\.from\('(orders|profiles|customer_projects|prospects|findings|outreach_queue|suppression_list|stripe_events|contact_submissions)'\)/;
+const legacyRuntimeQuery = /\.from\('(orders|profiles|customer_projects|prospects|findings|previews|outreach_queue|suppression_list|stripe_events|contact_submissions)'\)/;
 for (const file of operationalFiles) {
   const text = await readFile(file, 'utf8');
   if (legacyRuntimeQuery.test(text)) {
@@ -105,12 +123,25 @@ for (const variable of [
   }
 }
 
+const tokenUtilities = await readFile('netlify/functions/_shared/secure-tokens.mjs', 'utf8');
+if (!/createHmac\('sha256'/.test(tokenUtilities) || !/timingSafeEqual/.test(tokenUtilities)) {
+  failures.push('Private preview and opt-out tokens must use keyed hashes and timing-safe verification.');
+}
+
 const approvalScript = await readFile('scripts/approve-outreach.mjs', 'utf8');
 if (/nodemailer|sendgrid|resend\.emails|gmail\.users\.messages\.send/i.test(approvalScript)) {
   failures.push('The approval script must not contain a mail transport.');
 }
 if (!/from\('ar_staff'\)/.test(approvalScript) || !/createUnsubscribeToken/.test(approvalScript)) {
   failures.push('Approval must verify active staff and create a signed opt-out link.');
+}
+if (!/assertOutreachDraft/.test(approvalScript)) {
+  failures.push('Human-edited outreach must pass content guardrails before approval.');
+}
+
+const allText = await Promise.all(files.map((file) => readFile(file, 'utf8')));
+if (/sending_enabled/i.test(allText.join('\n'))) {
+  failures.push('The repository must not imply that a nonexistent sending_enabled flag activates email.');
 }
 
 if (failures.length) {
