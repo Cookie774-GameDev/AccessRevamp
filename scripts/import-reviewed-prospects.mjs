@@ -70,7 +70,8 @@ const recordSchema = z.object({
     wcagCriteria: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
     repairEffort: z.enum(['small', 'medium', 'large']).default('medium'),
     suggestedFix: z.string().trim().min(10).max(3000),
-    reviewedBy: z.string().trim().min(2).max(160),
+    reviewedByUserId: z.string().uuid(),
+    reviewedBy: z.string().trim().min(2).max(160).optional(),
   }).strict(),
   preview: conceptSchema.optional(),
   subject: z.string().trim().min(8).max(120),
@@ -127,6 +128,16 @@ for (const record of records) {
   if (emailSuppression || domainSuppression) {
     results.push({ websiteUrl, recipientEmail, status: 'skipped_suppressed' });
     continue;
+  }
+
+  const { data: reviewer, error: reviewerError } = await supabase
+    .from('ar_staff')
+    .select('user_id,role,active')
+    .eq('user_id', record.finding.reviewedByUserId)
+    .maybeSingle();
+  if (reviewerError) throw reviewerError;
+  if (!reviewer?.active) {
+    throw new Error(`Reviewer ${record.finding.reviewedByUserId} is not an active AccessRevamp staff member.`);
   }
 
   let { data: prospect, error: prospectLookupError } = await supabase
@@ -206,6 +217,7 @@ for (const record of records) {
       evidence_url: record.finding.referenceUrl || websiteUrl,
       retest_status: 'not_tested',
       human_reviewed_at: nowIso,
+      human_reviewed_by: reviewer.user_id,
     })
     .select('id')
     .single();
@@ -238,6 +250,7 @@ for (const record of records) {
       watermark: 'Private AccessRevamp Concept',
       noindex: true,
       approved_at: nowIso,
+      human_approved_by: reviewer.user_id,
       expires_at: expiresAt,
     })
     .select('id')
@@ -277,6 +290,7 @@ for (const record of records) {
     queueId: queueItem.id,
     previewUrl,
     expiresAt,
+    reviewerUserId: reviewer.user_id,
     status: 'draft_created',
   });
 }
