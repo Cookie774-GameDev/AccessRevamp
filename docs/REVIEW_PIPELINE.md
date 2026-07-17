@@ -110,6 +110,6 @@ The Apps Script review bridge adds review columns to an imported Sheet but has n
 - passwords, access tokens, private customer data, or non-public contact details;
 - a purchased or opaque scraped list with no public source page;
 - a scanner signal represented as a verified finding;
-- claims of breach, compromise, exploitable vulnerability, legal noncompliance, lawsuit risk, or guaranteed revenue;
+- claims of breach, compromise, exploitable vulnerability, legal noncompliance, lawsuit risk, or unsupported revenue outcomes;
 - more than 20 records in a batch;
 - an address already suppressed or a business that asked not to be contacted.
