@@ -1,0 +1,117 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const read = (path) => readFile(path, 'utf8');
+const [
+  packageText,
+  index,
+  checkoutClient,
+  checkoutFunction,
+  webhook,
+  scanner,
+  previewFunction,
+  previewScript,
+  migration,
+  importer,
+  netlify,
+] = await Promise.all([
+  read('package.json'),
+  read('index.html'),
+  read('src/checkout.js'),
+  read('netlify/functions/create-checkout.mjs'),
+  read('netlify/functions/stripe-webhook.mjs'),
+  read('scripts/scan-public-homepage.mjs'),
+  read('netlify/functions/private-preview.mjs'),
+  read('scripts/create-private-preview.mjs'),
+  read('supabase/migrations/202607170005_complete_review_and_preview_model.sql'),
+  read('scripts/import-reviewed-prospects.mjs'),
+  read('netlify.toml'),
+]);
+const packageJson = JSON.parse(packageText);
+
+test('runtime and security-sensitive dependencies are exact and current for the release', () => {
+  assert.equal(packageJson.engines.node, '>=22.12.0');
+  assert.equal(packageJson.dependencies.stripe, '22.3.2');
+  assert.equal(packageJson.dependencies['@supabase/supabase-js'], '2.110.7');
+  assert.equal(packageJson.dependencies.playwright, '1.61.1');
+  assert.equal(packageJson.dependencies['@axe-core/playwright'], '4.12.1');
+  assert.equal(packageJson.dependencies.zod, '3.25.76');
+  assert.equal(packageJson.devDependencies.vite, '8.1.5');
+  for (const version of [...Object.values(packageJson.dependencies), ...Object.values(packageJson.devDependencies)]) {
+    assert.doesNotMatch(version, /^[~^]/, 'production dependency versions must be exact');
+  }
+});
+
+test('pricing buttons use server-created Checkout with a validated Stripe fallback', () => {
+  assert.match(index, /src\/checkout\.js/);
+  assert.match(checkoutClient, /\.netlify\/functions\/create-checkout/);
+  assert.match(checkoutClient, /crypto\.randomUUID\(\)/);
+  assert.match(checkoutClient, /checkout\.stripe\.com/);
+  assert.match(checkoutClient, /book\.stripe\.com/);
+});
+
+test('Checkout uses explicit API version, idempotency, exact price IDs, and an integration identifier', () => {
+  assert.match(checkoutFunction, /2026-06-24\.dahlia/);
+  assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
+  assert.match(checkoutFunction, /integration_identifier: `accessrevamp_/);
+  assert.match(checkoutFunction, /price_1TuGoNLzyGRcyGQJRjtGsiMV/);
+  assert.match(checkoutFunction, /price_1TuGoTLzyGRcyGQJfdkqoE3f/);
+  assert.doesNotMatch(checkoutFunction, /payment_method_types/);
+  assert.doesNotMatch(checkoutFunction, /automatic_tax:\s*\{\s*enabled:\s*true/);
+});
+
+test('webhook re-retrieves the Checkout Session and validates the exact Stripe price', () => {
+  assert.match(webhook, /checkout\.sessions\.retrieve/);
+  assert.match(webhook, /line_items\.data\.price/);
+  assert.match(webhook, /priceId !== expectedPriceId/);
+  assert.match(webhook, /session\.mode !== 'payment'/);
+  assert.match(webhook, /STRIPE_EXPECT_LIVEMODE/);
+});
+
+test('scanner is passive and refuses private or state-changing traffic', () => {
+  assert.match(scanner, /candidate_needs_human_review/);
+  assert.match(scanner, /\['GET', 'HEAD'\]/);
+  assert.match(scanner, /Blocked private or reserved address/);
+  assert.match(scanner, /serviceWorkers: 'block'/);
+  assert.match(scanner, /acceptDownloads: false/);
+  assert.doesNotMatch(scanner, /\.click\(|\.fill\(|\.type\(|\.press\(/);
+});
+
+test('private previews store only a hash, expire, and send noindex controls', () => {
+  assert.match(previewScript, /createHash\('sha256'\)/);
+  assert.match(previewScript, /randomBytes\(32\)/);
+  assert.doesNotMatch(previewScript, /token:\s*token/);
+  assert.match(previewFunction, /x-robots-tag/);
+  assert.match(previewFunction, /noindex, nofollow, noarchive, nosnippet/);
+  assert.match(previewFunction, /Private AccessRevamp Concept · Not the live website/);
+  assert.match(previewFunction, /expiresAt <= new Date\(\)/);
+  assert.match(netlify, /from = "\/preview\/:token"/);
+});
+
+test('review migration contains structured findings, evidence, private previews, and browser-role denial', () => {
+  for (const column of [
+    'severity',
+    'confidence',
+    'affected_user_group',
+    'affected_business_task',
+    'wcag_reference',
+    'repair_effort',
+    'proposed_fix',
+    'retest_result',
+  ]) assert.match(migration, new RegExp(`\\b${column}\\b`));
+  assert.match(migration, /create table if not exists public\.finding_evidence/);
+  assert.match(migration, /create table if not exists public\.previews/);
+  assert.match(migration, /revoke all on table public\.finding_evidence, public\.previews from public, anon, authenticated/);
+  assert.match(migration, /grant all on table public\.finding_evidence, public\.previews to service_role/);
+});
+
+test('reviewed-prospect import uses severity and rejects security scare claims', () => {
+  assert.match(importer, /severity: z\.enum/);
+  assert.match(importer, /affectedUserGroup/);
+  assert.match(importer, /affectedBusinessTask/);
+  assert.match(importer, /confidence: 'verified'/);
+  assert.match(importer, /scareClaimPattern/);
+  assert.match(importer, /URL shorteners are not allowed/);
+  assert.doesNotMatch(importer, /'security_hygiene'/);
+});
