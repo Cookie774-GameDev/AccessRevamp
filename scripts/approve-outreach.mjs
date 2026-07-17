@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 import { createUnsubscribeToken } from '../netlify/functions/_shared/secure-tokens.mjs';
+import { assertOutreachDraft } from './lib/outreach-guardrails.mjs';
 
 const inputPath = process.argv[2];
 if (!inputPath) {
@@ -78,7 +79,7 @@ for (const decision of decisions) {
 
   const { data: item, error: itemError } = await supabase
     .from('ar_outreach_messages')
-    .select('id,contact_email,subject,body_text,status,follow_up_count')
+    .select('id,prospect_id,contact_email,subject,body_text,status,follow_up_count')
     .eq('id', decision.queueId)
     .single();
   if (itemError) throw itemError;
@@ -100,11 +101,19 @@ for (const decision of decisions) {
     continue;
   }
 
+  const { data: prospect, error: prospectError } = await supabase
+    .from('ar_prospects')
+    .select('domain')
+    .eq('id', item.prospect_id)
+    .single();
+  if (prospectError) throw prospectError;
+
   const token = createUnsubscribeToken({
     messageId: item.id,
     email: item.contact_email.toLowerCase(),
   });
   const optOutUrl = `${siteUrl}/.netlify/functions/unsubscribe?token=${encodeURIComponent(token)}`;
+  const subject = decision.subject || item.subject;
   let bodyText = decision.bodyText || item.body_text;
   bodyText = bodyText.replaceAll('{{OPT_OUT_URL}}', optOutUrl);
 
@@ -130,10 +139,16 @@ for (const decision of decisions) {
     throw new Error(`Approved body for outreach item ${item.id} exceeds 8000 characters.`);
   }
 
+  assertOutreachDraft({
+    subject,
+    bodyText,
+    reviewedDomain: prospect.domain,
+  });
+
   const { error: updateError } = await supabase
     .from('ar_outreach_messages')
     .update({
-      subject: decision.subject || item.subject,
+      subject,
       body_text: bodyText,
       unsubscribe_url: optOutUrl,
       status: 'approved',
