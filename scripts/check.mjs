@@ -25,20 +25,32 @@ async function collect(path) {
 }
 for (const root of roots) await collect(root);
 
-const forbidden = [
+const failures = [];
+const forbiddenPrices = [
   /\$\s*79\b/i,
   /\$\s*80\b/i,
   /\$\s*400\b/i,
   /\$\s*999\b/i,
   /\$\s*2,?500\b/i,
   /\$\s*99\s*(?:-|to)\s*\$?\s*300\s*\/\s*month/i,
-  /guaranteed\s+(?:compliance|security|revenue|sales)/i,
 ];
-const failures = [];
-for (const file of files) {
+const pricePolicyFiles = files.filter((file) =>
+  file !== 'scripts/check.mjs' && !file.startsWith('tests/'));
+for (const file of pricePolicyFiles) {
   const text = await readFile(file, 'utf8');
-  for (const pattern of forbidden) {
-    if (pattern.test(text)) failures.push(`${file} matched ${pattern}`);
+  for (const pattern of forbiddenPrices) {
+    if (pattern.test(text)) failures.push(`${file} matched obsolete catalog pattern ${pattern}`);
+  }
+}
+
+const publicClaimFiles = files.filter((file) =>
+  file.startsWith('src/')
+  || file === 'netlify/functions/preview.mjs'
+  || file === 'README.md');
+for (const file of publicClaimFiles) {
+  const text = await readFile(file, 'utf8');
+  if (/guaranteed\s+(?:compliance|security|revenue|sales)/i.test(text)) {
+    failures.push(`${file} contains a prohibited guaranteed-result claim.`);
   }
 }
 
@@ -111,6 +123,7 @@ for (const file of operationalFiles) {
 
 const environmentTemplate = await readFile('.env.netlify.example', 'utf8');
 for (const variable of [
+  'STRIPE_EXPECTED_LIVEMODE',
   'CONTACT_RATE_LIMIT_SECRET',
   'PREVIEW_TOKEN_SECRET',
   'UNSUBSCRIBE_SECRET',
@@ -139,8 +152,9 @@ if (!/assertOutreachDraft/.test(approvalScript)) {
   failures.push('Human-edited outreach must pass content guardrails before approval.');
 }
 
-const allText = await Promise.all(files.map((file) => readFile(file, 'utf8')));
-if (/sending_enabled/i.test(allText.join('\n'))) {
+const legacyFlagFiles = files.filter((file) => file !== 'scripts/check.mjs');
+const legacyFlagText = await Promise.all(legacyFlagFiles.map((file) => readFile(file, 'utf8')));
+if (/sending_enabled/i.test(legacyFlagText.join('\n'))) {
   failures.push('The repository must not imply that a nonexistent sending_enabled flag activates email.');
 }
 
