@@ -1,5 +1,5 @@
-import Stripe from 'stripe';
 import { handleError, json } from './_shared/http.mjs';
+import { getStripe } from './_shared/stripe-client.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
 const offers = Object.freeze({
@@ -11,6 +11,15 @@ const checkoutEventTypes = new Set([
   'checkout.session.async_payment_succeeded',
   'checkout.session.async_payment_failed',
 ]);
+const MAX_WEBHOOK_BYTES = 1_000_000;
+
+function expectedLivemode() {
+  const value = process.env.STRIPE_EXPECTED_LIVEMODE;
+  if (value !== 'true' && value !== 'false') {
+    throw new Error('STRIPE_EXPECTED_LIVEMODE must be configured as true or false.');
+  }
+  return value === 'true';
+}
 
 export default async (request) => {
   let supabase;
@@ -18,17 +27,28 @@ export default async (request) => {
   try {
     if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
     const signature = request.headers.get('stripe-signature');
-    if (!signature || !process.env.STRIPE_WEBHOOK_SECRET || !process.env.STRIPE_SECRET_KEY) {
+    if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
       return json({ error: 'Webhook configuration is incomplete.' }, 503);
     }
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > MAX_WEBHOOK_BYTES) {
+      return json({ error: 'Webhook payload is too large.' }, 413);
+    }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = getStripe();
     const rawBody = await request.text();
+    if (Buffer.byteLength(rawBody, 'utf8') > MAX_WEBHOOK_BYTES) {
+      return json({ error: 'Webhook payload is too large.' }, 413);
+    }
     const event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
+    if (event.livemode !== expectedLivemode()) {
+      throw new Error('Stripe webhook mode did not match this deployment.');
+    }
+
     eventId = event.id;
     supabase = getSupabaseAdmin();
 
