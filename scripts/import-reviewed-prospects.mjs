@@ -5,6 +5,7 @@ import {
   createPrivateToken,
   hashPreviewToken,
 } from '../netlify/functions/_shared/secure-tokens.mjs';
+import { assertOutreachDraft } from './lib/outreach-guardrails.mjs';
 
 const inputPath = process.argv[2];
 if (!inputPath) {
@@ -118,6 +119,12 @@ for (const record of records) {
   const domain = website.hostname.toLowerCase().replace(/^www\./, '');
   const recipientEmail = record.recipientEmail.toLowerCase();
   const recipientDomain = recipientEmail.split('@').pop();
+
+  assertOutreachDraft({
+    subject: record.subject,
+    bodyText: record.bodyText,
+    reviewedDomain: domain,
+  });
 
   const [{ data: emailSuppression, error: emailSuppressionError }, { data: domainSuppression, error: domainSuppressionError }] = await Promise.all([
     supabase.from('ar_suppression_list').select('id').eq('normalized_email', recipientEmail).maybeSingle(),
