@@ -44,52 +44,37 @@ export default async (request) => {
 
     if (checkoutEventTypes.has(event.type)) {
       const session = event.data.object;
-      const planKey = session.metadata?.plan_key;
-      const amount = Number(session.amount_total || 0);
-      const currency = String(session.currency || 'usd').toLowerCase();
-      if (!expectedAmounts[planKey] || expectedAmounts[planKey] !== amount || currency !== 'usd') {
-        throw new Error('Checkout amount, currency, or plan metadata did not match the configured catalog.');
-      }
+      const shouldFulfill = event.type === 'checkout.session.async_payment_succeeded'
+        || (event.type === 'checkout.session.completed' && session.payment_status === 'paid');
 
-      const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
-      const isPaid = session.payment_status === 'paid' || event.type === 'checkout.session.async_payment_succeeded';
-      const orderStatus = isPaid ? 'paid' : 'unpaid';
-      let userId = null;
+      if (shouldFulfill) {
+        const planKey = session.metadata?.plan_key;
+        const amount = Number(session.amount_total || 0);
+        const currency = String(session.currency || 'usd').toLowerCase();
+        if (!expectedAmounts[planKey] || expectedAmounts[planKey] !== amount || currency !== 'usd') {
+          throw new Error('Checkout amount, currency, or plan metadata did not match the configured catalog.');
+        }
 
-      if (email) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-        if (profileError) throw profileError;
-        userId = profile?.id || null;
-      }
+        const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
+        if (!email) throw new Error('Paid checkout did not include a customer email.');
 
-      const { data: order, error: orderError } = await supabase.from('orders').upsert({
-        user_id: userId,
-        stripe_event_id: event.id,
-        stripe_checkout_session_id: session.id,
-        stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
-        stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
-        customer_email: email || null,
-        plan_key: planKey,
-        amount_total: amount,
-        currency,
-        status: orderStatus,
-      }, { onConflict: 'stripe_checkout_session_id' }).select('id').single();
-      if (orderError) throw orderError;
-
-      if (userId && isPaid) {
-        const projectName = planKey === 'homepage_reveal' ? 'Homepage Reveal project' : 'Quick Fix project';
-        const { error: projectError } = await supabase.from('customer_projects').upsert({
-          user_id: userId,
-          order_id: order.id,
-          name: projectName,
+        const { data: order, error: orderError } = await supabase.from('orders').upsert({
+          stripe_event_id: event.id,
+          stripe_checkout_session_id: session.id,
+          stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
+          customer_email: email,
           plan_key: planKey,
-          status: 'intake_pending',
-        }, { onConflict: 'order_id' });
-        if (projectError) throw projectError;
+          amount_total: amount,
+          currency,
+          status: 'paid',
+        }, { onConflict: 'stripe_checkout_session_id' }).select('id').single();
+        if (orderError) throw orderError;
+
+        const { error: linkError } = await supabase.rpc('link_accessrevamp_paid_order', {
+          p_order_id: order.id,
+        });
+        if (linkError) throw linkError;
       }
     }
 
