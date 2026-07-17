@@ -7,21 +7,21 @@ const scopeBoundary = 'Boundary: Website scope, platform access, page count, del
 const faqAnswer = 'The pack covers one campaign or offer. It includes two approved master creative directions adapted into five standard formats each: square feed, portrait feed, Story/Reel cover, landscape ad, and US Letter/A4 poster. Deliverables are Canva-ready and include recommended headline, call-to-action, caption, and channel notes plus one consolidated revision round. Ad spend, media buying, printing, paid stock, and ongoing management are not included.';
 const termsItem = 'The Quick Fix marketing creative pack covers one campaign or offer, 10 Canva-ready variations produced from two master directions across five common formats, and one consolidated revision round. AI may assist concept and copy production, but every final creative is human reviewed. The client remains responsible for the accuracy and legality of supplied logos, images, product information, promotions, claims, and required disclosures. Ad spend, media buying, printing, paid stock, photography, motion design, and ongoing campaign management are excluded unless separately agreed in writing.';
 
-function appendListItem(list, text, marker) {
-  if (!list || list.querySelector(`[data-${marker}]`)) return;
+function appendListItem(list, text, markerAttribute) {
+  if (!list || list.querySelector(`[${markerAttribute}]`)) return;
   const item = document.createElement('li');
-  item.dataset[marker] = 'true';
+  item.setAttribute(markerAttribute, 'true');
   item.textContent = text;
   list.append(item);
 }
 
 function applyPricingDetails() {
   const card = document.querySelector('.price-card.featured');
-  if (!card) return;
+  if (!card || card.dataset.creativePackApplied === 'true') return;
 
   const summary = card.querySelector('.price-top + p');
   if (summary) summary.textContent = cardSummary;
-  appendListItem(card.querySelector('.check-list'), creativeItemText, 'creativePack');
+  appendListItem(card.querySelector('.check-list'), creativeItemText, 'data-creative-pack');
 
   const scope = card.querySelector('.scope-note');
   if (scope) {
@@ -47,12 +47,13 @@ function applyPricingDetails() {
       faqList.append(details);
     }
   }
+
+  card.dataset.creativePackApplied = 'true';
 }
 
 function applyTermsDetails() {
   if (location.pathname !== '/terms') return;
-  const list = document.querySelector('.legal-copy ul');
-  appendListItem(list, termsItem, 'creativePackTerms');
+  appendListItem(document.querySelector('.legal-copy ul'), termsItem, 'data-creative-pack-terms');
 }
 
 function applyOfferDetails() {
