@@ -16,6 +16,22 @@ export const plans = Object.freeze({
     cadence: 'one-time',
     stripePriceId: import.meta.env.VITE_STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
     checkoutUrl: import.meta.env.VITE_STRIPE_QUICK_FIX_URL || 'https://book.stripe.com/test_cNi00k99a1i81Kp6KIgQE01',
+    creativePack: Object.freeze({
+      totalVariations: 10,
+      masterDirections: 2,
+      formatsPerDirection: 5,
+      formats: Object.freeze([
+        'Square feed — 1080 × 1080',
+        'Portrait feed — 1080 × 1350',
+        'Story / Reel cover — 1080 × 1920',
+        'Landscape ad — 1200 × 628',
+        'US Letter / A4 poster',
+      ]),
+      canvaReady: true,
+      canvaFreeCompatibleByDefault: true,
+      revisionRounds: 1,
+      campaignCount: 1,
+    }),
   }),
 });
 
