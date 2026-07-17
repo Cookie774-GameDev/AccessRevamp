@@ -1,0 +1,125 @@
+name: Finalize AccessRevamp application
+
+on:
+  push:
+    branches:
+      - agent/build-accessrevamp-platform
+    paths:
+      - '.github/workflows/finalize-accessrevamp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-accessrevamp-application
+  cancel-in-progress: false
+
+jobs:
+  finalize-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/build-accessrevamp-platform
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Assemble reviewed source when bootstrap chunks remain
+        shell: bash
+        run: |
+          set -euo pipefail
+          assemble_if_present() {
+            local source_dir="$1"
+            local target="$2"
+            local expected="$3"
+            if [[ -d "$source_dir" ]]; then
+              mkdir -p "$(dirname "$target")"
+              cat "$source_dir"/part-* > "$target"
+              printf '%s  %s\n' "$expected" "$target" | sha256sum --check --strict
+            elif [[ ! -f "$target" ]]; then
+              echo "Missing both bootstrap chunks and assembled target: $target" >&2
+              exit 1
+            fi
+          }
+          assemble_if_present '.github/bootstrap/large/apps__marketing-web__public__assets__app_js' 'apps/marketing-web/public/assets/app.js' 'a6889439e5b9eacd5ac1b19d8760f243374cd62a7393e308b260104b08f59831'
+          assemble_if_present '.github/bootstrap/large/apps__marketing-web__public__assets__styles_css' 'apps/marketing-web/public/assets/styles.css' 'e18b6f22e6812a8215c78073df41a7e736893c2ae52313610f11fca1bbe7e53f'
+          assemble_if_present '.github/bootstrap/large/apps__marketing-web__src__pages_mjs' 'apps/marketing-web/src/pages.mjs' 'a68c71919aa3c8d4ad879f3a79b9fc8000a665f129ad012d5f072eafbf4f454d'
+          assemble_if_present '.github/bootstrap/large/integrations__google-apps-script__Code_gs' 'integrations/google-apps-script/Code.gs' 'fca585017ab06e1575dbce4b37168f6c4ddf1292ab9daac7c921146e95ea5b49'
+          assemble_if_present '.github/bootstrap/large/netlify__functions___lib__handlers_mjs' 'netlify/functions/_lib/handlers.mjs' 'cc45596e554ddb3f16b567d51e8d686cd58dcf0dcfa5ade7eb567a4170a79bb7'
+          assemble_if_present '.github/bootstrap/large/supabase__migrations__202607170001_accessrevamp_core_sql' 'supabase/migrations/202607170001_accessrevamp_core.sql' '95cd878dd58532707b26a8e88d333c75b51d3b231a45dfe5d09b32b21476a468'
+      - name: Apply final integration corrections and regression tests
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          pages_path = Path('apps/marketing-web/src/pages.mjs')
+          pages = pages_path.read_text()
+          old = '''body: `<section class="status-page" data-checkout-success><div class="status-card success"><span class="status-icon">${icons.check}</span><p class="eyebrow">Secure checkout return</p><h1>Thank you. Your next step is intake.</h1><p data-checkout-confirmation role="status">Checking the Stripe Checkout Session…</p>'''
+          new = '''body: `<section class="status-page" data-checkout-result><div class="status-card success"><span class="status-icon">${icons.check}</span><p class="eyebrow" data-checkout-eyebrow>Secure checkout return</p><h1 data-checkout-heading>Checking payment status…</h1><p data-checkout-message role="status">Verifying the Stripe Checkout Session…</p>'''
+          if old in pages:
+              pages = pages.replace(old, new, 1)
+          elif new not in pages:
+              raise SystemExit('Checkout result markup was neither original nor corrected')
+          pages_path.write_text(pages)
+
+          styles_path = Path('apps/marketing-web/public/assets/styles.css')
+          styles = styles_path.read_text()
+          styles = styles.replace('background: var(--white);', 'background: white;')
+          if 'var(--white)' in styles:
+              raise SystemExit('Undefined --white token remains')
+          styles_path.write_text(styles)
+
+          script_path = Path('integrations/google-apps-script/Code.gs')
+          script = script_path.read_text()
+          original_domain = "var domain = new URL(record.website_url).getHost().replace(/^www\\./, '').toLowerCase();"
+          corrected_domain = "var domain = domainFromUrl_(record.website_url);"
+          if original_domain in script:
+              script = script.replace(original_domain, corrected_domain, 1)
+          elif corrected_domain not in script:
+              raise SystemExit('Apps Script domain parsing line was neither original nor corrected')
+          helper = '''
+          function domainFromUrl_(value) {
+            var match = String(value || '').trim().match(/^https:\/\/([^\/?#:]+)(?::\d+)?(?:[\/?#]|$)/i);
+            if (!match) throw new Error('website_url must be an absolute HTTPS URL.');
+            return match[1].replace(/^www\./i, '').toLowerCase();
+          }
+          '''.strip()
+          marker = '\nfunction publicApiRequest_(path, method) {'
+          if 'function domainFromUrl_(value)' not in script:
+              if marker not in script:
+                  raise SystemExit('Apps Script helper insertion marker not found')
+              script = script.replace(marker, '\n\n' + helper + marker, 1)
+          if '.getHost(' in script:
+              raise SystemExit('Unsupported getHost() call remains')
+          script_path.write_text(script)
+
+          test_path = Path('tests/final-integration.test.mjs')
+          test_path.write_text('''import assert from 'node:assert/strict'\nimport test from 'node:test'\nimport { readFile } from 'node:fs/promises'\nimport { pages } from '../apps/marketing-web/src/pages.mjs'\n\nconst success = pages.find((page) => page.pathname === '/checkout/success/')\nconst [styles, appsScript] = await Promise.all([\n  readFile(new URL('../apps/marketing-web/public/assets/styles.css', import.meta.url), 'utf8'),\n  readFile(new URL('../integrations/google-apps-script/Code.gs', import.meta.url), 'utf8')\n])\n\ntest('checkout success page exposes every status hook used by the browser controller', () => {\n  assert.ok(success)\n  for (const hook of ['data-checkout-result', 'data-checkout-eyebrow', 'data-checkout-heading', 'data-checkout-message']) {\n    assert.match(success.body, new RegExp(hook), hook)\n  }\n})\n\ntest('final presentation and Apps Script integration avoid undefined tokens and unsupported URL APIs', () => {\n  assert.doesNotMatch(styles, /var\\(--white\\)/)\n  assert.doesNotMatch(appsScript, /\\.getHost\\(/)\n  assert.match(appsScript, /function domainFromUrl_\\(value\\)/)\n})\n''')
+          PY
+      - name: Install and run the complete verification suite
+        run: |
+          npm ci
+          npm run check
+      - name: Commit clean verified application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .github/bootstrap/large
+          rm -f .github/workflows/assemble-accessrevamp-source.yml
+          rm -f .github/workflows/finalize-accessrevamp.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No source changes required.'
+            exit 0
+          fi
+          git commit -m 'Finalize and verify AccessRevamp application'
+          git push origin HEAD:agent/build-accessrevamp-platform
