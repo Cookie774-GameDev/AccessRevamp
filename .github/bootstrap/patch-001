@@ -1,0 +1,441 @@
+ch { body = { message: 'The server returned an unreadable response.' } }
++    if (!response.ok) {
++      const error = new Error(body?.error?.message || body.message || 'Request failed. Please try again.')
++      error.status = response.status
++      error.code = body?.error?.code
++      error.details = body?.error?.details
++      throw error
++    }
++    return body
++  }
++
++  function validateForm(form, statusSelector = '[data-form-status]') {
++    let firstInvalid = null
++    $$('[required]', form).forEach((field) => {
++      const valid = field.type === 'checkbox' ? field.checked : field.checkValidity()
++      field.setAttribute('aria-invalid', valid ? 'false' : 'true')
++      if (!valid && !firstInvalid) firstInvalid = field
++    })
++    if (!firstInvalid) return true
++    firstInvalid.focus()
++    setStatus(form, 'Please complete the highlighted field.', 'error', statusSelector)
++    return false
++  }
++
++  function safeNextPath(value, fallback = '/dashboard/') {
++    if (!value || typeof value !== 'string') return fallback
++    if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return fallback
++    try {
++      const parsed = new URL(value, window.location.origin)
++      return parsed.origin === window.location.origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : fallback
++    } catch {
++      return fallback
++    }
++  }
++
++  async function submitApiForm(form) {
++    if (!validateForm(form)) return
++    const kind = form.dataset.apiForm
++    const endpoints = {
++      snapshot: '/api/snapshot',
++      contact: '/api/contact',
++      signin: '/api/auth/signin',
++      signup: '/api/auth/signup',
++      unsubscribe: '/api/unsubscribe'
++    }
++    const endpoint = endpoints[kind]
++    if (!endpoint) return
++
++    setBusy(form, true)
++    setStatus(form, '')
++    try {
++      const result = await api(endpoint, { method: 'POST', body: JSON.stringify(formPayload(form)) })
++      setStatus(form, result.message || 'Done.', 'success')
++      if (kind === 'signin') {
++        const next = safeNextPath(new URLSearchParams(window.location.search).get('next'), result.redirect || '/dashboard/')
++        window.location.assign(next)
++      }
++      if (kind === 'signup' && result.sessionCreated) window.location.assign('/dashboard/')
++      if (['snapshot', 'contact'].includes(kind)) form.reset()
++    } catch (error) {
++      setStatus(form, error.message || 'Something went wrong. Please try again.', 'error')
++    } finally {
++      setBusy(form, false)
++    }
++  }
++
++  function offerByCode(code) {
++    return Object.values(config.offers || {}).find((offer) => offer.code === code)
++  }
++
++  function initCheckout() {
++    const dialog = $('[data-checkout-dialog]')
++    const form = $('[data-checkout-form]')
++    if (!dialog || !form) return
++    const closeButton = $('[data-checkout-close]', dialog)
++    const title = $('[data-checkout-title]', dialog)
++    const price = $('[data-checkout-price]', dialog)
++    let opener = null
++
++    function close() {
++      if (typeof dialog.close === 'function' && dialog.open) dialog.close()
++      else dialog.removeAttribute('open')
++      form.reset()
++      setStatus(form, '', '', '[data-checkout-status]')
++      opener?.focus()
++      opener = null
++    }
++
++    $$('[data-checkout-offer]').forEach((button) => button.addEventListener('click', () => {
++      const offer = offerByCode(button.dataset.checkoutOffer)
++      if (!offer) return
++      opener = button
++      form.elements.offer.value = offer.code
++      title.textContent = offer.name
++      price.textContent = `${offer.displayPrice} · one-time service`
++      if (typeof dialog.showModal === 'function') dialog.showModal()
++      else dialog.setAttribute('open', '')
++      form.elements.email?.focus()
++    }))
++
++    closeButton?.addEventListener('click', close)
++    dialog.addEventListener('click', (event) => {
++      if (event.target === dialog) close()
++    })
++    dialog.addEventListener('cancel', (event) => {
++      event.preventDefault()
++      close()
++    })
++
++    form.addEventListener('submit', async (event) => {
++      event.preventDefault()
++      if (!validateForm(form, '[data-checkout-status]')) return
++      setBusy(form, true, 'Opening secure checkout…')
++      setStatus(form, '', '', '[data-checkout-status]')
++      try {
++        const result = await api('/api/checkout', { method: 'POST', body: JSON.stringify(formPayload(form)) })
++        if (!result.url || !result.url.startsWith('https://checkout.stripe.com/')) {
++          throw new Error('Stripe did not return a secure checkout URL.')
++        }
++        window.location.assign(result.url)
++      } catch (error) {
++        setStatus(form, error.message || 'Checkout could not start. Please use the contact form.', 'error', '[data-checkout-status]')
++        setBusy(form, false)
++      }
++    })
++  }
++
++  function initNavigation() {
++    const toggle = $('[data-nav-toggle]')
++    const nav = $('[data-site-nav]')
++    if (!toggle || !nav) return
++    const close = () => {
++      toggle.setAttribute('aria-expanded', 'false')
++      nav.classList.remove('open')
++    }
++    toggle.addEventListener('click', () => {
++      const open = toggle.getAttribute('aria-expanded') === 'true'
++      toggle.setAttribute('aria-expanded', String(!open))
++      nav.classList.toggle('open', !open)
++    })
++    nav.addEventListener('click', (event) => {
++      if (event.target.closest('a')) close()
++    })
++    document.addEventListener('keydown', (event) => {
++      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
++        close()
++        toggle.focus()
++      }
++    })
++  }
++
++  function initReveal() {
++    const nodes = $$('.reveal')
++    if (!nodes.length) return
++    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
++      nodes.forEach((node) => node.classList.add('in-view'))
++      return
++    }
++    const observer = new IntersectionObserver((entries) => {
++      entries.forEach((entry) => {
++        if (!entry.isIntersecting) return
++        entry.target.classList.add('in-view')
++        observer.unobserve(entry.target)
++      })
++    }, { threshold: 0.12, rootMargin: '0px 0px -30px' })
++    nodes.forEach((node) => observer.observe(node))
++  }
++
++  function initComparison() {
++    $$('[data-comparison]').forEach((comparison) => {
++      const stage = $('[data-comparison-stage]', comparison)
++      if (!stage) return
++      $$('[data-view]', comparison).forEach((button) => button.addEventListener('click', () => {
++        $$('[data-view]', comparison).forEach((candidate) => {
++          const selected = candidate === button
++          candidate.classList.toggle('active', selected)
++          candidate.setAttribute('aria-pressed', String(selected))
++        })
++        const after = button.dataset.view === 'after'
++        stage.classList.toggle('after', after)
++        stage.classList.toggle('before', !after)
++      }))
++    })
++  }
++
++  function formatDate(value) {
++    if (!value) return 'Date pending'
++    const date = new Date(value)
++    return Number.isNaN(date.valueOf())
++      ? 'Date pending'
++      : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date)
++  }
++
++  function renderList(container, items, renderer, emptyText) {
++    if (!container) return
++    if (!Array.isArray(items) || items.length === 0) {
++      container.className = 'empty-state'
++      container.textContent = emptyText
++      return
++    }
++    container.className = 'dashboard-list'
++    container.innerHTML = items.map(renderer).join('')
++  }
++
++  async function initDashboard() {
++    const root = $('[data-dashboard]')
++    if (!root) return
++    const alert = $('[data-dashboard-alert]', root)
++    try {
++      const data = await api('/api/dashboard')
++      $('[data-dashboard-greeting]', root).textContent = data.user?.email ? `Signed in as ${data.user.email}` : 'Signed in'
++      renderList(
++        $('[data-dashboard-snapshots]', root),
++        data.snapshotRequests,
++        (item) => `<div class="dashboard-item"><div><b>${escapeHtml(item.company || item.website_url)}</b><span>${escapeHtml(item.website_url)} · ${formatDate(item.created_at)}</span></div><em>${escapeHtml(item.status || 'received')}</em></div>`,
++        'No snapshot requests are linked to this account yet.'
++      )
++      renderList(
++        $('[data-dashboard-orders]', root),
++        data.orders,
++        (item) => `<div class="dashboard-item"><div><b>${escapeHtml(item.offer_name || item.offer_code)}</b><span>$${(Number(item.amount_cents || 0) / 100).toFixed(2)} · ${formatDate(item.created_at)}</span></div><em>${escapeHtml(item.payment_status || 'pending')}</em></div>`,
++        'No paid orders are linked to this account yet.'
++      )
++      renderList(
++        $('[data-dashboard-projects]', root),
++        data.projects,
++        (item) => `<div class="dashboard-item"><div><b>${escapeHtml(item.project_name || 'Website project')}</b><span>${escapeHtml(item.website_url || '')} · ${formatDate(item.updated_at)}</span></div><em>${escapeHtml(item.current_phase || item.status || 'intake')}</em></div>`,
++        'No active remediation projects are linked to this account yet.'
++      )
++    } catch (error) {
++      if (error.status === 401) {
++        window.location.replace('/signin/?next=/dashboard/')
++        return
++      }
++      if (alert) alert.textContent = error.message || 'Dashboard data could not be loaded.'
++    }
++  }
++
++  async function initAuthCallback() {
++    const root = $('[data-auth-callback]')
++    if (!root) return
++    const message = $('[data-auth-callback-message]', root)
++    const hash = new URLSearchParams(window.location.hash.slice(1))
++    const accessToken = hash.get('access_token')
++    const refreshToken = hash.get('refresh_token')
++    const authError = hash.get('error_description')
++    if (authError) {
++      message.textContent = authError
++      return
++    }
++    if (!accessToken || !refreshToken) {
++      message.textContent = 'The confirmation link did not contain a usable session. Return to sign in or request a new confirmation email.'
++      return
++    }
++    try {
++      await api('/api/auth/session', { method: 'POST', body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }) })
++      history.replaceState(null, '', window.location.pathname)
++      window.location.replace('/dashboard/')
++    } catch (error) {
++      message.textContent = error.message || 'The session could not be completed.'
++    }
++  }
++
++  async function signOut(button) {
++    button.disabled = true
++    try { await api('/api/auth/signout', { method: 'POST', body: '{}' }) } catch { /* navigate away even when the remote session already expired */ }
++    window.location.replace('/signin/')
++  }
++
++  function prefillUnsubscribe() {
++    const form = $('[data-api-form="unsubscribe"]')
++    if (!form) return
++    const params = new URLSearchParams(window.location.search)
++    const recipient = params.get('email')
++    const signedToken = params.get('token')
++    if (recipient && form.elements.email) form.elements.email.value = recipient
++    if (signedToken && form.elements.token) form.elements.token.value = signedToken
++  }
++
++  async function initCheckoutResult() {
++    const root = $('[data-checkout-result]')
++    if (!root) return
++    const params = new URLSearchParams(window.location.search)
++    const sessionId = params.get('session_id')
++    const eyebrow = $('[data-checkout-eyebrow]', root)
++    const heading = $('[data-checkout-heading]', root)
++    const message = $('[data-checkout-message]', root)
++    if (!sessionId) {
++      eyebrow.textContent = 'Missing checkout reference'
++      heading.textContent = 'We could not verify this browser return.'
++      message.textContent = 'Use the Stripe receipt or contact form so the purchase can be matched safely.'
++      return
++    }
++    try {
++      const result = await api(`/api/checkout/status?session_id=${encodeURIComponent(sessionId)}`)
++      const paid = result.paymentStatus === 'paid' || result.paymentStatus === 'no_payment_required'
++      eyebrow.textContent = paid ? 'Payment confirmed' : 'Payment processing'
++      heading.textContent = paid ? 'Thank you. Your next step is intake.' : 'Stripe is still processing the payment.'
++      const amount = Number.isFinite(Number(result.amountTotal)) ? `$${(Number(result.amountTotal) / 100).toFixed(2)}` : 'the selected service'
++      message.textContent = paid
++        ? `${result.offerName || 'Your AccessRevamp service'} is recorded at ${amount}. We will match the order to your intake details.`
++        : 'No action is needed yet. The signed Stripe webhook remains the source of truth.'
++    } catch (error) {
++      eyebrow.textContent = 'Verification pending'
++      heading.textContent = 'The browser return could not be verified.'
++      message.textContent = `${error.message} Keep your Stripe receipt and use the contact form if this persists.`
++    }
++  }
++
++  function validPalette(values) {
++    return Array.isArray(values) ? values.filter((value) => /^#[0-9a-f]{6}$/i.test(String(value))).slice(0, 5) : []
++  }
++
++  async function initPreview() {
++    const root = $('[data-preview-root]')
++    if (!root) return
++    const status = $('[data-preview-status]', root)
++    const content = $('[data-preview-content]', root)
++    const previewToken = new URLSearchParams(window.location.search).get('token')
++    if (!previewToken) {
++      status.textContent = 'This private preview link is missing its access token.'
++      status.classList.add('error')
++      return
++    }
++    try {
++      const data = await api(`/api/preview?token=${encodeURIComponent(previewToken)}`)
++      $('[data-preview-business]', root).textContent = `${data.businessName} homepage concept`
++      $('[data-preview-meta]', root).textContent = `Private preview · expires ${formatDate(data.expiresAt)}`
++      $('[data-preview-watermark]', root).textContent = data.watermark || 'Private AccessRevamp Concept'
++      $('[data-preview-finding]', root).textContent = data.findingSummary || 'A human-verified starting point accompanies this concept.'
++      $('[data-preview-users]', root).textContent = data.affectedUsers || 'People using assistive technology or alternative interaction methods.'
++      $('[data-preview-expires]', root).textContent = formatDate(data.expiresAt)
++      const websiteLink = $('[data-preview-website]', root)
++      websiteLink.href = data.websiteUrl
++      websiteLink.textContent = new URL(data.websiteUrl).hostname
++      const concept = data.concept || {}
++      $('[data-concept-eyebrow]', root).textContent = concept.eyebrow || ''
++      $('[data-concept-heading]', root).textContent = concept.heading || ''
++      $('[data-concept-subheading]', root).textContent = concept.subheading || ''
++      $('[data-concept-primary]', root).textContent = concept.primaryCta || ''
++      $('[data-concept-secondary]', root).textContent = concept.secondaryCta || ''
++      $('[data-concept-note]', root).textContent = concept.supportingNote || ''
++      const conceptPanel = $('[data-preview-concept]', root)
++      const palette = validPalette(concept.palette)
++      if (palette[0]) conceptPanel.style.setProperty('--preview-color-1', palette[0])
++      if (palette[1]) conceptPanel.style.setProperty('--preview-color-2', palette[1])
++      if (palette[2]) conceptPanel.style.setProperty('--preview-color-3', palette[2])
++      status.textContent = data.disclaimer
++      content.hidden = false
++    } catch (error) {
++      status.textContent = error.message || 'This private preview is unavailable or has expired.'
++      status.classList.add('error')
++    }
++  }
++
++  function opsItem(title, detail, status, action = '') {
++    return `<div class="dashboard-item ops-draft"><div><b>${escapeHtml(title)}</b><span>${escapeHtml(detail)}</span></div><div class="dashboard-item-actions"><em>${escapeHtml(status)}</em>${action}</div></div>`
++  }
++
++  async function loadOps(root) {
++    const alert = $('[data-ops-alert]', root)
++    if (alert) alert.textContent = ''
++    try {
++      const data = await api('/api/ops/summary')
++      const sendingState = String(data.sendCapability || '').startsWith('enabled')
++        ? 'controlled sending enabled'
++        : 'sending disabled'
++      $('[data-ops-greeting]', root).textContent = `Authorized as ${data.staff?.email || 'staff'} · ${data.staff?.role || 'reviewer'} · ${sendingState}`
++      renderList($('[data-ops-snapshots]', root), data.snapshots, (item) => opsItem(item.company || item.website_url, `${item.email} · ${formatDate(item.created_at)}`, item.status), 'No snapshot requests yet.')
++      renderList($('[data-ops-prospects]', root), data.prospects, (item) => opsItem(item.business_name, `${item.website_url} · ${item.platform || 'platform unknown'}`, item.status), 'No reviewed prospects yet.')
++      renderList($('[data-ops-drafts]', root), data.drafts, (item) => {
++        const action = item.status === 'draft'
++          ? `<button class="button button-small button-dark" type="button" data-approve-outreach="${escapeHtml(item.id)}">Approve draft</button>`
++          : ''
++        return opsItem(item.subject, `${item.contact_email} · ${formatDate(item.created_at)}`, item.status, action)
++      }, 'No outreach drafts yet.')
++      renderList($('[data-ops-suppression]', root), data.suppressionList, (item) => opsItem(item.normalized_email || item.domain, `${item.reason} · ${formatDate(item.created_at)}`, 'suppressed'), 'No suppression records yet.')
++    } catch (error) {
++      if (error.status === 401) {
++        window.location.replace('/signin/?next=/ops/')
++        return
++      }
++      if (alert) alert.textContent = error.status === 403
++        ? 'This account is signed in but is not authorized for operations.'
++        : (error.message || 'Operations data could not be loaded.')
++    }
++  }
++
++  function initOps() {
++    const root = $('[data-ops-root]')
++    if (!root) return
++    loadOps(root)
++    root.addEventListener('click', async (event) => {
++      const approve = event.target.closest('[data-approve-outreach]')
++      if (!approve) return
++      const original = approve.textContent
++      approve.disabled = true
++      approve.textContent = 'Approving…'
++      try {
++        const result = await api('/api/ops/outreach/approve', {
++          method: 'POST',
++          body: JSON.stringify({ message_id: approve.dataset.approveOutreach })
++        })
++        const alert = $('[data-ops-alert]', root)
++        if (alert) alert.textContent = result.message || 'Draft approved. Sending remains disabled.'
++        await loadOps(root)
++      } catch (error) {
++        const alert = $('[data-ops-alert]', root)
++        if (alert) alert.textContent = error.message || 'The draft could not be approved.'
++        approve.disabled = false
++        approve.textContent = original
++      }
++    })
++  }
++
++  document.addEventListener('DOMContentLoaded', () => {
++    initNavigation()
++    initReveal()
++    initComparison()
++    initCheckout()
++    prefillUnsubscribe()
++    initDashboard()
++    initAuthCallback()
++    initCheckoutResult()
++    initPreview()
++    initOps()
++
++    $$('[data-api-form]').forEach((form) => form.addEventListener('submit', (event) => {
++      event.preventDefault()
++      submitApiForm(form)
++    }))
++    $$('[data-signout]').forEach((button) => button.addEventListener('click', () => signOut(button)))
++    $$('input,select,textarea').forEach((field) => field.addEventListener('input', () => field.removeAttribute('aria-invalid')))
++  })
++})()
+diff --git a/apps/marketing-web/public/assets/favicon.svg b/apps/marketing-web/public/assets/favicon.svg
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b50bdc1b81df213a858782a697e01e71c799a50
+--- /dev/null
++++ b/apps/marketing-web/public/assets/favicon.svg
+@@ -0,0 +1
