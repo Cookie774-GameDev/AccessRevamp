@@ -2,12 +2,25 @@ import Stripe from 'stripe';
 import { handleError, json } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
+const STRIPE_API_VERSION = '2026-06-24.dahlia';
 const expectedAmounts = Object.freeze({ homepage_reveal: 5000, quick_fix: 19900 });
+const expectedPriceIds = Object.freeze({
+  homepage_reveal: process.env.STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
+  quick_fix: process.env.STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
+});
 const checkoutEventTypes = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
   'checkout.session.async_payment_failed',
 ]);
+
+function assertExpectedMode(event) {
+  const configured = process.env.STRIPE_EXPECT_LIVEMODE;
+  if (!['true', 'false'].includes(configured || '')) return;
+  if (event.livemode !== (configured === 'true')) {
+    throw new Error('Stripe event mode did not match STRIPE_EXPECT_LIVEMODE.');
+  }
+}
 
 export default async (request) => {
   try {
@@ -17,9 +30,13 @@ export default async (request) => {
       return json({ error: 'Webhook configuration is incomplete.' }, 503);
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: STRIPE_API_VERSION,
+      appInfo: { name: 'AccessRevamp', version: '1.1.0' },
+    });
     const rawBody = await request.text();
     const event = await stripe.webhooks.constructEventAsync(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
+    assertExpectedMode(event);
     const supabase = getSupabaseAdmin();
 
     const { error: eventInsertError } = await supabase.from('stripe_events').insert({
@@ -43,16 +60,32 @@ export default async (request) => {
     }
 
     if (checkoutEventTypes.has(event.type)) {
-      const session = event.data.object;
+      const eventSession = event.data.object;
+      const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
+        expand: ['line_items.data.price'],
+      });
       const shouldFulfill = event.type === 'checkout.session.async_payment_succeeded'
         || (event.type === 'checkout.session.completed' && session.payment_status === 'paid');
 
       if (shouldFulfill) {
         const planKey = session.metadata?.plan_key;
+        const expectedPriceId = expectedPriceIds[planKey];
+        const lineItems = session.line_items?.data || [];
+        const lineItem = lineItems[0];
+        const priceId = typeof lineItem?.price === 'string' ? lineItem.price : lineItem?.price?.id;
         const amount = Number(session.amount_total || 0);
-        const currency = String(session.currency || 'usd').toLowerCase();
-        if (!expectedAmounts[planKey] || expectedAmounts[planKey] !== amount || currency !== 'usd') {
-          throw new Error('Checkout amount, currency, or plan metadata did not match the configured catalog.');
+        const currency = String(session.currency || '').toLowerCase();
+        if (
+          !expectedAmounts[planKey]
+          || session.mode !== 'payment'
+          || session.payment_status !== 'paid'
+          || lineItems.length !== 1
+          || lineItem?.quantity !== 1
+          || priceId !== expectedPriceId
+          || expectedAmounts[planKey] !== amount
+          || currency !== 'usd'
+        ) {
+          throw new Error('Checkout price, amount, currency, mode, or plan metadata did not match the configured catalog.');
         }
 
         const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();

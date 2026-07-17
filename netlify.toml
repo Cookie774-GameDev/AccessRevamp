@@ -4,8 +4,9 @@
   functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 
 [functions]
   node_bundler = "esbuild"
@@ -15,6 +16,12 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+[[redirects]]
+  from = "/preview/:token"
+  to = "/.netlify/functions/private-preview?token=:token"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
@@ -31,6 +38,12 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Resource-Policy = "same-origin"
+
+[[headers]]
+  for = "/preview/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0"
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet"
 
 [[headers]]
   for = "/assets/*"

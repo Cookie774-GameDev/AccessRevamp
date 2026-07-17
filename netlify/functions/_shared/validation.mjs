@@ -4,7 +4,10 @@ const publicHttpUrl = z.string().trim().max(2048).refine((value) => {
   if (!value) return true;
   try {
     const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) && !['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase());
+    return ['http:', 'https:'].includes(url.protocol)
+      && !url.username
+      && !url.password
+      && !['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase());
   } catch {
     return false;
   }
@@ -23,6 +26,7 @@ export const contactSchema = z.object({
 export const checkoutSchema = z.object({
   planKey: z.enum(['homepage_reveal', 'quick_fix']),
   email: z.string().trim().email().max(254).optional(),
+  requestId: z.string().uuid(),
 }).strict();
 
 export const outreachDraftSchema = z.object({
