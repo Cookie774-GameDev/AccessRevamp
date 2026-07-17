@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const webhook = await readFile('netlify/functions/stripe-webhook.mjs', 'utf8');
+const fulfillmentMigration = await readFile(
+  'supabase/migrations/202607170004_harden_payment_fulfillment.sql',
+  'utf8',
+);
 
 test('Stripe webhook verifies the raw signed body before processing', () => {
   assert.match(webhook, /await request\.text\(\)/);
@@ -19,17 +23,37 @@ test('duplicate unprocessed Stripe events are retried instead of discarded', () 
 test('delayed payment outcomes are handled explicitly', () => {
   assert.match(webhook, /checkout\.session\.async_payment_succeeded/);
   assert.match(webhook, /checkout\.session\.async_payment_failed/);
-  assert.match(webhook, /const isPaid =/);
+  assert.match(webhook, /const shouldFulfill =/);
+  assert.match(webhook, /session\.payment_status === 'paid'/);
 });
 
-test('customer projects are created only for paid checkouts', () => {
-  assert.match(webhook, /if \(userId && isPaid\)/);
-  assert.match(webhook, /const orderStatus = isPaid \? 'paid' : 'unpaid'/);
+test('orders and projects are fulfilled only after confirmed payment', () => {
+  assert.match(webhook, /if \(shouldFulfill\)/);
+  assert.match(webhook, /status: 'paid'/);
+  assert.match(webhook, /rpc\('link_accessrevamp_paid_order'/);
+  assert.doesNotMatch(webhook, /from\('profiles'\)/);
 });
 
 test('catalog amount and currency are verified before fulfillment', () => {
   assert.match(webhook, /expectedAmounts\[planKey\] !== amount/);
   assert.match(webhook, /currency !== 'usd'/);
+});
+
+test('paid order linking requires a confirmed matching Auth email', () => {
+  assert.match(fulfillmentMigration, /users\.email_confirmed_at is not null/);
+  assert.match(fulfillmentMigration, /lower\(users\.email\) = lower\(v_order\.customer_email\)/);
+  assert.match(fulfillmentMigration, /v_order\.status <> 'paid'/);
+});
+
+test('paid order linker is restricted to the server role', () => {
+  assert.match(
+    fulfillmentMigration,
+    /revoke all on function public\.link_accessrevamp_paid_order\(uuid\) from public, anon, authenticated/,
+  );
+  assert.match(
+    fulfillmentMigration,
+    /grant execute on function public\.link_accessrevamp_paid_order\(uuid\) to service_role/,
+  );
 });
 
 test('event completion is persisted and checked', () => {
