@@ -1,0 +1,422 @@
+diff --git a/.bootstrap-write-ok b/.bootstrap-write-ok
+deleted file mode 100644
+index 45dbdbca4b439125b2291297492ee8080c314887..0000000000000000000000000000000000000000
+--- a/.bootstrap-write-ok
++++ /dev/null
+@@ -1 +0,0 @@
+-GitHub Actions branch writes are available.
+diff --git a/.editorconfig b/.editorconfig
+new file mode 100644
+index 0000000000000000000000000000000000000000..1014ba78880c899e842b397cb89a878be4671f7d
+--- /dev/null
++++ b/.editorconfig
+@@ -0,0 +1,12 @@
++root = true
++
++[*]
++charset = utf-8
++end_of_line = lf
++insert_final_newline = true
++indent_style = space
++indent_size = 2
++trim_trailing_whitespace = true
++
++[*.md]
++trim_trailing_whitespace = false
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000000000000000000000000000000000000..c437c636afddd60d3369cdce0f73fb32901d1595
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,42 @@
++# AccessRevamp — Netlify build and function configuration
++# Copy these values into Netlify Site configuration > Environment variables.
++# Never commit real secrets.
++
++# Build-time public values
++# Netlify also provides URL automatically after the first site is created.
++PUBLIC_SITE_URL=https://YOUR-SITE-NAME.netlify.app
++PUBLIC_CONTACT_EMAIL=REPLACE_WITH_REAL_MONITORED_EMAIL
++PUBLIC_BUSINESS_LEGAL_NAME=AccessRevamp
++
++# Runtime canonical origin. Use the same production URL as PUBLIC_SITE_URL.
++SITE_URL=https://YOUR-SITE-NAME.netlify.app
++
++# Dedicated AccessRevamp Supabase project only — do not reuse an unrelated database.
++SUPABASE_URL=https://YOUR-ACCESSREVAMP-PROJECT.supabase.co
++SUPABASE_PUBLISHABLE_KEY=sb_publishable_REPLACE_ME
++SUPABASE_SECRET_KEY=sb_secret_REPLACE_ME
++
++# Stripe sandbox first. Prefer a restricted key with only the permissions needed
++# to create/retrieve Checkout Sessions; never expose it to browser code.
++STRIPE_API_KEY=rk_test_REPLACE_ME
++STRIPE_WEBHOOK_SECRET=whsec_REPLACE_ME
++# Current AccessRevamp sandbox catalog prices. Replace with matching live-mode
++# price IDs only after the live products are created and verified.
++STRIPE_HOMEPAGE_REVEAL_PRICE_ID=price_1TuGoNLzyGRcyGQJRjtGsiMV
++STRIPE_COMPLETE_REVAMP_PRICE_ID=price_1TuGoTLzyGRcyGQJfdkqoE3f
++STRIPE_AUTOMATIC_TAX=false
++
++# Generate each value independently with at least 32 random characters.
++REQUEST_HASH_SECRET=replace-with-at-least-32-random-characters
++UNSUBSCRIBE_SECRET=replace-with-at-least-32-random-characters
++AUTOMATION_TOKEN=replace-with-at-least-32-random-characters
++
++# Comma-separated staff emails allowed to open /ops/ after authentication.
++ADMIN_EMAILS=owner@example.com
++
++# Outreach and controlled-delivery guardrails. A real sender identity, monitored
++# mailbox, valid postal address, and authenticated sending domain are required.
++# The Google Apps Script bridge has an independent enable switch.
++SENDER_FULL_NAME=
++BUSINESS_POSTAL_ADDRESS=
++ALLOW_COMMERCIAL_SEND=false
+diff --git a/.github/dependabot.yml b/.github/dependabot.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a350e5ff213e642a1d60366806258c0be0a07a2
+--- /dev/null
++++ b/.github/dependabot.yml
+@@ -0,0 +1,7 @@
++version: 2
++updates:
++  - package-ecosystem: github-actions
++    directory: /
++    schedule:
++      interval: monthly
++    open-pull-requests-limit: 5
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..aecfd829e4e5954924a26fa270aa8aeb049e7390
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,28 @@
++name: CI
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++
++permissions:
++  contents: read
++
++jobs:
++  verify:
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: 22
++          cache: npm
++      - run: npm ci
++      - run: npm run check
++      - name: Upload built site
++        uses: actions/upload-artifact@v4
++        with:
++          name: accessrevamp-dist
++          path: dist
++          if-no-files-found: error
+diff --git a/.github/workflows/manual-outreach-draft.yml b/.github/workflows/manual-outreach-draft.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..d2184ed12664d43b42c1367026226c2e1a58bfca
+--- /dev/null
++++ b/.github/workflows/manual-outreach-draft.yml
+@@ -0,0 +1,20 @@
++name: Validate outreach input
++
++on:
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  validate-only:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: 22
++      - run: npm ci
++      - run: npm run check
++      - name: Safety notice
++        run: echo "This workflow validates code only. It never sends commercial email."
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..cfd3448afa51809cddae64d790403305ac7743a6
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,15 @@
++node_modules/
++dist/
++.env
++.env.*
++!.env.example
++coverage/
++outreach/drafts/
++scan-output/
++apps/scan-worker/node_modules/
++.DS_Store
++*.log
++*.zip
++*.bundle
++artifacts/
++review/
+diff --git a/.nvmrc b/.nvmrc
+new file mode 100644
+index 0000000000000000000000000000000000000000..2bd5a0a98a36cc08ada88b804d3be047e6aa5b8a
+--- /dev/null
++++ b/.nvmrc
+@@ -0,0 +1 @@
++22
+diff --git a/ARCHITECTURE.md b/ARCHITECTURE.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d786f6cf0d135d7eb2f97f89d875faa1503fb803
+--- /dev/null
++++ b/ARCHITECTURE.md
+@@ -0,0 +1,41 @@
++# AccessRevamp architecture
++
++## Request flow
++
++```text
++Browser
++  ├─ static HTML/CSS/JS from Netlify CDN
++  └─ same-origin /api/*
++       └─ Netlify Function
++            ├─ Supabase Auth REST
++            ├─ Supabase Data REST / RPC
++            └─ Stripe Checkout API
++
++Stripe
++  └─ signed webhook → /api/stripe/webhook → idempotent order/project sync
++
++Google Sheet
++  └─ reviewed batch + bearer token → /api/automation/reviewed-batch
++       ├─ suppression check
++       ├─ prospect + verified finding
++       ├─ keyed-hash private preview token
++       └─ outreach draft requiring staff approval
++
++Scan worker
++  └─ public GET-only navigation → screenshot + axe results + passive observations
++       └─ human review before any prospect-facing use
++```
++
++## Trust boundaries
++
++- Browser code receives only public runtime configuration. It never receives Supabase secret keys, Stripe secret keys, webhook secrets, automation tokens, or hashing secrets.
++- All customer writes pass through the same-origin function, where payload size, origin, field constraints, honeypots, and rate limits are enforced.
++- Customer sessions use `__Host-` secure, HTTP-only, SameSite cookies.
++- Staff authorization comes from a server-side allowlist or the `ar_staff` table; user-editable profile metadata is not authorization.
++- Private preview tokens are returned once and stored only as keyed hashes.
++- Stripe webhooks are verified against the unmodified raw request body before state changes.
++- The Supabase secret key is limited to the server runtime. Public/authenticated Data API grants remain minimal even though the API generally uses the secret key.
++
++## Deliberate omissions
++
++The first release has no recurring billing, browser extension, client-side Supabase SDK, autonomous prospect scraper, unreviewed email sender, tracking pixels, active vulnerability scanner, legal-compliance scorer, or custom-domain dependency. These omissions reduce cost and risk while the service validates demand.
+diff --git a/BUILD_STATUS.md b/BUILD_STATUS.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b6d794cf23397e6b112f8f52525d39588e475fc8
+--- /dev/null
++++ b/BUILD_STATUS.md
+@@ -0,0 +1,35 @@
++# Build and activation status
++
++Updated: July 17, 2026
++
++## Complete in the repository
++
++- Polished responsive marketing and legal site
++- Exact $50 and $199 one-time offer configuration; old tiers and subscriptions removed
++- Contact and free-snapshot intake
++- Supabase Auth session flow and customer dashboard
++- Stripe-hosted Checkout, catalog-price verification, signed webhook handling, and order reconciliation
++- Private expiring concept preview route
++- Staff review queue and human draft approval
++- Supabase schema, RLS, explicit grants, private storage, rate limits, suppression, and outreach transition guard
++- Passive public-homepage scanner with private-network and non-GET blocking
++- Google Sheets human-review import bridge
++- CI, build validation, 28 tests, and operational runbooks
++
++## Connected external service state
++
++1. **GitHub:** the private repository `Cookie774-GameDev/AccessRevamp` is connected with admin/push access. The initial platform code is published through the GitHub connector.
++2. **Stripe:** the connected `AccessRevamp sandbox` contains active $50 and $199 one-time products, verified catalog Prices, and test Payment Links. The website is configured to use the two sandbox Price IDs after a restricted API key and webhook secret are added to hosting.
++3. **Supabase:** the connector currently exposes only `vipersel@yahoo.com's Project` (`tipeobvisjqvpbzcpckh`), which contains unrelated application tables. AccessRevamp migrations were deliberately **not** applied there. Connect or expose the dedicated AccessRevamp project first.
++
++## External activation still required
++
++1. **Supabase project selection:** expose the dedicated AccessRevamp project to the connector, then apply the three migrations and run security/performance advisors.
++2. **Hosting:** connect the GitHub repository to a free Netlify site, assign the generated `*.netlify.app` URL, and add environment variables. No hosting account is connected in this session.
++3. **Stripe webhook and key:** add a restricted sandbox API key and the Netlify webhook signing secret. Secret values are intentionally not stored in GitHub.
++4. **Business identity:** add a real monitored contact email. Commercial outreach additionally requires a truthful sender name and valid postal address.
++5. **Email sending:** sending remains intentionally absent. A compliant mailbox/provider, SPF/DKIM/DMARC, bounce/complaint processing, and final operational/legal review are prerequisites. The current system creates reviewable drafts only.
++
++## Definition of launch-ready
++
++`npm ci && npm run check` passes from a clean clone; the production build passes with real configuration; Supabase advisors have no unresolved critical security findings; Stripe sandbox payments and signed webhook reconciliation pass once for each offer; the contact mailbox is monitored; all legal/business identity fields are truthful; and a human approves every prospect-facing finding, concept, recipient, and message.
+diff --git a/README.md b/README.md
+index 4f708deb0756432b1b63f4b21979ee7fbdf64dfb..97ff30fb44bbe478d1d718fa3bae6a00e923ae53 100644
+--- a/README.md
++++ b/README.md
+@@ -1 +1,102 @@
+-# AccessRevamp
+\ No newline at end of file
++# AccessRevamp
++
++**See the barrier. Preview the fix.**
++
++AccessRevamp is a service-first website accessibility and redesign studio. This monorepo contains the public website, customer account flow, private concept previews, Supabase schema, Stripe one-time checkout, a passive public-homepage scanner, and a human-review outreach queue.
++
++## Launch offers
++
++| Offer | Price | Included |
++| --- | ---: | --- |
++| AccessRevamp Snapshot | Free | One human-verified accessibility finding, one usability/design opportunity, evidence, and an expiring private first-screen concept. |
++| Homepage Reveal | **$50 one-time** | Verified homepage findings, evidence, WCAG references, a prioritized repair plan, and the complete first-screen concept. |
++| Complete Website Revamp | **$199 one-time** | One agreed small-business website revamp scope, implementation, accessibility and passive website-health review, evidence, one retest, and a practical customer-reach/growth action plan. |
++
++There is no AccessRevamp subscription and no added AccessRevamp card-processing surcharge. Stripe may show legally required tax when tax collection is correctly configured. Third-party themes, plugins, apps, hosting, licensed assets, advertising spend, custom backends, ecommerce migrations, and ongoing maintenance are outside the $199 base scope unless agreed in writing.
++
++## Repository map
++
++```text
++apps/marketing-web/             Static, semantic marketing site and client-facing pages
++apps/scan-worker/               Playwright + axe public-homepage evidence worker
++netlify/functions/              Same-origin API for Supabase Auth/data and Stripe Checkout
++packages/finding-model/         Severity, confidence, and prospect-facing evidence guards
++packages/outreach/              Draft policy, copy renderer, and scare-claim checks
++supabase/migrations/            AccessRevamp-only tables, RLS, grants, and guard triggers
++integrations/google-apps-script Review-sheet import bridge; creates drafts, never sends mail
++docs/                           Architecture, deployment, security, methodology, and operations
++scripts/                        Build, validation, preview, and local draft tooling
++templates/                      Safe placeholder review/import examples
++tests/                          Node-native unit and contract tests
++```
++
++## What is implemented
++
++- A responsive marketing site with pricing, sample report, methodology, contact, legal pages, accessibility statement, authentication screens, customer dashboard, private preview route, checkout status, and staff review queue.
++- Netlify Function endpoints for intake, contact, opt-out, Supabase Auth, session cookies, dashboard records, Stripe Checkout, signed Stripe webhooks, private previews, reviewed-batch import, and staff draft approval.
++- Fixed Stripe catalog prices of **5,000 cents** and **19,900 cents** are verified server-side before Checkout is created. The browser cannot choose an amount or price ID.
++- Supabase migrations with `ar_*` isolation, Row Level Security, explicit grants, permanent suppression records, rate-limit buckets, private storage, and a database trigger that blocks outreach state changes without human approval.
++- A passive scanner that limits itself to public HTTP(S) pages, blocks private/reserved network targets, prevents non-GET network activity, runs deterministic axe checks, records evidence, and marks every result as requiring human review.
++- A Google Sheets bridge that imports up to 20 human-reviewed prospects, creates private previews/drafts, records suppression, and can send only staff-approved rows through Gmail after independent enable switches are turned on.
++
++## Local setup
++
++Requirements: Node.js 22 and a trusted Chromium/Chrome binary for the optional scan worker.
++
++```bash
++npm ci
++npm run check
++npm run preview
++```
++
++Open `http://localhost:4173`. The static preview does not provide API functions. For full local API testing, use the Netlify CLI with values from `.env.example`:
++
++```bash
++npx netlify dev
++```
++
++Run a passive homepage scan:
++
++```bash
++npm run scan -- --url https://example.com --out ./scan-output/example
++```
++
++Generate local drafts only after setting a real sender name, valid postal address, HTTPS deployment URL, and reviewed input:
++
++```bash
++SENDER_FULL_NAME="Real Name" \
++BUSINESS_POSTAL_ADDRESS="Valid postal address" \
++PUBLIC_SITE_URL="https://your-site.netlify.app" \
++npm run outreach:draft -- ./templates/prospect-batch.example.json ./outreach/drafts/batch.json
++```
++
++Commercial sending is disabled by default. The Apps Script sender requires `ALLOW_COMMERCIAL_SEND=true` in Netlify, `ALLOW_COMMERCIAL_SEND=TRUE` in Apps Script, a real sender identity, a valid postal address, a monitored mailbox, and a staff-approved database row. It never approves its own drafts.
++
++## Deployment order
++
++1. Create or connect a **clean Supabase project dedicated to AccessRevamp**.
++2. Apply the three migrations in `supabase/migrations/` in filename order.
++3. Configure Supabase Auth URLs and create the first staff user.
++4. Connect this repository to Netlify, assign the generated `*.netlify.app` URL, and configure environment variables.
++5. Configure the existing Stripe sandbox catalog prices, webhook, and restricted API key; then complete the test matrix.
++6. Add a real monitored contact email, truthful sender identity, and valid postal address.
++7. Complete the launch checklist before taking live payments or considering an email provider.
++
++Detailed instructions are in [`docs/deployment/LAUNCH-CHECKLIST.md`](docs/deployment/LAUNCH-CHECKLIST.md).
++
++## Non-negotiable boundaries
++
++- Automated tools do not determine accessibility by themselves. Prospect-facing findings must be manually verified.
++- Review public pages only. Do not log in, submit forms, test checkout, create accounts, bypass controls, evade rate limits, or perform active vulnerability testing.
++- Use **severity** and **confidence**, not unsupported security claims.
++- Do not promise legal compliance, certification, zero risk, or guaranteed business results.
++- Use only appropriate business contacts the company publishes itself, record the source URL, honor opt-outs permanently, and contact no other employee to evade an objection.
++- AI may explain, prioritize, and draft. A human remains responsible for the finding, concept, recipient, and message.
++
++## Current activation status
++
++The codebase is complete and testable locally. Stripe sandbox products and one-time prices are provisioned. It is not live until a dedicated Supabase project is connected, Netlify environment configuration and the Stripe webhook are completed, and a real business contact identity is supplied. See [`BUILD_STATUS.md`](BUILD_STATUS.md) for exact blockers.
++
++## License
++
++Private/proprietary. No license is granted to copy, redistribute, or operate this code outside the owner’s AccessRevamp project.
+diff --git a/apps/marketing-web/public/assets/app.js b/apps/marketing-web/public/assets/app.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..cabda9160bc76c2752e1b559317dacbd00808217
+--- /dev/null
++++ b/apps/marketing-web/public/assets/app.js
+@@ -0,0 +1,479 @@
++(() => {
++  'use strict'
++
++  const config = window.AccessRevampConfig || {}
++  const $ = (selector, parent = document) => parent.querySelector(selector)
++  const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)]
++
++  function escapeHtml(value) {
++    return String(value ?? '')
++      .replaceAll('&', '&amp;')
++      .replaceAll('<', '&lt;')
++      .replaceAll('>', '&gt;')
++      .replaceAll('"', '&quot;')
++      .replaceAll("'", '&#039;')
++  }
++
++  function setStatus(form, message, type = '', selector = '[data-form-status]') {
++    const region = $(selector, form)
++    if (!region) return
++    region.className = `form-status ${type}`.trim()
++    region.textContent = message
++  }
++
++  function setBusy(form, busy, busyText = 'Working…') {
++    const button = $('button[type="submit"]', form)
++    if (!button) return
++    if (!button.dataset.originalText) button.dataset.originalText = button.textContent
++    button.disabled = busy
++    button.textContent = busy ? busyText : button.dataset.originalText
++  }
++
++  function formPayload(form) {
++    const data = new FormData(form)
++    return Object.fromEntries(
++      [...data.entries()].map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
++    )
++  }
++
++  async function api(path, options = {}) {
++    const headers = new Headers(options.headers || {})
++    if (options.body !== undefined && !headers.has('content-type')) headers.set('content-type', 'application/json')
++    const response = await fetch(path, { credentials: 'same-origin', ...options, headers })
++    const text = await response.text()
++    let body = {}
++    try { body = text ? JSON.parse(text) : {} } cat 
