@@ -12,14 +12,15 @@ export function json(data, status = 200, extraHeaders = {}) {
   });
 }
 
-export function html(markup, status = 200) {
+export function html(markup, status = 200, extraHeaders = {}) {
   return new Response(markup, {
     status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff',
-      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      ...extraHeaders,
     },
   });
 }
