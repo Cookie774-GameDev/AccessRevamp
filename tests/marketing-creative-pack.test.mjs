@@ -18,7 +18,8 @@ test('Quick Fix remains $199 one time while adding ten creative variations', () 
   assert.match(config, /masterDirections:\s*2\b/);
   assert.match(config, /formatsPerDirection:\s*5\b/);
   assert.match(index, /src\/offer-details\.js/);
-  assert.match(offerDetails, /10 Canva-ready marketing creative variations/);
+  assert.match(offerDetails, /\$\{pack\.totalVariations\} Canva-ready marketing creative variations/);
+  assert.match(offerDetails, /10-piece AI-assisted Canva-ready marketing creative pack/);
 });
 
 test('creative production is bounded and inexpensive by design', () => {
