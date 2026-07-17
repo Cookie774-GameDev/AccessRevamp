@@ -2,7 +2,10 @@ import Stripe from 'stripe';
 import { handleError, json } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
-const expectedAmounts = Object.freeze({ homepage_reveal: 5000, quick_fix: 19900 });
+const offers = Object.freeze({
+  homepage_reveal: Object.freeze({ name: 'Homepage Reveal', amount: 5000 }),
+  quick_fix: Object.freeze({ name: 'Quick Fix Plan', amount: 19900 }),
+});
 const checkoutEventTypes = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
@@ -10,6 +13,8 @@ const checkoutEventTypes = new Set([
 ]);
 
 export default async (request) => {
+  let supabase;
+  let eventId;
   try {
     if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
     const signature = request.headers.get('stripe-signature');
@@ -19,59 +24,101 @@ export default async (request) => {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const rawBody = await request.text();
-    const event = await stripe.webhooks.constructEventAsync(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
-    const supabase = getSupabaseAdmin();
+    const event = await stripe.webhooks.constructEventAsync(
+      rawBody,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET,
+    );
+    eventId = event.id;
+    supabase = getSupabaseAdmin();
 
-    const { error: eventInsertError } = await supabase.from('stripe_events').insert({
+    const stripeObject = event.data?.object || {};
+    const { error: eventInsertError } = await supabase.from('ar_stripe_events').insert({
       id: event.id,
       event_type: event.type,
       livemode: event.livemode,
-      payload: event,
+      stripe_created_at: new Date(event.created * 1000).toISOString(),
+      stripe_object_id: typeof stripeObject.id === 'string' ? stripeObject.id : null,
+      status: 'processing',
+      payload_summary: {
+        api_version: event.api_version || null,
+        object: stripeObject.object || null,
+        request_id: event.request?.id || null,
+      },
     });
 
     if (eventInsertError?.code === '23505') {
       const { data: existingEvent, error: existingEventError } = await supabase
-        .from('stripe_events')
-        .select('processed_at')
+        .from('ar_stripe_events')
+        .select('status,processed_at')
         .eq('id', event.id)
         .single();
       if (existingEventError) throw existingEventError;
-      if (existingEvent?.processed_at) return json({ received: true, duplicate: true });
-      // A previous attempt recorded the event but did not finish. Continue so Stripe retries can recover.
+      if (existingEvent?.processed_at && ['processed', 'ignored'].includes(existingEvent.status)) {
+        return json({ received: true, duplicate: true });
+      }
+      const { error: retryError } = await supabase
+        .from('ar_stripe_events')
+        .update({ status: 'processing', error_message: null })
+        .eq('id', event.id);
+      if (retryError) throw retryError;
     } else if (eventInsertError) {
       throw eventInsertError;
     }
 
+    let finalEventStatus = 'ignored';
     if (checkoutEventTypes.has(event.type)) {
+      finalEventStatus = 'processed';
       const session = event.data.object;
       const shouldFulfill = event.type === 'checkout.session.async_payment_succeeded'
         || (event.type === 'checkout.session.completed' && session.payment_status === 'paid');
 
       if (shouldFulfill) {
-        const planKey = session.metadata?.plan_key;
-        const amount = Number(session.amount_total || 0);
+        const offerCode = session.metadata?.plan_key;
+        const offer = offers[offerCode];
+        const subtotal = Number(session.amount_subtotal ?? session.amount_total ?? 0);
+        const total = Number(session.amount_total ?? 0);
         const currency = String(session.currency || 'usd').toLowerCase();
-        if (!expectedAmounts[planKey] || expectedAmounts[planKey] !== amount || currency !== 'usd') {
-          throw new Error('Checkout amount, currency, or plan metadata did not match the configured catalog.');
+        const tax = Number(session.total_details?.amount_tax ?? (total - subtotal));
+
+        if (!offer || subtotal !== offer.amount || total < subtotal || tax !== total - subtotal || currency !== 'usd') {
+          throw new Error('Checkout amount, currency, tax, or offer metadata did not match the AccessRevamp catalog.');
         }
 
-        const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
+        const email = String(session.customer_details?.email || session.customer_email || '')
+          .trim()
+          .toLowerCase();
         if (!email) throw new Error('Paid checkout did not include a customer email.');
 
-        const { data: order, error: orderError } = await supabase.from('orders').upsert({
-          stripe_event_id: event.id,
-          stripe_checkout_session_id: session.id,
-          stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : null,
-          stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
-          customer_email: email,
-          plan_key: planKey,
-          amount_total: amount,
-          currency,
-          status: 'paid',
-        }, { onConflict: 'stripe_checkout_session_id' }).select('id').single();
+        const { data: order, error: orderError } = await supabase
+          .from('ar_orders')
+          .upsert({
+            customer_email: email,
+            website_url: session.metadata?.website_url || null,
+            offer_code: offerCode,
+            offer_name: offer.name,
+            amount_cents: offer.amount,
+            amount_total_cents: total,
+            tax_cents: tax,
+            currency,
+            payment_status: 'paid',
+            checkout_status: 'complete',
+            stripe_session_id: session.id,
+            stripe_payment_intent_id: typeof session.payment_intent === 'string'
+              ? session.payment_intent
+              : null,
+            paid_at: new Date().toISOString(),
+            metadata: {
+              stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
+              stripe_event_id: event.id,
+              source: session.metadata?.source || 'accessrevamp_website',
+            },
+          }, { onConflict: 'stripe_session_id' })
+          .select('id')
+          .single();
         if (orderError) throw orderError;
 
-        const { error: linkError } = await supabase.rpc('link_accessrevamp_paid_order', {
+        const { error: linkError } = await supabase.rpc('ar_link_paid_order', {
           p_order_id: order.id,
         });
         if (linkError) throw linkError;
@@ -79,13 +126,30 @@ export default async (request) => {
     }
 
     const { error: processedError } = await supabase
-      .from('stripe_events')
-      .update({ processed_at: new Date().toISOString() })
+      .from('ar_stripe_events')
+      .update({
+        status: finalEventStatus,
+        processed_at: new Date().toISOString(),
+        error_message: null,
+      })
       .eq('id', event.id);
     if (processedError) throw processedError;
 
     return json({ received: true });
   } catch (error) {
+    if (supabase && eventId) {
+      try {
+        await supabase
+          .from('ar_stripe_events')
+          .update({
+            status: 'failed',
+            error_message: String(error?.message || error).slice(0, 1000),
+          })
+          .eq('id', eventId);
+      } catch (recordError) {
+        console.error('Could not record the Stripe event failure.', recordError);
+      }
+    }
     return handleError(error);
   }
 };

@@ -1,0 +1,28 @@
+name: Export source snapshot
+
+on:
+  pull_request:
+  push:
+    branches:
+      - agent/finalize-production-platform
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create source archive
+        run: tar --exclude=.git --exclude=node_modules --exclude=dist -czf accessrevamp-source.tar.gz .
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-source-${{ github.sha }}
+          path: accessrevamp-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+# Temporary recovery workflow. It is removed before this pull request is completed.

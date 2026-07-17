@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
+import { createUnsubscribeToken } from '../netlify/functions/_shared/secure-tokens.mjs';
 
 const inputPath = process.argv[2];
 if (!inputPath) {
@@ -15,7 +16,7 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 const decisionSchema = z.object({
   queueId: z.string().uuid(),
-  approvedBy: z.string().trim().min(2).max(160),
+  approvedByUserId: z.string().uuid(),
   decision: z.enum(['approve', 'reject']),
   subject: z.string().trim().min(8).max(120).optional(),
   bodyText: z.string().trim().min(80).max(8000).optional(),
@@ -43,52 +44,69 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   global: { headers: { 'x-application-name': 'accessrevamp-human-approval' } },
 });
 
-const { data: settings, error: settingsError } = await supabase
-  .from('outreach_settings')
-  .select('sender_name,sender_email,postal_address,site_url')
-  .eq('singleton', true)
-  .single();
-if (settingsError) throw settingsError;
+const siteUrl = String(process.env.VITE_SITE_URL || process.env.SITE_URL || process.env.URL || '')
+  .replace(/\/$/, '');
+const senderName = String(process.env.SENDER_FULL_NAME || '').trim();
+const senderEmail = String(process.env.SENDER_EMAIL || process.env.VITE_CONTACT_EMAIL || '').trim();
+const postalAddress = String(process.env.BUSINESS_POSTAL_ADDRESS || '').trim();
+const approving = decisions.some((item) => item.decision === 'approve');
 
-const missingSettings = [
-  ['sender_name', settings.sender_name],
-  ['sender_email', settings.sender_email],
-  ['postal_address', settings.postal_address],
-  ['site_url', settings.site_url],
-].filter(([, value]) => !String(value || '').trim()).map(([key]) => key);
-
-if (decisions.some((item) => item.decision === 'approve') && missingSettings.length) {
-  throw new Error(`Outreach settings are incomplete: ${missingSettings.join(', ')}`);
+if (approving) {
+  const missing = [
+    ['HTTPS site URL', /^https:\/\//i.test(siteUrl)],
+    ['SENDER_FULL_NAME', senderName],
+    ['SENDER_EMAIL', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail)],
+    ['BUSINESS_POSTAL_ADDRESS', postalAddress],
+    ['UNSUBSCRIBE_SECRET', (process.env.UNSUBSCRIBE_SECRET || '').length >= 32],
+  ].filter(([, value]) => !value).map(([label]) => label);
+  if (missing.length) {
+    throw new Error(`Outreach identity or opt-out configuration is incomplete: ${missing.join(', ')}`);
+  }
 }
 
 const results = [];
 for (const decision of decisions) {
+  const { data: staff, error: staffError } = await supabase
+    .from('ar_staff')
+    .select('user_id,role,active')
+    .eq('user_id', decision.approvedByUserId)
+    .maybeSingle();
+  if (staffError) throw staffError;
+  if (!staff?.active) {
+    throw new Error(`Approver ${decision.approvedByUserId} is not an active AccessRevamp staff member.`);
+  }
+
   const { data: item, error: itemError } = await supabase
-    .from('outreach_queue')
-    .select('id,recipient_email,subject,body_text,status,opt_out_token')
+    .from('ar_outreach_messages')
+    .select('id,contact_email,subject,body_text,status,follow_up_count')
     .eq('id', decision.queueId)
     .single();
   if (itemError) throw itemError;
   if (item.status !== 'draft') {
-    throw new Error(`Queue item ${item.id} is ${item.status}, not draft.`);
+    throw new Error(`Outreach item ${item.id} is ${item.status}, not draft.`);
   }
 
   if (decision.decision === 'reject') {
     const { error } = await supabase
-      .from('outreach_queue')
-      .update({ status: 'canceled', last_error: decision.reviewNotes || 'Rejected during human review.' })
+      .from('ar_outreach_messages')
+      .update({
+        status: 'cancelled',
+        review_notes: decision.reviewNotes || 'Rejected during human review.',
+      })
       .eq('id', item.id)
       .eq('status', 'draft');
     if (error) throw error;
-    results.push({ queueId: item.id, status: 'canceled' });
+    results.push({ queueId: item.id, status: 'cancelled' });
     continue;
   }
 
-  const optOutUrl = `${String(settings.site_url).replace(/\/$/, '')}/.netlify/functions/unsubscribe?token=${item.opt_out_token}`;
+  const token = createUnsubscribeToken({
+    messageId: item.id,
+    email: item.contact_email.toLowerCase(),
+  });
+  const optOutUrl = `${siteUrl}/.netlify/functions/unsubscribe?token=${encodeURIComponent(token)}`;
   let bodyText = decision.bodyText || item.body_text;
-  if (bodyText.includes('{{OPT_OUT_URL}}')) {
-    bodyText = bodyText.replaceAll('{{OPT_OUT_URL}}', optOutUrl);
-  }
+  bodyText = bodyText.replaceAll('{{OPT_OUT_URL}}', optOutUrl);
 
   if (!/unsubscribe|opt out/i.test(bodyText)) {
     bodyText += `\n\nTo stop future AccessRevamp outreach, use this link: ${optOutUrl}`;
@@ -99,34 +117,36 @@ for (const decision of decisions) {
   const identityFooter = [
     '',
     '--',
-    settings.sender_name,
+    senderName,
     'AccessRevamp',
-    settings.sender_email,
-    settings.postal_address,
-    String(settings.site_url).replace(/\/$/, ''),
+    senderEmail,
+    postalAddress,
+    siteUrl,
+    'Commercial outreach from AccessRevamp.',
   ].join('\n');
 
-  if (!bodyText.includes(settings.postal_address)) bodyText += identityFooter;
+  if (!bodyText.includes(postalAddress)) bodyText += identityFooter;
   if (bodyText.length > 8000) {
-    throw new Error(`Approved body for queue item ${item.id} exceeds 8000 characters.`);
+    throw new Error(`Approved body for outreach item ${item.id} exceeds 8000 characters.`);
   }
 
   const { error: updateError } = await supabase
-    .from('outreach_queue')
+    .from('ar_outreach_messages')
     .update({
       subject: decision.subject || item.subject,
       body_text: bodyText,
+      unsubscribe_url: optOutUrl,
       status: 'approved',
-      human_approved_by: decision.approvedBy,
+      human_approved_by: decision.approvedByUserId,
       human_approved_at: new Date().toISOString(),
-      last_error: decision.reviewNotes || null,
+      review_notes: decision.reviewNotes || null,
     })
     .eq('id', item.id)
     .eq('status', 'draft');
   if (updateError) throw updateError;
 
-  results.push({ queueId: item.id, status: 'approved' });
+  results.push({ queueId: item.id, status: 'approved', followUp: item.follow_up_count === 1 });
 }
 
 console.log(JSON.stringify({ processed: results.length, results }, null, 2));
-console.error('No email was sent. Approved records may now be exported for the separately configured sender.');
+console.error('No email was sent. Approved records may only be exported to a separately reviewed sender workflow.');

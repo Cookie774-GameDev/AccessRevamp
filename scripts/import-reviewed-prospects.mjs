@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
+import {
+  createPrivateToken,
+  hashPreviewToken,
+} from '../netlify/functions/_shared/secure-tokens.mjs';
 
 const inputPath = process.argv[2];
 if (!inputPath) {
@@ -9,8 +13,16 @@ if (!inputPath) {
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const siteUrl = String(process.env.VITE_SITE_URL || process.env.SITE_URL || process.env.URL || '')
+  .replace(/\/$/, '');
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
+}
+if (!/^https:\/\//i.test(siteUrl)) {
+  throw new Error('VITE_SITE_URL, SITE_URL, or URL must be the deployed HTTPS AccessRevamp address.');
+}
+if (!process.env.PREVIEW_TOKEN_SECRET || process.env.PREVIEW_TOKEN_SECRET.length < 32) {
+  throw new Error('PREVIEW_TOKEN_SECRET must contain at least 32 random characters.');
 }
 
 const publicUrl = z.string().trim().url().refine((value) => {
@@ -19,11 +31,24 @@ const publicUrl = z.string().trim().url().refine((value) => {
     && !['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase());
 }, 'A public HTTP(S) URL is required.');
 
+const conceptSchema = z.object({
+  eyebrow: z.string().trim().min(2).max(100).optional(),
+  headline: z.string().trim().min(10).max(180).optional(),
+  subheadline: z.string().trim().min(20).max(400).optional(),
+  primaryCta: z.string().trim().min(2).max(60).optional(),
+  secondaryCta: z.string().trim().min(2).max(60).optional(),
+  proofPoints: z.array(z.string().trim().min(2).max(120)).min(1).max(4).optional(),
+}).strict();
+
 const recordSchema = z.object({
   businessName: z.string().trim().min(1).max(160),
   websiteUrl: publicUrl,
   recipientEmail: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
   contactSourceUrl: publicUrl,
+  contactName: z.string().trim().max(160).optional(),
+  platform: z.enum(['shopify', 'wordpress', 'woocommerce', 'squarespace', 'custom', 'unknown']).default('unknown'),
+  fitReason: z.string().trim().min(10).max(1000).default('Public U.S. storefront with a human-reviewed homepage opportunity.'),
+  fitScore: z.number().int().min(0).max(100).default(70),
   finding: z.object({
     category: z.enum([
       'accessibility',
@@ -34,12 +59,20 @@ const recordSchema = z.object({
       'security_hygiene',
       'conversion',
     ]),
+    ruleId: z.string().trim().min(2).max(160).optional(),
     title: z.string().trim().min(5).max(180),
     summary: z.string().trim().min(20).max(2000),
     evidence: z.string().trim().min(20).max(4000),
     referenceUrl: publicUrl.optional(),
+    severity: z.enum(['blocking', 'serious', 'moderate', 'improvement']),
+    affectedUsers: z.string().trim().min(5).max(500),
+    affectedTask: z.string().trim().min(5).max(500),
+    wcagCriteria: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+    repairEffort: z.enum(['small', 'medium', 'large']).default('medium'),
+    suggestedFix: z.string().trim().min(10).max(3000),
     reviewedBy: z.string().trim().min(2).max(160),
   }).strict(),
+  preview: conceptSchema.optional(),
   subject: z.string().trim().min(8).max(120),
   bodyText: z.string().trim().min(80).max(8000),
 }).strict();
@@ -77,78 +110,162 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 const results = [];
 for (const record of records) {
+  const now = new Date();
+  const nowIso = now.toISOString();
   const websiteUrl = normalizeWebsite(record.websiteUrl);
+  const website = new URL(websiteUrl);
+  const domain = website.hostname.toLowerCase().replace(/^www\./, '');
   const recipientEmail = record.recipientEmail.toLowerCase();
+  const recipientDomain = recipientEmail.split('@').pop();
 
-  const { data: suppression, error: suppressionError } = await supabase
-    .from('suppression_list')
-    .select('id')
-    .ilike('email', recipientEmail)
-    .maybeSingle();
-  if (suppressionError) throw suppressionError;
-  if (suppression) {
+  const [{ data: emailSuppression, error: emailSuppressionError }, { data: domainSuppression, error: domainSuppressionError }] = await Promise.all([
+    supabase.from('ar_suppression_list').select('id').eq('normalized_email', recipientEmail).maybeSingle(),
+    supabase.from('ar_suppression_list').select('id').eq('domain', recipientDomain).eq('scope', 'domain').limit(1).maybeSingle(),
+  ]);
+  if (emailSuppressionError) throw emailSuppressionError;
+  if (domainSuppressionError) throw domainSuppressionError;
+  if (emailSuppression || domainSuppression) {
     results.push({ websiteUrl, recipientEmail, status: 'skipped_suppressed' });
     continue;
   }
 
   let { data: prospect, error: prospectLookupError } = await supabase
-    .from('prospects')
+    .from('ar_prospects')
     .select('id')
     .eq('website_url', websiteUrl)
     .maybeSingle();
   if (prospectLookupError) throw prospectLookupError;
 
+  const prospectValues = {
+    business_name: record.businessName,
+    website_url: websiteUrl,
+    domain,
+    platform: record.platform,
+    public_business_email: recipientEmail,
+    public_contact_name: record.contactName || null,
+    contact_source_url: record.contactSourceUrl,
+    country: 'US',
+    fit_reason: record.fitReason,
+    fit_score: record.fitScore,
+    status: 'human_reviewed',
+    source: 'reviewed_jsonl_import',
+    human_verified_at: nowIso,
+  };
+
   if (!prospect) {
     const { data, error } = await supabase
-      .from('prospects')
-      .insert({
-        business_name: record.businessName,
-        website_url: websiteUrl,
-        contact_email: recipientEmail,
-        contact_source_url: record.contactSourceUrl,
-        public_contact_verified_at: new Date().toISOString(),
-        review_status: 'approved',
-        notes: 'Imported from a human-reviewed JSONL record.',
-      })
+      .from('ar_prospects')
+      .insert(prospectValues)
       .select('id')
       .single();
     if (error) throw error;
     prospect = data;
   } else {
     const { error } = await supabase
-      .from('prospects')
-      .update({
-        business_name: record.businessName,
-        contact_email: recipientEmail,
-        contact_source_url: record.contactSourceUrl,
-        public_contact_verified_at: new Date().toISOString(),
-        review_status: 'approved',
-      })
+      .from('ar_prospects')
+      .update(prospectValues)
       .eq('id', prospect.id);
     if (error) throw error;
   }
 
-  const { error: findingError } = await supabase.from('findings').insert({
-    prospect_id: prospect.id,
-    category: record.finding.category,
-    title: record.finding.title,
-    summary: record.finding.summary,
-    evidence: record.finding.evidence,
-    reference_url: record.finding.referenceUrl || websiteUrl,
-    status: 'verified',
-    reviewed_by: record.finding.reviewedBy,
-    reviewed_at: new Date().toISOString(),
-  });
-  if (findingError) throw findingError;
+  const { data: existingMessage, error: existingMessageError } = await supabase
+    .from('ar_outreach_messages')
+    .select('id,status')
+    .eq('prospect_id', prospect.id)
+    .eq('follow_up_count', 0)
+    .in('status', ['draft', 'approved', 'queued', 'sent', 'replied', 'bounced'])
+    .limit(1)
+    .maybeSingle();
+  if (existingMessageError) throw existingMessageError;
+  if (existingMessage) {
+    results.push({
+      websiteUrl,
+      recipientEmail,
+      queueId: existingMessage.id,
+      status: `skipped_existing_${existingMessage.status}`,
+    });
+    continue;
+  }
 
-  const { data: queueItem, error: queueError } = await supabase
-    .from('outreach_queue')
+  const { data: finding, error: findingError } = await supabase
+    .from('ar_findings')
     .insert({
       prospect_id: prospect.id,
-      recipient_email: recipientEmail,
+      rule_id: record.finding.ruleId || `manual:${record.finding.category}`,
+      url: record.finding.referenceUrl || websiteUrl,
+      title: record.finding.title,
+      description: `${record.finding.summary}\n\nEvidence: ${record.finding.evidence}`,
+      severity: record.finding.severity,
+      confidence: 'verified',
+      review_status: 'verified',
+      affected_users: record.finding.affectedUsers,
+      affected_task: record.finding.affectedTask,
+      wcag_criteria: record.finding.wcagCriteria,
+      repair_effort: record.finding.repairEffort,
+      suggested_fix: record.finding.suggestedFix,
+      evidence_url: record.finding.referenceUrl || websiteUrl,
+      retest_status: 'not_tested',
+      human_reviewed_at: nowIso,
+    })
+    .select('id')
+    .single();
+  if (findingError) throw findingError;
+
+  const token = createPrivateToken();
+  const tokenHash = hashPreviewToken(token);
+  const expiresAt = new Date(now.getTime() + (14 * 24 * 60 * 60 * 1000)).toISOString();
+  const concept = record.preview || {
+    eyebrow: record.businessName,
+    headline: 'A clearer first impression and a simpler path to action.',
+    subheadline: 'This private concept illustrates one possible first-screen direction based on the reviewed storefront.',
+    primaryCta: 'Explore the collection',
+    secondaryCta: 'Learn more',
+    proofPoints: ['Clearer hierarchy', 'Focused primary action', 'Accessible interaction states'],
+  };
+
+  const { data: preview, error: previewError } = await supabase
+    .from('ar_previews')
+    .insert({
+      prospect_id: prospect.id,
+      finding_id: finding.id,
+      token_hash: tokenHash,
+      business_name: record.businessName,
+      website_url: websiteUrl,
+      concept,
+      finding_summary: record.finding.summary,
+      affected_users: record.finding.affectedUsers,
+      status: 'approved',
+      watermark: 'Private AccessRevamp Concept',
+      noindex: true,
+      approved_at: nowIso,
+      expires_at: expiresAt,
+    })
+    .select('id')
+    .single();
+  if (previewError) throw previewError;
+
+  const previewUrl = `${siteUrl}/.netlify/functions/preview?token=${encodeURIComponent(token)}`;
+  let bodyText = record.bodyText.replaceAll('{{PRIVATE_PREVIEW_URL}}', previewUrl);
+  if (!bodyText.includes(previewUrl)) {
+    bodyText += `\n\nPrivate concept preview: ${previewUrl}`;
+  }
+  if (bodyText.length > 8000) {
+    throw new Error(`Draft body for ${websiteUrl} exceeds 8000 characters after adding the private preview.`);
+  }
+
+  const { data: queueItem, error: queueError } = await supabase
+    .from('ar_outreach_messages')
+    .insert({
+      prospect_id: prospect.id,
+      preview_id: preview.id,
+      contact_email: recipientEmail,
       subject: record.subject,
-      body_text: record.bodyText,
+      body_text: bodyText,
+      unsubscribe_url: 'pending-human-approval',
       status: 'draft',
+      human_approval_required: true,
+      follow_up_count: 0,
+      source: 'reviewed_jsonl_import',
     })
     .select('id')
     .single();
@@ -158,9 +275,11 @@ for (const record of records) {
     websiteUrl,
     recipientEmail,
     queueId: queueItem.id,
+    previewUrl,
+    expiresAt,
     status: 'draft_created',
   });
 }
 
 console.log(JSON.stringify({ imported: results.length, results }, null, 2));
-console.error('No email was sent. Drafts still require explicit human approval.');
+console.error('No email was sent. Every draft still requires an active staff member to approve it.');
