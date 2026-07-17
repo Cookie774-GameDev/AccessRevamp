@@ -5,7 +5,7 @@ create or replace function public.link_accessrevamp_paid_order(p_order_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = pg_catalog, public, auth
+set search_path = pg_catalog
 as $$
 declare
   v_order public.orders%rowtype;
