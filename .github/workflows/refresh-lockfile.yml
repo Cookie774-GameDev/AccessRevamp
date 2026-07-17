@@ -32,25 +32,33 @@ jobs:
       - name: Regenerate lockfile from exact package manifest
         id: refresh
         continue-on-error: true
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        run: |
+          set -o pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund 2>&1 | tee refresh.log
 
       - name: Install from regenerated lockfile
         id: install
         if: steps.refresh.outcome == 'success'
         continue-on-error: true
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: |
+          set -o pipefail
+          npm ci --ignore-scripts --no-audit --no-fund 2>&1 | tee install.log
 
       - name: Run static checks, tests, and production build
         id: check
         if: steps.install.outcome == 'success'
         continue-on-error: true
-        run: npm run check
+        run: |
+          set -o pipefail
+          npm run check 2>&1 | tee check.log
 
       - name: Audit production dependencies
         id: audit
         if: steps.install.outcome == 'success'
         continue-on-error: true
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          set -o pipefail
+          npm audit --omit=dev --audit-level=high 2>&1 | tee audit.log
 
       - name: Commit verified lockfile
         id: commit
@@ -77,7 +85,8 @@ jobs:
           AUDIT: ${{ steps.audit.outcome }}
           LOCK_CHANGED: ${{ steps.commit.outputs.changed }}
         run: |
-          gh pr comment 10 --body "Automated branch validation for \`${GITHUB_SHA}\`:
+          cat > validation-comment.md <<EOF
+          Automated branch validation for \`${GITHUB_SHA}\`:
 
           - lockfile refresh: **${REFRESH}**
           - clean install: **${INSTALL}**
@@ -85,7 +94,27 @@ jobs:
           - production dependency audit: **${AUDIT}**
           - lockfile committed: **${LOCK_CHANGED:-false}**
 
-          This workflow uses no deployment or application secrets and sends no email."
+          This workflow uses no deployment or application secrets and sends no email.
+          EOF
+
+          if [ "$REFRESH" != success ] || [ "$INSTALL" != success ] || [ "$CHECK" != success ] || [ "$AUDIT" != success ]; then
+            {
+              echo
+              echo '<details><summary>Failure output</summary>'
+              echo
+              echo '```text'
+              for file in refresh.log install.log check.log audit.log; do
+                if [ -f "$file" ]; then
+                  echo "--- $file ---"
+                  tail -n 80 "$file"
+                fi
+              done
+              echo '```'
+              echo '</details>'
+            } >> validation-comment.md
+          fi
+
+          gh pr comment 10 --body-file validation-comment.md
 
       - name: Fail when any validation stage failed
         if: always()
