@@ -10,9 +10,29 @@ AccessRevamp is an AI-assisted accessibility remediation studio for independent 
 |---|---:|---|---|
 | AccessRevamp Snapshot | Free | No checkout | One human-verified accessibility finding, one usability/design opportunity, evidence, and a private first-screen concept used for qualified outreach. |
 | Homepage Reveal | **$50** | One time | Human-reviewed homepage findings, evidence, severity and confidence labels, WCAG references, a prioritized repair plan, and the complete first-screen concept reveal. |
-| Quick Fix Plan | **$199** | One time | The agreed full website revamp, reviewed findings, accessibility/usability/responsive checks, retest notes, and practical customer-reach, advertising, and monetization recommendations. |
+| Quick Fix Plan | **$199** | One time | The agreed full website revamp, reviewed findings, accessibility/usability/responsive checks, retest notes, practical customer-reach and monetization recommendations, and a 10-piece AI-assisted Canva-ready marketing creative pack. |
 
 There are no subscriptions, recurring AccessRevamp platform charges, hidden implementation tiers, or separate processing surcharges. Scope is confirmed in writing before implementation begins. Any tax that is legally required must still be disclosed and collected correctly.
+
+## Quick Fix marketing creative pack
+
+The **$199 one-time Quick Fix Plan** includes a cost-controlled marketing creative package for one campaign or promoted offer:
+
+- **10 Canva-ready variations** in total.
+- **Two human-approved master creative directions**, each adapted into five common formats.
+- Square feed: `1080 × 1080`.
+- Portrait feed: `1080 × 1350`.
+- Story or Reel cover: `1080 × 1920`.
+- Landscape ad: `1200 × 628`.
+- US Letter or A4 poster.
+- Recommended headline, call to action, caption, channel, and posting context.
+- One consolidated revision round.
+- Client-provided brand assets and Canva Free-compatible elements by default so the production cost remains low.
+- AI-assisted concept and copy generation with human review before delivery.
+
+The package does **not** include ad spend, media buying, printing, paid stock licenses, photography, complex motion design, or ongoing campaign management unless separately agreed in writing. Canva is a third-party service; AccessRevamp is not affiliated with or endorsed by Canva.
+
+See `docs/MARKETING_CREATIVE_PACK.md` for the complete production and quality standard.
 
 ## Implemented foundation
 
@@ -27,6 +47,7 @@ There are no subscriptions, recurring AccessRevamp platform charges, hidden impl
 - Prospect, public-contact provenance, permanent suppression, outreach draft, human approval, opt-out, and audit records.
 - Database-enforced maximum of 20 queued/scheduled/sent outreach messages per UTC day.
 - Optional Google Sheets review handoff that does not request Gmail permissions or send mail.
+- Structured $199 marketing-creative specification with ten tracked variations, human approval, client ownership checks, and low-cost AI-assisted production rules.
 - Netlify free-tier deployment configuration and GitHub Actions CI.
 
 ## Local development
@@ -125,6 +146,6 @@ See `docs/OUTREACH_STANDARD.md` and `docs/REVIEW_PIPELINE.md`.
 - Real business identity and valid postal address.
 - Netlify site connection and generated public URL.
 - Restricted Stripe server key, webhook signing secret, and live-mode catalog values after activation.
-- Final privacy, terms, refund, and outreach review for the operating jurisdiction.
+- Final privacy, terms, refund, creative-rights, and outreach review for the operating jurisdiction.
 
 Secrets belong in the deployment provider, never in this repository.
