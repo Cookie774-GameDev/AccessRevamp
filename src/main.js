@@ -1,4 +1,7 @@
-import './styles.css';
+import './styles/base.css';
+import './styles/components.css';
+import './styles/pages.css';
+import './styles/motion.css';
 import { plans, siteConfig, servicePromise } from './config.js';
 import { getSupabase } from './lib/supabase.js';
 import { createRouter } from './app/router.js';

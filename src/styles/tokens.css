@@ -1,0 +1,28 @@
+:root {
+  --canvas: #f6f2df;
+  --surface: #fffdf5;
+  --surface-strong: #ffffff;
+  --ink: #17243b;
+  --ink-soft: #536078;
+  --line: #cfc8ad;
+  --line-dark: #9c967f;
+  --ultramarine: #3c56d9;
+  --ultramarine-dark: #273dac;
+  --ultramarine-pale: #dfe4ff;
+  --sun: #ffbe3d;
+  --sun-pale: #ffe6a3;
+  --persimmon: #f7603a;
+  --mint: #b8e3ce;
+  --danger: #b52a32;
+  --success: #207251;
+  --shadow: 0 24px 60px rgba(23, 36, 59, 0.12);
+  --shadow-small: 0 12px 28px rgba(23, 36, 59, 0.09);
+  --radius-small: 0.45rem;
+  --radius: 1rem;
+  --radius-large: 1.75rem;
+  --sans: "Arial Nova", "Aptos", "Segoe UI", Helvetica, Arial, sans-serif;
+  --display: Georgia, "Times New Roman", serif;
+  --condensed: "Arial Narrow", "Roboto Condensed", "Aptos Display", sans-serif;
+  --max-width: 78rem;
+  --header-height: 5.25rem;
+}
