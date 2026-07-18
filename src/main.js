@@ -6,6 +6,7 @@ import './styles/motion.css';
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';
 import { icon } from './components/icons.js';
+import { shell } from './components/shell.js';
 import { homePage } from './pages/home.js';
 import { workDetailPage, workPage, setupWorkFilters } from './pages/work.js';
 import { servicesPage } from './pages/services.js';
@@ -26,19 +27,27 @@ import { setupCheckout } from './services/checkout.js';
 
 const app = document.querySelector('#app');
 
+function underConstructionPage() {
+  return shell(`<section class="result-section"><div class="result-card"><span class="eyebrow">Production route preview</span><h1>Under construction in this preview</h1><p>This route is registered for the production experience, but its complete view has not been built yet. Nothing here is presented as completed client work.</p><div class="hero-actions"><a class="button" href="/" data-nav>Return home</a><a class="button button--ghost" href="/contact" data-nav>Contact us</a></div></div></section>`);
+}
+
 const routes = {
   '/': homePage,
+  '/portfolio': workPage,
+  '/portfolio/:slug': underConstructionPage,
   '/work': workPage,
   '/work/:slug': (params) => workDetailPage(params) || notFoundPage(),
   '/services': servicesPage,
   '/process': () => processPage(),
   '/pricing': pricingPage,
+  '/free-snapshot': underConstructionPage,
   '/sample-report': sampleReportPage,
   '/methodology': () => processPage({ methodology: true }),
   '/cinematic-scroll': cinematicPage,
   '/contact': contactPage,
   '/login': () => authPage('login'),
   '/signup': () => authPage('signup'),
+  '/account/projects': dashboardPage,
   '/dashboard': dashboardPage,
   '/privacy': () => legalPage('privacy'),
   '/terms': () => legalPage('terms'),
@@ -48,6 +57,7 @@ const routes = {
   '/outreach-standards': () => legalPage('outreach'),
   '/success': () => resultPage(true),
   '/cancel': () => resultPage(false),
+  '/preview/:token': underConstructionPage,
 };
 
 function setupMenu() {
@@ -72,11 +82,11 @@ function renderRoute({ pathname, pattern, params, view }) {
   updateDocumentMetadata(pathname, pattern);
 
   const cleanups = [setupMenu()];
-  if (pathname === '/work') cleanups.push(setupWorkFilters());
+  if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupWorkFilters());
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
   if (pathname === '/contact') cleanups.push(setupContactForm());
   if (pathname === '/login' || pathname === '/signup') cleanups.push(setupAuthForm(router.navigate));
-  if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
+  if (pathname === '/dashboard' || pathname === '/account/projects') cleanups.push(setupDashboard(router.navigate));
 
   return () => cleanups.forEach((cleanup) => cleanup?.());
 }

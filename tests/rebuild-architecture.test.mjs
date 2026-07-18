@@ -27,7 +27,8 @@ test('routing supports direct work details, browser history, and cleanup', async
   ]);
 
   assert.match(router, /popstate/);
-  assert.match(router, /\/work\/:slug/);
+  assert.match(router, /compileRoute/);
+  assert.match(router, /matchRoute/);
   assert.match(router, /history\.pushState/);
   assert.match(router, /destroy/);
   assert.match(lifecycle, /cleanup/);
@@ -36,4 +37,3 @@ test('routing supports direct work details, browser history, and cleanup', async
   assert.match(metadata, /'\/process'/);
   assert.match(metadata, /'\/cinematic-scroll'/);
 });
-

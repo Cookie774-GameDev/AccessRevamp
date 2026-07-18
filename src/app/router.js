@@ -1,16 +1,44 @@
 import { createLifecycle } from './lifecycle.js';
 
-const DETAIL_ROUTE = '/work/:slug';
+const PARAMETER_SEGMENT = /^:([A-Za-z][A-Za-z0-9_]*)$/;
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function matchRoute(pathname, routes) {
+export function compileRoute(pattern) {
+  const parameterNames = [];
+  const source = pattern
+    .split('/')
+    .map((segment) => {
+      const parameter = segment.match(PARAMETER_SEGMENT);
+      if (!parameter) return escapeRegExp(segment);
+      parameterNames.push(parameter[1]);
+      return '([^/]+)';
+    })
+    .join('/');
+
+  return { parameterNames, regexp: new RegExp(`^${source}$`) };
+}
+
+function decodeParameter(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export function matchRoute(pathname, routes) {
   if (routes[pathname]) return { pattern: pathname, view: routes[pathname], params: {} };
 
-  const workMatch = pathname.match(/^\/work\/([^/]+)$/);
-  if (workMatch && routes[DETAIL_ROUTE]) {
+  for (const [pattern, view] of Object.entries(routes)) {
+    const { parameterNames, regexp } = compileRoute(pattern);
+    if (parameterNames.length === 0) continue;
+    const match = pathname.match(regexp);
+    if (!match) continue;
+
     return {
-      pattern: DETAIL_ROUTE,
-      view: routes[DETAIL_ROUTE],
-      params: { slug: decodeURIComponent(workMatch[1]) },
+      pattern,
+      view,
+      params: Object.fromEntries(parameterNames.map((name, index) => [name, decodeParameter(match[index + 1])])),
     };
   }
 
