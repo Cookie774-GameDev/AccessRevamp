@@ -2,7 +2,7 @@
 
 **See the barrier. Preview the fix.**
 
-AccessRevamp is an AI-assisted accessibility remediation studio for independent storefronts and service businesses. The public site explains the offer, shows a sample report, supports contact and customer accounts, and sells two clearly scoped one-time services. The repository also contains the internal evidence, private-preview, payment, and approval-gated outreach foundation.
+AccessRevamp is an AI-assisted accessibility remediation studio for independent storefronts and service businesses. The public site explains the offer, shows sample and portfolio work, supports contact and customer accounts, and sells three clearly scoped one-time services. The repository also contains the internal evidence, private-preview, payment, delivery, refund-request, and approval-gated outreach foundation.
 
 ## Commercial catalog
 
@@ -11,8 +11,27 @@ AccessRevamp is an AI-assisted accessibility remediation studio for independent 
 | AccessRevamp Snapshot | Free | No checkout | One human-verified accessibility finding, one usability/design opportunity, evidence, and a private first-screen concept used for qualified outreach. |
 | Homepage Reveal | **$50** | One time | Human-reviewed homepage findings, evidence, severity and confidence labels, WCAG references, a prioritized repair plan, and the complete first-screen concept reveal. |
 | Quick Fix Plan | **$199** | One time | The agreed full website revamp, reviewed findings, accessibility/usability/responsive checks, retest notes, practical customer-reach and monetization recommendations, and a 10-piece AI-assisted Canva-ready marketing creative pack. |
+| Cinematic Scroll Site | **$250** | One time | One responsive single-page microsite with one scroll-scrubbed AI-assisted motion sequence, up to four story beats, one primary CTA, reduced-motion/mobile fallbacks, deployment-ready source, and one consolidated revision round. |
 
 There are no subscriptions, recurring AccessRevamp platform charges, hidden implementation tiers, or separate processing surcharges. Scope is confirmed in writing before implementation begins. Any tax that is legally required must still be disclosed and collected correctly.
+
+## Cinematic Scroll Site
+
+The **$250 one-time Cinematic Scroll Site** is the bounded motion offer:
+
+- One single-page microsite.
+- One scroll-scrubbed sequence with up to four story beats.
+- One primary call to action and essential copy integration.
+- AI-assisted media exploration using Higgsfield or a comparable provider when appropriate and available.
+- Human review of media, claims, asset rights, responsive behavior, and fallbacks.
+- Native scrolling, real HTML copy and links, reduced-motion support, and a lighter mobile path.
+- Deployment-ready source and one consolidated revision round.
+- Target final delivery within three business days after payment and complete intake.
+- Full refund requests accepted before final digital delivery.
+
+The offer excludes extra pages, ecommerce or account backends, custom 3D production, paid stock or model licenses, filming, ongoing hosting management, and unlimited revisions unless separately agreed in writing.
+
+See `docs/CINEMATIC_SCROLL_SITE.md` and `docs/REFUND_AND_CANCELLATION_POLICY.md`.
 
 ## Quick Fix marketing creative pack
 
@@ -34,13 +53,23 @@ The package does **not** include ad spend, media buying, printing, paid stock li
 
 See `docs/MARKETING_CREATIVE_PACK.md` for the complete production and quality standard.
 
+## Refund and delivery boundary
+
+A customer may request a full refund before final digital delivery. Final delivery means the completed files, report, final delivery link, or published agreed website has been made available. After delivery, change-of-mind refunds are not offered; material defects and missing agreed items are corrected, and statutory rights remain unaffected.
+
+Homepage Reveal and Cinematic Scroll Site target final delivery within three business days after payment and complete intake. Quick Fix reviewed findings, initial design direction, and creative-pack deliverables target the same window; the full implementation date is confirmed after scope, access, content, and dependencies are known.
+
+The authenticated customer workspace can store a pre-delivery refund request, but the actual Stripe refund remains a reviewed operator action.
+
 ## Implemented foundation
 
-- Polished responsive marketing site with pricing, methodology, sample report, contact, authentication, customer dashboard, legal pages, and checkout results.
+- Polished responsive marketing site with pricing, methodology, sample report, portfolio, contact, authentication, customer dashboard, legal pages, refund policy, and checkout results.
+- Original cinematic scroll-site portfolio concept using native scrolling, a pinned Canvas timeline, real HTML content, mobile behavior, and reduced-motion fallback.
 - Supabase Auth client and row-level-security-aware customer workspace.
 - Rate-limited contact function backed by a server-only Supabase RPC.
-- Server-created Stripe-hosted Checkout with exact catalog prices, idempotency, explicit API versioning, and a test Payment Link fallback.
+- Server-created Stripe-hosted Checkout with exact catalog prices, idempotency, explicit API versioning, and test Payment Link fallbacks.
 - Signature-verified, retry-safe Stripe webhook with synchronous and delayed-payment handling, exact price validation, and confirmed-email ownership linking.
+- Structured delivery fields and RLS-protected customer refund requests that close after final delivery.
 - Structured review data with severity, confidence, affected users/tasks, selectors, evidence, WCAG references, repair effort, proposed fixes, and retest results.
 - Randomized, hashed, human-approved private concept links with `noindex`, 14–30 day expiry, no external assets, and no connection to inventory, accounts, or checkout.
 - Passive public-homepage scanner using Playwright and axe-core. It blocks private/reserved destinations and non-GET/HEAD requests, and emits candidate evidence that still requires human review.
@@ -115,8 +144,9 @@ The repository uses the AccessRevamp Stripe sandbox catalog:
 
 - Homepage Reveal: `price_1TuGoNLzyGRcyGQJRjtGsiMV` — **$50 USD one time**
 - Quick Fix Plan: `price_1TuGoTLzyGRcyGQJfdkqoE3f` — **$199 USD one time**
+- Cinematic Scroll Site: `price_1TuNWjLzyGRcyGQJ5NNWNU88` — **$250 USD one time**
 
-The default fallback URLs are test links. Replace them with live-mode values only after the Stripe account is activated, business details are complete, a restricted server key is available, and the full live test matrix has passed. Set `STRIPE_EXPECT_LIVEMODE=false` in sandbox and `true` in production.
+The default fallback URLs are test links. Replace them with live-mode values only after the Stripe account is activated, business details are complete, a restricted server key is available, the refund workflow has been reviewed, and the full live test matrix has passed. Set `STRIPE_EXPECT_LIVEMODE=false` in sandbox and `true` in production.
 
 ## Netlify deployment (free URL)
 
@@ -127,7 +157,7 @@ The default fallback URLs are test links. Replace them with live-mode values onl
 5. Deploy and verify `/.netlify/functions/health`.
 6. Add the webhook endpoint `https://YOUR-SITE.netlify.app/.netlify/functions/stripe-webhook` in Stripe.
 7. Subscribe it to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`.
-8. Test both one-time purchases, account confirmation, order linking, cancellation, delayed payment, duplicate webhook delivery, and an invalid-price event.
+8. Test all three one-time purchases, account confirmation, order linking, cancellation, delayed payment, duplicate webhook delivery, an invalid-price event, a pre-delivery refund request, and the delivered-project refund cutoff.
 
 The initial free address is a `*.netlify.app` URL. A custom domain and business mailbox can be added after the business identity is ready.
 
@@ -146,6 +176,6 @@ See `docs/OUTREACH_STANDARD.md` and `docs/REVIEW_PIPELINE.md`.
 - Real business identity and valid postal address.
 - Netlify site connection and generated public URL.
 - Restricted Stripe server key, webhook signing secret, and live-mode catalog values after activation.
-- Final privacy, terms, refund, creative-rights, and outreach review for the operating jurisdiction.
+- Final privacy, terms, refund, creative-rights, AI-provider, and outreach review for the operating jurisdiction.
 
 Secrets belong in the deployment provider, never in this repository.
