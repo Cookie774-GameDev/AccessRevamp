@@ -1,0 +1,69 @@
+name: Patch cinematic runtime branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/patch-cinematic-runtime.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-cinematic-navigation-runtime
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply exact runtime and regression patch
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+
+          const sourcePath = 'src/cinematic-scroll.js';
+          const oldFunction = `function makeInternalLink(href, label, marker = 'cinematic-nav') {
+  const link = document.createElement('a');
+  link.href = href;
+  link.textContent = label;
+  link.dataset[marker] = '';
+  return link;
+}`;
+          const newFunction = `function makeInternalLink(href, label) {
+  const link = document.createElement('a');
+  link.href = href;
+  link.textContent = label;
+  link.setAttribute('data-cinematic-nav', '');
+  return link;
+}`;
+          let source = await readFile(sourcePath, 'utf8');
+          if (!source.includes(oldFunction)) throw new Error('The invalid cinematic navigation function was not found.');
+          source = source.replace(oldFunction, newFunction);
+          await writeFile(sourcePath, source);
+
+          const testPath = 'tests/cinematic-scroll.test.mjs';
+          const anchor = "  assert.match(index, /src\\/cinematic-scroll\\.js/);";
+          const addition = `${anchor}\n  assert.match(experience, /setAttribute\\('data-cinematic-nav', ''\\)/);\n  assert.doesNotMatch(experience, /dataset\\[marker\\]/);`;
+          let tests = await readFile(testPath, 'utf8');
+          if (!tests.includes(anchor)) throw new Error('The cinematic test anchor was not found.');
+          tests = tests.replace(anchor, addition);
+          await writeFile(testPath, tests);
+          NODE
+      - name: Validate patch
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node --test tests/cinematic-scroll.test.mjs
+          npm run check
+      - name: Commit to repair branch
+        run: |
+          git config user.name "AccessRevamp CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/cinematic-scroll.js tests/cinematic-scroll.test.mjs
+          git commit -m "Fix cinematic navigation runtime initialization"
+          git push origin HEAD:agent/fix-cinematic-navigation-runtime
