@@ -77,10 +77,11 @@ jobs:
               await page.evaluate((progress) => {
                 const stage = document.querySelector('[data-cinematic-stage]');
                 if (!stage) throw new Error('Cinematic stage was not rendered.');
-                const target = stage.offsetTop + Math.max(0, stage.offsetHeight - innerHeight) * progress;
+                const stageTop = stage.getBoundingClientRect().top + scrollY;
+                const target = stageTop + Math.max(0, stage.offsetHeight - innerHeight) * progress;
                 scrollTo(0, target);
               }, item.progress);
-              await page.waitForTimeout(220);
+              await page.waitForTimeout(260);
             }
 
             await page.screenshot({
@@ -100,6 +101,8 @@ jobs:
                 viewportWidth: innerWidth,
                 documentWidth: document.documentElement.scrollWidth,
                 documentHeight: document.documentElement.scrollHeight,
+                scrollY,
+                stageTop: stage ? stage.getBoundingClientRect().top : null,
                 pricingCards: document.querySelectorAll('.pricing-grid .price-card').length,
                 cinematicCard: Boolean(document.querySelector('[data-cinematic-price-card]')),
                 cinematicPortfolio: Boolean(document.querySelector('[data-cinematic-portfolio-card]')),
@@ -114,6 +117,8 @@ jobs:
             const errors = [];
             if (metrics.documentWidth > metrics.viewportWidth + 1) errors.push(`horizontal overflow ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
             if (item.path === '/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width)) errors.push('cinematic stage or canvas missing');
+            if (item.path === '/cinematic-scroll' && item.progress > 0 && Math.abs(metrics.stageTop) > 1) errors.push(`cinematic stage not pinned at viewport top: ${metrics.stageTop}px`);
+            if (item.path === '/cinematic-scroll' && item.progress > 0 && (!metrics.visibleBeat || metrics.visibleBeat.opacity < 0.2)) errors.push('no readable cinematic story beat at captured progress');
             if (item.path === '/pricing' && (metrics.pricingCards !== 3 || !metrics.cinematicCard)) errors.push(`pricing cards=${metrics.pricingCards}, cinematic=${metrics.cinematicCard}`);
             if (item.path === '/portfolio' && !metrics.cinematicPortfolio) errors.push('cinematic portfolio concept missing');
             if (item.path === '/refunds' && !/Refund/i.test(metrics.refundHeading)) errors.push('refund heading missing');
