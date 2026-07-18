@@ -2,7 +2,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { color-scheme: light; scroll-behavior: smooth; }
-body { margin: 0; min-width: 20rem; background: var(--canvas); color: var(--ink); font-family: var(--sans); font-size: 1rem; line-height: 1.6; text-rendering: optimizeLegibility; }
+body { margin: 0; min-width: 20rem; background: var(--canvas); color: var(--ink); font-family: var(--sans); font-size: 1.0625rem; line-height: 1.62; text-rendering: optimizeLegibility; }
 body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .18; z-index: 20; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E"); mix-blend-mode: multiply; }
 img, svg { display: block; max-width: 100%; }
 button, input, textarea, select { font: inherit; }
@@ -10,13 +10,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration-thickness: .08em; text-underline-offset: .22em; }
 p, h1, h2, h3, h4 { margin-top: 0; }
 p { color: var(--ink-soft); }
-h1, h2, h3 { color: var(--ink); letter-spacing: -.035em; line-height: 1.02; }
+h1, h2, h3 { color: var(--ink); letter-spacing: -.045em; line-height: .98; }
 h1, h2 { font-family: var(--display); font-weight: 500; }
 h1 { font-size: clamp(3rem, 7vw, 7.6rem); }
 h2 { font-size: clamp(2.25rem, 4.4vw, 4.8rem); }
 h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 ::selection { background: var(--sun); color: var(--ink); }
-:focus-visible { outline: .2rem solid var(--persimmon); outline-offset: .22rem; border-radius: .15rem; }
+:focus-visible { outline: .22rem solid var(--signal-coral); outline-offset: .24rem; border-radius: .15rem; }
 [hidden] { display: none !important; }
 .skip-link { position: fixed; top: .75rem; left: .75rem; z-index: 1000; transform: translateY(-150%); padding: .7rem 1rem; background: var(--ink); color: #fff; border-radius: .25rem; }
 .skip-link:focus { transform: translateY(0); }

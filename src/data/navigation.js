@@ -1,6 +1,6 @@
 export const primaryNavigation = Object.freeze([
-  ['/work', 'Work'],
-  ['/services', 'Services'],
+  ['/portfolio', 'Portfolio'],
+  ['/free-snapshot', 'Free snapshot'],
   ['/process', 'Process'],
   ['/pricing', 'Pricing'],
   ['/contact', 'Contact'],

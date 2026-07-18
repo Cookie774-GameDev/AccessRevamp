@@ -7,9 +7,9 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "preview": "vinext start",
     "baseline": "node scripts/capture-baseline.mjs && node scripts/capture-baseline-browser.mjs",
     "scan": "node scripts/scan-public-homepage.mjs",
     "test": "node --test tests/*.test.mjs",
@@ -19,11 +19,24 @@
   "dependencies": {
     "@axe-core/playwright": "4.12.1",
     "@supabase/supabase-js": "2.110.7",
+    "next": "16.2.6",
     "playwright": "1.61.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
     "stripe": "22.3.2",
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "vite": "8.1.5"
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "react-server-dom-webpack": "19.2.6",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.1.5",
+    "wrangler": "4.92.0"
   }
 }

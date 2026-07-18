@@ -23,20 +23,20 @@ export function shell(content, { pathname = location.pathname, home = false, pag
         <nav class="desktop-nav" aria-label="Primary">${primary}</nav>
         <div class="nav-actions">
           <a class="text-link nav-signin" href="/login" data-nav>Sign in</a>
-          <a class="button button--small" href="/pricing" data-nav>Start a revamp ${icon('arrow')}</a>
+          <a class="button button--small" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon('arrow')}</a>
           <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">${icon('menu')}</button>
         </div>
       </div>
-      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav>Sign in</a><a href="/pricing" data-nav>Start a revamp</a></nav></div>
+      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav>Sign in</a><a href="/pricing" data-nav>Get the $50 Homepage Reveal</a></nav></div>
     </header>
     <main id="main-content">${content}</main>
     <footer class="site-footer">
       <div class="container-wide footer-main">
-        <div class="footer-brand">${brandLink()}<p>Clearer storefronts, stronger stories, and practical next steps.</p></div>
-        <div class="footer-links"><div><h2>Explore</h2><a href="/work" data-nav>Work</a><a href="/services" data-nav>Services</a><a href="/sample-report" data-nav>Sample report</a><a href="/cinematic-scroll" data-nav>Cinematic demo</a></div><div><h2>Company</h2><a href="/process" data-nav>Process</a><a href="/contact" data-nav>Contact</a><a href="/accessibility" data-nav>Accessibility</a><a href="/privacy" data-nav>Privacy</a></div></div>
-        <div class="footer-statement"><span>Small studio.<br/>Human judgment.<br/>No vague retainers.</span>${sandboxBadge()}</div>
+        <div class="footer-brand">${brandLink()}<p>Verified friction, a clearer hierarchy, and a one-time path to a better website.</p></div>
+        <div class="footer-links"><div><h2>Explore</h2><a href="/portfolio" data-nav>Portfolio</a><a href="/free-snapshot" data-nav>Free snapshot</a><a href="/sample-report" data-nav>Sample report</a><a href="/methodology" data-nav>Methodology</a></div><div><h2>Policies</h2><a href="/outreach-standards" data-nav>Outreach standards</a><a href="/refunds" data-nav>Refunds</a><a href="/accessibility" data-nav>Accessibility</a><a href="/privacy" data-nav>Privacy</a><a href="/terms" data-nav>Terms</a></div></div>
+        <div class="footer-statement"><span>Evidence first.<br/>Human reviewed.<br/>One-time scope.</span>${sandboxBadge()}</div>
       </div>
-      <div class="container-wide footer-bottom"><span>© ${new Date().getFullYear()} AccessRevamp</span><span>One-time services · Clear scope · <a href="/terms" data-nav>Terms</a></span></div>
+      <div class="container-wide footer-bottom"><span>© ${new Date().getFullYear()} AccessRevamp</span><span>One-time services · Clear scope · No outreach without human approval</span></div>
     </footer>
   </div>`;
 }

@@ -13,7 +13,9 @@ const [main, portfolio, home, work, styles] = await Promise.all([
 test('the portfolio is loaded as part of the production website', () => {
   assert.match(main, /'\/work': workPage/);
   assert.match(main, /'\/work\/:slug'/);
-  assert.match(home, /selectedWork/);
+  assert.match(home, /\/portfolio\/greenline-lawn-and-grounds/);
+  assert.match(home, /\/portfolio\/firejar-spicy-peanut-butter/);
+  assert.match(home, /\/portfolio\/clearflow-plumbing/);
   assert.match(work, /portfolioItems/);
 });
 
@@ -31,8 +33,7 @@ test('the portfolio contains three homepage concepts and three poster concepts',
 
 test('portfolio work is clearly disclosed as fictional concept work', () => {
   assert.equal((portfolio.match(/fictionalConcept:\s*true/g) || []).length, 7);
-  assert.match(home, /original, fictional concept work/i);
-  assert.match(home, /not a client endorsement/i);
+  assert.equal((home.match(/Original working demo — not a client engagement\./g) || []).length, 1);
   assert.match(work, /not client endorsements/i);
   assert.doesNotMatch(`${home}\n${work}`, /trusted by|client results|we increased|revenue lift/i);
 });

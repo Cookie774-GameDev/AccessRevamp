@@ -3,14 +3,51 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const read = (path) => readFile(path, 'utf8');
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-test('the editorial homepage contains the approved story and conversion sequence', async () => {
+test('the homepage contains the complete approved audit-lens story', async () => {
   const home = await read('src/pages/home.js');
-  for (const phrase of ['Selected work', 'Find the friction', 'Clarify the offer', 'Build something stronger', 'See the sample report', 'Start a revamp']) {
-    assert.match(home, new RegExp(phrase, 'i'));
+  for (const phrase of [
+    'Your website is already telling us',
+    'where customers get stuck',
+    'Get the $50 Homepage Reveal',
+    'See a verified example',
+    'Evidence before claims',
+    'Diagnostic spectrum',
+    'Before',
+    'Evidence',
+    'After',
+    'Scout',
+    'Verify',
+    'Preview',
+    'Approve',
+    'Build',
+    'Measure',
+    'Greenline Lawn & Grounds',
+    'Firejar Spicy Peanut Butter',
+    'Clearflow Plumbing',
+    'One free finding',
+    'Cumulative upgrade credit',
+    'Deliverables by tier',
+    'Authorized testing boundary',
+    '30-day growth preview',
+    'Straight answers',
+    'Bring one public website',
+  ]) {
+    assert.match(home, new RegExp(escapeRegExp(phrase), 'i'));
   }
   assert.match(home, /Object\.values\(plans\)/);
-  assert.match(home, /workCard/);
+  for (const route of [
+    '/portfolio/greenline-lawn-and-grounds',
+    '/portfolio/firejar-spicy-peanut-butter',
+    '/portfolio/clearflow-plumbing',
+  ]) {
+    assert.match(home, new RegExp(route.replaceAll('/', '\\/')));
+  }
+  assert.match(home, /Original working demo — not a client engagement\./);
+  for (const category of ['Accessibility', 'Usability', 'Mobile', 'Performance', 'Content', 'SEO\/local discovery', 'Conversion', 'Monetization', 'Analytics', 'Social growth', 'Security hygiene']) {
+    assert.match(home, new RegExp(category, 'i'));
+  }
 });
 
 test('the portfolio contains seven clearly disclosed original fictional concepts', async () => {
@@ -34,4 +71,3 @@ test('public routes are explicit and cinematic behavior has lifecycle cleanup', 
   assert.match(cinematic, /prefers-reduced-motion/);
   assert.doesNotMatch(cinematic, /MutationObserver/);
 });
-
