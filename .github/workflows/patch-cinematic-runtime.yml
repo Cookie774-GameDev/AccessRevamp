@@ -6,12 +6,16 @@ on:
       - main
     paths:
       - .github/workflows/patch-cinematic-runtime.yml
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   patch-branch:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,17 +47,22 @@ jobs:
   return link;
 }`;
           let source = await readFile(sourcePath, 'utf8');
-          if (!source.includes(oldFunction)) throw new Error('The invalid cinematic navigation function was not found.');
-          source = source.replace(oldFunction, newFunction);
-          await writeFile(sourcePath, source);
+          if (source.includes(oldFunction)) {
+            source = source.replace(oldFunction, newFunction);
+            await writeFile(sourcePath, source);
+          } else if (!source.includes("link.setAttribute('data-cinematic-nav', '');")) {
+            throw new Error('The expected cinematic navigation function was not found.');
+          }
 
           const testPath = 'tests/cinematic-scroll.test.mjs';
           const anchor = "  assert.match(index, /src\\/cinematic-scroll\\.js/);";
           const addition = `${anchor}\n  assert.match(experience, /setAttribute\\('data-cinematic-nav', ''\\)/);\n  assert.doesNotMatch(experience, /dataset\\[marker\\]/);`;
           let tests = await readFile(testPath, 'utf8');
-          if (!tests.includes(anchor)) throw new Error('The cinematic test anchor was not found.');
-          tests = tests.replace(anchor, addition);
-          await writeFile(testPath, tests);
+          if (!tests.includes("assert.doesNotMatch(experience, /dataset\\[marker\\]/);")) {
+            if (!tests.includes(anchor)) throw new Error('The cinematic test anchor was not found.');
+            tests = tests.replace(anchor, addition);
+            await writeFile(testPath, tests);
+          }
           NODE
       - name: Validate patch
         run: |
@@ -62,6 +71,10 @@ jobs:
           npm run check
       - name: Commit to repair branch
         run: |
+          if git diff --quiet; then
+            echo "Patch already applied."
+            exit 0
+          fi
           git config user.name "AccessRevamp CI"
           git config user.email "actions@users.noreply.github.com"
           git add src/cinematic-scroll.js tests/cinematic-scroll.test.mjs
