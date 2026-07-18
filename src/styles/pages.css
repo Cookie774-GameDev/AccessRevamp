@@ -23,10 +23,14 @@
 .section-head h2 { max-width: 12ch; margin: .9rem 0 0; }
 .section-head > p { max-width: 34rem; }
 .work-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(2rem, 5vw, 5rem) clamp(1.25rem, 3vw, 2.5rem); }
-.work-grid .work-card { grid-column: span 6; }
-.work-grid .work-card:nth-child(3n + 1) { grid-column: span 7; }
-.work-grid .work-card:nth-child(3n + 2) { grid-column: span 5; margin-top: 6rem; }
-.work-grid .work-card:nth-child(3n + 2) .work-card__art { min-height: 29rem; }
+.work-grid > .work-card,
+.work-grid > [data-work-kind] { grid-column: span 6; }
+.work-grid > .work-card:nth-child(3n + 1),
+.work-grid > [data-work-kind]:nth-child(3n + 1) { grid-column: span 7; }
+.work-grid > .work-card:nth-child(3n + 2),
+.work-grid > [data-work-kind]:nth-child(3n + 2) { grid-column: span 5; margin-top: 6rem; }
+.work-grid > .work-card:nth-child(3n + 2) .work-card__art,
+.work-grid > [data-work-kind]:nth-child(3n + 2) .work-card__art { min-height: 29rem; }
 .work-disclosure { display: flex; align-items: start; gap: 1rem; margin-top: 3rem; padding: 1.2rem 1.4rem; border: 1px solid var(--line-dark); border-radius: var(--radius); background: rgba(255,253,245,.55); }
 .work-disclosure strong { min-width: max-content; color: var(--ultramarine-dark); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; }
 .work-disclosure span { color: var(--ink-soft); font-size: .88rem; }
@@ -151,8 +155,8 @@ textarea { resize: vertical; }
   .section-head { display: block; }
   .section-head > p, .section-head > a { margin-top: 1.25rem; }
   .work-grid { display: grid; grid-template-columns: 1fr; }
-  .work-grid .work-card, .work-grid .work-card:nth-child(3n + 1), .work-grid .work-card:nth-child(3n + 2) { grid-column: auto; margin-top: 0; }
-  .work-card__art, .work-grid .work-card:nth-child(3n + 2) .work-card__art { min-height: 21rem; }
+  .work-grid > .work-card, .work-grid > .work-card:nth-child(3n + 1), .work-grid > .work-card:nth-child(3n + 2), .work-grid > [data-work-kind] { grid-column: auto; margin-top: 0; }
+  .work-card__art, .work-grid > .work-card:nth-child(3n + 2) .work-card__art, .work-grid > [data-work-kind]:nth-child(3n + 2) .work-card__art { min-height: 21rem; }
   .work-disclosure { display: block; }
   .work-disclosure strong { display: block; margin-bottom: .5rem; }
   .pricing-grid { grid-template-columns: 1fr; }

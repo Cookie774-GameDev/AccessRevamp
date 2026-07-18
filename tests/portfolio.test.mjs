@@ -38,6 +38,8 @@ test('portfolio work is clearly disclosed as fictional concept work', () => {
 });
 
 test('portfolio layouts collapse safely for tablets and mobile screens', () => {
+  assert.match(styles, /\.work-grid\s*>\s*\[data-work-kind\][\s\S]*grid-column:\s*span 6/);
+  assert.match(styles, /\.work-grid\s*>\s*\[data-work-kind\]:nth-child\(3n \+ 1\)[\s\S]*grid-column:\s*span 7/);
   assert.match(styles, /@media \(max-width: 1000px\)/);
   assert.match(styles, /@media \(max-width: 760px\)/);
   assert.match(styles, /\.work-grid[\s\S]*grid-template-columns: 1fr/);

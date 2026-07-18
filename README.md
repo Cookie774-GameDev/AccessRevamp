@@ -179,3 +179,19 @@ See `docs/OUTREACH_STANDARD.md` and `docs/REVIEW_PIPELINE.md`.
 - Final privacy, terms, refund, creative-rights, AI-provider, and outreach review for the operating jurisdiction.
 
 Secrets belong in the deployment provider, never in this repository.
+
+## Editorial Story preview
+
+The July 2026 rebuild uses a single Vite entry point, explicit route modules, reusable page components, and lifecycle cleanup. Its public design system is warm canvas, deep ink, ultramarine, sun yellow, and restrained persimmon. The portfolio contains seven original fictional concepts and never represents them as commissioned client work.
+
+Run the production preview locally:
+
+```bash
+npm ci
+npm run check
+npm run preview -- --host 127.0.0.1 --port 4173
+```
+
+Open `http://127.0.0.1:4173/`. Direct routes such as `/work`, `/pricing`, `/contact`, `/dashboard`, and `/cinematic-scroll` are handled by the Netlify SPA redirect in production.
+
+The local preview intentionally has no deployment secrets. Contact submission, Supabase authentication, customer data, and server-created Stripe Checkout need their documented environment values and Netlify Functions. The checked-in Stripe fallback catalog remains sandbox-only, and the internal Google Drive operations workspace is not referenced by browser code.
