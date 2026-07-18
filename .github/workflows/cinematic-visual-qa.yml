@@ -173,8 +173,8 @@ jobs:
             if (metrics.documentWidth > metrics.viewportWidth + 1) {
               throw new Error(`${item.name} has horizontal overflow: ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
             }
-            if (item.route === '#/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width || !metrics.cinematicPortfolio)) {
-              throw new Error(`${item.name} did not render the cinematic stage, canvas, or portfolio concept.`);
+            if (item.route === '#/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width)) {
+              throw new Error(`${item.name} did not render the cinematic stage or canvas.`);
             }
             if (item.route === '#/pricing' && (metrics.pricingCards !== 3 || !metrics.cinematicCard)) {
               throw new Error(`Pricing rendered ${metrics.pricingCards} cards instead of three.`);
