@@ -1,0 +1,112 @@
+{
+  "capturedAt": "2026-07-18T15:36:59.334Z",
+  "purpose": "secret-safe pre-rebuild inventory",
+  "git": {
+    "branch": "redesign/editorial-story-ultramarine-local",
+    "commit": "0339bd3227d0b5eeec4c34fbdd97c695c596f8b1"
+  },
+  "runtime": {
+    "node": "v24.16.0",
+    "packageManager": "11.13.0"
+  },
+  "routes": [
+    "/",
+    "/accessibility",
+    "/cancel",
+    "/cinematic-scroll",
+    "/contact",
+    "/dashboard",
+    "/legal",
+    "/login",
+    "/methodology",
+    "/outreach-standards",
+    "/pricing",
+    "/privacy",
+    "/process",
+    "/refunds",
+    "/sample-report",
+    "/services",
+    "/signup",
+    "/success",
+    "/terms",
+    "/work",
+    "/work/:slug"
+  ],
+  "migrations": [
+    "202607170001_accessrevamp.sql",
+    "202607170002_link_paid_orders.sql",
+    "202607170003_require_confirmed_email.sql",
+    "202607170004_harden_payment_fulfillment.sql",
+    "202607170005_complete_review_and_preview_model.sql",
+    "202607170006_add_marketing_creative_pack.sql",
+    "202607170006_revoke_trigger_function_execution.sql",
+    "202607170007_index_internal_foreign_keys.sql",
+    "202607180001_add_cinematic_scroll_plan_and_refunds.sql"
+  ],
+  "build": [
+    {
+      "path": "dist/assets/index-B-EACzrD.css",
+      "bytes": 30216,
+      "gzipBytes": 7502
+    },
+    {
+      "path": "dist/assets/index-CdMQpg4r.js",
+      "bytes": 258917,
+      "gzipBytes": 70090
+    },
+    {
+      "path": "dist/assets/index-CdMQpg4r.js.map",
+      "bytes": 1204454,
+      "gzipBytes": 252113
+    }
+  ],
+  "scripts": [
+    "baseline",
+    "build",
+    "check",
+    "dev",
+    "lint",
+    "preview",
+    "scan",
+    "test"
+  ],
+  "dependencies": [
+    "@axe-core/playwright",
+    "@supabase/supabase-js",
+    "playwright",
+    "stripe",
+    "zod"
+  ],
+  "devDependencies": [
+    "vite"
+  ],
+  "environmentNames": [
+    "ACCESSREVAMP_SITE_URL",
+    "ALLOWED_ORIGINS",
+    "CONTACT_RATE_LIMIT_SECRET",
+    "STRIPE_CINEMATIC_SCROLL_PRICE_ID",
+    "STRIPE_EXPECT_LIVEMODE",
+    "STRIPE_HOMEPAGE_REVEAL_PRICE_ID",
+    "STRIPE_QUICK_FIX_PRICE_ID",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "VITE_CONTACT_EMAIL",
+    "VITE_SITE_URL",
+    "VITE_STRIPE_CINEMATIC_SCROLL_PRICE_ID",
+    "VITE_STRIPE_CINEMATIC_SCROLL_URL",
+    "VITE_STRIPE_HOMEPAGE_REVEAL_PRICE_ID",
+    "VITE_STRIPE_HOMEPAGE_REVEAL_URL",
+    "VITE_STRIPE_QUICK_FIX_PRICE_ID",
+    "VITE_STRIPE_QUICK_FIX_URL",
+    "VITE_SUPABASE_PUBLISHABLE_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "remoteVerification": {
+    "netlifyPreview": "not verified",
+    "supabaseRemote": "not verified",
+    "stripeTestCatalog": "not verified",
+    "stripeLiveMode": "not authorized"
+  }
+}

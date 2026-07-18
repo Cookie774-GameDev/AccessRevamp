@@ -1,5 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { isPolicyScannable } from './lib/scannable-file.mjs';
 
 const roots = ['src', 'netlify', 'supabase', 'docs', 'README.md', '.env.example', 'netlify.toml'];
 const files = [];
@@ -7,7 +8,7 @@ async function collect(path) {
   const stat = await import('node:fs/promises').then(({ stat }) => stat(path));
   if (stat.isDirectory()) {
     for (const entry of await readdir(path)) await collect(join(path, entry));
-  } else files.push(path);
+  } else if (isPolicyScannable(path)) files.push(path);
 }
 for (const root of roots) await collect(root);
 

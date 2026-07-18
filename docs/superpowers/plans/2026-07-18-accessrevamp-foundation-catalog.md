@@ -55,7 +55,7 @@
 - Produces: `npm run baseline`, which writes a secret-free JSON inventory and local browser evidence while updating no external systems.
 - Produces: documented commands and environment variable categories consumed by all later plans.
 
-- [ ] **Step 1: Write the failing repository-contract test**
+- [x] **Step 1: Write the failing repository-contract test**
 
 ```js
 test('required execution and design contracts exist', async () => {
@@ -69,13 +69,13 @@ test('required execution and design contracts exist', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm the missing-file failure**
+- [x] **Step 2: Run the test and confirm the missing-file failure**
 
 Run: `node --test tests/foundation-contract.test.mjs`
 
 Expected: FAIL with `ENOENT` for `AGENTS.md`.
 
-- [ ] **Step 3: Add the execution contract, approved visual contract, ADR, and baseline script**
+- [x] **Step 3: Add the execution contract, approved visual contract, ADR, and baseline script**
 
 `scripts/capture-baseline.mjs` must derive routes from `src/main.js`, build sizes from `dist/assets`, migration filenames from `supabase/migrations`, and configuration variable names from the two example env files. It must redact values and serialize only names, counts, byte sizes, and route strings.
 
@@ -89,13 +89,13 @@ The browser capture script starts the untouched current build on a loopback port
 
 Record the already observed facts: 67 tests pass, production audit reports zero vulnerabilities, the current JS build is about 70.59 KB gzip, required browser binaries are installed, the current branch is seven commits ahead, no staging URL is verified, no Supabase remote schema is verified, and Stripe remains test-mode/configuration-only.
 
-- [ ] **Step 4: Verify the contract and baseline output**
+- [x] **Step 4: Verify the contract and baseline output**
 
 Run: `node --test tests/foundation-contract.test.mjs && npm run build && npm run baseline`
 
 Expected: PASS, one JSON inventory, baseline screenshots at all four widths, axe/Lighthouse JSON, and no artifact strings matching `sk_`, `whsec_`, `service_role`, `price_`, or `book.stripe.com`.
 
-- [ ] **Step 5: Commit the independently reviewable foundation**
+- [x] **Step 5: Commit the independently reviewable foundation**
 
 ```bash
 git add AGENTS.md design.md docs/adr docs/baseline docs/evidence/baseline scripts/capture-baseline.mjs scripts/capture-baseline-browser.mjs tests/foundation-contract.test.mjs package.json
