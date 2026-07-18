@@ -12,11 +12,11 @@ function isPlainPrimaryClick(event) {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
-function makeInternalLink(href, label, marker = 'cinematic-nav') {
+function makeInternalLink(href, label) {
   const link = document.createElement('a');
   link.href = href;
   link.textContent = label;
-  link.dataset[marker] = '';
+  link.setAttribute('data-cinematic-nav', '');
   return link;
 }
 
