@@ -28,6 +28,7 @@
 - Modify `netlify/functions/_shared/validation.mjs`: strict issue, revoke, and resolve schemas.
 - Create `netlify/functions/operator-pricing-context.mjs`: allowlisted issue/revoke API.
 - Create `netlify/functions/pricing-context.mjs`: rate-keyed public resolver and minimized response.
+- Modify `worker/index.ts`: route the two pricing-context functions on Sites before the app-router fallback.
 - Modify `src/components/cards.js`: stable `data-plan-tier` hook.
 - Modify `src/pages/pricing.js`: private-context shell and pricing-specific page class.
 - Create `src/services/pricing-context.js`: fragment parsing, history cleanup, resolver call, safe DOM rendering.
@@ -137,6 +138,7 @@ git commit -m "feat: model private pricing contexts"
 - Modify: `netlify/functions/_shared/validation.mjs`
 - Create: `netlify/functions/operator-pricing-context.mjs`
 - Create: `netlify/functions/pricing-context.mjs`
+- Modify: `worker/index.ts`
 - Modify: `tests/private-pricing-context.test.mjs`
 
 **Interfaces:**
@@ -227,8 +229,10 @@ export default async (request) => {
 
 - [ ] **Step 4: Commit server boundaries**
 
+Route only `/.netlify/functions/pricing-context` and `/.netlify/functions/operator-pricing-context` through their handlers in `worker/index.ts`; every other request continues to `vinext/server/app-router-entry`.
+
 ```powershell
-git add netlify/functions/_shared/validation.mjs netlify/functions/operator-pricing-context.mjs netlify/functions/pricing-context.mjs tests/private-pricing-context.test.mjs
+git add netlify/functions/_shared/validation.mjs netlify/functions/operator-pricing-context.mjs netlify/functions/pricing-context.mjs worker/index.ts tests/private-pricing-context.test.mjs
 git commit -m "feat: add private pricing link boundaries"
 ```
 
