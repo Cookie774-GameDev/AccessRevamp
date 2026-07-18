@@ -1,6 +1,6 @@
 # Payments, entitlements, and refunds
 
-**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation plus cumulative schema and reservation RPC, `PLANNED` Checkout/reconciliation/refund completion, `EXTERNALLY BLOCKED` connected database and Stripe test-mode E2E evidence, and `LAUNCH-ONLY` live activation.
+**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation, cumulative schema/RPC, and guarded Stripe test-catalog tooling; `PLANNED` Checkout/reconciliation/refund completion; `EXTERNALLY BLOCKED` connected database and Stripe test-mode evidence; and `LAUNCH-ONLY` live activation.
 
 **Owner:** Payments engineering with database, product, operations, security, and finance/legal review.
 
@@ -63,13 +63,15 @@ The retained code verifies Stripe signatures, uses idempotency, validates existi
 
 `202607180002_add_tier_entitlements.sql` implements the exact $0/$50/$200/$250 catalog, durable cumulative entitlements, short-lived upgrade reservations, and refund dependencies. `202607180003_add_payment_rpcs.sql` implements the service-only reservation boundary: it locks by user, expires stale reservations, reuses only an identical live request, rejects same-tier/downgrade checkout, verifies the source order remains fully paid, calculates exact cumulative credit, prevents a second live credit reservation across different targets, and returns no Stripe identifier.
 
+`npm run stripe:test-catalog:sync` and `npm run stripe:test-catalog:verify` implement a test-only Stripe catalog boundary. Both refuse credentials that are not explicit test secret keys. Synchronization uses stable lookup and idempotency keys for the three exact products and six one-time USD prices, reuses verified objects, refuses mismatched managed definitions, leaves unrelated objects untouched, and archives only an integration-marked $199 legacy test price after checking all open Checkout Sessions. Output contains product names, cents, test mode, and configured/missing environment-variable names only—never provider IDs or secrets.
+
 ### PLANNED
 
-Server-only catalog projection, guarded Stripe test products and three upgrade prices, authenticated Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quotes, and operator recovery paths remain specified for implementation.
+Server-only catalog projection, authenticated Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quotes, and operator recovery paths remain specified for implementation.
 
 ### EXTERNALLY BLOCKED
 
-The reservation structural/security contract passes, but `supabase test db` cannot connect because no local Supabase Postgres runtime is available. Creating or confirming Stripe test products/prices, inspecting configured webhooks, applying these migrations to a nonproduction Supabase branch, executing the concurrent-reservation SQL test, and retaining complete test-mode E2E evidence require connected authorized environments.
+The reservation structural/security contract passes, but `supabase test db` cannot connect because no local Supabase Postgres runtime is available. The Stripe catalog contract and mocked behavior pass, while remote verification stops with the explicit missing `STRIPE_SECRET_KEY` prerequisite; no Stripe object was created or changed. Confirming the six test prices, inspecting configured webhooks, applying migrations to a nonproduction Supabase branch, executing the concurrent-reservation SQL test, and retaining complete test-mode E2E evidence require connected authorized environments.
 
 ### LAUNCH-ONLY
 
@@ -77,4 +79,4 @@ Live products/prices, live keys, tax settings, production webhook, real transact
 
 ## Validation
 
-The entitlement and reservation structural/security suite passes 6/6 tests. Still required: clean-database and retained-chain migration execution, SQL race tests, catalog/unit tests, mocked Stripe integration tests, webhook fixture/replay tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.
+The entitlement/reservation structural-security suite passes 6/6 tests, and the guarded Stripe catalog suite passes its exact-definition, credential refusal, idempotency, unrelated-object, open-session, and output-redaction tests. Still required: clean-database and retained-chain migration execution, SQL race tests, remote Stripe test-catalog verification, Checkout/webhook integration and replay tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.

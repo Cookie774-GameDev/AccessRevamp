@@ -142,7 +142,7 @@ git commit -m "feat: serialize upgrade reservations"
 - Produces `npm run stripe:test-catalog:sync` and `npm run stripe:test-catalog:verify`.
 - Produces six active one-time USD test prices without writing IDs to source or stdout.
 
-- [ ] **Step 1: Write failing test-mode, product-name, amount, and redaction tests**
+- [x] **Step 1: Write failing test-mode, product-name, amount, and redaction tests**
 
 ```js
 for (const [name, amount] of EXPECTED_PRICES) assert.deepEqual(catalogDefinition[name].unitAmount, amount);
@@ -151,23 +151,23 @@ assert.doesNotMatch(syncSource, /sk_live_|livemode:\s*true/i);
 assert.doesNotMatch(syncSource, /console\.log\([^)]*(price|secret|product\.id)/i);
 ```
 
-- [ ] **Step 2: Run and confirm the missing synchronizer failure**
+- [x] **Step 2: Run and confirm the missing synchronizer failure**
 
 Run: `node --test tests/stripe-test-catalog.test.mjs`
 
 Expected: FAIL because the guarded scripts do not exist.
 
-- [ ] **Step 3: Implement idempotent test-only product/price synchronization**
+- [x] **Step 3: Implement idempotent test-only product/price synchronization**
 
 Refuse any key not starting `sk_test_`. Upsert or reuse test products named Homepage Reveal, Complete Website Revamp, and Cinematic Scroll Site. Create/reuse six one-time USD prices at 5000, 20000, 25000, 15000, 20000, and 5000 cents using stable lookup keys. Archive only the stale AccessRevamp $199 test price after verifying it is not used by an active session; do not touch unrelated Stripe objects. Print names, amounts, mode, and configured/missing environment variable names only—never IDs or secrets.
 
-- [ ] **Step 4: Verify the script contract and synchronize only with explicit test credentials**
+- [x] **Step 4: Verify the script contract and synchronize only with explicit test credentials**
 
 Run: `node --test tests/stripe-test-catalog.test.mjs && npm run stripe:test-catalog:verify`
 
 Expected: contract PASS; remote verification confirms `livemode=false` and all six amounts when a test key exists. If credentials are absent, the script exits with a clear unmet-prerequisite status and the project does not claim remote catalog completion.
 
-- [ ] **Step 5: Commit the guarded test catalog tools**
+- [x] **Step 5: Commit the guarded test catalog tools**
 
 ```bash
 git add scripts/stripe tests/stripe-test-catalog.test.mjs package.json package-lock.json docs/PAYMENTS.md
