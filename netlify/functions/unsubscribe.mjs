@@ -16,13 +16,10 @@ export default async (request) => {
     const { data: item, error: lookupError } = await supabase.from('outreach_queue').select('recipient_email').eq('opt_out_token', token).maybeSingle();
     if (lookupError) throw lookupError;
     if (!item) return request.method === 'GET' ? html(page('Opt-out link not found', 'This link may already have expired. Reply to the original message with “unsubscribe” and the address will be suppressed manually.'), 404) : json({ error: 'Token not found.' }, 404);
-    const { error } = await supabase.from('suppression_list').upsert({
-      email: item.recipient_email.toLowerCase(),
-      reason: 'recipient_opt_out',
-      source: 'one_click_link',
-    }, { onConflict: 'email' });
+    const { error } = await supabase.rpc('stop_accessrevamp_outreach', {
+      p_email: item.recipient_email.toLowerCase(), p_reason: 'opt_out', p_operator_id: null,
+    });
     if (error) throw error;
-    await supabase.from('outreach_queue').update({ status: 'canceled' }).eq('recipient_email', item.recipient_email).in('status', ['draft', 'approved', 'queued', 'scheduled']);
     return request.method === 'GET'
       ? html(page('You are opted out', 'This address has been added to the permanent AccessRevamp suppression list. No further outreach should be sent to it.'))
       : json({ ok: true });

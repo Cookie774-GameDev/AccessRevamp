@@ -32,6 +32,20 @@ export const entitlementQuoteSchema = z.object({
   targetTier: z.enum(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']),
 }).strict();
 
+export const freeSnapshotSchema = z.object({
+  websiteUrl: publicHttpUrl.refine(Boolean, 'A public website URL is required.').refine((value) => {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    return url.protocol === 'https:'
+      && !/^(10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname)
+      && !hostname.endsWith('.local') && !hostname.endsWith('.internal');
+  }, 'Enter a public HTTPS website URL.'),
+  contactEmail: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  consent: z.literal(true, { errorMap: () => ({ message: 'Consent is required.' }) }),
+  businessContext: z.string().trim().min(20).max(1200),
+  requestId: z.string().uuid(),
+}).strict();
+
 export const outreachDraftSchema = z.object({
   businessName: z.string().trim().min(1).max(160),
   websiteUrl: publicHttpUrl.refine(Boolean, 'A public website URL is required.'),

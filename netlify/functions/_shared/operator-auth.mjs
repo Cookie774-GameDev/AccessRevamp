@@ -1,0 +1,2 @@
+import { HttpError } from './http.mjs'; import { requireConfirmedUser } from './auth.mjs';
+export async function requireOperator(request,admin){const user=await requireConfirmedUser(request,admin);const{data,error}=await admin.from('accessrevamp_operators').select('user_id,active').eq('user_id',user.id).eq('active',true).maybeSingle();if(error)throw new HttpError(503,'Operator authorization is unavailable.');if(!data)throw new HttpError(403,'Operator access required.');return user;}

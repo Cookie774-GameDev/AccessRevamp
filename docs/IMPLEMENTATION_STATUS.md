@@ -16,15 +16,24 @@ Last updated: July 18, 2026
 
 ## PLANNED by the approved rebuild
 
-- Remaining public routes, account and operator workspaces, three complete route-isolated working demos, cinematic story, reports/exports, analytics, and final quality evidence.
-- Connected nonproduction execution and complete test evidence for the locally implemented payment system.
+- Connected nonproduction execution and complete remote evidence for payments, migrations, deployed headers, load, and active security remain pending authorization.
 
-## VERIFIED foundation checkpoint
+## VERIFIED final local checkpoint
 
-- `npm run check`: static policy passed across 115 files; 94/94 tests passed; Sites/vinext worker build completed.
+- Static policy passed across 157 files; 130/130 source and contract tests passed; the vinext/Sites worker and static production bundle both built.
+- Browser verification passed 48/48 checks: 16 Chromium, 16 Firefox, and 16 WebKit, including required routes, interactive demos, keyboard navigation, accessibility, responsive widths, and overflow checks.
+- Four original generated asset groups, the ten-item requirement crosswalk, performance budgets, local secret scan, high-severity dependency audit gate, and `git diff --check` passed.
 - `npm audit --omit=dev --audit-level=high`: zero high/critical findings; two moderate Next/PostCSS advisories remain documented.
 - Current local Lighthouse checkpoint remains below final targets: home 62/96/100/91, pricing 72/93/100/91, work 72/92/100/91, cinematic 75/95/100/91.
 - Historical pre-rebuild evidence was preserved rather than overwritten by the checkpoint rerun.
+
+## IMPLEMENTED and locally verified rebuild scope
+
+- Manual Free Snapshot intake, consent-aware analytics allowlist, structured report and PNG export workflow.
+- Greenline, Firejar, and Clearflow route-isolated working demos with safe sample-only state.
+- Evidence-led four-beat cinematic route and original generated artwork with AVIF/WebP/PNG provenance.
+- Confirmed-user customer projection, restricted operator workspace, hashed preview lifecycle, and suppression-first queue with no sending provider.
+- Local quality budgets, secret scanning, requirement crosswalk, and guarded owned-staging load/security commands.
 
 ## EXTERNALLY BLOCKED evidence
 

@@ -28,13 +28,13 @@ test('the cinematic plan is exactly $250 one time and checkout-enabled', () => {
   assert.doesNotMatch(experience, /MutationObserver/);
 });
 
-test('portfolio concept is original, scroll-controlled, and accessible on mobile', () => {
-  assert.match(page, /Aether One/);
+test('evidence story is original, scroll-controlled, and accessible on mobile', () => {
+  for (const beat of ['Scattered signals', 'Verified evidence', 'Redesigned hierarchy', 'Clear action']) assert.match(page, new RegExp(beat));
   assert.match(page, /data-cinematic-stage/);
   assert.match(experience, /prefers-reduced-motion/);
   assert.match(experience, /rect\.height[\s\S]*rect\.top/);
-  assert.match(styles, /@media \(max-width:\s*760px\)/);
-  assert.match(styles, /@media \(prefers-reduced-motion:\s*reduce\)/);
+  assert.match(styles, /@media\s*\(max-width:\s*760px\)/);
+  assert.match(styles, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   assert.match(styles, /100svh/);
 });
 

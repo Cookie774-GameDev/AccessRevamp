@@ -106,11 +106,11 @@ test('placeholder views render the exact portfolio disclosure only for portfolio
   assert.doesNotMatch(genericHtml, new RegExp(escapeRegExp(disclosure)));
 });
 
-test('main binds portfolio and generic placeholders to their intended routes', async () => {
+test('main binds completed portfolio demos and snapshot while preview remains server-owned', async () => {
   const mainSource = await readFile('src/main.js', 'utf8');
 
-  assert.match(mainSource, /'\/portfolio\/:slug': portfolioUnderConstructionPage/);
-  assert.match(mainSource, /'\/free-snapshot': underConstructionPage/);
+  assert.match(mainSource, /'\/portfolio\/:slug': demoLoadingPage/);
+  assert.match(mainSource, /'\/free-snapshot': freeSnapshotPage/);
   assert.match(mainSource, /'\/preview\/:token': underConstructionPage/);
 });
 

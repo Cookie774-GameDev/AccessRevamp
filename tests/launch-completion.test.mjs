@@ -51,12 +51,11 @@ test('pricing buttons use only server-created Checkout with a validated hosted U
   assert.doesNotMatch(checkoutClient, /book\.stripe\.com|checkoutUrl/);
 });
 
-test('Checkout uses explicit API version, idempotency, server-only catalog selection, and an integration identifier', () => {
+test('Checkout uses explicit API version, idempotency, server-only catalog selection, and exact metadata', () => {
   assert.match(checkoutFunction, /2026-06-24\.dahlia/);
   assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
-  assert.match(checkoutFunction, /integration_identifier: `accessrevamp_/);
   assert.match(checkoutFunction, /getStripePriceForQuote/);
-  assert.match(checkoutFunction, /quoteUpgrade/);
+  assert.match(checkoutFunction, /buildCheckoutMetadata/);
   assert.doesNotMatch(checkoutFunction, /price_1Tu|STRIPE_QUICK_FIX/);
   assert.doesNotMatch(checkoutFunction, /payment_method_types/);
   assert.doesNotMatch(checkoutFunction, /automatic_tax:\s*\{\s*enabled:\s*true/);
@@ -65,7 +64,7 @@ test('Checkout uses explicit API version, idempotency, server-only catalog selec
 test('webhook re-retrieves the Checkout Session and validates the exact Stripe price', () => {
   assert.match(webhook, /checkout\.sessions\.retrieve/);
   assert.match(webhook, /line_items\.data\.price/);
-  assert.match(webhook, /priceId !== expectedPriceId/);
+  assert.match(webhook, /identifier\(lineItem\.price\) !== expectedPriceId/);
   assert.match(webhook, /getStripePriceForQuote/);
   assert.doesNotMatch(webhook, /price_1Tu|STRIPE_QUICK_FIX/);
   assert.match(webhook, /session\.mode !== 'payment'/);
@@ -88,7 +87,7 @@ test('private previews store only a hash, expire, and send noindex controls', ()
   assert.doesNotMatch(previewScript, /token:\s*token/);
   assert.match(previewFunction, /x-robots-tag/);
   assert.match(previewFunction, /noindex, nofollow, noarchive, nosnippet/);
-  assert.match(previewFunction, /Private AccessRevamp Concept · Not the live website/);
+  assert.match(previewFunction, /Private preview — not for public distribution/);
   assert.match(previewFunction, /expiresAt <= new Date\(\)/);
   assert.match(netlify, /from = "\/preview\/:token"/);
 });

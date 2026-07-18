@@ -1,0 +1,1 @@
+export const STANDARD_THRESHOLDS=Object.freeze({performance:90,accessibility:95,bestPractices:95,seo:95});export const CINEMATIC_THRESHOLDS=Object.freeze({...STANDARD_THRESHOLDS,performance:85});export const BUDGETS=Object.freeze({jsGzip:180*1024,cssGzip:70*1024,transfer:1.5*1024*1024,heroPoster:250*1024});

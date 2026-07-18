@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-07-18T19:38:45.671Z",
+  "thresholds": {
+    "standard": {
+      "performance": 90,
+      "accessibility": 95,
+      "bestPractices": 95,
+      "seo": 95
+    },
+    "cinematic": {
+      "performance": 85,
+      "accessibility": 95,
+      "bestPractices": 95,
+      "seo": 95
+    }
+  },
+  "budgets": {
+    "jsGzip": 184320,
+    "cssGzip": 71680,
+    "transfer": 1572864,
+    "heroPoster": 256000
+  },
+  "fieldData": "No Core Web Vitals field data is claimed by this local artifact."
+}

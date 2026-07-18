@@ -85,6 +85,7 @@ export default async (request) => {
     }
 
     const concept = conceptFrom(preview.concept_payload);
+    await supabase.from('accessrevamp_audit_log').insert({ action: 'preview_viewed', entity_type: 'preview', entity_id: preview.id, details: {} });
     const sourceHost = new URL(preview.source_url).hostname.replace(/^www\./, '');
     const expiresLabel = expiresAt.toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'UTC' });
     const proofMarkup = concept.proofPoints.map((item) => `<li><span aria-hidden="true">✓</span>${escapeHtml(item)}</li>`).join('');
@@ -105,7 +106,7 @@ export default async (request) => {
 </head>
 <body>
   <div class="shell">
-    <div class="watermark">Private AccessRevamp Concept · Not the live website</div>
+    <div class="watermark">Private preview — not for public distribution</div>
     <nav class="nav" aria-label="Concept navigation"><div class="brand"><span class="mark" aria-hidden="true">A</span><span>${escapeHtml(concept.brandName)}</span></div><span class="tag">Prepared for ${escapeHtml(sourceHost)}</span></nav>
     <main class="hero">
       <section><span class="eyebrow">${escapeHtml(concept.eyebrow)}</span><h1>${escapeHtml(concept.headline)}</h1><p class="lede">${escapeHtml(concept.subheadline)}</p><div class="actions"><a class="button" href="#concept-details">${escapeHtml(concept.ctaLabel)}</a><span class="note">Concept only—no inventory, account, or checkout connection.</span></div></section>

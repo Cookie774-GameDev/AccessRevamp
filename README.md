@@ -4,7 +4,7 @@
 
 AccessRevamp is an evidence-led website improvement studio for independent businesses. This repository contains the public portfolio and one-time service website, customer and operator foundations, private previews, Supabase data model, Stripe test-mode payment flow, and three original working demo sites.
 
-**Current status:** Production rebuild in progress on a feature branch. Local foundations and pre-rebuild evidence are `IMPLEMENTED`; the exact catalog, entitlements, redesign, demos, and final verification are `PLANNED`; connected remote evidence is `EXTERNALLY BLOCKED`; production activation is `LAUNCH-ONLY`. No production switch or outreach sending is authorized.
+**Current status:** The complete redesign, exact catalog, entitlements, public routes, three working demos, reporting workflow, account/operator foundations, and local verification are implemented on a feature branch. Connected Supabase/Stripe/Netlify evidence remains `EXTERNALLY BLOCKED`; production data changes, live payments, outreach sending, and custom-domain activation remain `LAUNCH-ONLY`.
 
 ## Canonical one-time catalog
 
@@ -56,7 +56,7 @@ Build and open the production preview:
 
 ```bash
 npm run build
-npm run preview -- --host 127.0.0.1 --port 4173
+npm run preview -- --port 4173
 ```
 
 The preview intentionally has no deployment secrets. Contact submission, authentication, customer data, operator data, and server-created Checkout require the documented Netlify/Supabase/Stripe environment categories.
