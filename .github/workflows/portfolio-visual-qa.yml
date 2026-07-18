@@ -1,0 +1,129 @@
+name: Portfolio Visual QA
+
+on:
+  push:
+    branches:
+      - agent/portfolio-visual-qa
+
+permissions:
+  contents: read
+
+jobs:
+  preview-and-screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Convert routes to a standalone hash preview
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+
+          const mainPath = 'src/main.js';
+          let main = await readFile(mainPath, 'utf8');
+          const mainAnchor = "const app = document.querySelector('#app');";
+          if (!main.includes(mainAnchor)) throw new Error('Main preview patch anchor was not found.');
+          main = main.replace(mainAnchor, `${mainAnchor}\nconst currentRoute = () => location.hash.slice(1) || '/';`);
+          main = main.replaceAll('location.pathname', 'currentRoute()');
+          main = main.replace("history.pushState({}, '', path);", "location.hash = path;");
+          main = main.replace("window.addEventListener('popstate', render);", "window.addEventListener('hashchange', render);");
+          await writeFile(mainPath, main);
+
+          const portfolioPath = 'src/portfolio.js';
+          let portfolio = await readFile(portfolioPath, 'utf8');
+          const portfolioAnchor = "import './portfolio.css';";
+          if (!portfolio.includes(portfolioAnchor)) throw new Error('Portfolio preview patch anchor was not found.');
+          portfolio = portfolio.replace(portfolioAnchor, `${portfolioAnchor}\n\nconst currentPortfolioRoute = () => location.hash.slice(1) || '/';`);
+          portfolio = portfolio.replaceAll('location.pathname', 'currentPortfolioRoute()');
+          portfolio = portfolio.replace("history.pushState({}, '', url.pathname);\n  window.dispatchEvent(new PopStateEvent('popstate'));", "location.hash = url.pathname;");
+          portfolio = portfolio.replace("window.addEventListener('popstate', () => requestAnimationFrame(applyPortfolioExperience));", "window.addEventListener('hashchange', () => requestAnimationFrame(applyPortfolioExperience));");
+          await writeFile(portfolioPath, portfolio);
+          NODE
+      - name: Run tests and build standalone preview
+        run: |
+          npm test
+          npm run build -- --base=./
+          cp dist/index.html dist/OPEN_ME.html
+          cat > dist/README.txt <<'TXT'
+          ACCESSREVAMP PORTFOLIO UI PREVIEW
+
+          Open OPEN_ME.html or index.html in a modern browser.
+          Navigation uses URL hashes in this downloadable preview, so the homepage,
+          portfolio, pricing, sample report, methodology, contact, sign-in, and
+          dashboard shell remain browsable without a hosting account.
+
+          Supabase auth/data, contact submission, server-created Stripe Checkout,
+          webhooks, and private previews require the deployed environment.
+          TXT
+      - name: Install Chromium for visual QA
+        run: npx playwright install --with-deps chromium
+      - name: Capture desktop and mobile portfolio screenshots
+        run: |
+          mkdir -p visual-qa
+          npx vite preview --host 127.0.0.1 --port 4173 > /tmp/accessrevamp-vite.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          import { writeFile } from 'node:fs/promises';
+
+          const browser = await chromium.launch({ headless: true });
+          const cases = [
+            { name: 'portfolio-desktop', route: '#/portfolio', viewport: { width: 1440, height: 1050 } },
+            { name: 'portfolio-mobile', route: '#/portfolio', viewport: { width: 390, height: 844 }, mobile: true },
+            { name: 'home-mobile', route: '#/', viewport: { width: 390, height: 844 }, mobile: true },
+          ];
+          const report = [];
+
+          for (const item of cases) {
+            const context = await browser.newContext({
+              viewport: item.viewport,
+              deviceScaleFactor: item.mobile ? 2 : 1,
+              isMobile: Boolean(item.mobile),
+              hasTouch: Boolean(item.mobile),
+              reducedMotion: 'reduce',
+            });
+            const page = await context.newPage();
+            await page.goto(`http://127.0.0.1:4173/${item.route}`, { waitUntil: 'networkidle' });
+            await page.screenshot({ path: `visual-qa/${item.name}.png`, fullPage: true, animations: 'disabled' });
+            const metrics = await page.evaluate(() => ({
+              route: location.hash,
+              viewportWidth: innerWidth,
+              documentWidth: document.documentElement.scrollWidth,
+              portfolioCards: document.querySelectorAll('.portfolio-card').length,
+              portfolioLinks: document.querySelectorAll('[data-portfolio-link]').length,
+              mainText: document.querySelector('#main-content')?.innerText.slice(0, 300) || '',
+            }));
+            if (metrics.documentWidth > metrics.viewportWidth + 1) {
+              throw new Error(`${item.name} has horizontal overflow: ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
+            }
+            if (item.route === '#/portfolio' && metrics.portfolioCards !== 6) {
+              throw new Error(`${item.name} rendered ${metrics.portfolioCards} portfolio cards instead of 6.`);
+            }
+            report.push({ name: item.name, ...metrics });
+            await context.close();
+          }
+
+          await browser.close();
+          await writeFile('visual-qa/report.json', `${JSON.stringify(report, null, 2)}\n`);
+          NODE
+      - name: Upload standalone preview and visual QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-portfolio-preview
+          path: |
+            dist
+            visual-qa
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
