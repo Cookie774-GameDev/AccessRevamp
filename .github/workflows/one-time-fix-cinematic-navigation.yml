@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/fix-cinematic-navigation-runtime
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
