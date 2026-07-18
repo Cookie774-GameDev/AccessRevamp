@@ -29,6 +29,10 @@ export const checkoutSchema = z.object({
   requestId: z.string().uuid(),
 }).strict();
 
+export const entitlementQuoteSchema = z.object({
+  targetTier: z.enum(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']),
+}).strict();
+
 export const outreachDraftSchema = z.object({
   businessName: z.string().trim().min(1).max(160),
   websiteUrl: publicHttpUrl.refine(Boolean, 'A public website URL is required.'),

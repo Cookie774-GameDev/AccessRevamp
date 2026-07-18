@@ -187,7 +187,7 @@ git commit -m "feat: add guarded Stripe test catalog sync"
 - Produces: `requireConfirmedUser(request, supabaseAdmin)` returning `{id, email}` from verified token claims.
 - Produces: `POST /.netlify/functions/entitlement-quote` accepting `{targetTier}` and returning list/credit/due/resulting tier without a Stripe ID.
 
-- [ ] **Step 1: Write failing authentication and response-shape tests**
+- [x] **Step 1: Write failing authentication and response-shape tests**
 
 ```js
 assert.deepEqual(Object.keys(validQuote).sort(), ['creditCents','dueNowCents','listPriceCents','resultingTier','targetTier']);
@@ -195,23 +195,23 @@ await assert.rejects(() => requireConfirmedUser(requestWithoutBearer, admin), /a
 await assert.rejects(() => requireConfirmedUser(unconfirmedRequest, admin), /confirmed/i);
 ```
 
-- [ ] **Step 2: Run and confirm missing-module failures**
+- [x] **Step 2: Run and confirm missing-module failures**
 
 Run: `node --test tests/auth-boundary.test.mjs tests/entitlement-quote.test.mjs`
 
 Expected: FAIL for missing modules.
 
-- [ ] **Step 3: Implement strict same-origin, size, schema, bearer-token, and confirmed-email validation**
+- [x] **Step 3: Implement strict same-origin, size, schema, bearer-token, and confirmed-email validation**
 
 Use Supabase Admin `auth.getUser(token)`; never accept an email from the body. Return 401 for absent/invalid sessions, 403 for unconfirmed identity, 409 for ineligible transition, 422 for schema errors, and a redacted 503 for configuration absence.
 
-- [ ] **Step 4: Verify auth and quote tests**
+- [x] **Step 4: Verify auth and quote tests**
 
 Run: `node --test tests/auth-boundary.test.mjs tests/entitlement-quote.test.mjs tests/validation.test.mjs`
 
 Expected: all tests PASS and response fixtures contain no email, token, reservation ID, or Stripe ID.
 
-- [ ] **Step 5: Commit the identity boundary**
+- [x] **Step 5: Commit the identity boundary**
 
 ```bash
 git add netlify/functions/_shared netlify/functions/entitlement-quote.mjs tests/auth-boundary.test.mjs tests/entitlement-quote.test.mjs tests/validation.test.mjs

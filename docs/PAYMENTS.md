@@ -1,6 +1,6 @@
 # Payments, entitlements, and refunds
 
-**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation, cumulative schema/RPC, and guarded Stripe test-catalog tooling; `PLANNED` Checkout/reconciliation/refund completion; `EXTERNALLY BLOCKED` connected database and Stripe test-mode evidence; and `LAUNCH-ONLY` live activation.
+**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation, cumulative schema/RPC, guarded Stripe test catalog, and confirmed-user quote boundary; `PLANNED` Checkout/reconciliation/refund completion; `EXTERNALLY BLOCKED` connected database and Stripe test-mode evidence; and `LAUNCH-ONLY` live activation.
 
 **Owner:** Payments engineering with database, product, operations, security, and finance/legal review.
 
@@ -65,9 +65,11 @@ The retained code verifies Stripe signatures, uses idempotency, validates existi
 
 `npm run stripe:test-catalog:sync` and `npm run stripe:test-catalog:verify` implement a test-only Stripe catalog boundary. Both refuse credentials that are not explicit test secret keys. Synchronization uses stable lookup and idempotency keys for the three exact products and six one-time USD prices, reuses verified objects, refuses mismatched managed definitions, leaves unrelated objects untouched, and archives only an integration-marked $199 legacy test price after checking all open Checkout Sessions. Output contains product names, cents, test mode, and configured/missing environment-variable names only—never provider IDs or secrets.
 
+`requireConfirmedUser` accepts one bounded Bearer token, verifies it with Supabase Admin `auth.getUser`, requires a confirmed email claim, and returns only normalized verified identity. The entitlement quote endpoint accepts only a strict paid target-tier object after same-origin, content-type, declared-size, and actual UTF-8 byte checks. It reads only the authenticated user's active entitlement through the server client, validates exact settled value, rejects same-tier/downgrade transitions, and returns only target, list price, credit, due-now value, and resulting tier. Browser-provided email, paid value, reservation, amount, or provider identifier is never accepted.
+
 ### PLANNED
 
-Server-only catalog projection, authenticated Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quotes, and operator recovery paths remain specified for implementation.
+Server-only catalog projection, reservation-backed Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quote UI, and operator recovery paths remain specified for implementation.
 
 ### EXTERNALLY BLOCKED
 

@@ -36,6 +36,25 @@ export function assertJsonSize(request) {
   if (length > MAX_BODY_BYTES) throw new HttpError(413, 'Request is too large.');
 }
 
+export async function readJsonBody(request) {
+  const contentType = (request.headers.get('content-type') || '')
+    .split(';', 1)[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== 'application/json') {
+    throw new HttpError(415, 'Content-Type must be application/json.');
+  }
+  const text = await request.text();
+  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) {
+    throw new HttpError(413, 'Request is too large.');
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new HttpError(422, 'Request body must be valid JSON.');
+  }
+}
+
 export function assertMethod(request, method) {
   if (request.method !== method) throw new HttpError(405, 'Method not allowed.');
 }
@@ -62,6 +81,9 @@ export class HttpError extends Error {
 export function handleError(error) {
   const status = Number(error?.status) || 500;
   const message = status >= 500 ? 'The request could not be completed.' : error.message;
-  if (status >= 500) console.error(error);
+  if (status >= 500) {
+    const name = String(error?.name || 'Error').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
+    console.error('AccessRevamp server request failed.', { status, name });
+  }
   return json({ error: message }, status);
 }

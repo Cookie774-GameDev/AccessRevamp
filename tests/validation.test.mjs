@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contactSchema, outreachDraftSchema } from '../netlify/functions/_shared/validation.mjs';
+import { contactSchema, entitlementQuoteSchema, outreachDraftSchema } from '../netlify/functions/_shared/validation.mjs';
 
 test('contact validation accepts a bounded legitimate request', () => {
   const result = contactSchema.parse({
@@ -21,4 +21,10 @@ test('contact validation rejects localhost and honeypot submissions', () => {
 
 test('outreach draft requires public contact provenance and substantive copy', () => {
   assert.throws(() => outreachDraftSchema.parse({ businessName: 'Shop', websiteUrl: 'https://shop.example', recipientEmail: 'owner@example.com', contactSourceUrl: 'not-a-url', subject: 'Hello there', bodyText: 'Too short' }));
+});
+
+test('entitlement quote accepts only one paid target tier and never identity input', () => {
+  assert.deepEqual(entitlementQuoteSchema.parse({ targetTier: 'complete_revamp' }), { targetTier: 'complete_revamp' });
+  assert.throws(() => entitlementQuoteSchema.parse({ targetTier: 'free_snapshot' }));
+  assert.throws(() => entitlementQuoteSchema.parse({ targetTier: 'complete_revamp', email: 'owner@example.com' }));
 });
