@@ -8,7 +8,7 @@ const faq = (question, answer) => `<details><summary>${question}<span>+</span></
 
 export function homePage() {
   const work = selectedWork.map((item, index) => workCard(item, { featured: index === 0 })).join('');
-  const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'quick_fix', compact: true })).join('');
+  const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');
   const ticker = Array(2).fill('<span>Human-reviewed</span><span>One-time pricing</span><span>Original direction</span><span>Accessible by design</span>').join('');
 
   return shell(`

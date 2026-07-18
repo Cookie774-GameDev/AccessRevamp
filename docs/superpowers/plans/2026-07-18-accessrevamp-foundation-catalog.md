@@ -171,7 +171,7 @@ git commit -m "docs: define production operating model"
 - Produces: `TIERS`, `TIER_KEYS`, `getTier(key)`, `getEligibleCreditCents(paidCents, targetKey)`, and `quoteUpgrade(paidCents, targetKey)`.
 - Produces server-only: `getStripePriceForQuote(quote, env)` returning `{ priceId, transitionKey }`.
 
-- [ ] **Step 1: Replace stale source-text assertions with failing behavioral catalog tests**
+- [x] **Step 1: Replace stale source-text assertions with failing behavioral catalog tests**
 
 ```js
 const transitions = [
@@ -186,13 +186,13 @@ for (const [paid, target, due] of transitions) {
 
 Also assert that importing `src/config.js` contains no `price_`, `book.stripe.com`, `VITE_STRIPE`, `$199`, or `quick_fix`.
 
-- [ ] **Step 2: Run the catalog test and confirm the stale-catalog failure**
+- [x] **Step 2: Run the catalog test and confirm the stale-catalog failure**
 
 Run: `node --test tests/catalog.test.mjs`
 
 Expected: FAIL because `tier-catalog.js` does not exist and the old config contains `$199`.
 
-- [ ] **Step 3: Implement the pure catalog and exact upgrade arithmetic**
+- [x] **Step 3: Implement the pure catalog and exact upgrade arithmetic**
 
 Use JSDoc `@typedef` declarations for tier keys and quote results. `quoteUpgrade` must reject unknown tiers, downgrades, negative paid value, and paid value above $250; cap eligible credit at the target list price; return list price, verified credit, amount due, and resulting entitlement.
 
@@ -209,13 +209,13 @@ const PRICE_ENV_BY_TRANSITION = Object.freeze({
 });
 ```
 
-- [ ] **Step 4: Verify behavioral and secret-boundary tests**
+- [x] **Step 4: Verify behavioral and secret-boundary tests**
 
 Run: `node --test tests/catalog.test.mjs && npm run build && rg -n "price_|book\.stripe\.com|VITE_STRIPE" dist src`
 
 Expected: tests PASS; search returns no matches in `dist` or `src`.
 
-- [ ] **Step 5: Commit the catalog boundary**
+- [x] **Step 5: Commit the catalog boundary**
 
 ```bash
 git add src/config src/config.js netlify/functions/_shared/stripe-catalog.mjs tests/catalog.test.mjs .env.example .env.netlify.example

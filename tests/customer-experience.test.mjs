@@ -15,13 +15,15 @@ test('contact preserves the strict public payload and accessible request states'
   assert.match(page, /aria-live="polite"/);
 });
 
-test('checkout uses server creation, safe Stripe fallback, and busy states', async () => {
+test('checkout uses only a server-created Stripe URL and exposes busy/failure states', async () => {
   const service = await read('src/services/checkout.js');
   assert.match(service, /\.netlify\/functions\/create-checkout/);
   assert.match(service, /crypto\.randomUUID\(\)/);
   assert.match(service, /checkout\.stripe\.com/);
-  assert.match(service, /book\.stripe\.com/);
+  assert.doesNotMatch(service, /book\.stripe\.com|checkoutUrl/);
   assert.match(service, /aria-busy/);
+  assert.match(service, /Checkout unavailable/);
+  assert.match(service, /setAttribute\('disabled'/);
   assert.match(service, /removeEventListener/);
 });
 
@@ -43,4 +45,3 @@ test('legal, account, checkout-result, and internal-boundary routes stay explici
   assert.match(legal, /refundPolicy/);
   assert.doesNotMatch(`${main}\n${legal}`, /1ETfgTPdIBnO5J6Rburhx-2iYwR72ke6S|drive\.google\.com/i);
 });
-

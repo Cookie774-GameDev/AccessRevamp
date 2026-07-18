@@ -1,63 +1,8 @@
-export const plans = Object.freeze({
-  homepage_reveal: Object.freeze({
-    key: 'homepage_reveal',
-    name: 'Homepage Reveal',
-    label: 'A focused first look',
-    summary: 'A human-reviewed homepage report and a complete visual direction for the first screen.',
-    amount: 5000,
-    displayPrice: '$50',
-    cadence: 'one-time',
-    stripePriceId: import.meta.env.VITE_STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
-    checkoutUrl: import.meta.env.VITE_STRIPE_HOMEPAGE_REVEAL_URL || 'https://book.stripe.com/test_dRmdRabhid0QfBfedagQE00',
-    features: Object.freeze(['Public homepage review', 'Prioritized findings', 'First-screen design direction', 'Clear repair recommendations']),
-  }),
-  quick_fix: Object.freeze({
-    key: 'quick_fix',
-    name: 'Quick Fix Plan',
-    label: 'The practical rebuild',
-    summary: 'The reveal, the agreed website revamp, and a bounded creative pack in one practical scope.',
-    amount: 19900,
-    displayPrice: '$199',
-    cadence: 'one-time',
-    stripePriceId: import.meta.env.VITE_STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
-    checkoutUrl: import.meta.env.VITE_STRIPE_QUICK_FIX_URL || 'https://book.stripe.com/test_cNi00k99a1i81Kp6KIgQE01',
-    features: Object.freeze(['Everything in Homepage Reveal', 'Agreed redesign and implementation', 'Responsive and accessibility checks', '10 Canva-ready creative variations']),
-    creativePack: Object.freeze({
-      totalVariations: 10,
-      masterDirections: 2,
-      formatsPerDirection: 5,
-      formats: Object.freeze([
-        'Square feed — 1080 × 1080',
-        'Portrait feed — 1080 × 1350',
-        'Story / Reel cover — 1080 × 1920',
-        'Landscape ad — 1200 × 628',
-        'US Letter / A4 poster',
-      ]),
-      canvaReady: true,
-      canvaFreeCompatibleByDefault: true,
-      revisionRounds: 1,
-      campaignCount: 1,
-    }),
-  }),
-  cinematic_scroll: Object.freeze({
-    key: 'cinematic_scroll',
-    name: 'Cinematic Scroll Site',
-    label: 'A story with movement',
-    summary: 'One premium scroll-driven product story with a cohesive visual sequence and accessible fallbacks.',
-    amount: 25000,
-    displayPrice: '$250',
-    cadence: 'one-time',
-    stripePriceId: import.meta.env.VITE_STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
-    checkoutUrl: import.meta.env.VITE_STRIPE_CINEMATIC_SCROLL_URL || 'https://book.stripe.com/test_6oU8wQ7125yo2Ot4CAgQE04',
-    features: Object.freeze(['One motion-led story sequence', 'Up to four story beats', 'Mobile static fallback', 'Reduced-motion alternative']),
-    deliveryBusinessDays: 3,
-    motionSequenceCount: 1,
-    maximumStoryBeats: 4,
-    revisionRounds: 1,
-    mobileFallback: true,
-    reducedMotionFallback: true,
-  }),
-});
+import { TIERS } from './config/tier-catalog.js';
+
+export const plans = TIERS;
+
+const paymentMode = import.meta.env.VITE_PAYMENT_MODE === 'live' ? 'live' : 'test';
 
 export const siteConfig = Object.freeze({
   name: 'AccessRevamp',
@@ -65,7 +10,8 @@ export const siteConfig = Object.freeze({
   contactEmail: import.meta.env.VITE_CONTACT_EMAIL || '',
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
   supabaseKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-  checkoutIsSandbox: Object.values(plans).some((plan) => plan.checkoutUrl.includes('/test_')),
+  paymentMode,
+  checkoutIsSandbox: paymentMode === 'test',
 });
 
 export const servicePromise = Object.freeze([

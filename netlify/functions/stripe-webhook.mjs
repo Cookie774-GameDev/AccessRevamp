@@ -1,14 +1,10 @@
 import Stripe from 'stripe';
+import { quoteUpgrade } from '../../src/config/tier-catalog.js';
 import { handleError, json } from './_shared/http.mjs';
+import { getStripePriceForQuote } from './_shared/stripe-catalog.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
 const STRIPE_API_VERSION = '2026-06-24.dahlia';
-const expectedAmounts = Object.freeze({ homepage_reveal: 5000, quick_fix: 19900, cinematic_scroll: 25000 });
-const expectedPriceIds = Object.freeze({
-  homepage_reveal: process.env.STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
-  quick_fix: process.env.STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
-  cinematic_scroll: process.env.STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
-});
 const checkoutEventTypes = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
@@ -70,20 +66,22 @@ export default async (request) => {
 
       if (shouldFulfill) {
         const planKey = session.metadata?.plan_key;
-        const expectedPriceId = expectedPriceIds[planKey];
+        const quote = quoteUpgrade(0, planKey);
+        const expectedPriceId = getStripePriceForQuote(quote, process.env).priceId;
+        const expectedAmount = quote.dueNowCents;
         const lineItems = session.line_items?.data || [];
         const lineItem = lineItems[0];
         const priceId = typeof lineItem?.price === 'string' ? lineItem.price : lineItem?.price?.id;
         const amount = Number(session.amount_total || 0);
         const currency = String(session.currency || '').toLowerCase();
         if (
-          !expectedAmounts[planKey]
+          !expectedAmount
           || session.mode !== 'payment'
           || session.payment_status !== 'paid'
           || lineItems.length !== 1
           || lineItem?.quantity !== 1
           || priceId !== expectedPriceId
-          || expectedAmounts[planKey] !== amount
+          || expectedAmount !== amount
           || currency !== 'usd'
         ) {
           throw new Error('Checkout price, amount, currency, mode, or plan metadata did not match the configured catalog.');

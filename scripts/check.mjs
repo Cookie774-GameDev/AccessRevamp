@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isPolicyScannable } from './lib/scannable-file.mjs';
+import { TIERS, TIER_KEYS } from '../src/config/tier-catalog.js';
 
 const roots = ['src', 'netlify', 'supabase', 'docs', 'README.md', '.env.example', 'netlify.toml'];
 const files = [];
@@ -26,11 +27,17 @@ for (const file of files) {
   const text = await readFile(file, 'utf8');
   for (const pattern of forbidden) if (pattern.test(text)) failures.push(file + ' matched ' + pattern);
 }
-const config = await readFile('src/config.js', 'utf8');
-if (!/amount:\s*5000\b/.test(config)) failures.push('Homepage Reveal must be exactly 5000 cents.');
-if (!/amount:\s*19900\b/.test(config)) failures.push('Quick Fix must be exactly 19900 cents.');
-if (!/amount:\s*25000\b/.test(config)) failures.push('Cinematic Scroll Site must be exactly 25000 cents.');
-if ((config.match(/cadence:\s*'one-time'/g) || []).length !== 3) failures.push('All three catalog entries must be one-time.');
+const expectedCatalog = Object.freeze({
+  free_snapshot: 0,
+  homepage_reveal: 5000,
+  complete_revamp: 20000,
+  cinematic_scroll: 25000,
+});
+if (TIER_KEYS.length !== 4) failures.push('The canonical catalog must contain exactly four tiers.');
+for (const [key, cents] of Object.entries(expectedCatalog)) {
+  if (TIERS[key]?.listPriceCents !== cents) failures.push(`${key} must be exactly ${cents} cents.`);
+  if (TIERS[key]?.cadence !== 'one-time') failures.push(`${key} must be one-time.`);
+}
 const migration = await readFile('supabase/migrations/202607170001_accessrevamp.sql', 'utf8');
 if (!/daily_limit[^\n]+20/.test(migration) || !/Daily outreach limit of 20 reached/.test(migration)) failures.push('Database outreach ceiling is missing.');
 if (!/suppression_list/.test(migration)) failures.push('Permanent suppression list is missing.');

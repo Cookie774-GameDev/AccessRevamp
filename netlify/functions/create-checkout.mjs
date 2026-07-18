@@ -1,14 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import Stripe from 'stripe';
+import { quoteUpgrade } from '../../src/config/tier-catalog.js';
 import { assertJsonSize, assertMethod, assertSameOrigin, handleError, json } from './_shared/http.mjs';
+import { getStripePriceForQuote } from './_shared/stripe-catalog.mjs';
 import { checkoutSchema } from './_shared/validation.mjs';
 
 const STRIPE_API_VERSION = '2026-06-24.dahlia';
-const PLAN_PRICES = Object.freeze({
-  homepage_reveal: process.env.STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
-  quick_fix: process.env.STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
-  cinematic_scroll: process.env.STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
-});
 
 function randomLetters(length = 8) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -24,6 +21,8 @@ export default async (request) => {
     const payload = checkoutSchema.parse(await request.json());
     if (!process.env.STRIPE_SECRET_KEY) throw new Error('Stripe server configuration is missing.');
 
+    const quote = quoteUpgrade(0, payload.planKey);
+    const { priceId, transitionKey } = getStripePriceForQuote(quote, process.env);
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: STRIPE_API_VERSION,
       appInfo: {
@@ -34,7 +33,7 @@ export default async (request) => {
     const origin = new URL(request.url).origin;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      line_items: [{ price: PLAN_PRICES[payload.planKey], quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       customer_email: payload.email,
       customer_creation: 'always',
       billing_address_collection: 'required',
@@ -47,13 +46,17 @@ export default async (request) => {
       cancel_url: `${origin}/cancel`,
       metadata: {
         plan_key: payload.planKey,
+        transition_key: transitionKey,
+        gross_cents: String(quote.listPriceCents),
+        credit_cents: String(quote.verifiedCreditCents),
+        net_cents: String(quote.dueNowCents),
         source: 'accessrevamp_website',
         checkout_request_id: payload.requestId,
       },
       payment_intent_data: {
         metadata: {
           plan_key: payload.planKey,
-          source: 'accessrevamp_website',
+          transition_key: transitionKey,
           checkout_request_id: payload.requestId,
         },
       },

@@ -10,7 +10,7 @@ const pages = {
   terms: {
     title: 'Service terms',
     intro: 'Every AccessRevamp purchase is governed by the selected plan and the written scope confirmed for delivery.',
-    items: ['Homepage Reveal is a report and concept deliverable, not implementation.', 'Quick Fix covers only the website and creative scope confirmed in writing.', 'Cinematic Scroll Site is bounded to one sequence, up to four story beats, one revision, and accessible fallbacks.', 'Accessibility and security observations are not certification, penetration testing, or legal advice.', 'Timelines may change when access, assets, content, third-party tools, or approvals are delayed.'],
+    items: ['Homepage Reveal includes a reviewed report and one landing-page direction; its written scope states whether delivery is coded, conceptual, or both.', 'Complete Website Revamp covers up to five agreed standard content pages unless written scope says otherwise.', 'Cinematic Scroll Site is bounded to one sequence, up to four story beats, one revision, and accessible fallbacks.', 'Accessibility and security observations are not certification, penetration testing, or legal advice.', 'Timelines may change when access, assets, content, third-party tools, or approvals are delayed.'],
   },
   accessibility: {
     title: 'Accessibility statement',

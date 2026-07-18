@@ -43,20 +43,21 @@ test('runtime and security-sensitive dependencies are exact and current for the 
   }
 });
 
-test('pricing buttons use server-created Checkout with a validated Stripe fallback', () => {
+test('pricing buttons use only server-created Checkout with a validated hosted URL', () => {
   assert.match(main, /setupCheckout/);
   assert.match(checkoutClient, /\.netlify\/functions\/create-checkout/);
   assert.match(checkoutClient, /crypto\.randomUUID\(\)/);
   assert.match(checkoutClient, /checkout\.stripe\.com/);
-  assert.match(checkoutClient, /book\.stripe\.com/);
+  assert.doesNotMatch(checkoutClient, /book\.stripe\.com|checkoutUrl/);
 });
 
-test('Checkout uses explicit API version, idempotency, exact price IDs, and an integration identifier', () => {
+test('Checkout uses explicit API version, idempotency, server-only catalog selection, and an integration identifier', () => {
   assert.match(checkoutFunction, /2026-06-24\.dahlia/);
   assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
   assert.match(checkoutFunction, /integration_identifier: `accessrevamp_/);
-  assert.match(checkoutFunction, /price_1TuGoNLzyGRcyGQJRjtGsiMV/);
-  assert.match(checkoutFunction, /price_1TuGoTLzyGRcyGQJfdkqoE3f/);
+  assert.match(checkoutFunction, /getStripePriceForQuote/);
+  assert.match(checkoutFunction, /quoteUpgrade/);
+  assert.doesNotMatch(checkoutFunction, /price_1Tu|STRIPE_QUICK_FIX/);
   assert.doesNotMatch(checkoutFunction, /payment_method_types/);
   assert.doesNotMatch(checkoutFunction, /automatic_tax:\s*\{\s*enabled:\s*true/);
 });
@@ -65,6 +66,8 @@ test('webhook re-retrieves the Checkout Session and validates the exact Stripe p
   assert.match(webhook, /checkout\.sessions\.retrieve/);
   assert.match(webhook, /line_items\.data\.price/);
   assert.match(webhook, /priceId !== expectedPriceId/);
+  assert.match(webhook, /getStripePriceForQuote/);
+  assert.doesNotMatch(webhook, /price_1Tu|STRIPE_QUICK_FIX/);
   assert.match(webhook, /session\.mode !== 'payment'/);
   assert.match(webhook, /STRIPE_EXPECT_LIVEMODE/);
 });

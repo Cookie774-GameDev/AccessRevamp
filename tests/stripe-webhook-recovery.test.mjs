@@ -35,7 +35,8 @@ test('orders and projects are fulfilled only after confirmed payment', () => {
 });
 
 test('catalog amount and currency are verified before fulfillment', () => {
-  assert.match(webhook, /expectedAmounts\[planKey\] !== amount/);
+  assert.match(webhook, /expectedAmount !== amount/);
+  assert.match(webhook, /quoteUpgrade\(0, planKey\)/);
   assert.match(webhook, /currency !== 'usd'/);
 });
 
