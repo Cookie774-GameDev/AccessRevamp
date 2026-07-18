@@ -1,0 +1,61 @@
+name: UI Preview Artifact
+
+on:
+  push:
+    branches:
+      - agent/ui-preview-artifact
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Convert the SPA to a standalone hash-routed preview
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const path = 'src/main.js';
+          let source = await readFile(path, 'utf8');
+          const anchor = "const app = document.querySelector('#app');";
+          if (!source.includes(anchor)) throw new Error('Preview patch anchor was not found.');
+          source = source.replace(anchor, `${anchor}\nconst currentRoute = () => location.hash.slice(1) || '/';`);
+          source = source.replaceAll('location.pathname', 'currentRoute()');
+          source = source.replace("history.pushState({}, '', path);", "location.hash = path;");
+          source = source.replace("window.addEventListener('popstate', render);", "window.addEventListener('hashchange', render);");
+          await writeFile(path, source);
+          NODE
+      - name: Build browser-openable preview
+        run: npm run build -- --base=./
+      - name: Add preview instructions
+        run: |
+          cp dist/index.html dist/OPEN_ME.html
+          cat > dist/README.txt <<'TXT'
+          ACCESSREVAMP UI PREVIEW
+
+          Open OPEN_ME.html or index.html in a modern browser.
+          Navigation uses URL hashes in this downloadable preview, so Pricing,
+          Methodology, Sample Report, Contact, Sign In, and Dashboard views remain
+          browsable without a hosting account.
+
+          Contact submission, authentication, customer data, Stripe session creation,
+          private previews, and webhooks require the deployed Netlify and Supabase
+          environment and are intentionally not live inside this static preview.
+          TXT
+      - name: Upload UI preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-ui-preview
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
