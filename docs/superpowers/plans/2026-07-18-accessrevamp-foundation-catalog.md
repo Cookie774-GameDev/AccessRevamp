@@ -123,7 +123,7 @@ git commit -m "docs: establish rebuild execution contract"
 - Produces: stable documentation destinations linked by `AGENTS.md` and `README.md`.
 - Consumes: approved design specification `docs/superpowers/specs/2026-07-18-accessrevamp-production-rebuild-design.md`.
 
-- [ ] **Step 1: Extend the failing test to require all ten deep documents and safe status labels**
+- [x] **Step 1: Extend the failing test to require all ten deep documents and safe status labels**
 
 ```js
 const requiredDocs = ['PRODUCT','ARCHITECTURE','DESIGN','PAYMENTS','DATA_MODEL','SECURITY','OUTREACH','QUALITY','DEPLOYMENT','THIRD_PARTY'];
@@ -134,23 +134,23 @@ for (const name of requiredDocs) {
 }
 ```
 
-- [ ] **Step 2: Run the test and confirm missing-document failures**
+- [x] **Step 2: Run the test and confirm missing-document failures**
 
 Run: `node --test tests/foundation-contract.test.mjs`
 
 Expected: FAIL on the first missing required document.
 
-- [ ] **Step 3: Write each document with implemented, planned, externally blocked, and launch-only sections**
+- [x] **Step 3: Write each document with implemented, planned, externally blocked, and launch-only sections**
 
 Each file must identify current evidence, its owning subsystem, validation commands, and links to the approved spec and applicable plan. `THIRD_PARTY.md` records package purpose/version/license source, zero to three named inspiration references with URL/date/what was learned/what was intentionally not copied, and prohibits arbitrary copied components/assets. `ARCHITECTURE.md` states that Google Drive is internal operator context only and is never read by the browser. `DEPLOYMENT.md` explicitly says no production switch has been authorized.
 
-- [ ] **Step 4: Verify documentation and stale-claim removal**
+- [x] **Step 4: Verify documentation and stale-claim removal**
 
 Run: `node --test tests/foundation-contract.test.mjs && rg -n "\$199|Quick Fix|two plans|exactly two" README.md docs src tests`
 
-Expected: test PASS; search results exist only in baseline/history sections explicitly labelled as stale pre-rebuild state.
+Expected: test PASS; README and current operating documents are clean. Any source/test hits are recorded as immediate Task 3 blockers and may not remain after the canonical catalog lands.
 
-- [ ] **Step 5: Commit the documentation set**
+- [x] **Step 5: Commit the documentation set**
 
 ```bash
 git add docs AGENTS.md README.md tests/foundation-contract.test.mjs

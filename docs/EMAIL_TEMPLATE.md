@@ -6,7 +6,7 @@ Hi {{contact_name_or_team}},
 
 I reviewed the public homepage at {{website_url}} and noticed {{one_verified_observation}}. {{one_sentence_impact_with_no_guarantee}}
 
-AccessRevamp prepares a human-reviewed findings report and homepage concept for a one-time **$50**, or an agreed complete website revamp with the report and practical growth recommendations for a one-time **$199**. There is no subscription.
+AccessRevamp prepares a human-reviewed findings report and homepage concept for a one-time **$50**, or an agreed Complete Website Revamp with the report and practical growth recommendations for a one-time **$200**. There is no subscription.
 
 Method and sample: {{accessrevamp_site_url}}
 

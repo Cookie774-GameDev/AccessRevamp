@@ -112,7 +112,14 @@ Completion requires direct evidence for every item in `C:\Users\viper\Downloads\
 
 - Product design: `docs/superpowers/specs/2026-07-18-accessrevamp-production-rebuild-design.md`
 - Execution plans: `docs/superpowers/plans/2026-07-18-accessrevamp-*.md`
+- Product: `docs/PRODUCT.md`
+- Architecture: `docs/ARCHITECTURE.md`
+- Design system: `docs/DESIGN.md`
+- Payments and entitlements: `docs/PAYMENTS.md`
+- Data model: `docs/DATA_MODEL.md`
 - Current status: `docs/IMPLEMENTATION_STATUS.md`
 - Security: `docs/SECURITY.md`
+- Outreach: `docs/OUTREACH.md`
+- Quality: `docs/QUALITY.md`
 - Deployment: `docs/DEPLOYMENT.md`
-
+- Third parties and provenance: `docs/THIRD_PARTY.md`

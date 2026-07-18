@@ -12,6 +12,19 @@ const REQUIRED_DESIGN_TOKENS = Object.freeze([
   '#6B7280',
 ]);
 
+const REQUIRED_DEEP_DOCS = Object.freeze([
+  'PRODUCT',
+  'ARCHITECTURE',
+  'DESIGN',
+  'PAYMENTS',
+  'DATA_MODEL',
+  'SECURITY',
+  'OUTREACH',
+  'QUALITY',
+  'DEPLOYMENT',
+  'THIRD_PARTY',
+]);
+
 test('required execution and design contracts exist', async () => {
   for (const path of [
     'AGENTS.md',
@@ -43,4 +56,18 @@ test('the baseline command is secret-safe and browser-complete', async () => {
   assert.match(browserScript, /lighthouse/i);
   assert.match(inventoryScript, /redact|secret-safe|safeValue/i);
   assert.doesNotMatch(`${inventoryScript}\n${browserScript}`, /console\.log\([^)]*process\.env/i);
+});
+
+test('deep operating documents use truthful implementation status markers', async () => {
+  for (const name of REQUIRED_DEEP_DOCS) {
+    const source = await readFile(`docs/${name}.md`, 'utf8');
+    assert.ok(source.length > 600, `docs/${name}.md must be substantive`);
+    assert.match(source, /Status:/);
+    for (const marker of ['IMPLEMENTED', 'PLANNED', 'EXTERNALLY BLOCKED', 'LAUNCH-ONLY']) {
+      assert.match(source, new RegExp(`\\b${marker}\\b`), `docs/${name}.md must define ${marker}`);
+    }
+    assert.match(source, /superpowers\/specs\/2026-07-18-accessrevamp-production-rebuild-design\.md/);
+    assert.match(source, /superpowers\/plans\//);
+    assert.doesNotMatch(source, /(production deployed|live payment verified|fully compliant)/i);
+  }
 });

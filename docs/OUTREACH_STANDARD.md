@@ -22,7 +22,7 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - The public page reviewed and the affected element or task.
 - Accurate, restrained, human-approved wording.
 - AccessRevamp website URL; no URL shortener.
-- Exact one-time price when a plan is mentioned: **$50** or **$199**.
+- Exact one-time price when a paid tier is mentioned: **$50**, **$200**, or **$250**, with server-verified cumulative credit explained separately when applicable.
 - Working reply path.
 - Valid postal address where required.
 - Clear opt-out and one-click suppression link.

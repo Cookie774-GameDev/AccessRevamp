@@ -1,6 +1,6 @@
-# Quick Fix marketing creative pack
+# Complete Website Revamp marketing creative pack
 
-The **AccessRevamp Quick Fix Plan remains $199 USD one time**. The plan now includes an AI-assisted, human-reviewed marketing creative package designed to be inexpensive to produce without giving the customer generic or unreviewed output.
+The **AccessRevamp Complete Website Revamp is $200 USD one time**. Its written scope may include an AI-assisted, human-reviewed marketing creative package designed to be inexpensive to produce without giving the customer generic or unreviewed output.
 
 ## Included deliverables
 
@@ -104,11 +104,11 @@ Use stable IDs and never overwrite another customer’s assets.
 
 The reviewed website analysis, prioritized recommendations, and action plan follow the approved three-business-day promise after payment and receipt of required information. The creative brief and two master-direction proposals may be included in that analysis package when the required brand and offer inputs are ready.
 
-The final ten creative variations follow the written Quick Fix implementation schedule because production depends on customer assets, master-direction approval, copy accuracy, and requested revisions. Do not promise that every website implementation and all ten final creatives will be completed within three business days unless the written scope explicitly supports that schedule.
+The final ten creative variations follow the written Complete Website Revamp implementation schedule because production depends on customer assets, master-direction approval, copy accuracy, and requested revisions. Do not promise that every website implementation and all ten final creatives will be completed within three business days unless the written scope explicitly supports that schedule.
 
 ## Exclusions
 
-The $199 plan does not include:
+The $200 tier does not include:
 
 - Ad spend or platform fees.
 - Media buying, campaign launch, bidding, targeting configuration, or ongoing optimization.

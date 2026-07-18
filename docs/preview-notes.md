@@ -6,7 +6,7 @@
 - One application entry point, explicit route metadata, direct work-detail routes, browser history, and route cleanup.
 - Homepage sequence: hero, selected work, three-part story, all three plans, sample report, FAQ, and contact CTA.
 - Seven original fictional concepts across homepage, campaign, and cinematic directions.
-- Exact sandbox catalog: Homepage Reveal $50, Quick Fix Plan $199, Cinematic Scroll Site $250.
+- Approved target catalog: Free Snapshot $0, Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250, all one time. The pre-rebuild preview remains evidence only until the catalog implementation task lands.
 - Strict contact payload, server-created Stripe Checkout with validated Stripe fallback, Supabase auth states, and explicitly user-scoped dashboard reads.
 - Responsive layouts, visible keyboard focus, status announcements, and reduced-motion behavior.
 

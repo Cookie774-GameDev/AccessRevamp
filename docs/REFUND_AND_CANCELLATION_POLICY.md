@@ -16,7 +16,7 @@ After final delivery, AccessRevamp does not offer change-of-mind refunds. Access
 
 ## Three-business-day delivery target
 
-Homepage Reveal and Cinematic Scroll Site target final delivery within three business days after payment and complete intake. Quick Fix reviewed findings, initial design direction, and the included creative-pack deliverables target the same window. The full Quick Fix implementation schedule is confirmed separately after page count, platform access, content, third-party systems, and scope are known.
+Homepage Reveal and Cinematic Scroll Site target final delivery within three business days after payment and complete intake. Complete Website Revamp reviewed findings, initial design direction, and any included creative-pack deliverables target the same window. Its full implementation schedule is confirmed separately after page count, platform access, content, third-party systems, and scope are known.
 
 If AccessRevamp misses an applicable written delivery promise and the customer has not approved an extension, the customer may cancel for a full refund before accepting late delivery.
 
