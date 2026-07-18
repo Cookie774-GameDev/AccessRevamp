@@ -5,7 +5,7 @@ export const ANALYTICS_EVENTS = new Set([
   'quote_started', 'quote_completed', 'emergency_call_clicked', 'cart_opened',
   'demo_checkout_started', 'service_area_checked', 'call_clicked',
   'schedule_requested', 'heat_filter_changed', 'product_viewed', 'cart_item_added',
-  'service_path_selected', 'water_loss_checked', 'eta_checked'
+  'service_path_selected', 'water_loss_checked', 'eta_checked', 'private_pricing_opened'
 ]);
 
 export const ANALYTICS_PROPERTY_KEYS = new Set([

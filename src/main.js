@@ -31,6 +31,7 @@ import { setupCheckout } from './services/checkout.js';
 import { setupFreeSnapshot } from './services/free-snapshot.js';
 import { setupAccountProjects } from './services/account-projects.js';
 import { setupOperator } from './services/operator.js';
+import { setupPricingContext } from './services/pricing-context.js';
 
 const app = document.querySelector('#app');
 
@@ -104,6 +105,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
   if (pathname === '/contact') cleanups.push(setupContactForm());
   if (pathname === '/free-snapshot') cleanups.push(setupFreeSnapshot());
+  if (pathname === '/pricing') cleanups.push(setupPricingContext());
   if (pathname === '/login' || pathname === '/signup') cleanups.push(setupAuthForm(router.navigate));
   if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
   if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));

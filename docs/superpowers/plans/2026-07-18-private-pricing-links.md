@@ -50,7 +50,7 @@
 **Interfaces:**
 - Produces `public.issue_accessrevamp_pricing_context(text,text,text,text,text,timestamptz,uuid) returns jsonb`.
 - Produces `public.revoke_accessrevamp_pricing_context(uuid,uuid,text) returns void`.
-- Produces `public.resolve_accessrevamp_pricing_context(text,text) returns table(customer_label text, website_url text, scope_summary text, recommended_tier text, expires_at timestamptz)`.
+- Produces `public.consume_accessrevamp_pricing_resolution_limit(text) returns boolean` and `public.resolve_accessrevamp_pricing_context(text) returns table(customer_label text, website_url text, scope_summary text, recommended_tier text, expires_at timestamptz)`.
 
 - [ ] **Step 1: Add migration contract tests without running them**
 

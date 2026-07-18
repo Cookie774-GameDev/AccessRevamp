@@ -54,3 +54,39 @@ export const outreachDraftSchema = z.object({
   subject: z.string().trim().min(8).max(120),
   bodyText: z.string().trim().min(80).max(8000),
 }).strict();
+
+const privatePricingTier = z.enum(['free_snapshot', 'homepage_reveal', 'complete_revamp', 'cinematic_scroll']);
+const privatePricingWebsite = z.string().trim().max(2048).refine((value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password
+      && !['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase())
+      && !url.hostname.toLowerCase().endsWith('.local')
+      && !url.hostname.toLowerCase().endsWith('.internal');
+  } catch { return false; }
+}, 'Enter a public HTTPS website URL.');
+
+export const privatePricingIssueSchema = z.object({
+  action: z.literal('issue'),
+  customerLabel: z.string().trim().min(1).max(120),
+  websiteUrl: privatePricingWebsite,
+  scopeSummary: z.string().trim().min(20).max(800),
+  recommendedTier: privatePricingTier,
+  internalReference: z.string().trim().max(240).optional().default(''),
+  expiresAt: z.string().datetime({ offset: true }),
+}).strict();
+
+export const privatePricingRevokeSchema = z.object({
+  action: z.literal('revoke'),
+  contextId: z.string().uuid(),
+  reason: z.string().trim().min(8).max(500),
+}).strict();
+
+export const privatePricingResolveSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+}).strict();
+
+export const privatePricingActionSchema = z.discriminatedUnion('action', [
+  privatePricingIssueSchema,
+  privatePricingRevokeSchema,
+]);

@@ -48,6 +48,25 @@
 .story-step:nth-child(3) { background: var(--persimmon); }
 .story-step:nth-child(3) p { color: #fff1ed; }
 .pricing-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.35rem; align-items: stretch; }
+.pricing-page .pricing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.pricing-page .plan-card { min-width: 0; padding: clamp(1.35rem, 2.1vw, 2rem); }
+.pricing-page .plan-card h3 { font-size: clamp(1.55rem, 2.1vw, 2rem); }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] { color: #fff; border-color: #8ef0d1; background: linear-gradient(145deg, #2947d7 0%, #15277d 43%, #07111f 100%); box-shadow: 0 24px 64px rgba(22, 43, 151, .28), 8px 8px 0 var(--mint), inset 0 0 0 1px rgba(255,255,255,.12); }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] :is(h3, p, li, .plan-price span, .sandbox-badge) { color: #fff; }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .kicker { color: var(--mint); }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .plan-price strong { color: var(--sun); }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .button { border-color: var(--sun); background: var(--sun); color: var(--ink); }
+.pricing-page .plan-card--private-recommended { outline: 3px solid var(--mint); outline-offset: 4px; }
+.pricing-page .plan-flag--private { background: var(--mint); }
+.private-pricing-context { padding: 2rem 0; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--mint) 16%, var(--surface)); }
+.private-pricing-context__inner { display: grid; grid-template-columns: minmax(14rem, .55fr) minmax(0, 1fr); gap: 1rem 3rem; align-items: start; }
+.private-pricing-context__inner .eyebrow { grid-column: 1 / -1; }
+.private-pricing-context__inner h2, .private-pricing-context__inner p { margin: 0; }
+.private-pricing-context__inner .privacy-note { grid-column: 2; }
+@media (forced-colors: active) {
+  .pricing-page .plan-card[data-plan-tier="cinematic_scroll"] { border: 2px solid CanvasText; box-shadow: none; }
+  .pricing-page .plan-card--private-recommended { outline-color: Highlight; }
+}
 .report-preview { display: grid; grid-template-columns: .8fr 1.2fr; border: 1px solid var(--ink); border-radius: var(--radius-large); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
 .report-preview__intro { display: flex; flex-direction: column; justify-content: space-between; padding: clamp(2rem, 5vw, 4rem); background: var(--sun); }
 .report-preview__intro h2 { max-width: 8ch; margin-top: 1rem; }
@@ -134,6 +153,8 @@ textarea { resize: vertical; }
   .hero-board { min-height: 29rem; }
   .pricing-grid { grid-template-columns: 1fr 1fr; }
   .pricing-grid .plan-card:last-child { grid-column: 1 / -1; }
+  .pricing-page .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pricing-page .pricing-grid .plan-card:last-child { grid-column: auto; }
   .story-steps { grid-template-columns: 1fr; }
   .story-step { min-height: 18rem; }
   .story-step::before { margin-bottom: 3rem; }
@@ -161,6 +182,8 @@ textarea { resize: vertical; }
   .work-disclosure strong { display: block; margin-bottom: .5rem; }
   .pricing-grid { grid-template-columns: 1fr; }
   .pricing-grid .plan-card:last-child { grid-column: auto; }
+  .pricing-page .pricing-grid, .private-pricing-context__inner { grid-template-columns: 1fr; }
+  .private-pricing-context__inner .privacy-note { grid-column: auto; }
   .report-preview__intro, .report-preview__sheet { padding: 1.5rem; }
   .report-finding { grid-template-columns: 2.5rem 1fr; }
   .report-finding .severity { grid-column: 2; }

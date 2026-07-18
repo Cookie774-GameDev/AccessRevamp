@@ -20,8 +20,8 @@ Last updated: July 18, 2026
 
 ## VERIFIED final local checkpoint
 
-- Static policy passed across 157 files; 130/130 source and contract tests passed; the vinext/Sites worker and static production bundle both built.
-- Browser verification passed 48/48 checks: 16 Chromium, 16 Firefox, and 16 WebKit, including required routes, interactive demos, keyboard navigation, accessibility, responsive widths, and overflow checks.
+- Static policy passed across 163 files; 138/138 source and contract tests passed; the vinext/Sites worker and static production bundle both built.
+- The expanded browser matrix covered 51 scenarios. Its four-worker run passed 50/51; the sole Firefox homepage timeout showed a complete rendered page and passed in an isolated 11-route Firefox rerun. The new private-pricing and four-card geometry scenario passed in Chromium, Firefox, and WebKit.
 - Four original generated asset groups, the ten-item requirement crosswalk, performance budgets, local secret scan, high-severity dependency audit gate, and `git diff --check` passed.
 - `npm audit --omit=dev --audit-level=high`: zero high/critical findings; two moderate Next/PostCSS advisories remain documented.
 - Current local Lighthouse checkpoint remains below final targets: home 62/96/100/91, pricing 72/93/100/91, work 72/92/100/91, cinematic 75/95/100/91.
@@ -34,10 +34,11 @@ Last updated: July 18, 2026
 - Evidence-led four-beat cinematic route and original generated artwork with AVIF/WebP/PNG provenance.
 - Confirmed-user customer projection, restricted operator workspace, hashed preview lifecycle, and suppression-first queue with no sending provider.
 - Local quality budgets, secret scanning, requirement crosswalk, and guarded owned-staging load/security commands.
+- Four-card desktop pricing, premium $250 treatment, and hash-only expiring/revocable private pricing-context links with fixed canonical prices.
 
 ## EXTERNALLY BLOCKED evidence
 
-The connected Supabase project was verified read-only, but no nonproduction branch accepted the new migrations and the local database runtime did not start. Stripe test catalog/webhook state, Netlify preview URL, owned active-testing authorization, and remote end-to-end results remain unproven. No provider state is inferred from local source or from the separate Sites review deployment.
+The connected Supabase project was verified read-only, but no nonproduction branch accepted the new migrations and the local database runtime did not start. Private pricing links cannot be issued remotely until migration `202607180005` and its server environment are applied to an approved environment. Stripe test catalog/webhook state, Netlify preview URL, owned active-testing authorization, and remote end-to-end results remain unproven. No provider state is inferred from local source or from the separate Sites review deployment.
 
 ## LAUNCH-ONLY actions
 

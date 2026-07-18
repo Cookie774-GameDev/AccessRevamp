@@ -50,7 +50,7 @@ Use `npm run check`, `npm run verify:assets`, `npm run quality:local`, `npm run 
 
 ## 13. Unit and contract evidence
 
-Final local pass on July 18, 2026: static policy passed across 157 files; 130 tests passed, 0 failed; vinext/Sites and static SPA builds completed; four generated asset groups verified; ten requirements checked with zero failures; secret scan returned zero findings; the high-severity dependency audit gate and `git diff --check` passed. The dependency audit reports two moderate transitive Next/PostCSS advisories, with no safe nonbreaking resolution available in the current dependency line.
+Latest local pass on July 18, 2026: static policy passed across 163 files; 138 tests passed, 0 failed; vinext/Sites and static SPA builds completed; four generated asset groups verified; ten requirements checked with zero failures; secret scan returned zero findings; the high-severity dependency audit gate and `git diff --check` passed. The dependency audit reports two moderate transitive Next/PostCSS advisories, with no safe nonbreaking resolution available in the current dependency line.
 
 ## 14. Lighthouse evidence
 
@@ -62,7 +62,7 @@ Local browser measurements are lab evidence. No field INP or production Core Web
 
 ## 16. Browser and accessibility matrix
 
-The automated production-bundle matrix passed 48/48 checks: 16 Chromium, 16 Firefox, and 16 WebKit. It covers the required public routes, all three interactive demos, keyboard skip/primary actions, serious/critical axe findings, 320px width, 200% zoom, and horizontal overflow. Reduced-motion and fallback behavior also pass source contracts. Forced colors, slow-network timing, and failed-media visual review remain documented manual staging checks rather than overclaimed local evidence.
+The expanded production-bundle matrix contains 51 scenarios across Chromium, Firefox, and WebKit. The concurrent run passed 50/51; its only miss was a 30-second Firefox homepage timeout under four-worker contention after the complete page had rendered. An isolated Firefox public-route rerun passed 11/11, including that homepage in 8.4 seconds. The new private pricing resolver and four-card alignment scenario passed in every engine. Reduced-motion and fallback behavior also pass source contracts; forced-colors, slow-network timing, and failed-media visual review remain documented staging checks.
 
 ## 17. Authorized security
 
@@ -74,7 +74,7 @@ The k6 model caps load and enforces <1% error rate, public p95 <800ms, and funct
 
 ## 19. Known limitations
 
-Remote Supabase migration/RLS proof, Stripe test transactions, deployed header verification, field performance, active security/load, final legal identity, and monitoring require an approved connected environment.
+Remote Supabase migration/RLS proof, actual private-pricing link issuance, Stripe test transactions, deployed header verification, field performance, active security/load, final legal identity, and monitoring require an approved connected environment.
 
 ## 20. Launch blockers
 

@@ -5,7 +5,7 @@ export function planCard(plan, { featured = false, compact = false } = {}) {
   const action = plan.key === 'free_snapshot'
     ? `<a class="button button--full" href="/contact?interest=free_snapshot" data-nav>Request ${escapeHtml(plan.name)} ${icon('arrow')}</a>`
     : `<button class="button button--full" type="button" data-checkout="${plan.key}">Choose ${escapeHtml(plan.name)} ${icon('arrow')}</button>`;
-  return `<article class="plan-card${featured ? ' plan-card--featured' : ''}${compact ? ' plan-card--compact' : ''}">
+  return `<article data-plan-tier="${escapeHtml(plan.key)}" class="plan-card${featured ? ' plan-card--featured' : ''}${compact ? ' plan-card--compact' : ''}">
     <div class="plan-card__top"><span class="kicker">${escapeHtml(plan.label)}</span>${featured ? '<span class="plan-flag">Most complete</span>' : ''}</div>
     <h3>${escapeHtml(plan.name)}</h3>
     <p>${escapeHtml(plan.summary)}</p>
