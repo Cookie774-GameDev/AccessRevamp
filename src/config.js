@@ -33,6 +33,21 @@ export const plans = Object.freeze({
       campaignCount: 1,
     }),
   }),
+  cinematic_scroll: Object.freeze({
+    key: 'cinematic_scroll',
+    name: 'Cinematic Scroll Site',
+    amount: 25000,
+    displayPrice: '$250',
+    cadence: 'one-time',
+    stripePriceId: import.meta.env.VITE_STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
+    checkoutUrl: import.meta.env.VITE_STRIPE_CINEMATIC_SCROLL_URL || 'https://book.stripe.com/test_6oU8wQ7125yo2Ot4CAgQE04',
+    deliveryBusinessDays: 3,
+    motionSequenceCount: 1,
+    maximumStoryBeats: 4,
+    revisionRounds: 1,
+    mobileFallback: true,
+    reducedMotionFallback: true,
+  }),
 });
 
 export const siteConfig = Object.freeze({
