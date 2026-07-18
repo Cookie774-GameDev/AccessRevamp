@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.netlify/
+.wrangler/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+coverage/
+artifacts/
+test-results/
+playwright-report/

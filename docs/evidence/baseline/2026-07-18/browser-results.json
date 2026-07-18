@@ -1,0 +1,171 @@
+{
+  "capturedAt": "2026-07-18T15:43:11.249Z",
+  "results": [
+    {
+      "route": "/",
+      "width": 375,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/pricing",
+      "width": 375,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work",
+      "width": 375,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/cinematic-scroll",
+      "width": 375,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/pricing",
+      "width": 768,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work",
+      "width": 768,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/cinematic-scroll",
+      "width": 768,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/",
+      "width": 1024,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/pricing",
+      "width": 1024,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work",
+      "width": 1024,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/cinematic-scroll",
+      "width": 1024,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/",
+      "width": 1440,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/pricing",
+      "width": 1440,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/work",
+      "width": 1440,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "route": "/cinematic-scroll",
+      "width": 1440,
+      "status": 200,
+      "consoleErrors": [],
+      "failedRequests": []
+    }
+  ],
+  "lighthouse": [
+    {
+      "route": "/",
+      "status": "captured-with-cleanup-warning",
+      "lighthouseVersion": "13.4.0",
+      "scores": {
+        "performance": 81,
+        "accessibility": 95,
+        "bestPractices": 100,
+        "seo": 91
+      },
+      "warning": "Lighthouse produced a valid report but could not remove its temporary Chrome profile.",
+      "output": "docs/evidence/baseline/2026-07-18/lighthouse-home.json"
+    },
+    {
+      "route": "/pricing",
+      "status": "captured-with-cleanup-warning",
+      "lighthouseVersion": "13.4.0",
+      "scores": {
+        "performance": 89,
+        "accessibility": 93,
+        "bestPractices": 100,
+        "seo": 91
+      },
+      "warning": "Lighthouse produced a valid report but could not remove its temporary Chrome profile.",
+      "output": "docs/evidence/baseline/2026-07-18/lighthouse-pricing.json"
+    },
+    {
+      "route": "/work",
+      "status": "captured-with-cleanup-warning",
+      "lighthouseVersion": "13.4.0",
+      "scores": {
+        "performance": 92,
+        "accessibility": 98,
+        "bestPractices": 100,
+        "seo": 91
+      },
+      "warning": "Lighthouse produced a valid report but could not remove its temporary Chrome profile.",
+      "output": "docs/evidence/baseline/2026-07-18/lighthouse-work.json"
+    },
+    {
+      "route": "/cinematic-scroll",
+      "status": "captured-with-cleanup-warning",
+      "lighthouseVersion": "13.4.0",
+      "scores": {
+        "performance": 27,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 91
+      },
+      "warning": "Lighthouse produced a valid report but could not remove its temporary Chrome profile.",
+      "output": "docs/evidence/baseline/2026-07-18/lighthouse-cinematic-scroll.json"
+    }
+  ]
+}

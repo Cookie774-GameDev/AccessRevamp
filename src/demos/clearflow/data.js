@@ -1,0 +1,3 @@
+export const SAMPLE_ZIPS=new Set(['75001','75006','75007','75010']);
+export function serviceArea(zip){if(!/^\d{5}$/.test(String(zip)))return{status:'invalid',message:'Enter a five-digit ZIP.'};return SAMPLE_ZIPS.has(String(zip))?{status:'available',message:'Sample same-day window: 2–4 hours. This is not a real ETA.'}:{status:'outside',message:'Outside the fictional sample service area.'};}
+export function waterLoss(gallonsPerMinute,minutes){const rate=Number(gallonsPerMinute),time=Number(minutes);if(!(rate>0&&time>0))throw new Error('Enter positive sample values.');return Math.round(rate*time*10)/10;}

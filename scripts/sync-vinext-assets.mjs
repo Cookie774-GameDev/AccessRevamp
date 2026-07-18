@@ -1,0 +1,1 @@
+import{cp,mkdir}from'node:fs/promises';import{join}from'node:path';const source=join(process.cwd(),'dist','client','assets'),destination=join(process.cwd(),'dist','assets');await mkdir(destination,{recursive:true});await cp(source,destination,{recursive:true,force:true});console.log('Synchronized vinext client assets for preview and Netlify routing.');

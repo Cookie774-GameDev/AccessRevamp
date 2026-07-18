@@ -1,0 +1,53 @@
+{
+  "name": "accessrevamp-platform",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build && node scripts/sync-vinext-assets.mjs && vite build --config vite.static.config.js",
+    "preview": "node scripts/preview-static.mjs",
+    "baseline": "node scripts/capture-baseline.mjs && node scripts/capture-baseline-browser.mjs",
+    "scan": "node scripts/scan-public-homepage.mjs",
+    "stripe:test-catalog:sync": "node scripts/stripe/sync-test-catalog.mjs",
+    "stripe:test-catalog:verify": "node scripts/stripe/verify-test-catalog.mjs",
+    "verify:assets": "node scripts/verify-generated-assets.mjs",
+    "export:sample-report": "node scripts/export-report-png.mjs",
+    "quality:budgets": "node scripts/quality/check-budgets.mjs",
+    "quality:lighthouse": "node scripts/quality/run-lighthouse.mjs",
+    "quality:local": "npm run build && npm run quality:budgets && node scripts/quality/aggregate-quality.mjs",
+    "security:local": "node scripts/quality/scan-secrets.mjs",
+    "security:authorized": "node scripts/quality/run-authorized-security.mjs",
+    "load:authorized": "node scripts/quality/run-authorized-load.mjs",
+    "verify:requirements": "node scripts/quality/verify-requirements.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "lint": "node scripts/check.mjs",
+    "check": "npm run lint && npm test && npm run build"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@supabase/supabase-js": "2.110.7",
+    "next": "16.2.6",
+    "playwright": "1.61.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "stripe": "22.3.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "react-server-dom-webpack": "19.2.6",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.1.5",
+    "wrangler": "4.92.0"
+  }
+}

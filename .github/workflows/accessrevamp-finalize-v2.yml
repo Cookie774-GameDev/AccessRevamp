@@ -1,0 +1,86 @@
+name: Finalize AccessRevamp repository
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/accessrevamp-finalize-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: accessrevamp-finalizer
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate application source
+        run: |
+          node .bootstrap-v2/frontend.mjs
+          node .bootstrap-v2/backend.mjs
+
+      - name: Apply migration safety post-processing
+        run: |
+          node <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'supabase/migrations/202607170001_accessrevamp.sql';
+          let sql = readFileSync(path, 'utf8');
+          sql = sql.replace(
+            "  email text not null,\n  reason text not null default 'opt_out',",
+            "  email text not null unique,\n  reason text not null default 'opt_out',",
+          );
+          sql = sql.replace(
+            'revoke all on all tables in schema public from anon, authenticated;',
+            'revoke all on table public.profiles, public.contact_submissions, public.contact_rate_limits, public.orders, public.customer_projects, public.stripe_events, public.prospects, public.findings, public.outreach_settings, public.suppression_list, public.outreach_queue, public.accessrevamp_audit_log from anon, authenticated;',
+          );
+          sql = sql.replace(
+            "coalesce(scheduled_for, sent_at, created_at)::date = timezone('utc', now())::date",
+            "(coalesce(scheduled_for, sent_at, created_at) at time zone 'utc')::date = (now() at time zone 'utc')::date",
+          );
+          writeFileSync(path, sql);
+          NODE
+
+      - name: Create lockfile and install
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Validate source
+        run: npm run check
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Remove one-time upload files
+        run: |
+          rm -rf dist node_modules .bootstrap-v2 .accessrevamp-upload .accessrevamp-source .source-upload
+          find .github/workflows -maxdepth 1 -type f -iname '*bootstrap*.yml' -delete || true
+          find .github/workflows -maxdepth 1 -type f -iname '*bootstrap*.yaml' -delete || true
+          rm -f .github/workflows/accessrevamp-finalize-v2.yml
+
+      - name: Commit verified repository
+        run: |
+          git config user.name "AccessRevamp Build Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Repository is already current."
+            exit 0
+          fi
+          git commit -m "Build production-ready AccessRevamp platform"
+          git push origin HEAD:main
