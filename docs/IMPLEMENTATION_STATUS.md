@@ -10,14 +10,14 @@ Last updated: July 18, 2026
 - Canonical Free Snapshot $0, Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250 catalog with cumulative $150/$200/$50 upgrade arithmetic and a server-only Stripe adapter.
 - Declarative registrations and metadata for every required route, including parameterized portfolio and private-preview routes.
 - Editorial audit-lens homepage, approved palette, shared shell, responsive/reduced-motion behavior, and exact portfolio-demo disclosures.
-- Sites-compatible worker wrapper and an owner-only hosted review deployment at `https://accessrevamp-studio.combatonline02.chatgpt.site`; this does not replace the required Netlify staging evidence.
+- Sites-compatible worker wrapper and a public hosted review deployment at `https://accessrevamp-studio.combatonline02.chatgpt.site`; this does not replace the required Netlify staging evidence.
 - Existing authentication, customer workspace, signature-verified Stripe webhook foundation, passive review boundary, private-preview safety, suppression, approval records, and outreach disabled by default.
+- Local exact-tier entitlements, serialized upgrade reservations, guarded Stripe test-catalog tools, confirmed-user quotes, reservation-backed Checkout, atomic fulfillment, terminal session handling, and transitive refund dependency reconciliation.
 
 ## PLANNED by the approved rebuild
 
-- Cumulative verified upgrades of $150, $200, and $50 through server-authoritative entitlements and reservations.
 - Remaining public routes, account and operator workspaces, three complete route-isolated working demos, cinematic story, reports/exports, analytics, and final quality evidence.
-- Dedicated Stripe test-mode full/upgrade prices without browser Price IDs or direct Payment Links.
+- Connected nonproduction execution and complete test evidence for the locally implemented payment system.
 
 ## VERIFIED foundation checkpoint
 
@@ -28,11 +28,11 @@ Last updated: July 18, 2026
 
 ## EXTERNALLY BLOCKED evidence
 
-The connected Supabase project identity and migration state, Stripe test catalog/webhook state, Netlify preview URL, owned active-testing authorization, and remote end-to-end results have not been proven from this worktree. No provider state is inferred from local source or from the separate Sites review deployment.
+The connected Supabase project was verified read-only, but no nonproduction branch accepted the new migrations and the local database runtime did not start. Stripe test catalog/webhook state, Netlify preview URL, owned active-testing authorization, and remote end-to-end results remain unproven. No provider state is inferred from local source or from the separate Sites review deployment.
 
 ## LAUNCH-ONLY actions
 
-Production migrations, domain publication, live Stripe products/keys/webhook/transaction, tax settings, outreach transport or sending, sender identity, legal approval, secret rotation, monitoring, and final rollback signoff require separate explicit approval.
+Production migrations, custom-domain purchase/binding, live Stripe products/keys/webhook/transaction, tax settings, outreach transport or sending, sender identity, legal approval, secret rotation, monitoring, and final rollback signoff require separate explicit approval.
 
 ## Launch rule
 

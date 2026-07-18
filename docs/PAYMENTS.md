@@ -1,6 +1,6 @@
 # Payments, entitlements, and refunds
 
-**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation, cumulative schema/RPC, guarded Stripe test catalog, and confirmed-user quote boundary; `PLANNED` Checkout/reconciliation/refund completion; `EXTERNALLY BLOCKED` connected database and Stripe test-mode evidence; and `LAUNCH-ONLY` live activation.
+**Status:** Mixed — `IMPLEMENTED` local cumulative payments, guarded test catalog, confirmed-user quotes, reservation-backed Checkout, atomic fulfillment, and refund dependency code; `PLANNED` account/operator recovery UI; `EXTERNALLY BLOCKED` connected database and Stripe test-mode evidence; and `LAUNCH-ONLY` live activation.
 
 **Owner:** Payments engineering with database, product, operations, security, and finance/legal review.
 
@@ -67,9 +67,13 @@ The retained code verifies Stripe signatures, uses idempotency, validates existi
 
 `requireConfirmedUser` accepts one bounded Bearer token, verifies it with Supabase Admin `auth.getUser`, requires a confirmed email claim, and returns only normalized verified identity. The entitlement quote endpoint accepts only a strict paid target-tier object after same-origin, content-type, declared-size, and actual UTF-8 byte checks. It reads only the authenticated user's active entitlement through the server client, validates exact settled value, rejects same-tier/downgrade transitions, and returns only target, list price, credit, due-now value, and resulting tier. Browser-provided email, paid value, reservation, amount, or provider identifier is never accepted.
 
+Checkout now consumes only `{ targetTier, requestId }` plus a verified Bearer session. The server reserves credit transactionally, chooses the exact server-only Price mapping, creates one quantity-one Checkout line item, copies all nine normalized fields to Session and PaymentIntent metadata, persists the provider session against the reservation, and returns one validated Stripe-hosted URL. The browser has no payment-link fallback and reuses its request ID after a recoverable failure.
+
+The webhook verifies the raw signature and explicit expected mode, retrieves the Session and line item, validates identity, reservation, transition, amount, currency, quantity, provider Price, and metadata, then calls one service-only fulfillment RPC. That transaction records the event/order, closes the reservation, advances the entitlement, opens one project, records any upgrade dependency, and appends an audit event. Failed or expired sessions use a separate terminal transaction and grant nothing. Refund normalization records provider evidence, uses cumulative returned value to prevent double counting, follows transitive upgrade dependencies, and suspends unsupported entitlements for review.
+
 ### PLANNED
 
-Server-only catalog projection, reservation-backed Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quote UI, and operator recovery paths remain specified for implementation.
+Server-only catalog projection, account quote UI, refund request/operator recovery screens, and connected recovery rehearsal remain specified for implementation.
 
 ### EXTERNALLY BLOCKED
 
@@ -81,4 +85,4 @@ Live products/prices, live keys, tax settings, production webhook, real transact
 
 ## Validation
 
-The entitlement/reservation structural-security suite passes 6/6 tests, and the guarded Stripe catalog suite passes its exact-definition, credential refusal, idempotency, unrelated-object, open-session, and output-redaction tests. Still required: clean-database and retained-chain migration execution, SQL race tests, remote Stripe test-catalog verification, Checkout/webhook integration and replay tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.
+Earlier entitlement/reservation and guarded-catalog checks passed before the current Checkout/webhook/refund implementation. Per the current implementation-first instruction, the complete payment suite is deferred until all product work is present. Still required then: clean-database and retained-chain migration execution, SQL race tests, remote Stripe test-catalog verification, Checkout/webhook integration and replay tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.

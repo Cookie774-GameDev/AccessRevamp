@@ -245,7 +245,7 @@ Run: `node --test tests/checkout-contract.test.mjs tests/customer-experience.tes
 
 Expected: FAIL because current checkout sends `planKey` and has a direct-link fallback.
 
-- [ ] **Step 3: Implement reservation-backed session creation**
+- [x] **Step 3: Implement reservation-backed session creation**
 
 Authenticate, reserve atomically, select the exact environment Price ID for the server-calculated transition, create one line item with quantity one, require billing address, disable client promotions, use 30-minute expiry and request-scoped idempotency, copy all nine metadata fields to Checkout Session and PaymentIntent, persist `checkout_session_id`, and return only a validated Stripe-hosted URL.
 
@@ -257,7 +257,7 @@ Run: `node --test tests/checkout-contract.test.mjs tests/customer-experience.tes
 
 Expected: tests PASS and no secret Price identifiers or direct payment links exist in browser source/build.
 
-- [ ] **Step 5: Commit checkout hardening**
+- [x] **Step 5: Commit checkout hardening**
 
 ```bash
 git add netlify/functions src/services/checkout.js tests/checkout-contract.test.mjs tests/customer-experience.test.mjs
@@ -290,7 +290,7 @@ Run: `node --test tests/stripe-webhook-recovery.test.mjs tests/payment-matrix.te
 
 Expected: FAIL because expiration, reservations, entitlements, and exact metadata are absent.
 
-- [ ] **Step 3: Implement retrieve-expand-verify and one-RPC reconciliation**
+- [x] **Step 3: Implement retrieve-expand-verify and one-RPC reconciliation**
 
 Deduplicate event IDs but retry recorded/unprocessed events. Retrieve and expand the session. Verify expected test/live mode, `payment` mode, paid status for success, one line item, quantity one, exact transition Price, USD, net amount, user, reservation, metadata equality, reservation state, and expiry rules. RPC order is event/order/reservation/entitlement/project/audit, with exactly-once constraints.
 
@@ -337,7 +337,7 @@ Run: `node --test tests/refund-dependencies.test.mjs`
 
 Expected: FAIL because refund event routing and RPC are absent.
 
-- [ ] **Step 3: Implement refund event normalization and entitlement recomputation**
+- [x] **Step 3: Implement refund event normalization and entitlement recomputation**
 
 Handle `charge.refunded` and the selected `refund.updated` terminal path without double counting. Record refund ID, amount, reason, operator/system actor, and timestamps. Recompute effective paid value. If later entitlement used refunded credit, create an operator-review dependency and suspend/flag according to disclosed terms; never silently keep unsupported access.
 

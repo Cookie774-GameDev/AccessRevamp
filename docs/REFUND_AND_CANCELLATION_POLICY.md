@@ -4,7 +4,7 @@ _Last updated July 18, 2026._
 
 ## Full refund before final digital delivery
 
-A customer may request a full refund before AccessRevamp makes the final purchased website, report, creative pack, or other digital deliverable available. The request must identify the order using the checkout email and enough information to locate the purchase.
+A customer may request a full refund before AccessRevamp makes the final purchased website, report, creative pack, or other digital deliverable available. The request must be made from the confirmed account that owns the order and include enough information to identify the purchase.
 
 ## Final delivery
 
@@ -27,6 +27,8 @@ The delivery clock begins only after required assets, copy, public URLs, access,
 ## Refund processing
 
 Approved refunds are submitted through Stripe to the original payment method. AccessRevamp confirms when the refund is initiated; the customer's financial institution controls when the credit becomes visible.
+
+If a later upgrade used value from an earlier purchase, refunding that earlier purchase can make the later entitlement unsupported. AccessRevamp records that dependency, pauses the affected entitlement for human review, and explains the available resolution. It does not silently preserve unsupported access or silently revoke delivered work. Partial, duplicate, and out-of-order provider events are reconciled against the cumulative amount returned to the original payment method.
 
 ## Separately approved external costs
 
