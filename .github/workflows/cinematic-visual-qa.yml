@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/cinematic-visual-qa
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
