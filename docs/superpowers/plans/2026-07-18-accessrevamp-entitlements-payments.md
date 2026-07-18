@@ -95,7 +95,7 @@ git commit -m "feat: add cumulative entitlement schema"
 - Produces service-only RPC `reserve_accessrevamp_upgrade(p_user_id uuid, p_target_tier_key text, p_request_id uuid)`.
 - Returns one row: reservation ID, from/to tiers, gross/credit/net cents, source entitlement ID, expiry, and idempotent existing/new marker.
 
-- [ ] **Step 1: Write failing function-contract tests**
+- [x] **Step 1: Write failing function-contract tests**
 
 ```js
 assert.match(sql, /pg_advisory_xact_lock|for update/i);
@@ -106,23 +106,23 @@ assert.match(sql, /revoke all on function public\.reserve_accessrevamp_upgrade/i
 assert.match(sql, /grant execute[^;]+service_role/i);
 ```
 
-- [ ] **Step 2: Run and confirm the missing-RPC failure**
+- [x] **Step 2: Run and confirm the missing-RPC failure**
 
 Run: `node --test tests/payment-rpc-contract.test.mjs`
 
 Expected: FAIL because the migration is absent.
 
-- [ ] **Step 3: Implement serialized quote/reservation logic**
+- [x] **Step 3: Implement serialized quote/reservation logic**
 
 Lock by user ID, expire prior stale reservations, reuse an identical unexpired request ID, reject downgrade/same-tier no-charge checkout, calculate the highest nonrefunded paid value, clamp credit to the target price, and insert exactly one reservation. The function must not accept or return arbitrary Stripe Price IDs.
 
-- [ ] **Step 4: Exercise the database race contract**
+- [x] **Step 4: Exercise the database race contract**
 
 Run: `node --test tests/payment-rpc-contract.test.mjs && supabase test db`
 
 Expected: contract tests PASS; SQL tests prove two concurrent reservations cannot consume the same base credit. Record an unavailable local Supabase runtime as unverified, not passed.
 
-- [ ] **Step 5: Commit the reservation RPC**
+- [x] **Step 5: Commit the reservation RPC**
 
 ```bash
 git add supabase/migrations/202607180003_add_payment_rpcs.sql tests/payment-rpc-contract.test.mjs tests/entitlement-migration.test.mjs docs/PAYMENTS.md

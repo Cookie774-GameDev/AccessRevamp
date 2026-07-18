@@ -1,6 +1,6 @@
 # Payments, entitlements, and refunds
 
-**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation, `PLANNED` cumulative entitlement flow, `EXTERNALLY BLOCKED` Stripe test-mode synchronization and E2E evidence, and `LAUNCH-ONLY` live activation.
+**Status:** Mixed — `IMPLEMENTED` signature/idempotency foundation plus cumulative schema and reservation RPC, `PLANNED` Checkout/reconciliation/refund completion, `EXTERNALLY BLOCKED` connected database and Stripe test-mode E2E evidence, and `LAUNCH-ONLY` live activation.
 
 **Owner:** Payments engineering with database, product, operations, security, and finance/legal review.
 
@@ -59,15 +59,17 @@ Automated/mocked tests cover every full purchase and upgrade, repeated clicks, r
 
 ### IMPLEMENTED
 
-The current code verifies Stripe signatures, uses idempotency, validates existing exact prices, handles delayed payment, links confirmed users, and stores reviewed refund requests. This is retained foundation, not proof of the new cumulative catalog.
+The retained code verifies Stripe signatures, uses idempotency, validates existing exact prices, handles delayed payment, links confirmed users, and stores reviewed refund requests.
+
+`202607180002_add_tier_entitlements.sql` implements the exact $0/$50/$200/$250 catalog, durable cumulative entitlements, short-lived upgrade reservations, and refund dependencies. `202607180003_add_payment_rpcs.sql` implements the service-only reservation boundary: it locks by user, expires stale reservations, reuses only an identical live request, rejects same-tier/downgrade checkout, verifies the source order remains fully paid, calculates exact cumulative credit, prevents a second live credit reservation across different targets, and returns no Stripe identifier.
 
 ### PLANNED
 
-Server-only catalog projection, exact $200 replacement tier, three upgrade prices, entitlement reservation RPC, nine-field metadata, atomic reconciliation, refund dependencies, account quotes, and operator recovery paths are specified for implementation.
+Server-only catalog projection, guarded Stripe test products and three upgrade prices, authenticated Checkout boundary, nine-field metadata, atomic reconciliation, refund dependency transitions, account quotes, and operator recovery paths remain specified for implementation.
 
 ### EXTERNALLY BLOCKED
 
-Creating or confirming Stripe test products/prices, inspecting configured webhooks, applying nonproduction Supabase migrations, and retaining complete test-mode E2E evidence require connected authorized environments.
+The reservation structural/security contract passes, but `supabase test db` cannot connect because no local Supabase Postgres runtime is available. Creating or confirming Stripe test products/prices, inspecting configured webhooks, applying these migrations to a nonproduction Supabase branch, executing the concurrent-reservation SQL test, and retaining complete test-mode E2E evidence require connected authorized environments.
 
 ### LAUNCH-ONLY
 
@@ -75,4 +77,4 @@ Live products/prices, live keys, tax settings, production webhook, real transact
 
 ## Validation
 
-Run catalog/unit tests, migration/RPC tests, mocked Stripe integration tests, webhook fixture/replay tests, race tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.
+The entitlement and reservation structural/security suite passes 6/6 tests. Still required: clean-database and retained-chain migration execution, SQL race tests, catalog/unit tests, mocked Stripe integration tests, webhook fixture/replay tests, test-mode E2E, secret/bundle scans, and a manual operator refund rehearsal. Never log full Stripe objects or environment values.
