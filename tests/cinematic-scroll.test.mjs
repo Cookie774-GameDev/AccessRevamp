@@ -22,6 +22,8 @@ test('the cinematic plan is exactly $250 one time and checkout-enabled', () => {
   assert.match(webhook, /cinematic_scroll:\s*25000/);
   assert.match(webhook, /cinematic_scroll[\s\S]*price_1TuNWjLzyGRcyGQJ5NNWNU88/);
   assert.match(index, /src\/cinematic-scroll\.js/);
+  assert.match(experience, /setAttribute\('data-cinematic-nav', ''\)/);
+  assert.doesNotMatch(experience, /dataset\[marker\]/);
 });
 
 test('portfolio concept is original, scroll-controlled, and accessible on mobile', () => {
