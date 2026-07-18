@@ -43,8 +43,8 @@ jobs:
 
           const cases = [
             { name: 'cinematic-desktop-start', path: '/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0 },
-            { name: 'cinematic-desktop-mid', path: '/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0.56 },
-            { name: 'cinematic-mobile-mid', path: '/cinematic-scroll', viewport: { width: 390, height: 844 }, mobile: true, progress: 0.56 },
+            { name: 'cinematic-desktop-mid', path: '/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0.56, captureStage: true },
+            { name: 'cinematic-mobile-mid', path: '/cinematic-scroll', viewport: { width: 390, height: 844 }, mobile: true, progress: 0.56, captureStage: true },
             { name: 'pricing-mobile', path: '/pricing', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
             { name: 'portfolio-desktop', path: '/portfolio', viewport: { width: 1440, height: 1050 }, fullPage: true },
             { name: 'refunds-mobile', path: '/refunds', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
@@ -84,18 +84,59 @@ jobs:
               await page.waitForTimeout(260);
             }
 
-            await page.screenshot({
-              path: `cinematic-fixed-qa/${item.name}.png`,
-              fullPage: Boolean(item.fullPage),
-              animations: 'disabled',
-            });
+            if (item.captureStage) {
+              await page.locator('.cinematic-sticky').screenshot({
+                path: `cinematic-fixed-qa/${item.name}.png`,
+                animations: 'disabled',
+              });
+            } else {
+              await page.screenshot({
+                path: `cinematic-fixed-qa/${item.name}.png`,
+                fullPage: Boolean(item.fullPage),
+                animations: 'disabled',
+              });
+            }
 
             const metrics = await page.evaluate(() => {
               const stage = document.querySelector('[data-cinematic-stage]');
+              const sticky = document.querySelector('.cinematic-sticky');
               const canvas = document.querySelector('[data-cinematic-canvas]');
-              const visibleBeat = [...document.querySelectorAll('[data-beat]')]
-                .map((beat) => ({ index: beat.dataset.beat, opacity: Number.parseFloat(getComputedStyle(beat).opacity) || 0 }))
-                .sort((a, b) => b.opacity - a.opacity)[0] || null;
+              const beats = [...document.querySelectorAll('[data-beat]')]
+                .map((beat) => ({
+                  element: beat,
+                  index: beat.dataset.beat,
+                  opacity: Number.parseFloat(getComputedStyle(beat).opacity) || 0,
+                }))
+                .sort((a, b) => b.opacity - a.opacity);
+              const visibleBeat = beats[0] || null;
+              const beatRect = visibleBeat?.element.getBoundingClientRect() || null;
+              const stickyRect = sticky?.getBoundingClientRect() || null;
+
+              let canvasSignal = null;
+              if (canvas) {
+                const context = canvas.getContext('2d');
+                const samplePoints = [
+                  [0.18, 0.2], [0.5, 0.2], [0.82, 0.2],
+                  [0.18, 0.5], [0.5, 0.5], [0.82, 0.5],
+                  [0.18, 0.8], [0.5, 0.8], [0.82, 0.8],
+                ];
+                const luminance = samplePoints.map(([x, y]) => {
+                  const pixel = context.getImageData(
+                    Math.min(canvas.width - 1, Math.max(0, Math.floor(canvas.width * x))),
+                    Math.min(canvas.height - 1, Math.max(0, Math.floor(canvas.height * y))),
+                    1,
+                    1,
+                  ).data;
+                  return Math.round(pixel[0] * 0.2126 + pixel[1] * 0.7152 + pixel[2] * 0.0722);
+                });
+                canvasSignal = {
+                  min: Math.min(...luminance),
+                  max: Math.max(...luminance),
+                  range: Math.max(...luminance) - Math.min(...luminance),
+                  samples: luminance,
+                };
+              }
+
               return {
                 pathname: location.pathname,
                 viewportWidth: innerWidth,
@@ -103,12 +144,15 @@ jobs:
                 documentHeight: document.documentElement.scrollHeight,
                 scrollY,
                 stageTop: stage ? stage.getBoundingClientRect().top : null,
+                stickyRect: stickyRect ? { top: stickyRect.top, bottom: stickyRect.bottom, width: stickyRect.width, height: stickyRect.height } : null,
                 pricingCards: document.querySelectorAll('.pricing-grid .price-card').length,
                 cinematicCard: Boolean(document.querySelector('[data-cinematic-price-card]')),
                 cinematicPortfolio: Boolean(document.querySelector('[data-cinematic-portfolio-card]')),
                 stage: Boolean(stage),
                 canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
-                visibleBeat,
+                canvasSignal,
+                visibleBeat: visibleBeat ? { index: visibleBeat.index, opacity: visibleBeat.opacity } : null,
+                visibleBeatRect: beatRect ? { top: beatRect.top, bottom: beatRect.bottom, width: beatRect.width, height: beatRect.height } : null,
                 refundHeading: document.querySelector('.refund-policy') ? document.querySelector('h1')?.textContent || '' : '',
                 legalHub: Boolean(document.querySelector('.legal-hub-grid')),
               };
@@ -117,8 +161,10 @@ jobs:
             const errors = [];
             if (metrics.documentWidth > metrics.viewportWidth + 1) errors.push(`horizontal overflow ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
             if (item.path === '/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width)) errors.push('cinematic stage or canvas missing');
-            if (item.path === '/cinematic-scroll' && item.progress > 0 && Math.abs(metrics.stageTop) > 1) errors.push(`cinematic stage not pinned at viewport top: ${metrics.stageTop}px`);
+            if (item.path === '/cinematic-scroll' && item.progress > 0 && (!metrics.stickyRect || Math.abs(metrics.stickyRect.top) > 1)) errors.push(`cinematic sticky frame not pinned: ${metrics.stickyRect?.top}px`);
             if (item.path === '/cinematic-scroll' && item.progress > 0 && (!metrics.visibleBeat || metrics.visibleBeat.opacity < 0.2)) errors.push('no readable cinematic story beat at captured progress');
+            if (item.path === '/cinematic-scroll' && item.progress > 0 && metrics.visibleBeatRect && (metrics.visibleBeatRect.bottom < 0 || metrics.visibleBeatRect.top > metrics.stickyRect.height)) errors.push('active cinematic copy is outside the pinned frame');
+            if (item.path === '/cinematic-scroll' && item.progress > 0 && (!metrics.canvasSignal || metrics.canvasSignal.max < 20 || metrics.canvasSignal.range < 8)) errors.push(`cinematic canvas lacks visible contrast: ${JSON.stringify(metrics.canvasSignal)}`);
             if (item.path === '/pricing' && (metrics.pricingCards !== 3 || !metrics.cinematicCard)) errors.push(`pricing cards=${metrics.pricingCards}, cinematic=${metrics.cinematicCard}`);
             if (item.path === '/portfolio' && !metrics.cinematicPortfolio) errors.push('cinematic portfolio concept missing');
             if (item.path === '/refunds' && !/Refund/i.test(metrics.refundHeading)) errors.push('refund heading missing');
