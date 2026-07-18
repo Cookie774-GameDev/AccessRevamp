@@ -23,6 +23,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run regression tests against production source
+        run: npm test
       - name: Convert routes to a standalone hash preview
         run: |
           node --input-type=module <<'NODE'
@@ -48,9 +50,8 @@ jobs:
           portfolio = portfolio.replace("window.addEventListener('popstate', () => requestAnimationFrame(applyPortfolioExperience));", "window.addEventListener('hashchange', () => requestAnimationFrame(applyPortfolioExperience));");
           await writeFile(portfolioPath, portfolio);
           NODE
-      - name: Run tests and build standalone preview
+      - name: Build standalone preview
         run: |
-          npm test
           npm run build -- --base=./
           cp dist/index.html dist/OPEN_ME.html
           cat > dist/README.txt <<'TXT'
