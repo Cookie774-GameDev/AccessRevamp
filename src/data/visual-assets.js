@@ -16,6 +16,11 @@ export const visualAssets = {
   firejarHot: asset('firejar-hot-01', 1254, 1254),
   clearflowHero: asset('clearflow-hero-01', 1536, 1024),
   clearflowDetail: asset('clearflow-detail-01', 1448, 1086),
+  greenlineInterface: asset('greenline-interface-01', 1440, 1000),
+  firejarInterface: asset('firejar-interface-01', 1440, 1000),
+  clearflowInterface: asset('clearflow-interface-01', 1440, 1000),
+  auditBefore: asset('audit-before-01', 1440, 1000),
+  auditAfter: asset('audit-after-01', 1440, 1000),
 };
 
 export const demoBrands = {
@@ -24,6 +29,7 @@ export const demoBrands = {
     name: 'Greenline Lawn & Grounds',
     hero: visualAssets.greenlineHero,
     detail: visualAssets.greenlineDetail,
+    interface: visualAssets.greenlineInterface,
   },
   firejar: {
     slug: 'firejar-spicy-peanut-butter',
@@ -34,12 +40,14 @@ export const demoBrands = {
       bright: visualAssets.firejarBright,
       hot: visualAssets.firejarHot,
     },
+    interface: visualAssets.firejarInterface,
   },
   clearflow: {
     slug: 'clearflow-plumbing',
     name: 'Clearflow Plumbing',
     hero: visualAssets.clearflowHero,
     detail: visualAssets.clearflowDetail,
+    interface: visualAssets.clearflowInterface,
   },
 };
 
