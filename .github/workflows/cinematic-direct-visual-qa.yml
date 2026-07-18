@@ -1,0 +1,151 @@
+name: Cinematic Direct Visual QA
+
+on:
+  push:
+    branches:
+      - agent/cinematic-visual-qa
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  direct-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate production source
+        run: npm run check
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build and inspect production routes
+        run: |
+          npm run build
+          mkdir -p cinematic-direct-qa
+          npx vite preview --host 127.0.0.1 --port 4173 > cinematic-direct-qa/vite.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          import { writeFile } from 'node:fs/promises';
+
+          const cases = [
+            { name: 'cinematic-desktop-start', path: '/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0 },
+            { name: 'cinematic-desktop-mid', path: '/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0.56 },
+            { name: 'cinematic-mobile-mid', path: '/cinematic-scroll', viewport: { width: 390, height: 844 }, mobile: true, progress: 0.56 },
+            { name: 'pricing-mobile', path: '/pricing', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
+            { name: 'portfolio-desktop', path: '/portfolio', viewport: { width: 1440, height: 1050 }, fullPage: true },
+            { name: 'refunds-mobile', path: '/refunds', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
+            { name: 'legal-desktop', path: '/legal', viewport: { width: 1440, height: 900 }, fullPage: true },
+          ];
+
+          const browser = await chromium.launch({ headless: true });
+          const report = [];
+          const failures = [];
+
+          for (const item of cases) {
+            const context = await browser.newContext({
+              viewport: item.viewport,
+              deviceScaleFactor: item.mobile ? 2 : 1,
+              isMobile: Boolean(item.mobile),
+              hasTouch: Boolean(item.mobile),
+              reducedMotion: 'no-preference',
+            });
+            const page = await context.newPage();
+            const consoleErrors = [];
+            page.on('console', (message) => {
+              if (message.type() === 'error') consoleErrors.push(message.text());
+            });
+            page.on('pageerror', (error) => consoleErrors.push(error.message));
+
+            try {
+              await page.goto(`http://127.0.0.1:4173${item.path}`, { waitUntil: 'networkidle' });
+              await page.waitForTimeout(300);
+
+              if (typeof item.progress === 'number' && item.progress > 0) {
+                await page.evaluate((progress) => {
+                  const stage = document.querySelector('[data-cinematic-stage]');
+                  if (!stage) throw new Error('Cinematic stage was not rendered.');
+                  const target = stage.offsetTop + Math.max(0, stage.offsetHeight - innerHeight) * progress;
+                  scrollTo(0, target);
+                }, item.progress);
+                await page.waitForTimeout(220);
+              }
+
+              await page.screenshot({
+                path: `cinematic-direct-qa/${item.name}.png`,
+                fullPage: Boolean(item.fullPage),
+                animations: 'disabled',
+              });
+
+              const metrics = await page.evaluate(() => {
+                const stage = document.querySelector('[data-cinematic-stage]');
+                const canvas = document.querySelector('[data-cinematic-canvas]');
+                const visibleBeat = [...document.querySelectorAll('[data-beat]')]
+                  .map((beat) => ({ index: beat.dataset.beat, opacity: Number.parseFloat(getComputedStyle(beat).opacity) || 0 }))
+                  .sort((a, b) => b.opacity - a.opacity)[0] || null;
+                return {
+                  pathname: location.pathname,
+                  viewportWidth: innerWidth,
+                  documentWidth: document.documentElement.scrollWidth,
+                  documentHeight: document.documentElement.scrollHeight,
+                  pricingCards: document.querySelectorAll('.pricing-grid .price-card').length,
+                  cinematicCard: Boolean(document.querySelector('[data-cinematic-price-card]')),
+                  cinematicPortfolio: Boolean(document.querySelector('[data-cinematic-portfolio-card]')),
+                  stage: Boolean(stage),
+                  canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
+                  visibleBeat,
+                  refundHeading: document.querySelector('.refund-policy') ? document.querySelector('h1')?.textContent || '' : '',
+                  legalHub: Boolean(document.querySelector('.legal-hub-grid')),
+                  mainText: document.querySelector('#main-content')?.innerText.slice(0, 260) || '',
+                };
+              });
+
+              const errors = [];
+              if (metrics.documentWidth > metrics.viewportWidth + 1) errors.push(`horizontal overflow ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
+              if (item.path === '/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width)) errors.push('cinematic stage or canvas missing');
+              if (item.path === '/pricing' && (metrics.pricingCards !== 3 || !metrics.cinematicCard)) errors.push(`pricing cards=${metrics.pricingCards}, cinematic=${metrics.cinematicCard}`);
+              if (item.path === '/portfolio' && !metrics.cinematicPortfolio) errors.push('cinematic portfolio concept missing');
+              if (item.path === '/refunds' && !/Refund/i.test(metrics.refundHeading)) errors.push('refund heading missing');
+              if (item.path === '/legal' && !metrics.legalHub) errors.push('legal hub missing');
+              if (consoleErrors.length) errors.push(`console: ${consoleErrors.join(' | ')}`);
+
+              report.push({ name: item.name, ...metrics, consoleErrors, errors });
+              if (errors.length) failures.push(`${item.name}: ${errors.join('; ')}`);
+            } catch (error) {
+              failures.push(`${item.name}: ${error.message}`);
+              report.push({ name: item.name, error: error.message, consoleErrors });
+            } finally {
+              await writeFile('cinematic-direct-qa/report.json', `${JSON.stringify({ report, failures }, null, 2)}\n`);
+              await context.close();
+            }
+          }
+
+          await browser.close();
+          if (failures.length) {
+            console.error(failures.join('\n'));
+            process.exitCode = 1;
+          }
+          NODE
+      - name: Upload direct QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-cinematic-direct-qa
+          path: cinematic-direct-qa
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
