@@ -63,6 +63,6 @@ function applyOfferDetails() {
 
 const app = document.querySelector('#app');
 if (app) {
-  new MutationObserver(applyOfferDetails).observe(app, { childList: true, subtree: true });
+  // Legacy enhancer retained for source history only; the modular renderer owns page composition.
 }
 applyOfferDetails();

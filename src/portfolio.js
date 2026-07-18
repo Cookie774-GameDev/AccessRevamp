@@ -253,7 +253,7 @@ document.addEventListener('click', (event) => {
   window.dispatchEvent(new PopStateEvent('popstate'));
 });
 
-new MutationObserver(applyPortfolioExperience).observe(document.querySelector('#app'), { childList: true, subtree: true });
+// Legacy enhancer retained for source history only; the modular renderer owns page composition.
 window.addEventListener('popstate', () => requestAnimationFrame(applyPortfolioExperience));
 applyPortfolioExperience();
 

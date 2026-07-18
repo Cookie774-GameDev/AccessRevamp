@@ -1,6 +1,8 @@
 import './styles.css';
 import { plans, siteConfig, servicePromise } from './config.js';
 import { getSupabase } from './lib/supabase.js';
+import { createRouter } from './app/router.js';
+import { updateDocumentMetadata } from './app/metadata.js';
 
 const app = document.querySelector('#app');
 const routeMeta = {
@@ -142,21 +144,10 @@ const pages = {
   '/cancel': () => resultPage(false),
 };
 
-function navigate(path) {
-  if (path === location.pathname) return;
-  history.pushState({}, '', path);
-  render();
-  window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-}
+let router;
+const navigate = (path) => router.navigate(path);
 
 function bindNavigation() {
-  document.querySelectorAll('[data-nav]').forEach((link) => link.addEventListener('click', (event) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target === '_blank') return;
-    const url = new URL(link.href, location.origin);
-    if (url.origin !== location.origin) return;
-    event.preventDefault();
-    navigate(url.pathname);
-  }));
   const button = document.querySelector('.menu-button');
   const menu = document.querySelector('.mobile-nav');
   button?.addEventListener('click', () => {
@@ -270,21 +261,14 @@ async function loadDashboard() {
   bindNavigation();
 }
 
-function updateMeta() {
-  const [title, description] = routeMeta[location.pathname] || ['Page not found', 'AccessRevamp'];
-  document.title = title + ' | AccessRevamp';
-  document.querySelector('meta[name="description"]')?.setAttribute('content', description);
-}
-
-function render() {
-  const page = pages[location.pathname] || notFoundPage;
-  app.innerHTML = page();
-  updateMeta();
+function renderRoute({ pathname, pattern, params, view }) {
+  app.innerHTML = view(params);
+  updateDocumentMetadata(pathname, pattern);
   bindNavigation();
   bindContact();
   bindAuth();
   loadDashboard();
 }
 
-window.addEventListener('popstate', render);
-render();
+router = createRouter({ routes: pages, fallback: notFoundPage, render: renderRoute });
+router.start();

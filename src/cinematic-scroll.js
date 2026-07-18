@@ -496,7 +496,7 @@ document.addEventListener('click', (event) => {
 });
 
 const app = document.querySelector('#app');
-if (app) new MutationObserver(applyCinematicExperience).observe(app, { childList: true, subtree: true });
+// Route setup is now called explicitly by the modular renderer.
 window.addEventListener('popstate', () => requestAnimationFrame(applyCinematicExperience));
 applyCinematicExperience();
 
