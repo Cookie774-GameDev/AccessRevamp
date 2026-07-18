@@ -2,23 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [index, portfolio, styles] = await Promise.all([
-  readFile('index.html', 'utf8'),
-  readFile('src/portfolio.js', 'utf8'),
-  readFile('src/portfolio.css', 'utf8'),
+const [main, portfolio, home, work, styles] = await Promise.all([
+  readFile('src/main.js', 'utf8'),
+  readFile('src/data/portfolio.js', 'utf8'),
+  readFile('src/pages/home.js', 'utf8'),
+  readFile('src/pages/work.js', 'utf8'),
+  readFile('src/styles/pages.css', 'utf8'),
 ]);
 
 test('the portfolio is loaded as part of the production website', () => {
-  assert.match(index, /src\/portfolio\.js/);
-  assert.match(portfolio, /location\.pathname === '\/portfolio'/);
-  assert.match(portfolio, /data-portfolio-home/);
-  assert.match(portfolio, /AccessRevamp portfolio/);
+  assert.match(main, /'\/work': workPage/);
+  assert.match(main, /'\/work\/:slug'/);
+  assert.match(home, /selectedWork/);
+  assert.match(work, /portfolioItems/);
 });
 
 test('the portfolio contains three homepage concepts and three poster concepts', () => {
-  assert.equal((portfolio.match(/category: '.*homepage'/g) || []).length, 3);
-  assert.equal((portfolio.match(/category: '.*campaign'|category: 'Home-goods product drop'/g) || []).length, 3);
-  assert.equal((portfolio.match(/canvaUrl: 'https:\/\/www\.canva\.com\/d\//g) || []).length, 6);
+  assert.equal((portfolio.match(/kind: 'homepage'/g) || []).length, 3);
+  assert.equal((portfolio.match(/kind: 'campaign'/g) || []).length, 3);
+  assert.equal((portfolio.match(/kind: 'cinematic'/g) || []).length, 1);
   assert.match(portfolio, /Northline Goods/);
   assert.match(portfolio, /Morrow Studio/);
   assert.match(portfolio, /Fable & Finch/);
@@ -28,16 +30,16 @@ test('the portfolio contains three homepage concepts and three poster concepts',
 });
 
 test('portfolio work is clearly disclosed as fictional concept work', () => {
-  assert.match(portfolio, /original, fictional concept work/i);
-  assert.match(portfolio, /not client endorsements/i);
-  assert.match(portfolio, /not live client sites/i);
-  assert.doesNotMatch(portfolio, /trusted by|client results|we increased|revenue lift/i);
+  assert.equal((portfolio.match(/fictionalConcept:\s*true/g) || []).length, 7);
+  assert.match(home, /original, fictional concept work/i);
+  assert.match(home, /not a client endorsement/i);
+  assert.match(work, /not client endorsements/i);
+  assert.doesNotMatch(`${home}\n${work}`, /trusted by|client results|we increased|revenue lift/i);
 });
 
 test('portfolio layouts collapse safely for tablets and mobile screens', () => {
-  assert.match(styles, /@media \(max-width: 1080px\)/);
-  assert.match(styles, /@media \(max-width: 980px\)/);
-  assert.match(styles, /@media \(max-width: 720px\)/);
-  assert.match(styles, /portfolio-grid--home,[\s\S]*portfolio-grid--posters,[\s\S]*portfolio-process[\s\S]*grid-template-columns: 1fr/);
-  assert.match(styles, /concept-site__nav > div[\s\S]*display: none/);
+  assert.match(styles, /@media \(max-width: 1000px\)/);
+  assert.match(styles, /@media \(max-width: 760px\)/);
+  assert.match(styles, /\.work-grid[\s\S]*grid-template-columns: 1fr/);
+  assert.match(styles, /\.work-card__art[\s\S]*min-height: 21rem/);
 });

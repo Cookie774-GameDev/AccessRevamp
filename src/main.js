@@ -6,6 +6,14 @@ import { plans, siteConfig, servicePromise } from './config.js';
 import { getSupabase } from './lib/supabase.js';
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';
+import { homePage as editorialHomePage } from './pages/home.js';
+import { workDetailPage, workPage, setupWorkFilters } from './pages/work.js';
+import { servicesPage } from './pages/services.js';
+import { pricingPage as editorialPricingPage } from './pages/pricing.js';
+import { sampleReportPage } from './pages/sample-report.js';
+import { processPage } from './pages/process.js';
+import { cinematicPage } from './pages/cinematic.js';
+import { setupCinematicExperience } from './cinematic-scroll.js';
 
 const app = document.querySelector('#app');
 const routeMeta = {
@@ -131,10 +139,15 @@ function notFoundPage() {
 }
 
 const pages = {
-  '/': homePage,
-  '/pricing': pricingPage,
-  '/sample-report': samplePage,
-  '/methodology': methodologyPage,
+  '/': editorialHomePage,
+  '/work': workPage,
+  '/work/:slug': (params) => workDetailPage(params) || notFoundPage(),
+  '/services': servicesPage,
+  '/process': () => processPage(),
+  '/pricing': editorialPricingPage,
+  '/sample-report': sampleReportPage,
+  '/methodology': () => processPage({ methodology: true }),
+  '/cinematic-scroll': cinematicPage,
   '/outreach-standards': outreachPage,
   '/contact': contactPage,
   '/login': () => authPage('login'),
@@ -271,6 +284,9 @@ function renderRoute({ pathname, pattern, params, view }) {
   bindContact();
   bindAuth();
   loadDashboard();
+  if (pathname === '/work') return setupWorkFilters();
+  if (pathname === '/cinematic-scroll') return setupCinematicExperience();
+  return undefined;
 }
 
 router = createRouter({ routes: pages, fallback: notFoundPage, render: renderRoute });
