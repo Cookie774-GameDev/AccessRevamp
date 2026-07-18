@@ -7,18 +7,28 @@ Last updated: July 18, 2026
 - Retained Vite, Netlify Functions, Supabase, and Stripe architecture with a passing local gate.
 - Secret-safe pre-rebuild screenshots, axe reports, Lighthouse reports, route/build/config inventory, and known-defect record.
 - Repository execution contract, approved design contract, ADR, six detailed implementation plans, and ten-document operating model.
+- Canonical Free Snapshot $0, Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250 catalog with cumulative $150/$200/$50 upgrade arithmetic and a server-only Stripe adapter.
+- Declarative registrations and metadata for every required route, including parameterized portfolio and private-preview routes.
+- Editorial audit-lens homepage, approved palette, shared shell, responsive/reduced-motion behavior, and exact portfolio-demo disclosures.
+- Sites-compatible worker wrapper and an owner-only hosted review deployment at `https://accessrevamp-studio.combatonline02.chatgpt.site`; this does not replace the required Netlify staging evidence.
 - Existing authentication, customer workspace, signature-verified Stripe webhook foundation, passive review boundary, private-preview safety, suppression, approval records, and outreach disabled by default.
 
 ## PLANNED by the approved rebuild
 
-- Canonical Free Snapshot $0, Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250 catalog.
 - Cumulative verified upgrades of $150, $200, and $50 through server-authoritative entitlements and reservations.
-- Rebuilt public experience, account and operator workspaces, three complete route-isolated working demos, cinematic story, reports/exports, analytics, and final quality evidence.
+- Remaining public routes, account and operator workspaces, three complete route-isolated working demos, cinematic story, reports/exports, analytics, and final quality evidence.
 - Dedicated Stripe test-mode full/upgrade prices without browser Price IDs or direct Payment Links.
+
+## VERIFIED foundation checkpoint
+
+- `npm run check`: static policy passed across 115 files; 94/94 tests passed; Sites/vinext worker build completed.
+- `npm audit --omit=dev --audit-level=high`: zero high/critical findings; two moderate Next/PostCSS advisories remain documented.
+- Current local Lighthouse checkpoint remains below final targets: home 62/96/100/91, pricing 72/93/100/91, work 72/92/100/91, cinematic 75/95/100/91.
+- Historical pre-rebuild evidence was preserved rather than overwritten by the checkpoint rerun.
 
 ## EXTERNALLY BLOCKED evidence
 
-The connected Supabase project identity and migration state, Stripe test catalog/webhook state, Netlify preview URL, owned staging authorization, and remote end-to-end results have not been proven from this worktree. No provider state is inferred from local source.
+The connected Supabase project identity and migration state, Stripe test catalog/webhook state, Netlify preview URL, owned active-testing authorization, and remote end-to-end results have not been proven from this worktree. No provider state is inferred from local source or from the separate Sites review deployment.
 
 ## LAUNCH-ONLY actions
 

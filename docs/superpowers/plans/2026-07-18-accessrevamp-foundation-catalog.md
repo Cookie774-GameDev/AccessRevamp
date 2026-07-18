@@ -234,7 +234,7 @@ git commit -m "feat: add canonical cumulative tier catalog"
 - Produces: `compileRoute(pattern)` and `matchRoute(pathname, routes)` supporting `:token` and `:slug` segments.
 - Produces: required route registrations whose page modules may be temporary honest “under construction in this preview” views only until their owning plans replace them.
 
-- [ ] **Step 1: Write failing route-pattern and inventory tests**
+- [x] **Step 1: Write failing route-pattern and inventory tests**
 
 ```js
 for (const route of REQUIRED_ROUTES) assert.match(mainSource, new RegExp(`['\"]${escape(route)}['\"]`));
@@ -242,23 +242,23 @@ assert.deepEqual(matchRoute('/preview/abc123', {'/preview/:token': () => ''}).pa
 assert.deepEqual(matchRoute('/portfolio/greenline-lawn-and-grounds', {'/portfolio/:slug': () => ''}).params, {slug:'greenline-lawn-and-grounds'});
 ```
 
-- [ ] **Step 2: Run and confirm failures for `/preview/:token`, `/free-snapshot`, and `/account/projects`**
+- [x] **Step 2: Run and confirm failures for `/preview/:token`, `/free-snapshot`, and `/account/projects`**
 
 Run: `node --test tests/router-contract.test.mjs`
 
 Expected: FAIL listing missing route patterns.
 
-- [ ] **Step 3: Generalize segment matching and register every required route**
+- [x] **Step 3: Generalize segment matching and register every required route**
 
 The matcher must escape literal segments, decode parameters safely, reject extra segments, and preserve existing history/cleanup behavior. Metadata for token previews is fixed `noindex` copy and never includes the token.
 
-- [ ] **Step 4: Verify routing and full baseline**
+- [x] **Step 4: Verify routing and full baseline**
 
 Run: `node --test tests/router-contract.test.mjs tests/rebuild-architecture.test.mjs && npm run check`
 
 Expected: all tests PASS; build completes without duplicate module entry points.
 
-- [ ] **Step 5: Commit the route contract**
+- [x] **Step 5: Commit the route contract**
 
 ```bash
 git add src/app src/main.js tests/router-contract.test.mjs tests/rebuild-architecture.test.mjs
@@ -275,23 +275,23 @@ git commit -m "feat: register production route contract"
 - Consumes: Tasks 1–4.
 - Produces: a truthful foundation checkpoint for the entitlement/payment plan.
 
-- [ ] **Step 1: Run the complete foundation evidence set**
+- [x] **Step 1: Run the complete foundation evidence set**
 
 Run: `npm run check && npm audit --omit=dev --audit-level=high && npm run baseline && git diff --check`
 
 Expected: all checks PASS, audit reports zero high-or-greater production vulnerabilities, and the baseline inventory contains no secret-like values.
 
-- [ ] **Step 2: Inspect bundle and stale assumptions**
+- [x] **Step 2: Inspect bundle and stale assumptions**
 
 Run: `rg -n "\$199|Quick Fix|VITE_STRIPE|book\.stripe\.com|price_" src netlify/functions tests docs README.md .env*`
 
 Expected: no stale product text; `price_` appears only as a prohibited-pattern assertion or server environment category, never an actual ID.
 
-- [ ] **Step 3: Update implementation status with exact evidence and external gaps**
+- [x] **Step 3: Update implementation status with exact evidence and external gaps**
 
 Record commit IDs, command results, unverified external systems, and the next plan. Do not mark Supabase remote or Stripe object creation as verified.
 
-- [ ] **Step 4: Commit the foundation checkpoint**
+- [x] **Step 4: Commit the foundation checkpoint**
 
 ```bash
 git add docs/baseline/2026-07-18.md docs/IMPLEMENTATION_STATUS.md
