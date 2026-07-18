@@ -1,0 +1,202 @@
+name: Cinematic Visual QA
+
+on:
+  push:
+    branches:
+      - agent/cinematic-visual-qa
+
+permissions:
+  contents: read
+
+jobs:
+  preview-and-screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run production regression tests
+        run: npm test
+      - name: Convert routes to a standalone hash preview
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+
+          async function patch(path, transform) {
+            const source = await readFile(path, 'utf8');
+            await writeFile(path, transform(source));
+          }
+
+          await patch('src/main.js', (source) => {
+            const anchor = "const app = document.querySelector('#app');";
+            if (!source.includes(anchor)) throw new Error('Main preview patch anchor was not found.');
+            return source
+              .replace(anchor, `${anchor}\nconst currentRoute = () => location.hash.slice(1).split('#')[0] || '/';`)
+              .replaceAll('location.pathname', 'currentRoute()')
+              .replace("history.pushState({}, '', path);", "location.hash = path;")
+              .replace("window.addEventListener('popstate', render);", "window.addEventListener('hashchange', render);");
+          });
+
+          await patch('src/portfolio.js', (source) => {
+            const anchor = "import './portfolio.css';";
+            if (!source.includes(anchor)) throw new Error('Portfolio preview patch anchor was not found.');
+            return source
+              .replace(anchor, `${anchor}\n\nconst currentPortfolioRoute = () => location.hash.slice(1).split('#')[0] || '/';`)
+              .replaceAll('location.pathname', 'currentPortfolioRoute()')
+              .replace("history.pushState({}, '', url.pathname);\n  window.dispatchEvent(new PopStateEvent('popstate'));", "location.hash = url.pathname;")
+              .replace("window.addEventListener('popstate', () => requestAnimationFrame(applyPortfolioExperience));", "window.addEventListener('hashchange', () => requestAnimationFrame(applyPortfolioExperience));");
+          });
+
+          await patch('src/cinematic-scroll.js', (source) => {
+            const anchor = "import './cinematic-scroll.css';";
+            if (!source.includes(anchor)) throw new Error('Cinematic preview patch anchor was not found.');
+            return source
+              .replace(anchor, `${anchor}\n\nconst currentCinematicRoute = () => location.hash.slice(1).split('#')[0] || '/';`)
+              .replaceAll('location.pathname', 'currentCinematicRoute()')
+              .replace("history.pushState({}, '', url.pathname + url.hash);", "location.hash = url.pathname;")
+              .replace("window.addEventListener('popstate', () => requestAnimationFrame(applyCinematicExperience));", "window.addEventListener('hashchange', () => requestAnimationFrame(applyCinematicExperience));")
+              .replace('href="#cinematic-demo"', 'href="#/cinematic-scroll"');
+          });
+          NODE
+      - name: Build deployable and single-file previews
+        run: |
+          npm run build -- --base=./
+          cp dist/index.html dist/OPEN_ME.html
+          cat > preview-entry.mjs <<'JS'
+          import './src/main.js';
+          import './src/offer-details.js';
+          import './src/portfolio.js';
+          import './src/cinematic-scroll.js';
+          import './src/checkout.js';
+          JS
+          npx esbuild preview-entry.mjs --bundle --format=iife --platform=browser --target=es2022 --minify --outfile=preview.bundle.js --define:import.meta.env='{}'
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const css = await readFile('preview.bundle.css', 'utf8');
+          const js = (await readFile('preview.bundle.js', 'utf8')).replace(/<\/script/gi, '<\\/script');
+          const html = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111f"><title>AccessRevamp Cinematic UI Preview</title><style>${css}</style></head><body><a class="skip-link" href="#main-content">Skip to content</a><div id="app"></div><script>${js}</script></body></html>`;
+          await writeFile('AccessRevamp_Cinematic_UI_Preview.html', html);
+          NODE
+          cat > dist/README.txt <<'TXT'
+          ACCESSREVAMP CINEMATIC UI PREVIEW
+
+          Open OPEN_ME.html or index.html in a modern browser. Navigation uses URL
+          hashes so the homepage, portfolio, pricing, cinematic demo, legal center,
+          refund policy, contact, sign-in, and dashboard shell remain browsable.
+
+          AccessRevamp_Cinematic_UI_Preview.html is a self-contained alternative.
+
+          Supabase auth/data, contact submission, server-created Checkout, webhooks,
+          and private previews require the deployed environment.
+          TXT
+      - name: Install Chromium for visual QA
+        run: npx playwright install --with-deps chromium
+      - name: Capture desktop and mobile screenshots
+        run: |
+          mkdir -p visual-qa
+          npx vite preview --host 127.0.0.1 --port 4173 > /tmp/accessrevamp-vite.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          import { writeFile } from 'node:fs/promises';
+
+          const browser = await chromium.launch({ headless: true });
+          const cases = [
+            { name: 'cinematic-desktop-start', route: '#/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0 },
+            { name: 'cinematic-desktop-mid', route: '#/cinematic-scroll', viewport: { width: 1440, height: 1050 }, progress: 0.56 },
+            { name: 'cinematic-mobile-mid', route: '#/cinematic-scroll', viewport: { width: 390, height: 844 }, mobile: true, progress: 0.56 },
+            { name: 'pricing-mobile', route: '#/pricing', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
+            { name: 'portfolio-desktop', route: '#/portfolio', viewport: { width: 1440, height: 1050 }, fullPage: true },
+            { name: 'refunds-mobile', route: '#/refunds', viewport: { width: 390, height: 844 }, mobile: true, fullPage: true },
+          ];
+          const report = [];
+
+          for (const item of cases) {
+            const context = await browser.newContext({
+              viewport: item.viewport,
+              deviceScaleFactor: item.mobile ? 2 : 1,
+              isMobile: Boolean(item.mobile),
+              hasTouch: Boolean(item.mobile),
+              reducedMotion: 'no-preference',
+            });
+            const page = await context.newPage();
+            await page.goto(`http://127.0.0.1:4173/${item.route}`, { waitUntil: 'networkidle' });
+            await page.waitForTimeout(250);
+
+            if (typeof item.progress === 'number' && item.progress > 0) {
+              await page.evaluate((progress) => {
+                const stage = document.querySelector('[data-cinematic-stage]');
+                if (!stage) throw new Error('Cinematic stage was not rendered.');
+                const target = stage.offsetTop + Math.max(0, stage.offsetHeight - innerHeight) * progress;
+                scrollTo(0, target);
+              }, item.progress);
+              await page.waitForTimeout(180);
+            }
+
+            await page.screenshot({ path: `visual-qa/${item.name}.png`, fullPage: Boolean(item.fullPage), animations: 'disabled' });
+            const metrics = await page.evaluate(() => {
+              const stage = document.querySelector('[data-cinematic-stage]');
+              const canvas = document.querySelector('[data-cinematic-canvas]');
+              const cinematicCard = document.querySelector('[data-cinematic-price-card]');
+              const cinematicPortfolio = document.querySelector('[data-cinematic-portfolio-card]');
+              const visibleBeat = [...document.querySelectorAll('[data-beat]')]
+                .map((beat) => ({ index: beat.dataset.beat, opacity: Number.parseFloat(getComputedStyle(beat).opacity) || 0 }))
+                .sort((a, b) => b.opacity - a.opacity)[0] || null;
+              return {
+                route: location.hash,
+                viewportWidth: innerWidth,
+                documentWidth: document.documentElement.scrollWidth,
+                documentHeight: document.documentElement.scrollHeight,
+                pricingCards: document.querySelectorAll('.pricing-grid .price-card').length,
+                cinematicCard: Boolean(cinematicCard),
+                cinematicPortfolio: Boolean(cinematicPortfolio),
+                stage: Boolean(stage),
+                canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
+                visibleBeat,
+                refundHeading: document.querySelector('.refund-policy') ? document.querySelector('h1')?.textContent || '' : '',
+              };
+            });
+
+            if (metrics.documentWidth > metrics.viewportWidth + 1) {
+              throw new Error(`${item.name} has horizontal overflow: ${metrics.documentWidth}px > ${metrics.viewportWidth}px`);
+            }
+            if (item.route === '#/cinematic-scroll' && (!metrics.stage || !metrics.canvas?.width || !metrics.cinematicPortfolio)) {
+              throw new Error(`${item.name} did not render the cinematic stage, canvas, or portfolio concept.`);
+            }
+            if (item.route === '#/pricing' && (metrics.pricingCards !== 3 || !metrics.cinematicCard)) {
+              throw new Error(`Pricing rendered ${metrics.pricingCards} cards instead of three.`);
+            }
+            if (item.route === '#/portfolio' && !metrics.cinematicPortfolio) {
+              throw new Error('Portfolio did not include the cinematic concept.');
+            }
+            if (item.route === '#/refunds' && !/Refund/i.test(metrics.refundHeading)) {
+              throw new Error('Refund policy route did not render its heading.');
+            }
+            report.push({ name: item.name, ...metrics });
+            await context.close();
+          }
+
+          await browser.close();
+          await writeFile('visual-qa/report.json', `${JSON.stringify(report, null, 2)}\n`);
+          NODE
+      - name: Upload preview and visual QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-cinematic-preview
+          path: |
+            dist
+            AccessRevamp_Cinematic_UI_Preview.html
+            visual-qa
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
