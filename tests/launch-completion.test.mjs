@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(path, 'utf8');
 const [
   packageText,
-  index,
+  main,
   checkoutClient,
   checkoutFunction,
   webhook,
@@ -17,8 +17,8 @@ const [
   netlify,
 ] = await Promise.all([
   read('package.json'),
-  read('index.html'),
-  read('src/checkout.js'),
+  read('src/main.js'),
+  read('src/services/checkout.js'),
   read('netlify/functions/create-checkout.mjs'),
   read('netlify/functions/stripe-webhook.mjs'),
   read('scripts/scan-public-homepage.mjs'),
@@ -44,7 +44,7 @@ test('runtime and security-sensitive dependencies are exact and current for the 
 });
 
 test('pricing buttons use server-created Checkout with a validated Stripe fallback', () => {
-  assert.match(index, /src\/checkout\.js/);
+  assert.match(main, /setupCheckout/);
   assert.match(checkoutClient, /\.netlify\/functions\/create-checkout/);
   assert.match(checkoutClient, /crypto\.randomUUID\(\)/);
   assert.match(checkoutClient, /checkout\.stripe\.com/);
