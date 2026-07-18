@@ -24,7 +24,7 @@ export const contactSchema = z.object({
 }).strict();
 
 export const checkoutSchema = z.object({
-  planKey: z.enum(['homepage_reveal', 'quick_fix']),
+  planKey: z.enum(['homepage_reveal', 'quick_fix', 'cinematic_scroll']),
   email: z.string().trim().email().max(254).optional(),
   requestId: z.string().uuid(),
 }).strict();

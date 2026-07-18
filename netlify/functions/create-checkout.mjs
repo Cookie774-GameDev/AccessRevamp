@@ -7,6 +7,7 @@ const STRIPE_API_VERSION = '2026-06-24.dahlia';
 const PLAN_PRICES = Object.freeze({
   homepage_reveal: process.env.STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
   quick_fix: process.env.STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
+  cinematic_scroll: process.env.STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
 });
 
 function randomLetters(length = 8) {
@@ -27,7 +28,7 @@ export default async (request) => {
       apiVersion: STRIPE_API_VERSION,
       appInfo: {
         name: 'AccessRevamp',
-        version: '1.1.0',
+        version: '1.2.0',
       },
     });
     const origin = new URL(request.url).origin;

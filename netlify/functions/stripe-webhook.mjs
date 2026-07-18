@@ -3,10 +3,11 @@ import { handleError, json } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
 const STRIPE_API_VERSION = '2026-06-24.dahlia';
-const expectedAmounts = Object.freeze({ homepage_reveal: 5000, quick_fix: 19900 });
+const expectedAmounts = Object.freeze({ homepage_reveal: 5000, quick_fix: 19900, cinematic_scroll: 25000 });
 const expectedPriceIds = Object.freeze({
   homepage_reveal: process.env.STRIPE_HOMEPAGE_REVEAL_PRICE_ID || 'price_1TuGoNLzyGRcyGQJRjtGsiMV',
   quick_fix: process.env.STRIPE_QUICK_FIX_PRICE_ID || 'price_1TuGoTLzyGRcyGQJfdkqoE3f',
+  cinematic_scroll: process.env.STRIPE_CINEMATIC_SCROLL_PRICE_ID || 'price_1TuNWjLzyGRcyGQJ5NNWNU88',
 });
 const checkoutEventTypes = new Set([
   'checkout.session.completed',
@@ -32,7 +33,7 @@ export default async (request) => {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: STRIPE_API_VERSION,
-      appInfo: { name: 'AccessRevamp', version: '1.1.0' },
+      appInfo: { name: 'AccessRevamp', version: '1.2.0' },
     });
     const rawBody = await request.text();
     const event = await stripe.webhooks.constructEventAsync(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
