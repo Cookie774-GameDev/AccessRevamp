@@ -91,11 +91,22 @@ test('dynamic routes reject missing and extra segments', () => {
   assert.equal(routerModule.matchRoute('/portfolio/example/details', routes), null);
 });
 
-test('the production portfolio family uses an honest temporary preview', async () => {
+test('the production portfolio family uses an honest route-specific temporary preview', async () => {
   const mainSource = await readFile('src/main.js', 'utf8');
+  const disclosure = 'Original working demo — not a client engagement.';
 
-  assert.match(mainSource, /'\/portfolio\/:slug': underConstructionPage/);
+  assert.match(mainSource, new RegExp(escapeRegExp(disclosure)), 'missing exact portfolio disclosure');
+
+  const portfolioPlaceholder = mainSource.match(/function portfolioUnderConstructionPage\(\) \{([\s\S]*?)\n\}/)?.[1] || '';
+  const genericPlaceholder = mainSource.match(/function underConstructionPage\(\) \{([\s\S]*?)\n\}/)?.[1] || '';
+
+  assert.match(mainSource, /'\/portfolio\/:slug': portfolioUnderConstructionPage/);
+  assert.match(portfolioPlaceholder, new RegExp(escapeRegExp(disclosure)));
+  assert.match(portfolioPlaceholder, /buildUnderConstructionPage/);
   assert.match(mainSource, /under construction in this preview/i);
+  assert.doesNotMatch(genericPlaceholder, new RegExp(escapeRegExp(disclosure)));
+  assert.match(mainSource, /'\/free-snapshot': underConstructionPage/);
+  assert.match(mainSource, /'\/preview\/:token': underConstructionPage/);
 });
 
 test('router navigation preserves history, popstate rendering, and route cleanup', () => {

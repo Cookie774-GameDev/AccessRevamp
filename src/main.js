@@ -27,14 +27,22 @@ import { setupCheckout } from './services/checkout.js';
 
 const app = document.querySelector('#app');
 
+function buildUnderConstructionPage(disclosure = '') {
+  return shell(`<section class="result-section"><div class="result-card"><span class="eyebrow">Production route preview</span><h1>Under construction in this preview</h1><p>This route is registered for the production experience, but its complete view has not been built yet. Nothing here is presented as completed client work.</p>${disclosure}<div class="hero-actions"><a class="button" href="/" data-nav>Return home</a><a class="button button--ghost" href="/contact" data-nav>Contact us</a></div></div></section>`);
+}
+
 function underConstructionPage() {
-  return shell(`<section class="result-section"><div class="result-card"><span class="eyebrow">Production route preview</span><h1>Under construction in this preview</h1><p>This route is registered for the production experience, but its complete view has not been built yet. Nothing here is presented as completed client work.</p><div class="hero-actions"><a class="button" href="/" data-nav>Return home</a><a class="button button--ghost" href="/contact" data-nav>Contact us</a></div></div></section>`);
+  return buildUnderConstructionPage();
+}
+
+function portfolioUnderConstructionPage() {
+  return buildUnderConstructionPage('<p>Original working demo — not a client engagement.</p>');
 }
 
 const routes = {
   '/': homePage,
   '/portfolio': workPage,
-  '/portfolio/:slug': underConstructionPage,
+  '/portfolio/:slug': portfolioUnderConstructionPage,
   '/work': workPage,
   '/work/:slug': (params) => workDetailPage(params) || notFoundPage(),
   '/services': servicesPage,
