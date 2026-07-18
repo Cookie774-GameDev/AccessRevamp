@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { page as greenline } from '../src/demos/greenline/page.js';
 import { page as firejar } from '../src/demos/firejar/page.js';
 import { page as clearflow } from '../src/demos/clearflow/page.js';
@@ -30,4 +30,14 @@ test('homepage lifecycle binds and cleans the dedicated experience module', asyn
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   assert.match(main, /import \{ setupHomeExperience \} from '\.\/pages\/home-interactions\.js';/);
   assert.match(main, /pathname === '\/'\) cleanups\.push\(setupHomeExperience\(app\)\)/);
+});
+
+test('generated imagery ships only optimized web formats', async () => {
+  const files = await readdir(new URL('../public/assets/generated/', import.meta.url));
+  assert.equal(files.some((file) => file.endsWith('.png')), false);
+
+  const helper = await readFile(new URL('../src/data/visual-assets.js', import.meta.url), 'utf8');
+  const cinematic = await readFile(new URL('../src/pages/cinematic.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(helper, /assetRecord\.png/);
+  assert.doesNotMatch(cinematic, /generated\/\$\{image\}\.png/);
 });

@@ -4,7 +4,6 @@ const asset = (id, width, height) => ({
   height,
   avif: `${id}.avif`,
   webp: `${id}.webp`,
-  png: `${id}.png`,
 });
 
 export const visualAssets = {
@@ -72,6 +71,6 @@ export function picture(assetRecord, {
   return `<picture class="${escapeAttribute(className)}">
     <source srcset="${base}${assetRecord.avif}" type="image/avif">
     <source srcset="${base}${assetRecord.webp}" type="image/webp">
-    <img src="${base}${assetRecord.png}" width="${assetRecord.width}" height="${assetRecord.height}" alt="${escapeAttribute(alt)}" loading="${loading}" decoding="async" sizes="${escapeAttribute(sizes)}" fetchpriority="${fetchpriority}">
+    <img src="${base}${assetRecord.webp}" width="${assetRecord.width}" height="${assetRecord.height}" alt="${escapeAttribute(alt)}" loading="${loading}" decoding="async" sizes="${escapeAttribute(sizes)}" fetchpriority="${fetchpriority}">
   </picture>`;
 }
