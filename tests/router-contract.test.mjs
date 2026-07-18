@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import * as routerModule from '../src/app/router.js';
 import { routeMetadata, updateDocumentMetadata } from '../src/app/metadata.js';
+import { portfolioUnderConstructionPage, underConstructionPage } from '../src/pages/under-construction.js';
 
 const REQUIRED_ROUTES = [
   '/',
@@ -91,20 +92,24 @@ test('dynamic routes reject missing and extra segments', () => {
   assert.equal(routerModule.matchRoute('/portfolio/example/details', routes), null);
 });
 
-test('the production portfolio family uses an honest route-specific temporary preview', async () => {
-  const mainSource = await readFile('src/main.js', 'utf8');
+test('placeholder views render the exact portfolio disclosure only for portfolio demos', () => {
   const disclosure = 'Original working demo — not a client engagement.';
 
-  assert.match(mainSource, new RegExp(escapeRegExp(disclosure)), 'missing exact portfolio disclosure');
+  assert.equal(typeof portfolioUnderConstructionPage, 'function', 'portfolio placeholder must be importable');
+  assert.equal(typeof underConstructionPage, 'function', 'generic placeholder must be importable');
 
-  const portfolioPlaceholder = mainSource.match(/function portfolioUnderConstructionPage\(\) \{([\s\S]*?)\n\}/)?.[1] || '';
-  const genericPlaceholder = mainSource.match(/function underConstructionPage\(\) \{([\s\S]*?)\n\}/)?.[1] || '';
+  const portfolioHtml = portfolioUnderConstructionPage();
+  const genericHtml = underConstructionPage();
+
+  assert.match(portfolioHtml, new RegExp(escapeRegExp(disclosure)));
+  assert.match(portfolioHtml, /under construction in this preview/i);
+  assert.doesNotMatch(genericHtml, new RegExp(escapeRegExp(disclosure)));
+});
+
+test('main binds portfolio and generic placeholders to their intended routes', async () => {
+  const mainSource = await readFile('src/main.js', 'utf8');
 
   assert.match(mainSource, /'\/portfolio\/:slug': portfolioUnderConstructionPage/);
-  assert.match(portfolioPlaceholder, new RegExp(escapeRegExp(disclosure)));
-  assert.match(portfolioPlaceholder, /buildUnderConstructionPage/);
-  assert.match(mainSource, /under construction in this preview/i);
-  assert.doesNotMatch(genericPlaceholder, new RegExp(escapeRegExp(disclosure)));
   assert.match(mainSource, /'\/free-snapshot': underConstructionPage/);
   assert.match(mainSource, /'\/preview\/:token': underConstructionPage/);
 });
