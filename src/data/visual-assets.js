@@ -8,6 +8,10 @@ const asset = (id, width, height) => ({
 });
 
 export const visualAssets = {
+  signalField: asset('signal-field-01', 840, 900),
+  evidenceLayers: asset('evidence-layers-01', 840, 900),
+  hierarchyBeacon: asset('hierarchy-beacon-01', 840, 900),
+  actionPath: asset('action-path-01', 840, 900),
   greenlineHero: asset('greenline-hero-01', 1536, 1024),
   greenlineDetail: asset('greenline-detail-01', 1448, 1086),
   firejarHero: asset('firejar-hero-01', 1536, 1024),

@@ -2,12 +2,14 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/pages.css';
 import './styles/motion.css';
+import './styles/image-led.css';
 
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';
 import { icon } from './components/icons.js';
 import { shell } from './components/shell.js';
 import { homePage } from './pages/home.js';
+import { setupHomeExperience } from './pages/home-interactions.js';
 import { workDetailPage, workPage, setupWorkFilters } from './pages/work.js';
 import { servicesPage } from './pages/services.js';
 import { pricingPage } from './pages/pricing.js';
@@ -101,6 +103,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   updateDocumentMetadata(pathname, pattern);
 
   const cleanups = [setupMenu()];
+  if (pathname === '/') cleanups.push(setupHomeExperience(app));
   if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupWorkFilters());
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
   if (pathname === '/contact') cleanups.push(setupContactForm());
