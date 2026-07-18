@@ -46,7 +46,7 @@
 - Produces tables `tier_catalog`, `entitlements`, `upgrade_reservations`, and `refund_dependencies` with exact approved columns and states.
 - Produces one active entitlement per user and one live reservation per user/target transition.
 
-- [ ] **Step 1: Write failing structural and security tests**
+- [x] **Step 1: Write failing structural and security tests**
 
 ```js
 for (const table of ['tier_catalog','entitlements','upgrade_reservations','refund_dependencies']) {
@@ -58,25 +58,25 @@ assert.match(sql, /reserved[\s\S]*checkout_created[\s\S]*paid[\s\S]*expired[\s\S
 assert.doesNotMatch(sql, /grant\s+select.*upgrade_reservations.*authenticated/i);
 ```
 
-- [ ] **Step 2: Run and confirm the migration-missing failure**
+- [x] **Step 2: Run and confirm the migration-missing failure**
 
 Run: `node --test tests/entitlement-migration.test.mjs`
 
 Expected: FAIL with `ENOENT`.
 
-- [ ] **Step 3: Write the forward-only schema migration**
+- [x] **Step 3: Write the forward-only schema migration**
 
 Seed only the non-secret tier keys/ranks/list prices. Keep Stripe Price references nullable and service-only, or omit persisted Price IDs in favor of server environment mapping. Add check constraints for nonnegative monetary values, `net_cents = gross_cents - credit_cents`, ordered tiers, valid states, 30-minute expiry, and dependency resolution fields.
 
 Revoke all browser access to reservations, dependencies, and internal catalog fields. Customer entitlement visibility must use an own-user policy exposing no Stripe reference.
 
-- [ ] **Step 4: Verify migration text and local database when available**
+- [x] **Step 4: Verify migration text and local database when available**
 
 Run: `node --test tests/entitlement-migration.test.mjs && supabase db reset`
 
 Expected: tests PASS; local reset applies all migrations. If the Supabase CLI/local runtime is unavailable, record that exact external/tooling gap and do not claim migration execution.
 
-- [ ] **Step 5: Commit the schema**
+- [x] **Step 5: Commit the schema**
 
 ```bash
 git add supabase/migrations/202607180002_add_tier_entitlements.sql tests/entitlement-migration.test.mjs docs/DATA_MODEL.md

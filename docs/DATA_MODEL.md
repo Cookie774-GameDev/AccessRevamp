@@ -1,6 +1,6 @@
 # Data model and authorization
 
-**Status:** Mixed — `IMPLEMENTED` retained operational schema, `PLANNED` entitlement/reservation/refund additions, `EXTERNALLY BLOCKED` remote project verification, and `LAUNCH-ONLY` production migration application.
+**Status:** Mixed — `IMPLEMENTED` retained operational schema plus the local catalog/entitlement migration, `PLANNED` transactional payment RPCs and refund reconciliation, `EXTERNALLY BLOCKED` database execution evidence, and `LAUNCH-ONLY` production migration application.
 
 **Owner:** Database engineering with payments, application, operations, privacy, and security review.
 
@@ -12,7 +12,7 @@ Postgres is the durable source of truth for identity-linked commercial and opera
 
 All exposed tables have RLS enabled. Customers read only their own appropriate profile, orders, entitlements, projects, deliverables, and refund requests. Internal research, evidence, preview secrets, suppression, queue, Stripe events, reservations, refund dependencies, and audit records remain service/operator only unless a deliberately minimized projection is defined.
 
-## Planned catalog and entitlement tables
+## Catalog and entitlement tables
 
 ### `tier_catalog`
 
@@ -57,13 +57,15 @@ Collect only fields required for delivery, evidence, consent, suppression, legal
 
 Existing migrations establish RLS-protected customer and operational tables, confirmed-email linking, payment events, passive review records, preview hashing/expiry, suppression, outreach ceilings, creative tracking, and refund requests.
 
+`202607180002_add_tier_entitlements.sql` adds the exact four-tier catalog, cumulative entitlements, upgrade reservations, and refund dependency records. It enforces the $0/$50/$200/$250 catalog, upward-only upgrade transitions, exact gross-credit-net arithmetic, reservation expiry, one active entitlement per user, one live reservation per user and target, idempotency uniqueness, foreign-key indexes, update triggers, RLS, an own-user entitlement read policy, explicit browser-role revocation, and service-role grants. Stripe price identifiers and all reservation/refund state remain server-only.
+
 ### PLANNED
 
-Forward migrations add the four catalog/entitlement tables, constraints, indexes, safe projection, reservation/reconciliation RPCs, refund dependency logic, grants, and contract tests before any caller depends on them.
+Forward migrations add serialized reservation and reconciliation RPCs, safe catalog projection, refund dependency transitions, append-only payment audit events, and their contract/race tests before any caller depends on them.
 
-### EXTERNALLY BLOCKED
+### EXTERNALLY BLOCKED / UNVERIFIED
 
-The remote Supabase project identity, applied migration history, Auth configuration, advisors, seed/catalog state, and nonproduction RPC behavior have not been verified from this worktree.
+The connected project `vbkkimvedmklebghtkzs` was inspected read-only: it is active, its nine existing AccessRevamp migrations are present, its public application tables have RLS enabled, and customer/order tables are empty. No nonproduction branch was available through the connector, no local Supabase containers started successfully, and `202607180002_add_tier_entitlements.sql` has not been applied remotely. Clean-database execution, upgrade-path execution, advisor output, Auth configuration, seed/catalog state, and nonproduction RPC behavior therefore remain unverified.
 
 ### LAUNCH-ONLY
 
@@ -71,4 +73,4 @@ Production database backup, migration apply, maintenance window if needed, advis
 
 ## Validation
 
-Run SQL syntax/migration tests, clean-database and upgrade-path applies, constraint fixtures, RLS allow/deny matrix, direct RPC denial, transaction/race tests, index/advisor review, refund-ordering tests, and rollback/forward-recovery rehearsal. Record migration filenames and checksums in final evidence.
+The structural/security contract test for `202607180002_add_tier_entitlements.sql` passes 3/3 assertions. Still required: SQL execution against a clean database and the retained migration chain, constraint fixtures, RLS allow/deny matrix, direct RPC denial, transaction/race tests, index/advisor review, refund-ordering tests, and rollback/forward-recovery rehearsal. Record migration filenames and checksums in final evidence.
