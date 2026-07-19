@@ -17,6 +17,7 @@ export function setupContactForm() {
       lastName: String(data.get('lastName') || '').trim(),
       email: String(data.get('email') || '').trim(),
       websiteUrl: String(data.get('websiteUrl') || '').trim(),
+      interest: String(data.get('interest') || '').trim(),
       message: String(data.get('message') || '').trim(),
       consent: form.elements.consent.checked,
       companyFax: String(data.get('companyFax') || ''),
@@ -26,7 +27,7 @@ export function setupContactForm() {
     submit.setAttribute('aria-busy', 'true');
     status.textContent = 'Sending your request…';
     try {
-      const response = await fetch('/.netlify/functions/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),

@@ -30,5 +30,12 @@
   --display: "Iowan Old Style", "Baskerville", "Times New Roman", Georgia, serif;
   --condensed: "Arial Narrow", "Aptos Narrow", "Roboto Condensed", sans-serif;
   --max-width: 80rem;
+  --content-max: 86rem;
+  --page-gutter: clamp(1.25rem, 4vw, 4.5rem);
+  --section-space: clamp(4.5rem, 9vw, 9rem);
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-editorial: 450ms;
+  --layer-nav: 40;
+  --layer-overlay: 60;
   --header-height: 5rem;
 }

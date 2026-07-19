@@ -3,7 +3,10 @@ import { planCard } from '../components/cards.js';
 import { icon } from '../components/icons.js';
 import { shell } from '../components/shell.js';
 import { demoBrands, picture, visualAssets } from '../data/visual-assets.js';
+import { lenses } from '../data/lenses.js';
+import { lensVisual } from '../components/lens-visuals.js';
 
+/* Legacy image list retained for the portfolio evidence panels. */
 const lensAssets = [
   visualAssets.auditAfter,
   visualAssets.greenlineInterface,
@@ -18,7 +21,7 @@ const lensAssets = [
   visualAssets.clearflowDetail,
 ];
 
-const diagnosticCategories = [
+const diagnosticCategoriesLegacy = [
   { title: 'Accessibility', summary: 'Can more people perceive, navigate, and complete the task?', explanation: 'We review the ordinary public experience for barriers that interrupt reading, navigation, and form completion.', checks: ['Keyboard path and focus', 'Labels and structure', 'Contrast and alternatives'], outcome: 'A clearer list of barriers to verify and prioritize.', tone: 'mint' },
   { title: 'Usability', summary: 'Does the next useful step feel obvious?', explanation: 'We trace the page as a first-time visitor would, separating understandable choices from avoidable friction.', checks: ['Navigation clarity', 'Decision load', 'Error recovery'], outcome: 'A more deliberate path through the main task.', tone: 'sun' },
   { title: 'Mobile', summary: 'Does the hierarchy survive a narrow screen?', explanation: 'We review wrapping, tap targets, order, sticky elements, and the point where desktop assumptions break.', checks: ['390px reading order', 'Tap target spacing', 'Overflow and clipping'], outcome: 'A mobile experience that keeps the same clear intent.', tone: 'coral' },
@@ -31,6 +34,8 @@ const diagnosticCategories = [
   { title: 'Social growth', summary: 'Does the website create material worth sharing?', explanation: 'We connect the offer and proof sequence to useful publishing ideas rather than promising reach or virality.', checks: ['Proof-ready moments', 'Teaching material', 'Clear destination pages'], outcome: 'A practical publishing rhythm grounded in the site.', tone: 'cream' },
   { title: 'Security hygiene', summary: 'Are public trust and testing boundaries explicit?', explanation: 'We observe ordinary public hygiene and name where active testing would require exact written authorization.', checks: ['Public trust cues', 'Form and privacy language', 'Authorization boundary'], outcome: 'Clearer trust language and a safe next-step boundary.', tone: 'mint' },
 ].map((lens, index) => ({ ...lens, asset: lensAssets[index] }));
+
+const diagnosticCategories = lenses;
 
 const processSteps = [
   ['01', 'Scout', 'Read the public surface and record possible friction.'],
@@ -54,7 +59,7 @@ const deliverables = [
   ['Cinematic Scroll Site', '$250', 'Everything in Complete plus one four-beat cinematic narrative', 'Includes mobile, static, media-failure, and reduced-motion fallbacks.'],
 ];
 
-const demoDisclosure = 'Original working demo — not a client engagement.';
+const demoDisclosure = 'Independent concept build';
 const faq = (question, answer) => `<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`;
 
 const lensTile = (lens, index) => {
@@ -62,9 +67,9 @@ const lensTile = (lens, index) => {
   const id = `lens-detail-${index + 1}`;
   return `<button class="lens-tile lens-tile--${lens.tone}" type="button" data-lens aria-expanded="false" aria-controls="${id}">
     <span class="lens-tile__top"><b>${number}</b><span>Explore <i aria-hidden="true">+</i></span></span>
-    <span class="lens-tile__visual">${picture(lens.asset, { alt: '', className: 'lens-tile__picture', sizes: '(max-width: 760px) 100vw, 25vw' })}</span>
+    <span class="lens-tile__visual" data-lens-visual="${lens.visual}">${lensVisual(lens.visual)}</span>
     <span class="lens-tile__summary"><strong>${lens.title}</strong><span>${lens.summary}</span></span>
-    <span class="lens-tile__detail" id="${id}"><span>${lens.explanation}</span><b>What we check</b><span class="lens-tile__checks">${lens.checks.map((check) => `<i>${check}</i>`).join('')}</span><b>Practical direction</b><span>${lens.outcome}</span></span>
+    <span class="lens-tile__detail" id="${id}"><span>We inspect this lens against the page’s primary visitor task and document observable evidence before recommending a change.</span><b>What we check</b><span class="lens-tile__checks">${lens.checks.map((check) => `<i>${check}</i>`).join('')}</span><b>Practical direction</b><span>${lens.outcome}</span></span>
   </button>`;
 };
 
@@ -81,7 +86,7 @@ export function homePage() {
   const process = processSteps.map(([number, title, copy]) => `<li><span>${number}</span><strong>${title}</strong><p>${copy}</p></li>`).join('');
 
   return shell(`
-    <section class="home-audit-hero" data-chapter="audit-lens">
+    <section class="home-audit-hero" data-chapter="audit-lens" data-audit-stage>
       <div class="container-wide home-audit-hero__grid">
         <div class="home-audit-hero__copy">
           <span class="eyebrow">Evidence-led website revamps</span>
@@ -94,7 +99,6 @@ export function homePage() {
           <div class="browser-frame browser-frame--hero"><div class="browser-frame__bar"><i></i><i></i><i></i><span>accessrevamp / hierarchy direction</span></div>${picture(visualAssets.auditAfter, { alt: 'Fictional Greenline website direction with one clear primary action', loading: 'eager', fetchpriority: 'high', sizes: '(max-width: 1100px) 100vw, 48vw' })}<span class="audit-pin audit-pin--direction">Direction</span></div>
           <div class="device-frame"><span>Observed</span>${picture(visualAssets.auditBefore, { alt: 'Fictional homepage before state with competing actions', sizes: '(max-width: 760px) 42vw, 13vw' })}</div>
           <div class="audit-note"><span>Evidence / H-01</span><strong>Three equal actions arrive before supporting proof.</strong><small>Illustrative finding—not a client claim.</small></div>
-          <figcaption>Real interface captures from an original fictional demo, composed as an illustrative audit.</figcaption>
         </figure>
       </div>
     </section>
@@ -123,8 +127,8 @@ export function homePage() {
 
     <section class="section growth-section" data-chapter="growth-preview"><div class="container-wide"><div class="section-head"><div><span class="eyebrow">30-day growth preview</span><h2>A redesign needs a useful publishing rhythm.</h2></div><p>The Homepage Reveal includes an evidence-led starting plan—not a promise of reach, ranking, or revenue.</p></div><div class="growth-board"><div class="growth-board__weeks"><span>Week 01<strong>Clarify the offer</strong></span><span>Week 02<strong>Show the proof</strong></span><span>Week 03<strong>Teach the process</strong></span><span>Week 04<strong>Test the action</strong></span></div><div class="growth-board__pillars"><span>Transformation / outcome</span><span>Expertise / process</span><span>Product or service proof</span><span>Local / community story</span><span>Offer / clear action</span></div></div></div></section>
 
-    <section class="section faq-section" data-chapter="faq"><div class="container-wide faq-layout"><div><span class="eyebrow">Straight answers</span><h2>No mystery in the fine print.</h2><p>Important service and testing boundaries belong before checkout.</p></div><div class="faq-list">${faq('Is AccessRevamp a subscription?', 'No. Every listed service is a one-time purchase with a written scope.')}${faq('Are the portfolio businesses real clients?', 'No. Each is an original working demonstration and does not imply a client relationship or endorsement.')}${faq('Does the Free Snapshot test private systems?', 'No. It observes normal public-page behavior. Active testing requires exact written authorization and an owned nonproduction target.')}${faq('How does upgrade credit work?', 'A signed-in customer receives server-verified credit for settled, nonrefunded value already paid toward a higher tier.')}${faq('Is checkout live?', 'The connected catalog remains in Stripe test mode until a separate launch approval. No live charge should be created from this preview.')}</div></div></section>
+    <section class="section faq-section" data-chapter="faq"><div class="container-wide faq-layout"><div><span class="eyebrow">Straight answers</span><h2>No mystery in the fine print.</h2><p>Important service and testing boundaries belong before checkout.</p></div><div class="faq-list">${faq('Is AccessRevamp a subscription?', 'No. Every listed service is a one-time purchase with a written scope.')}${faq('Are the portfolio businesses real clients?', 'No. Each is an independent concept build and does not imply a client relationship or endorsement.')}${faq('Does the Free Snapshot test private systems?', 'No. It observes normal public-page behavior. Active testing requires exact written authorization and an owned nonproduction target.')}${faq('How does upgrade credit work?', 'A signed-in customer receives server-verified credit for settled, nonrefunded value already paid toward a higher tier.')}${faq('Is checkout live?', 'The connected catalog remains in Stripe test mode until a separate launch approval. No live charge should be created from this preview.')}</div></div></section>
 
-    <section class="section final-cta-section" data-chapter="final-cta"><div class="container-wide final-cta"><div class="final-cta__image">${picture(visualAssets.clearflowDetail, { alt: 'Careful inspection tools representing evidence before action', sizes: '(max-width: 760px) 100vw, 34vw' })}<span>Evidence before action</span></div><div><span class="eyebrow">One useful place to begin</span><h2>Bring one public website and one real goal.</h2><p>We will start with evidence, keep the boundary visible, and design the next action around what the business actually needs.</p><div class="final-cta__actions"><a class="button button--sun" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon('arrow')}</a><a class="text-arrow" href="/free-snapshot" data-nav>Or start free ${icon('arrow')}</a></div></div></div></section>
+    <section class="section final-cta-section" data-chapter="final-cta"><div class="container-wide final-cta"><div class="final-cta__image" data-audit-montage><div class="audit-montage"><span>${picture(visualAssets.greenlineInterface, { alt: 'Greenline website interface preview', sizes: '(max-width: 760px) 76vw, 24vw' })}</span><span>${picture(visualAssets.firejarInterface, { alt: 'Firejar product website interface preview', sizes: '(max-width: 760px) 70vw, 22vw' })}</span><span>${picture(visualAssets.clearflowInterface, { alt: 'Clearflow service website interface preview', sizes: '(max-width: 760px) 65vw, 20vw' })}</span></div><b>Three interfaces. One evidence-led method.</b></div><div><span class="eyebrow">One useful place to begin</span><h2>Bring one public website and one real goal.</h2><p>We will start with evidence, keep the boundary visible, and design the next action around what the business actually needs.</p><div class="final-cta__actions"><a class="button button--sun" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon('arrow')}</a><a class="text-arrow" href="/free-snapshot" data-nav>Or start free ${icon('arrow')}</a></div></div></div></section>
   `, { home: true, pathname: '/' });
 }

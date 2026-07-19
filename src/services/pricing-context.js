@@ -40,7 +40,7 @@ export function setupPricingContext(root = document) {
   };
   if (token === null) { showFailure(); return undefined; }
 
-  fetch('/.netlify/functions/pricing-context', {
+  fetch('/api/pricing-context', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ token }),

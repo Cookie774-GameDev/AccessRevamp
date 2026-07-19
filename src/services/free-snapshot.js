@@ -22,7 +22,7 @@ export function setupFreeSnapshot() {
     button.disabled = true;
     status.textContent = 'Submitting for manual review…';
     try {
-      const response = await fetch('/.netlify/functions/free-snapshot', {
+      const response = await fetch('/api/free-snapshot', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ websiteUrl: data.get('websiteUrl'), contactEmail: data.get('contactEmail'), businessContext: data.get('businessContext'), consent: data.get('consent') === 'on', requestId: requestId() })
       });

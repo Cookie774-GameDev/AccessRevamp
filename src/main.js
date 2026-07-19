@@ -3,6 +3,7 @@ import './styles/components.css';
 import './styles/pages.css';
 import './styles/motion.css';
 import './styles/image-led.css';
+import './styles/studio-redesign.css';
 
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';

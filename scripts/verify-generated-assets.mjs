@@ -1,1 +1,25 @@
-import{readFile,readdir,stat}from'node:fs/promises';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{dirname,join}from'node:path';const root=join(dirname(fileURLToPath(import.meta.url)),'..','public','assets','generated');const manifest=JSON.parse(await readFile(join(root,'manifest.json'),'utf8'));const listed=new Set(['manifest.json']);for(const asset of manifest.assets){if(asset.sourceType!=='original-generated'||!/AccessRevamp original/i.test(asset.rights))throw new Error(`Invalid provenance: ${asset.id}`);for(const format of ['avif','webp']){const variant=asset.variants[format];listed.add(variant.file);const bytes=await readFile(join(root,variant.file));const info=await stat(join(root,variant.file));const hash=createHash('sha256').update(bytes).digest('hex');if(info.size!==variant.bytes||hash!==variant.sha256)throw new Error(`Asset mismatch: ${variant.file}`);}}const files=await readdir(root);const unlisted=files.filter(file=>!listed.has(file));if(unlisted.length)throw new Error(`Unmanifested assets: ${unlisted.join(', ')}`);console.log(`Verified ${manifest.assets.length} original asset groups.`);
+import { readFile, readdir, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'assets', 'generated');
+const manifest = JSON.parse(await readFile(join(root, 'manifest.json'), 'utf8'));
+const listed = new Set(['manifest.json']);
+for (const asset of manifest.assets) {
+  const generated = asset.sourceType === 'original-generated' && /AccessRevamp original/i.test(asset.rights);
+  const licensed = asset.sourceType === 'licensed-stock' && asset.creator && asset.sourcePage && /license/i.test(asset.rights);
+  if (!generated && !licensed) throw new Error(`Invalid provenance: ${asset.id}`);
+  for (const format of ['avif', 'webp']) {
+    const variant = asset.variants[format];
+    listed.add(variant.file);
+    const bytes = await readFile(join(root, variant.file));
+    const info = await stat(join(root, variant.file));
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    if (info.size !== variant.bytes || hash !== variant.sha256) throw new Error(`Asset mismatch: ${variant.file}`);
+  }
+}
+const files = await readdir(root);
+const unlisted = files.filter((file) => !listed.has(file));
+if (unlisted.length) throw new Error(`Unmanifested assets: ${unlisted.join(', ')}`);
+console.log(`Verified ${manifest.assets.length} generated and licensed asset groups.`);
