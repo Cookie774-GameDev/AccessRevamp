@@ -5,7 +5,10 @@ import { shell } from '../components/shell.js';
 import { demoBrands, picture, visualAssets } from '../data/visual-assets.js';
 import { lenses } from '../data/lenses.js';
 import { lensVisual } from '../components/lens-visuals.js';
-import { cinematicReferences } from '../data/cinematic-references.js';
+import { exampleWebsites, showcasePairs } from '../data/showcase-media.js';
+import { orderWizard } from '../components/order-wizard.js';
+
+// Interaction references remain credited in their data module; external studies are not by AccessRevamp.
 
 const processSteps = [
   ['01', 'Observe', 'Read the ordinary public experience and record possible friction.'],
@@ -27,15 +30,6 @@ const outcomes = [
   ['Browsing', 'confident action', 'Products or services with equal visual weight', 'A hierarchy that helps visitors compare and decide', visualAssets.firejarHero, visualAssets.firejarInterface],
   ['Disconnected tools', 'one growth system', 'Website, content, and follow-up planned separately', 'Pages and creative assets built around the same campaign goal', visualAssets.evidenceLayers, visualAssets.clearflowInterface],
 ];
-
-const referenceStudy = (reference, index) => `<article class="reference-card reference-card--${reference.study}" data-reveal>
-  <div class="reference-card__study" aria-hidden="true"><span></span><span></span><span></span><b>${String(index + 1).padStart(2, '0')}</b></div>
-  <span class="micro-label">${reference.source} · interaction study</span>
-  <h3>${reference.title}</h3>
-  <p>${reference.technique}</p>
-  <p class="reference-credit">Created by ${reference.creator}, not by AccessRevamp.</p>
-  <a class="text-arrow" href="${reference.url}" target="_blank" rel="noopener noreferrer">Open original source ${icon('arrow')}</a>
-</article>`;
 
 const lensTile = (lens, index) => {
   const number = String(index + 1).padStart(2, '0');
@@ -69,6 +63,12 @@ const transformationPanel = ([from, to, problem, change, before, after], index) 
 
 const faq = (question, answer) => `<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`;
 
+const exampleWebsite = (example) => `<figure class="example-website" data-reveal><img src="${example.src}" alt="${example.alt}" width="${example.width}" height="${example.height}" loading="lazy" decoding="async" draggable="false"></figure>`;
+
+const showcasePanel = (kind, src, poster, name) => `<figure class="showcase-panel"><figcaption>${kind === 'normal' ? 'Normal Website' : 'Cinematic Scroll Website'}</figcaption><div class="showcase-panel__media"><video data-src="${src}" poster="${poster}" muted playsinline preload="none" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen" draggable="false" aria-label="${name} ${kind === 'normal' ? 'normal website' : 'cinematic scroll website'} demonstration"></video><span class="showcase-panel__fallback">Media unavailable. The poster frame preserves the visual comparison.</span></div></figure>`;
+
+const showcaseChapter = (pair, index) => `<article class="showcase-chapter" data-showcase-chapter data-progress="0"><div class="showcase-chapter__sticky" data-showcase-stage tabindex="0" aria-label="Scroll or drag to compare ${pair.name}"><div class="showcase-chapter__head"><span>0${index + 1}</span><h3>${pair.name}</h3><p>Original working demo — not a client engagement.</p></div><div class="showcase-pair">${showcasePanel('normal', pair.normal, pair.normalPoster, pair.name)}${showcasePanel('cinematic', pair.cinematic, pair.cinematicPoster, pair.name)}</div><div class="showcase-controls"><span>Scroll or drag to explore</span><label><span class="visually-hidden">${pair.name} comparison progress</span><input type="range" min="0" max="100" value="0" step="1" data-showcase-range><output data-showcase-output>0%</output></label></div></div></article>`;
+
 export function homePage() {
   const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');
   const process = processSteps.map(([number, title, copy]) => `<li><span>${number}</span><strong>${title}</strong><p>${copy}</p></li>`).join('');
@@ -79,16 +79,18 @@ export function homePage() {
       <svg class="reveal-hero__grid" data-reveal-grid aria-hidden="true"><defs><pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M 48 0 L 0 0 0 48" fill="none" stroke="#64748b" stroke-width="0.6"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)"/></svg>
       <picture class="reveal-hero__layer reveal-hero__base">
         <source media="(max-width: 700px)" srcset="/images/hero/accessrevamp-atlas-base-mobile.webp">
-        <img src="/images/hero/accessrevamp-atlas-base-desktop.webp" alt="Pale sculptural AccessRevamp scene showing a website, marketing, commerce, and customer journey system carried by Atlas" width="1672" height="941" fetchpriority="high" decoding="async">
+        <img src="/images/hero/accessrevamp-atlas-base-desktop.webp" alt="Pale sculptural AccessRevamp scene showing a website, marketing, commerce, and customer journey system carried by Atlas" width="1672" height="941" fetchpriority="high" decoding="async" draggable="false">
       </picture>
       <picture class="reveal-hero__layer reveal-hero__gold" data-reveal-gold aria-hidden="true">
         <source media="(max-width: 700px)" srcset="/images/hero/accessrevamp-atlas-gold-mobile.webp">
-        <img src="/images/hero/accessrevamp-atlas-gold-desktop.webp" alt="" width="1672" height="941" decoding="async">
+        <img src="/images/hero/accessrevamp-atlas-gold-desktop.webp" alt="" width="1672" height="941" decoding="async" draggable="false">
       </picture>
       <span class="reveal-cursor" data-reveal-cursor aria-hidden="true"><i></i></span>
       <div class="reveal-hero__cue"><span>Move or drag to reveal</span><button type="button" data-reveal-toggle aria-pressed="false">Reveal transformation</button></div>
       <a class="reveal-hero__scroll" href="#promise">Scroll to enter <span aria-hidden="true">↓</span></a>
     </section>
+
+    <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid"><article><strong><span data-customer-count>87</span></strong><p>happy customers</p><small>Published count, not a live feed.</small></article><article><strong>3 days</strong><p>first website delivery</p><small>After payment and receipt of required assets.</small></article><article><strong>Desktop → mobile</strong><p>one connected system</p><small>Carefully ported to touch.</small></article></div></section>
 
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
       <div><span class="eyebrow">One clearer growth system</span><h2>A better storefront is more than a better-looking homepage.</h2></div>
@@ -96,17 +98,21 @@ export function homePage() {
       <div class="promise-outcomes"><article><b>01</b><h3>Understand</h3><p>Make the offer immediately recognizable.</p></article><article><b>02</b><h3>Act</h3><p>Make the next useful step easier to complete.</p></article><article><b>03</b><h3>Connect</h3><p>Give the website and marketing work one direction.</p></article></div>
     </div></section>
 
+    <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid">${exampleWebsites.map(exampleWebsite).join('')}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>
+
+    <section class="showcase-section" aria-labelledby="showcase-title"><div class="container-wide showcase-intro"><span class="eyebrow">Two production depths</span><h2 id="showcase-title">Normal Websites vs. Cinematic Scroll Experiences</h2><p>Scroll down to advance and up to reverse. Each pair shares one progress value.</p></div>${showcasePairs.map(showcaseChapter).join('')}</section>
+
+    <section class="section process-map-section"><div class="container-wide process-story"><div class="process-story__intro"><span class="eyebrow">A visible method</span><h2>From observation to an agreed build.</h2><p>Each stage earns the next. Recommendations remain separate from claims, and implementation stays inside the purchased scope.</p><a class="text-arrow" href="/process" data-nav>Read the complete process ${icon('arrow')}</a></div><div class="process-story__rail"><ol class="process-map">${process}</ol></div></div></section>
+
     <section class="section transformation-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Transformation studies</span><div><h2>Potential becomes visible when the hierarchy changes.</h2><p>These are original illustrative interfaces. The design reasoning is real; the business outcome still depends on the customer’s offer, traffic, market, and operations.</p></div></div><div class="transformation-grid">${outcomes.map(transformationPanel).join('')}</div></div></section>
 
     <section class="section services-renaissance"><div class="container-wide"><div class="section-head"><div><span class="eyebrow">Four one-time depths</span><h2>Choose the transformation you need.</h2></div><p>The $50 purchase is never wasted: verified, settled value becomes credit toward $200 or $250.</p></div><div class="upgrade-ribbon" aria-label="Cumulative upgrade credit"><strong>Keep every verified dollar</strong><span>$50 → $200 <b>pay $150</b></span><span>$50 → $250 <b>pay $200</b></span><span>$200 → $250 <b>pay only $50</b></span></div><div class="pricing-grid">${pricing}</div><a class="text-arrow section-link" href="/pricing" data-nav>Compare every deliverable ${icon('arrow')}</a></div></section>
 
+    ${orderWizard()}
+
     <section class="section demo-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Original portfolio worlds</span><div><h2>Three industries. Three completely different design systems.</h2><p>Each concept is an original responsive mini-application with its own grid, typography, image treatment, motion, and conversion path.</p></div></div><div class="demo-showcase">${demos.map(demoCard).join('')}</div></div></section>
 
-    <section class="section reference-section"><div class="container-wide"><div class="chapter-head chapter-head--light" data-reveal><span class="chapter-index">Interaction references</span><div><h2>Experiences that inspire our standard.</h2><p>These external examples are credited references—not AccessRevamp work. The moving studies below demonstrate techniques in an original, lightweight form without copying protected media or code.</p></div></div><div class="reference-grid">${cinematicReferences.map(referenceStudy).join('')}</div></div></section>
-
     <section class="section spectrum-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Eleven review lenses</span><div><h2>One system, inspected from every useful angle.</h2><p>Open a lens to see what we check and the practical direction it can create.</p></div></div><div class="lens-mosaic" data-lens-grid>${lenses.map(lensTile).join('')}</div></div></section>
-
-    <section class="section process-map-section"><div class="container-wide process-story"><div class="process-story__intro"><span class="eyebrow">A visible method</span><h2>From observation to an agreed build.</h2><p>Each stage earns the next. Recommendations remain separate from claims, and implementation stays inside the purchased scope.</p><a class="text-arrow" href="/process" data-nav>Read the complete process ${icon('arrow')}</a></div><div class="process-story__rail"><ol class="process-map">${process}</ol></div></div></section>
 
     <section class="section creative-bundle-section"><div class="container-wide creative-bundle"><div><span class="eyebrow">Creative production included</span><h2>Your rebuilt website arrives with material to promote it.</h2><p>The $50 Homepage Reveal includes one subtle AI-assisted motion poster. The $200 Complete Website Revamp includes five motion posters, ten still posters, three business-card directions, and two brochure directions—all human-reviewed and based on customer-approved assets and claims.</p><a class="button" href="/pricing" data-nav>See the complete plan details ${icon('arrow')}</a></div><div class="creative-orbit" aria-label="Illustrative creative deliverable formats"><span>Motion<br>9:16</span><span>Still<br>1:1</span><span>Card<br>front/back</span><span>Brochure<br>two directions</span><i aria-hidden="true"></i></div></div></section>
 

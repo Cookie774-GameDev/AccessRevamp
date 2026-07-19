@@ -1,0 +1,124 @@
+import { plans } from '../config.js';
+import { escapeHtml } from '../components/icons.js';
+
+const STORAGE_KEY = 'accessrevamp-order-draft-v1';
+const MAX_FILES = 8;
+const MAX_BYTES = 8 * 1024 * 1024;
+const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip', 'application/x-zip-compressed']);
+
+export function setupOrderWizard(root = document) {
+  const form = root.querySelector('[data-order-wizard]');
+  if (!form) return undefined;
+  const panels = [...form.querySelectorAll('[data-order-panel]')];
+  const steps = [...form.querySelectorAll('[data-order-step-jump]')];
+  const previous = form.querySelector('[data-order-previous]');
+  const next = form.querySelector('[data-order-next]');
+  const status = form.querySelector('[data-order-status]');
+  const summary = form.querySelector('[data-order-summary]');
+  const checkout = form.querySelector('[data-order-checkout][data-checkout]');
+  const cinematicFields = form.querySelector('[data-cinematic-fields]');
+  const fileInput = form.querySelector('[data-order-file-input]');
+  const fileList = form.querySelector('[data-order-file-list]');
+  let current = 0;
+  let files = [];
+
+  const save = () => {
+    const draft = {};
+    new FormData(form).forEach((value, key) => { if (typeof value === 'string') draft[key] = value; });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ current, draft })); } catch { /* Draft persistence is optional when storage is unavailable. */ }
+  };
+  const restore = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      Object.entries(saved.draft || {}).forEach(([name, value]) => {
+        const controls = [...form.elements].filter((control) => control.name === name);
+        controls.forEach((control) => {
+          if (control.type === 'radio' || control.type === 'checkbox') control.checked = control.value === value || value === 'on';
+          else control.value = value;
+        });
+      });
+      current = Math.min(4, Math.max(0, Number(saved.current) || 0));
+    } catch { localStorage.removeItem(STORAGE_KEY); }
+  };
+  const selectedPlan = () => form.elements.orderPlan?.value || 'complete_revamp';
+  const renderFiles = () => {
+    fileList.innerHTML = files.map((file, index) => `<li><span>${escapeHtml(file.name)}</span><small>${(file.size / 1024 / 1024).toFixed(1)} MB</small><button type="button" data-order-remove-file="${index}" aria-label="Remove ${escapeHtml(file.name)}">Remove</button></li>`).join('');
+  };
+  const renderSummary = () => {
+    const plan = plans[selectedPlan()];
+    const value = (name) => escapeHtml(form.elements[name]?.value || 'Not provided');
+    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
+    checkout.dataset.checkout = plan.key;
+    checkout.textContent = `Continue with ${plan.name}`;
+  };
+  const updatePlanFields = () => { cinematicFields.hidden = selectedPlan() !== 'cinematic_scroll'; };
+  const show = (index) => {
+    current = Math.min(4, Math.max(0, index));
+    panels.forEach((panel, panelIndex) => { panel.hidden = panelIndex !== current; });
+    steps.forEach((step, stepIndex) => step.setAttribute('aria-current', stepIndex === current ? 'step' : 'false'));
+    previous.hidden = current === 0;
+    next.hidden = current === 4;
+    next.textContent = current === 3 ? 'Continue to payment' : 'Continue';
+    status.textContent = `Step ${current + 1} of 5`;
+    if (current >= 3) renderSummary();
+    save();
+  };
+  const validatePanel = () => {
+    const required = [...panels[current].querySelectorAll('[required]')];
+    const invalid = required.find((control) => !control.checkValidity());
+    if (!invalid) return true;
+    invalid.reportValidity();
+    invalid.focus();
+    status.textContent = 'Complete the highlighted field before continuing.';
+    return false;
+  };
+  const normalizeUrl = () => {
+    const input = form.elements.websiteUrl;
+    if (input.value && !/^https?:\/\//i.test(input.value)) input.value = `https://${input.value}`;
+  };
+  const onNext = () => { normalizeUrl(); if (validatePanel()) show(current + 1); };
+  const onPrevious = () => show(current - 1);
+  const onStep = (event) => {
+    const target = event.target.closest('[data-order-step-jump]');
+    if (!target) return;
+    const requested = Number(target.dataset.orderStepJump);
+    if (requested <= current) show(requested);
+    else if (requested === current + 1 && validatePanel()) show(requested);
+  };
+  const onChange = () => { updatePlanFields(); save(); };
+  const onFiles = () => {
+    const incoming = [...(fileInput.files || [])];
+    files = incoming.filter((file) => ALLOWED.has(file.type) && file.size <= MAX_BYTES).slice(0, MAX_FILES);
+    renderFiles();
+    status.textContent = files.length === incoming.length ? `${files.length} reference file${files.length === 1 ? '' : 's'} selected.` : 'Some files were skipped. Use supported files no larger than 8MB.';
+  };
+  const onRemove = (event) => {
+    const button = event.target.closest('[data-order-remove-file]');
+    if (!button) return;
+    files.splice(Number(button.dataset.orderRemoveFile), 1);
+    renderFiles();
+  };
+  const onSubmit = (event) => event.preventDefault();
+
+  restore();
+  updatePlanFields();
+  show(current);
+  next.addEventListener('click', onNext);
+  previous.addEventListener('click', onPrevious);
+  form.addEventListener('click', onStep);
+  form.addEventListener('input', onChange);
+  form.addEventListener('change', onChange);
+  form.addEventListener('submit', onSubmit);
+  fileInput.addEventListener('change', onFiles);
+  fileList.addEventListener('click', onRemove);
+  return () => {
+    next.removeEventListener('click', onNext);
+    previous.removeEventListener('click', onPrevious);
+    form.removeEventListener('click', onStep);
+    form.removeEventListener('input', onChange);
+    form.removeEventListener('change', onChange);
+    form.removeEventListener('submit', onSubmit);
+    fileInput.removeEventListener('change', onFiles);
+    fileList.removeEventListener('click', onRemove);
+  };
+}

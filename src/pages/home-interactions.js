@@ -1,3 +1,6 @@
+import { setupShowcaseComparisons } from '../services/showcase-comparison.js';
+import { setupOrderWizard } from '../services/order-wizard.js';
+
 export function setupHomeExperience(root = document) {
   root.classList.add('home-is-enhanced');
   const hero = root.querySelector('[data-reveal-hero]');
@@ -9,6 +12,7 @@ export function setupHomeExperience(root = document) {
   const finePointer = globalThis.matchMedia?.('(hover: hover) and (pointer: fine)');
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const cleanups = [];
+  cleanups.push(setupShowcaseComparisons(root), setupOrderWizard(root));
   let active = null;
   let intentTimer;
   let keyboardMode = false;
@@ -65,7 +69,7 @@ export function setupHomeExperience(root = document) {
     updateHeroRect();
     startHeroLoop();
     listen(hero, 'pointerenter', (event) => { setHeroPointer(event); startHeroLoop(); });
-    listen(hero, 'pointermove', (event) => { if (event.pointerType === 'touch' && !pointerCaptured) return; setHeroPointer(event); });
+    listen(hero, 'pointermove', (event) => { if (event.pointerType === 'touch' && !pointerCaptured) return; if (pointerCaptured) event.preventDefault(); setHeroPointer(event); });
     listen(hero, 'pointerleave', () => {
       if (pointerCaptured) return;
       heroActive = false;
@@ -74,6 +78,7 @@ export function setupHomeExperience(root = document) {
     });
     listen(hero, 'pointerdown', (event) => {
       if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      event.preventDefault();
       pointerCaptured = true;
       hero.setPointerCapture(event.pointerId);
       hero.style.touchAction = 'none';
@@ -87,6 +92,7 @@ export function setupHomeExperience(root = document) {
     };
     listen(hero, 'pointerup', releasePointer);
     listen(hero, 'pointercancel', releasePointer);
+    listen(hero, 'lostpointercapture', releasePointer);
     listen(toggle, 'click', () => {
       const full = hero.classList.toggle('is-fully-revealed');
       toggle.setAttribute('aria-pressed', String(full));
@@ -106,6 +112,24 @@ export function setupHomeExperience(root = document) {
       setTimeout(() => { if (!pointerCaptured) hero.classList.remove('is-revealing'); }, 1800);
     }
   }
+
+  const customerCount = root.querySelector('[data-customer-count]');
+  let countObserver;
+  if (customerCount && !reducedMotion && 'IntersectionObserver' in globalThis) {
+    customerCount.textContent = '0';
+    countObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      countObserver.disconnect();
+      const started = performance.now();
+      const tick = (time) => {
+        const progress = Math.min(1, (time - started) / 900);
+        customerCount.textContent = String(Math.round(87 * (1 - ((1 - progress) ** 3))));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }), { threshold: .45 });
+    countObserver.observe(customerCount);
+  } else if (customerCount) customerCount.textContent = '87';
 
   const setActive = (next) => {
     if (active === next) return;
@@ -171,8 +195,9 @@ export function setupHomeExperience(root = document) {
 
   return () => {
     clearTimeout(intentTimer);
-    cleanups.forEach((cleanup) => cleanup());
+    cleanups.forEach((cleanup) => cleanup?.());
     observer?.disconnect();
+    countObserver?.disconnect();
     clearTimeout(navTimer);
     if (frame) cancelAnimationFrame(frame);
     hero?.removeAttribute('style');
