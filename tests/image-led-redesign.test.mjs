@@ -7,13 +7,15 @@ import { page as clearflow } from '../src/demos/clearflow/page.js';
 
 test('home renders an image-led hero and all expandable lenses', async () => {
   const source = await readFile(new URL('../src/pages/home.js', import.meta.url), 'utf8');
-  assert.match(source, /class="hero-visual-stack"/);
+  assert.match(source, /class="reveal-hero"/);
+  assert.match(source, /accessrevamp-atlas-base-desktop\.webp/);
+  assert.match(source, /accessrevamp-atlas-gold-desktop\.webp/);
   assert.match(source, /data-lens-grid/);
   assert.match(source, /class="lens-tile/);
   assert.match(source, /aria-expanded="false"/);
+  assert.match(source, /Transformation studies/);
   assert.match(source, />Before</);
-  assert.match(source, />Evidence</);
-  assert.match(source, />After</);
+  assert.match(source, />Direction</);
 });
 
 test('portfolio and every fictional demo include meaningful local imagery', async () => {

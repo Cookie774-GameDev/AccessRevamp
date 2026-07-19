@@ -28,15 +28,15 @@ export const visualAssets = {
 
 export const demoBrands = {
   greenline: {
-    slug: 'greenline-lawn-and-grounds',
-    name: 'Greenline Lawn & Grounds',
+    slug: 'verdant-cut',
+    name: 'Verdant Cut Co.',
     hero: visualAssets.greenlineHero,
     detail: visualAssets.greenlineDetail,
     interface: visualAssets.greenlineInterface,
   },
   firejar: {
-    slug: 'firejar-spicy-peanut-butter',
-    name: 'Firejar Spicy Peanut Butter',
+    slug: 'ember-and-jar',
+    name: 'Ember & Jar',
     hero: visualAssets.firejarHero,
     products: {
       gentle: visualAssets.firejarGentle,
@@ -46,8 +46,8 @@ export const demoBrands = {
     interface: visualAssets.firejarInterface,
   },
   clearflow: {
-    slug: 'clearflow-plumbing',
-    name: 'Clearflow Plumbing',
+    slug: 'clearline-plumbing',
+    name: 'Clearline Plumbing',
     hero: visualAssets.clearflowHero,
     detail: visualAssets.clearflowDetail,
     interface: visualAssets.clearflowInterface,

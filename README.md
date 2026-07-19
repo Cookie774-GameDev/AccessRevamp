@@ -11,8 +11,8 @@ AccessRevamp is an evidence-led website improvement studio for independent busin
 | Tier | List price | Summary |
 | --- | ---: | --- |
 | Free Snapshot | $0 | One manually reviewed, evidence-backed public observation. No checkout or full audit. |
-| Homepage Reveal | $50 | Human-reviewed report, one landing-page direction, desktop/mobile PNGs, implementation priorities, and a 30-day growth plan. |
-| Complete Website Revamp | $200 | Applicable Homepage Reveal work plus an agreed responsive implementation of up to five standard content pages and a retest summary. |
+| Homepage Reveal | $50 | Human-reviewed report, one landing-page direction, desktop/mobile PNGs, one subtle AI-assisted motion poster ad, implementation priorities, and a 30-day growth plan. |
+| Complete Website Revamp | $200 | Applicable Homepage Reveal work plus an agreed responsive implementation of up to five standard content pages, five motion posters, ten still posters, three business-card variations, two brochure variations, and a retest summary. |
 | Cinematic Scroll Site | $250 | Complete Website Revamp scope plus one bounded cinematic single-page narrative with mobile and reduced-motion fallbacks. |
 
 Every paid service is one time. Verified cumulative upgrades are:

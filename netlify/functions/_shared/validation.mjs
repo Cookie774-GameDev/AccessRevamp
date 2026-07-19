@@ -46,6 +46,21 @@ export const freeSnapshotSchema = z.object({
   requestId: z.string().uuid(),
 }).strict();
 
+const projectReferenceUrl = publicHttpUrl.refine(Boolean, 'Reference links must be public HTTP or HTTPS URLs.');
+
+export const projectIntakeTextSchema = z.object({
+  projectId: z.string().uuid(),
+  plan: z.enum(['complete_revamp', 'cinematic_scroll']),
+  pages: z.array(z.enum(['home', 'about', 'services', 'shop', 'portfolio', 'faq', 'contact', 'custom'])).min(1).max(5),
+  styleNotes: z.string().trim().min(20).max(2000),
+  contentNotes: z.string().trim().max(4000).default(''),
+  cinematicNotes: z.string().trim().max(2000).default(''),
+  projectNotes: z.string().trim().max(4000).default(''),
+  referenceUrls: z.array(projectReferenceUrl).max(10),
+  inspirationChoices: z.array(projectReferenceUrl).max(5),
+  rightsConfirmed: z.literal(true),
+}).strict();
+
 export const outreachDraftSchema = z.object({
   businessName: z.string().trim().min(1).max(160),
   websiteUrl: publicHttpUrl.refine(Boolean, 'A public website URL is required.'),

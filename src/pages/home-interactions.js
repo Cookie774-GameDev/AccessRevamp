@@ -1,5 +1,9 @@
 export function setupHomeExperience(root = document) {
   root.classList.add('home-is-enhanced');
+  const hero = root.querySelector('[data-reveal-hero]');
+  const shell = root.querySelector('.renaissance-home');
+  const cursor = hero?.querySelector('[data-reveal-cursor]');
+  const toggle = hero?.querySelector('[data-reveal-toggle]');
   const grid = root.querySelector('[data-lens-grid]');
   const tiles = grid ? [...grid.querySelectorAll('[data-lens]')] : [];
   const finePointer = globalThis.matchMedia?.('(hover: hover) and (pointer: fine)');
@@ -8,11 +12,100 @@ export function setupHomeExperience(root = document) {
   let active = null;
   let intentTimer;
   let keyboardMode = false;
+  let frame = 0;
+  let heroRect;
+  let heroActive = false;
+  let pointerCaptured = false;
+  let navTimer;
+  let pageVisible = !document.hidden;
+  const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
+  const smooth = { ...mouse };
+  const gridOffset = { x: 0, y: 0 };
 
   const listen = (target, type, handler, options) => {
     target?.addEventListener(type, handler, options);
     cleanups.push(() => target?.removeEventListener(type, handler, options));
   };
+
+  const updateHeroRect = () => { heroRect = hero?.getBoundingClientRect(); };
+  const setHeroPointer = (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+    heroActive = true;
+    hero?.classList.add('is-revealing');
+    if (event.clientY <= 104) {
+      clearTimeout(navTimer);
+      shell?.classList.add('nav-is-visible');
+    }
+  };
+
+  const paintHero = () => {
+    if (!pageVisible || !hero) { frame = 0; return; }
+    smooth.x += (mouse.x - smooth.x) * .1;
+    smooth.y += (mouse.y - smooth.y) * .1;
+    const rect = heroRect || hero.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, smooth.x - rect.left));
+    const localY = Math.max(0, Math.min(rect.height, smooth.y - rect.top));
+    const cx = localX / Math.max(rect.width, 1) - .5;
+    const cy = localY / Math.max(rect.height, 1) - .5;
+    gridOffset.x += (cx * 16 - gridOffset.x) * .06;
+    gridOffset.y += (cy * 16 - gridOffset.y) * .06;
+    hero.style.setProperty('--reveal-x', `${localX}px`);
+    hero.style.setProperty('--reveal-y', `${localY}px`);
+    hero.style.setProperty('--grid-x', `${gridOffset.x.toFixed(2)}px`);
+    hero.style.setProperty('--grid-y', `${gridOffset.y.toFixed(2)}px`);
+    frame = requestAnimationFrame(paintHero);
+  };
+
+  const startHeroLoop = () => {
+    if (!frame && !reducedMotion && hero) frame = requestAnimationFrame(paintHero);
+  };
+
+  if (hero) {
+    updateHeroRect();
+    startHeroLoop();
+    listen(hero, 'pointerenter', (event) => { setHeroPointer(event); startHeroLoop(); });
+    listen(hero, 'pointermove', (event) => { if (event.pointerType === 'touch' && !pointerCaptured) return; setHeroPointer(event); });
+    listen(hero, 'pointerleave', () => {
+      if (pointerCaptured) return;
+      heroActive = false;
+      hero.classList.remove('is-revealing');
+      navTimer = setTimeout(() => { if (scrollY < 24 && !shell?.querySelector('.site-header:focus-within')) shell?.classList.remove('nav-is-visible'); }, 520);
+    });
+    listen(hero, 'pointerdown', (event) => {
+      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      pointerCaptured = true;
+      hero.setPointerCapture(event.pointerId);
+      hero.style.touchAction = 'none';
+      setHeroPointer(event);
+    });
+    const releasePointer = (event) => {
+      if (!pointerCaptured) return;
+      pointerCaptured = false;
+      if (hero.hasPointerCapture?.(event.pointerId)) hero.releasePointerCapture(event.pointerId);
+      hero.style.touchAction = '';
+    };
+    listen(hero, 'pointerup', releasePointer);
+    listen(hero, 'pointercancel', releasePointer);
+    listen(toggle, 'click', () => {
+      const full = hero.classList.toggle('is-fully-revealed');
+      toggle.setAttribute('aria-pressed', String(full));
+      toggle.textContent = full ? 'Show reveal spotlight' : 'Reveal transformation';
+      hero.classList.add('is-revealing');
+    });
+    listen(globalThis, 'resize', updateHeroRect, { passive: true });
+    listen(globalThis, 'scroll', () => shell?.classList.toggle('nav-is-visible', scrollY > 24 || heroActive), { passive: true });
+    listen(document, 'visibilitychange', () => {
+      pageVisible = !document.hidden;
+      if (pageVisible) startHeroLoop();
+      else if (frame) { cancelAnimationFrame(frame); frame = 0; }
+    });
+    listen(shell?.querySelector('.site-header'), 'focusin', () => shell?.classList.add('nav-is-visible'));
+    if (!reducedMotion && !finePointer?.matches) {
+      hero.classList.add('is-revealing');
+      setTimeout(() => { if (!pointerCaptured) hero.classList.remove('is-revealing'); }, 1800);
+    }
+  }
 
   const setActive = (next) => {
     if (active === next) return;
@@ -59,6 +152,7 @@ export function setupHomeExperience(root = document) {
 
   listen(grid, 'pointerleave', () => { clearTimeout(intentTimer); if (finePointer?.matches) setActive(null); });
   listen(grid, 'click', (event) => {
+    if (event.detail === 0) return;
     if (finePointer?.matches) return;
     const tile = event.target.closest?.('[data-lens]');
     if (tile) setActive(active === tile ? null : tile);
@@ -79,6 +173,10 @@ export function setupHomeExperience(root = document) {
     clearTimeout(intentTimer);
     cleanups.forEach((cleanup) => cleanup());
     observer?.disconnect();
+    clearTimeout(navTimer);
+    if (frame) cancelAnimationFrame(frame);
+    hero?.removeAttribute('style');
+    shell?.classList.remove('nav-is-visible');
     root.classList.remove('home-is-enhanced');
   };
 }

@@ -4,6 +4,7 @@ import './styles/pages.css';
 import './styles/motion.css';
 import './styles/image-led.css';
 import './styles/studio-redesign.css';
+import './styles/cinematic-renaissance.css';
 
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';
@@ -23,6 +24,7 @@ import { dashboardPage } from './pages/dashboard.js';
 import { legalPage } from './pages/legal.js';
 import { freeSnapshotPage } from './pages/free-snapshot.js';
 import { accountProjectsPage } from './pages/account-projects.js';
+import { projectIntakePage } from './pages/project-intake.js';
 import { operatorPage } from './pages/operator.js';
 import { notFoundPage, resultPage } from './pages/results.js';
 import { underConstructionPage as underConstructionContent } from './pages/under-construction.js';
@@ -33,6 +35,7 @@ import { setupDashboard } from './services/dashboard.js';
 import { setupCheckout } from './services/checkout.js';
 import { setupFreeSnapshot } from './services/free-snapshot.js';
 import { setupAccountProjects } from './services/account-projects.js';
+import { setupProjectIntake } from './services/project-intake.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
 
@@ -46,6 +49,9 @@ const DEMO_MODULES = {
   'greenline-lawn-and-grounds': () => Promise.all([import('./demos/greenline/page.js'), import('./demos/greenline/setup.js'), import('./demos/greenline/styles.css')]),
   'firejar-spicy-peanut-butter': () => Promise.all([import('./demos/firejar/page.js'), import('./demos/firejar/setup.js'), import('./demos/firejar/styles.css')]),
   'clearflow-plumbing': () => Promise.all([import('./demos/clearflow/page.js'), import('./demos/clearflow/setup.js'), import('./demos/clearflow/styles.css')]),
+  'verdant-cut': () => Promise.all([import('./demos/greenline/page.js'), import('./demos/greenline/setup.js'), import('./demos/greenline/styles.css')]),
+  'ember-and-jar': () => Promise.all([import('./demos/firejar/page.js'), import('./demos/firejar/setup.js'), import('./demos/firejar/styles.css')]),
+  'clearline-plumbing': () => Promise.all([import('./demos/clearflow/page.js'), import('./demos/clearflow/setup.js'), import('./demos/clearflow/styles.css')]),
 };
 
 function demoLoadingPage({ slug }) {
@@ -69,6 +75,7 @@ const routes = {
   '/login': () => authPage('login'),
   '/signup': () => authPage('signup'),
   '/account/projects': accountProjectsPage,
+  '/project-intake': projectIntakePage,
   '/dashboard': dashboardPage,
   '/operator': operatorPage,
   '/privacy': () => legalPage('privacy'),
@@ -113,6 +120,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/login' || pathname === '/signup') cleanups.push(setupAuthForm(router.navigate));
   if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
   if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));
+  if (pathname === '/project-intake') cleanups.push(setupProjectIntake());
   if (pathname === '/operator') cleanups.push(setupOperator());
 
   if (pattern === '/portfolio/:slug') {

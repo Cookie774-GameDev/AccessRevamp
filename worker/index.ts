@@ -6,6 +6,7 @@ import freeSnapshot from "../netlify/functions/free-snapshot.mjs";
 import operatorOverview from "../netlify/functions/operator-overview.mjs";
 import operatorPricingContext from "../netlify/functions/operator-pricing-context.mjs";
 import pricingContext from "../netlify/functions/pricing-context.mjs";
+import projectIntake from "../netlify/functions/project-intake.mjs";
 import stripeWebhook from "../netlify/functions/stripe-webhook.mjs";
 
 const routes = new Map<string, (request: Request) => Promise<Response>>([
@@ -15,6 +16,7 @@ const routes = new Map<string, (request: Request) => Promise<Response>>([
   ["/api/free-snapshot", freeSnapshot],
   ["/api/operator-overview", operatorOverview],
   ["/api/pricing-context", pricingContext],
+  ["/api/project-intake", projectIntake],
   ["/api/stripe-webhook", stripeWebhook],
   ["/.netlify/functions/pricing-context", pricingContext],
   ["/.netlify/functions/operator-pricing-context", operatorPricingContext],

@@ -2,6 +2,8 @@
 
 Accessed 2026-07-18. Source originals are retained in `docs/source-assets/`; production pages use local WebP and AVIF derivatives in `public/assets/generated/`.
 
+The registered Atlas hero pair was supplied by the AccessRevamp owner on 2026-07-19 as ChatGPT-created project artwork. The pale and gold PNG masters are retained unchanged in `docs/source-assets/atlas/`; aligned desktop and mobile WebP derivatives are self-hosted in `public/images/hero/`. These two variants are always transformed with the same crop and dimensions so the reveal remains registered.
+
 | Local source | Used for | Creator | Original source page | License / usage notes |
 | --- | --- | --- | --- | --- |
 | `greenline-lawn-pexels-4162011.jpg` | Greenline hero and service detail | Magda Ehlers | https://www.pexels.com/photo/lawn-mower-on-grass-4162011/ | Pexels page marks the photo “Free to use.” Locally cropped and optimized; no hotlink. |

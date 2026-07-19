@@ -15,6 +15,7 @@ export const routeMetadata = Object.freeze({
   '/login': ['Sign in', 'Access your AccessRevamp project workspace.'],
   '/signup': ['Create an account', 'Create your AccessRevamp project workspace.'],
   '/account/projects': ['Projects', 'View your AccessRevamp projects and orders.'],
+  '/project-intake': ['Project brief', 'Choose pages, share references, and upload private visual direction for a verified Complete or Cinematic project.'],
   '/dashboard': ['Dashboard', 'View your AccessRevamp projects and orders.'],
   '/operator': ['Operator workspace', 'Restricted AccessRevamp evidence, preview, delivery, refund, and queue operations.'],
   '/privacy': ['Privacy', 'How AccessRevamp handles contact, account, and order information.'],

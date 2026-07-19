@@ -27,6 +27,10 @@ Outreach may introduce a manually verified public-site observation and an option
 
 The database maximum is 20 queued/scheduled/sent items per UTC day. Lower operational limits may apply. Attempt 21 must fail transactionally. Suppression is permanent unless a lawful, audited correction process applies; contacting a different employee to evade an opt-out is prohibited.
 
+## Official preparation ramp
+
+The requested operating target is recorded as 15 human-reviewed drafts per day for program days 1–4, 20 per day for days 5–14, and 22 per day from day 15 onward. The repository safety ceiling remains 20 per UTC day, so the enforced preparation limit clamps the final stage to 20 unless a separately reviewed policy change replaces that ceiling. This ramp governs capacity for distinct, eligible businesses; it never authorizes indefinite follow-up to the same recipient. Sending remains disabled, and every record still requires the full evidence, approval, suppression, opt-out, sender-readiness, and jurisdiction checks above.
+
 ## Claim standard
 
 Use plain observations such as a keyboard path that could not be completed or a visible mobile hierarchy issue, with evidence and confidence. Do not claim legal noncompliance, confirmed security vulnerabilities from passive signals, lost revenue without first-party analytics, guaranteed results, urgency through fear, or knowledge of private business conditions. Never use fake `Re:`/`Fwd:` subjects or imply an existing relationship.

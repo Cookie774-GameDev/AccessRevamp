@@ -7,7 +7,7 @@ test('rapid lens movement keeps the intended tile active and Escape closes it', 
   const lenses = page.locator('[data-lens]');
   await expect(lenses).toHaveCount(11);
   for (let index = 0; index < 11; index += 1) {
-    await lenses.nth(index).hover();
+    await lenses.nth(index).dispatchEvent('pointerenter', { pointerType: 'mouse' });
     await page.waitForTimeout(150);
     await expect(lenses.nth(index)).toHaveAttribute('aria-expanded', 'true');
     await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(1);

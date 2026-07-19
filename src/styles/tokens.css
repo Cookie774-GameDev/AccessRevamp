@@ -38,4 +38,22 @@
   --layer-nav: 40;
   --layer-overlay: 60;
   --header-height: 5rem;
+  --ar-paper: #fffdf8;
+  --ar-ivory: #f7f3ea;
+  --ar-marble: #ece8df;
+  --ar-white: #ffffff;
+  --ar-ink: #151515;
+  --ar-charcoal: #101114;
+  --ar-slate: #64748b;
+  --ar-gold: #b97820;
+  --ar-gold-deep: #8e5917;
+  --ar-gold-soft: #e6c47f;
+  --ar-mint: #63d7c4;
+  --ar-mint-soft: #b7f5cf;
+  --ar-coral: #f25b4b;
+  --ar-mustard: #f2c94c;
+  --ar-line: rgba(21, 21, 21, 0.13);
+  --ar-glass: rgba(255, 253, 248, 0.72);
+  --ease-out-premium: cubic-bezier(.22, 1, .36, 1);
+  --ease-soft: cubic-bezier(.4, 0, .2, 1);
 }

@@ -1,6 +1,6 @@
 import { test, expect } from 'playwright/test';
 
-const demos = ['greenline-lawn-and-grounds', 'firejar-spicy-peanut-butter', 'clearflow-plumbing'];
+const demos = ['verdant-cut', 'ember-and-jar', 'clearline-plumbing'];
 
 for (const slug of demos) test(`${slug} is an honest interactive demo`, async ({ page }) => {
   await page.goto(`/portfolio/${slug}`);

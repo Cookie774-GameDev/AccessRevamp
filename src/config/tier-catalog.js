@@ -61,7 +61,7 @@ export const TIERS = Object.freeze({
     displayPrice: '$50',
     currency: 'USD',
     cadence: 'one-time',
-    features: ['Human-reviewed findings report', 'One landing-page direction', 'Desktop and mobile PNG exports', '30-day growth plan'],
+    features: ['Human-reviewed findings report', 'One landing-page direction', 'Desktop and mobile PNG exports', 'One subtle AI-assisted motion poster ad', '30-day growth plan', 'Upgrade to the $200 plan later for only $150'],
   }),
   complete_revamp: tier({
     key: 'complete_revamp',
@@ -73,7 +73,7 @@ export const TIERS = Object.freeze({
     displayPrice: '$200',
     currency: 'USD',
     cadence: 'one-time',
-    features: ['Everything applicable in Homepage Reveal', 'Up to five agreed standard pages', 'Responsive accessibility and performance work', 'Before/after evidence and one retest summary'],
+    features: ['Every applicable $50 Homepage Reveal deliverable', 'Up to five agreed standard pages', 'Responsive accessibility and performance work', 'Five Canva-built AI-assisted motion poster ads', 'Ten still poster variations', 'Three business card variations', 'Two brochure variations', 'Before/after evidence and one retest summary', 'Upgrade to the $250 Cinematic plan later for only $50'],
   }),
   cinematic_scroll: tier({
     key: 'cinematic_scroll',
@@ -85,7 +85,7 @@ export const TIERS = Object.freeze({
     displayPrice: '$250',
     currency: 'USD',
     cadence: 'one-time',
-    features: ['Everything in Complete Website Revamp', 'One motion-led narrative sequence', 'Up to four story beats', 'Mobile and reduced-motion fallbacks'],
+    features: ['Everything in Complete Website Revamp', 'One motion-led narrative sequence', 'Up to four story beats', 'Mobile and reduced-motion fallbacks', 'Upgrade from the $200 plan for $50'],
     deliveryBusinessDays: 3,
     motionSequenceCount: 1,
     maximumStoryBeats: 4,

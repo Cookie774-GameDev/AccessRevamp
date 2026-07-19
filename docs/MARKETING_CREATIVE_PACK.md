@@ -9,11 +9,15 @@ The package covers **one business, one campaign, and one promoted offer** unless
 It includes:
 
 1. Two master creative directions for the approved campaign.
-2. Five format adaptations for each master direction.
-3. Ten final Canva-ready creative variations in total.
-4. A recommended headline, supporting line, call to action, caption, channel, and posting context for each master direction.
-5. One consolidated revision round after the customer reviews the two master directions.
-6. Editable Canva-ready design files plus agreed PNG or PDF exports when the delivery workflow supports them.
+2. Ten final Canva-ready still poster variations across the five standard formats.
+3. Five subtle AI-assisted motion poster ads derived from approved campaign art, each supplied as a vertical social format with a static cover.
+4. Three business-card variations with coordinated front and back direction.
+5. Two brochure variations, using bi-fold or tri-fold structure as agreed in the project brief.
+6. A recommended headline, supporting line, call to action, caption, channel, and posting context for each master direction.
+7. One consolidated revision round after the customer reviews the two master directions.
+8. Editable Canva-ready design files plus agreed MP4, PNG, or PDF exports when the delivery workflow supports them.
+
+The $50 Homepage Reveal includes one subtle AI-assisted motion poster ad. It does not include the ten still posters, four additional motion posters, business-card variations, or brochure variations unless the customer upgrades to the $200 Complete Website Revamp. A verified $50 purchase is credited toward that upgrade, leaving $150 due.
 
 ## Standard format matrix
 
@@ -27,7 +31,7 @@ Each approved master direction is adapted into:
 | Landscape ad | 1200 × 628 | Meta link ads, display placements, website banners |
 | Print poster | US Letter or A4 | Counter sign, flyer, handout, community board, local event |
 
-Two master directions multiplied by these five formats produces the ten included variations. A customer may request a different equivalent format mix before production begins, but the total remains ten unless a different scope is approved in writing.
+Two master directions multiplied by these five formats produces the ten included still-poster variations. The five motion posters, three business-card variations, and two brochure variations are separate bounded deliverables derived from the same approved campaign direction. A customer may request an equivalent format mix before production begins, but the written quantity remains fixed unless a different scope is approved.
 
 ## Low-cost AI-assisted production model
 
@@ -104,7 +108,7 @@ Use stable IDs and never overwrite another customer’s assets.
 
 The reviewed website analysis, prioritized recommendations, and action plan follow the approved three-business-day promise after payment and receipt of required information. The creative brief and two master-direction proposals may be included in that analysis package when the required brand and offer inputs are ready.
 
-The final ten creative variations follow the written Complete Website Revamp implementation schedule because production depends on customer assets, master-direction approval, copy accuracy, and requested revisions. Do not promise that every website implementation and all ten final creatives will be completed within three business days unless the written scope explicitly supports that schedule.
+The final creative bundle follows the written Complete Website Revamp implementation schedule because production depends on customer assets, master-direction approval, copy accuracy, and requested revisions. Do not promise that the website implementation, five motion posters, ten still posters, three business-card variations, and two brochure variations will all be completed within three business days unless the written scope explicitly supports that schedule.
 
 ## Exclusions
 
@@ -116,7 +120,7 @@ The $200 tier does not include:
 - Paid Canva elements, paid stock media, or third-party licenses unless the customer pays or approves them.
 - Photography, videography, voice-over, complex illustration, or advanced motion design.
 - More than one campaign or promoted offer.
-- More than two master directions, ten final variations, or one consolidated revision round.
+- More than two master directions, five motion posters, ten still posters, three business-card variations, two brochure variations, or one consolidated revision round.
 - Ongoing social posting, community management, or recurring content production.
 - Legal review of advertising claims or required disclosures.
 

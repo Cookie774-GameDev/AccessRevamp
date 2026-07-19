@@ -11,11 +11,13 @@ test('studio redesign centralizes the production scale and section rhythm', asyn
   }
 });
 
-test('homepage uses an audit stage and montage without project-art watermarks', async () => {
+test('homepage uses the Atlas reveal and keeps disclosure in project metadata', async () => {
   const home = await read('src/pages/home.js');
-  assert.match(home, /data-audit-stage/);
-  assert.match(home, /data-audit-montage/);
-  assert.doesNotMatch(home, /Original fictional|Original working demo|Not a client engagement/i);
+  assert.match(home, /data-reveal-hero/);
+  assert.match(home, /data-reveal-gold/);
+  assert.match(home, /data-reveal-cursor/);
+  assert.match(home, /Original working demo — not a client engagement\./);
+  assert.doesNotMatch(home, /Original fictional brand image|sample business/i);
 });
 
 test('eleven lenses use structured data and unique code-native visuals', async () => {

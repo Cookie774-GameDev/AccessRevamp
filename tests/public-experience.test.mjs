@@ -8,39 +8,35 @@ const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 test('the homepage contains the complete approved audit-lens story', async () => {
   const home = await read('src/pages/home.js');
   for (const phrase of [
-    'Your website is already telling us',
-    'where customers get stuck',
-    'Get the $50 Homepage Reveal',
-    'See a verified example',
-    'Evidence before claims',
-    'Diagnostic spectrum',
+    'AccessRevamp transforms storefronts',
+    'One clearer growth system',
+    'Choose the transformation you need',
+    'Keep every verified dollar',
+    'Transformation studies',
+    'Eleven review lenses',
     'Before',
-    'Evidence',
-    'After',
-    'Scout',
+    'Direction',
+    'Observe',
     'Verify',
-    'Preview',
-    'Approve',
+    'Prioritize',
+    'Design',
     'Build',
-    'Measure',
-    'Greenline Lawn & Grounds',
-    'Firejar Spicy Peanut Butter',
-    'Clearflow Plumbing',
-    'One free finding',
-    'Cumulative upgrade credit',
-    'Deliverables by tier',
-    'Authorized testing boundary',
-    '30-day growth preview',
-    'Straight answers',
+    'Retest',
+    'Verdant Cut Co.',
+    'Ember & Jar',
+    'Clearline Plumbing',
+    'one subtle AI-assisted motion poster',
+    'five motion posters',
+    'Interaction references',
     'Bring one public website',
   ]) {
     assert.match(home, new RegExp(escapeRegExp(phrase), 'i'));
   }
   assert.match(home, /Object\.values\(plans\)/);
   for (const route of [
-    '/portfolio/greenline-lawn-and-grounds',
-    '/portfolio/firejar-spicy-peanut-butter',
-    '/portfolio/clearflow-plumbing',
+    '/portfolio/verdant-cut',
+    '/portfolio/ember-and-jar',
+    '/portfolio/clearline-plumbing',
   ]) {
     assert.match(home, new RegExp(route.replaceAll('/', '\\/')));
   }

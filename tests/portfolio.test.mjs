@@ -14,9 +14,9 @@ const [main, portfolio, home, work, styles, demoShell] = await Promise.all([
 test('the portfolio is loaded as part of the production website', () => {
   assert.match(main, /'\/work': workPage/);
   assert.match(main, /'\/work\/:slug'/);
-  assert.match(home, /\/portfolio\/greenline-lawn-and-grounds/);
-  assert.match(home, /\/portfolio\/firejar-spicy-peanut-butter/);
-  assert.match(home, /\/portfolio\/clearflow-plumbing/);
+  assert.match(home, /\/portfolio\/verdant-cut/);
+  assert.match(home, /\/portfolio\/ember-and-jar/);
+  assert.match(home, /\/portfolio\/clearline-plumbing/);
   assert.match(work, /portfolioItems/);
 });
 
