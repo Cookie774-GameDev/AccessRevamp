@@ -1,6 +1,6 @@
 import { getSupabase } from '../lib/supabase.js';
 
-const CHECKOUT_ENDPOINT = '/.netlify/functions/create-checkout';
+const CHECKOUT_ENDPOINT = '/api/create-checkout';
 const ALLOWED_STRIPE_HOSTS = new Set(['checkout.stripe.com']);
 
 function validatedStripeUrl(value) {

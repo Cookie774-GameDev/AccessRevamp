@@ -1,5 +1,106 @@
-import{getSupabase}from'../lib/supabase.js';import{escapeHtml}from'../components/icons.js';
-const money=(c=0,currency='USD')=>new Intl.NumberFormat('en-US',{style:'currency',currency:currency.toUpperCase()}).format(c/100);const show=(host,name,html)=>{host.dataset.accountState=name;host.innerHTML=html};
-export function setupAccountProjects(navigate){const host=document.querySelector('[data-account-content]');if(!host)return;const logout=document.querySelector('[data-account-logout]'),greeting=document.querySelector('[data-account-greeting]');let disposed=false;
- const load=async()=>{const supabase=getSupabase();if(!supabase){show(host,'configuration-missing','<h2>Workspace configuration missing</h2><p>This preview has no Supabase public configuration.</p>');return;}const sessionResult=await supabase.auth.getSession();if(disposed)return;const session=sessionResult.data?.session;if(sessionResult.error){show(host,'session-expired','<h2>Session unavailable</h2><p>Sign in again to continue.</p>');return;}if(!session){show(host,'signed-out','<h2>Sign in to continue</h2><p><a class="button" href="/login" data-nav>Sign in</a></p>');return;}if(!session.user.email_confirmed_at){show(host,'confirmation-required','<h2>Confirm your email</h2><p>Open the confirmation email before viewing customer records.</p>');return;}logout.hidden=false;greeting.textContent=`Signed in as ${session.user.email}`;try{const response=await fetch('/.netlify/functions/account-projects',{headers:{authorization:`Bearer ${session.access_token}`}});if(response.status===401){show(host,'session-expired','<h2>Your session expired</h2><p>Please sign in again.</p>');return;}const result=await response.json();if(!response.ok)throw new Error(result.error||'Workspace unavailable');const projects=result.projects||[],orders=result.orders||[],refunds=result.refundRequests||[];const partial=result.partialFailures?.length?`<div class="notice">Some sections are temporarily unavailable: ${result.partialFailures.map(escapeHtml).join(', ')}.</div>`:'';const content=`${partial}<div class="dashboard-grid"><section class="dashboard-card"><h2>Current entitlement</h2><p>${result.entitlement?`${escapeHtml(result.entitlement.highest_tier_key)} · ${escapeHtml(result.entitlement.status)} · verified paid value ${money(result.entitlement.effective_paid_cents)}`:'No paid entitlement is linked yet.'}</p><a href="/pricing" data-nav>Review one-time upgrade options</a></section><section class="dashboard-card"><h2>Verified orders</h2>${orders.length?`<ul>${orders.map(o=>`<li>${escapeHtml(o.plan_key)} — ${money(o.amount_total,o.currency)} — ${escapeHtml(o.status)}</li>`).join('')}</ul>`:'<p>No verified order yet.</p>'}</section><section class="dashboard-card"><h2>Projects and delivery</h2>${projects.length?`<ul>${projects.map(p=>`<li><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.status)}<p>Report, concept, desktop PNG, mobile PNG, creative pack, required inputs, due date, and revision links appear here only when available.</p></li>`).join('')}</ul>`:'<p>No project has been opened yet.</p>'}</section><section class="dashboard-card"><h2>Refund requests</h2>${refunds.length?`<ul>${refunds.map(r=>`<li>${escapeHtml(r.reason||'Request')} — ${escapeHtml(r.status)}</li>`).join('')}</ul>`:'<p>No refund request is on file.</p>'}</section></div>`;show(host,projects.length||orders.length?'populated':partial?'partial-failure':'empty',content);}catch(error){show(host,'unavailable',`<h2>Workspace unavailable</h2><p>${escapeHtml(error.message)}</p>`);}};
- const onLogout=async()=>{await getSupabase()?.auth.signOut();navigate('/')};logout?.addEventListener('click',onLogout);load();return()=>{disposed=true;logout?.removeEventListener('click',onLogout)};}
+import { getSupabase } from "../lib/supabase.js";
+import { escapeHtml } from "../components/icons.js";
+const money = (c = 0, currency = "USD") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(c / 100);
+const show = (host, name, html) => {
+  host.dataset.accountState = name;
+  host.innerHTML = html;
+};
+export function setupAccountProjects(navigate) {
+  const host = document.querySelector("[data-account-content]");
+  if (!host) return;
+  const logout = document.querySelector("[data-account-logout]"),
+    greeting = document.querySelector("[data-account-greeting]");
+  let disposed = false;
+  const load = async () => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      show(
+        host,
+        "configuration-missing",
+        "<h2>Workspace configuration missing</h2><p>This preview has no Supabase public configuration.</p>",
+      );
+      return;
+    }
+    const sessionResult = await supabase.auth.getSession();
+    if (disposed) return;
+    const session = sessionResult.data?.session;
+    if (sessionResult.error) {
+      show(
+        host,
+        "session-expired",
+        "<h2>Session unavailable</h2><p>Sign in again to continue.</p>",
+      );
+      return;
+    }
+    if (!session) {
+      show(
+        host,
+        "signed-out",
+        '<h2>Sign in to continue</h2><p><a class="button" href="/login" data-nav>Sign in</a></p>',
+      );
+      return;
+    }
+    if (!session.user.email_confirmed_at) {
+      show(
+        host,
+        "confirmation-required",
+        "<h2>Confirm your email</h2><p>Open the confirmation email before viewing customer records.</p>",
+      );
+      return;
+    }
+    logout.hidden = false;
+    greeting.textContent = `Signed in as ${session.user.email}`;
+    try {
+      const response = await fetch("/api/account-projects", {
+        headers: { authorization: `Bearer ${session.access_token}` },
+      });
+      if (response.status === 401) {
+        show(
+          host,
+          "session-expired",
+          "<h2>Your session expired</h2><p>Please sign in again.</p>",
+        );
+        return;
+      }
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Workspace unavailable");
+      const projects = result.projects || [],
+        orders = result.orders || [],
+        refunds = result.refundRequests || [];
+      const partial = result.partialFailures?.length
+        ? `<div class="notice">Some sections are temporarily unavailable: ${result.partialFailures.map(escapeHtml).join(", ")}.</div>`
+        : "";
+      const content = `${partial}<div class="dashboard-grid"><section class="dashboard-card"><h2>Current entitlement</h2><p>${result.entitlement ? `${escapeHtml(result.entitlement.highest_tier_key)} · ${escapeHtml(result.entitlement.status)} · verified paid value ${money(result.entitlement.effective_paid_cents)}` : "No paid entitlement is linked yet."}</p><a href="/pricing" data-nav>Review one-time upgrade options</a></section><section class="dashboard-card"><h2>Verified orders</h2>${orders.length ? `<ul>${orders.map((o) => `<li>${escapeHtml(o.plan_key)} — ${money(o.amount_total, o.currency)} — ${escapeHtml(o.status)}</li>`).join("")}</ul>` : "<p>No verified order yet.</p>"}</section><section class="dashboard-card"><h2>Projects and delivery</h2>${projects.length ? `<ul>${projects.map((p) => `<li><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.status)}<p>Report, concept, desktop PNG, mobile PNG, creative pack, required inputs, due date, and revision links appear here only when available.</p></li>`).join("")}</ul>` : "<p>No project has been opened yet.</p>"}</section><section class="dashboard-card"><h2>Refund requests</h2>${refunds.length ? `<ul>${refunds.map((r) => `<li>${escapeHtml(r.reason || "Request")} — ${escapeHtml(r.status)}</li>`).join("")}</ul>` : "<p>No refund request is on file.</p>"}</section></div>`;
+      show(
+        host,
+        projects.length || orders.length
+          ? "populated"
+          : partial
+            ? "partial-failure"
+            : "empty",
+        content,
+      );
+    } catch (error) {
+      show(
+        host,
+        "unavailable",
+        `<h2>Workspace unavailable</h2><p>${escapeHtml(error.message)}</p>`,
+      );
+    }
+  };
+  const onLogout = async () => {
+    await getSupabase()?.auth.signOut();
+    navigate("/");
+  };
+  logout?.addEventListener("click", onLogout);
+  load();
+  return () => {
+    disposed = true;
+    logout?.removeEventListener("click", onLogout);
+  };
+}
