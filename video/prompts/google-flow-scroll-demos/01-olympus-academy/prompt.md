@@ -1,68 +1,73 @@
-# Olympus Academy — Google Flow Prompt
+# Olympus Academy — Immersive Temple Fly-Through Prompt
 
 ## Source image
 
 Use `ChatGPT Image Jul 19, 2026, 11_29_50 AM.png` as the source image and exact opening frame.
 
-## Paste-ready master prompt
+## Paste-ready Google Flow prompt
 
 ```text
-Use the uploaded OLYMPUS ACADEMY hero screenshot as the exact first frame, visual bible, and immutable design reference. Generate one continuous 8.0-second, 16:9, full-bleed cinematic desktop website-scroll showcase. The finished video must feel like a bespoke high-budget editorial mythology website with premium scroll-scrubbed motion, not a slideshow and not a movie scene. Keep the camera locked directly in front of the webpage. The viewport never tilts or orbits; the webpage content moves upward under one smooth downward trackpad scroll.
+Create an 8.0-second, 16:9, single-take, image-to-video sequence from the uploaded OLYMPUS ACADEMY website hero.
 
-PRESERVE THE OPENING DESIGN EXACTLY:
-- Keep the gold Spartan-helmet laurel logo, the words “OLYMPUS ACADEMY,” the navigation “COURSE,” “MYTHS,” “JOURNEY,” the outlined “ENROLL” button, the headline “ENTER OLYMPUS.”, the sentence “A cinematic course in Greek mythology.”, and the gold “BEGIN” button exactly spelled, positioned, and styled at the beginning.
-- Preserve the original Zeus statue, throne, trident/scepter, temple, cliffs, clouds, sun placement, and cinematic left-to-right composition. Do not redesign the hero and do not replace the statue or architecture.
-- Maintain the original premium Roman-editorial visual language: high-contrast classical display serif for large titles, restrained uppercase sans-serif with wide tracking for navigation and labels, thin antique-gold rules, generous negative space, and sharp aligned margins.
+CRITICAL MOTION REQUIREMENT: DO NOT SCROLL A FLAT WEBPAGE UPWARD. DO NOT REVEAL ORDINARY BELOW-THE-FOLD WEBSITE SECTIONS. Instead, treat the hero artwork as a portal into a real, dimensional Mount Olympus environment. The visitor’s mouse-wheel scroll controls a smooth forward camera journey from the website hero, across the cliff, up to the temple, through the columns, and into the academy interior. It must look like a $10,000 immersive 3D scroll website: the interface is briefly pinned, the artwork develops depth, and the camera travels into the world in one elegant continuous move.
 
-COLOR AND MATERIAL DIRECTION:
-Use only near-black #0C0B09, charcoal-brown #1D1914, smoked bronze #72573A, antique gold #B68B4C, warm gold #BD8D55, sunlit amber #F0C993, and aged ivory #F5F0E7. Materials should feel like dark polished stone, carved marble, aged bronze, parchment, and subtle gold leaf. No saturated blue, purple, cyan, modern neon, or glossy sci-fi colors.
+OPENING FRAME AND BRAND FIDELITY:
+- Begin on the uploaded screenshot with the same composition: black editorial area on the left, “ENTER OLYMPUS.” headline, gold “BEGIN” button, Olympus Academy helmet-and-laurel logo, top navigation, seated Zeus statue on the right, sun behind the clouds, temple on the central cliff, and warm bronze-gold atmosphere.
+- Preserve the original palette: near-black #0C0B09, charcoal brown #211A13, antique bronze #7B5B36, antique gold #B98C4B, warm amber #E4B56B, bright sun gold #FFD998, aged ivory #F5F0E7, and carved marble gray.
+- Preserve the original visual language: monumental classical architecture, dark editorial luxury, carved stone, aged bronze, gold leaf, volumetric sunlight, cloud sea, and cinematic high contrast.
+- The Zeus statue is carved stone and remains completely still. No blinking, breathing, talking, head movement, hand movement, or facial animation. Light may move across the statue, but the sculpture itself never moves.
+- Keep the original words sharp during the opening moment. Once the camera journey begins, existing interface and text may mask or slide cleanly out of view. Do not invent new readable paragraphs or random navigation labels.
 
-AMBIENT HERO MOTION BEFORE THE SCROLL:
-For the first moment, hold the exact screenshot while adding extremely restrained life: slow cloud drift behind the temple, a soft breathing change in the volumetric sun rays, tiny airborne dust motes in the warm light, and minute torch/ember flicker around the distant temple platforms. The Zeus statue remains completely stone and still—no blinking, breathing, head movement, hand movement, or facial animation. Light may glide gently across the marble surface, but the sculpture itself never moves.
+CAMERA CHARACTER:
+The movement should feel like scroll-scrubbed interaction rather than a free-flying movie camera. Use a smooth, controlled forward dolly with subtle easing, strong but believable depth parallax, and only a very small left-to-right arc. The horizon remains stable. No handheld shake, no abrupt speed ramp, no whip pan, no hard cut, and no teleportation. The camera should appear to be pulled forward by one continuous downward scroll gesture.
 
-SCROLL BEHAVIOR AND STORY:
-Create one continuous downward scroll covering roughly 2.3 desktop viewport heights. Use premium pinned-scene behavior similar to a top-tier interactive editorial site: the main artwork remains partially pinned while text and section layers move at different controlled speeds. The motion must read unmistakably as a real webpage being scrolled. Use smooth acceleration, a calm middle speed, and a clean ease-out. No cuts, no jump transitions, and no reverse motion.
+EXACT 8-SECOND CAMERA JOURNEY:
 
-0.00–0.90 SECONDS — HERO HOLD AND AWAKENING:
-Start on the exact uploaded hero. Apply only a very subtle 1–1.5% digital push-in while clouds drift a few pixels and the sun rays brighten slightly. Draw the thin gold line beneath “OLYMPUS.” from left to right. Let the arrow inside the “BEGIN” button move approximately 6 pixels to the right and return once. All text remains razor sharp and unchanged.
+0.00–0.70 SECONDS — EXACT WEBSITE HERO HOLD
+Start almost exactly on the supplied hero frame. Hold long enough for the design to register. Add only restrained environmental life: slow cloud movement behind the temple, a gentle breathing change in the sun rays, tiny floating dust motes, and a faint gold glint on the “BEGIN” button. The website remains front-facing and legible. No page movement yet.
 
-0.90–2.55 SECONDS — FIRST SCROLL / PINNED OLYMPUS REVEAL:
-Begin one silky downward trackpad scroll. The viewport stays fixed while the page moves upward. Compress the top navigation into a refined 70-pixel translucent near-black sticky header with the original logo on the left and original navigation on the right. The word “ENTER” glides upward with the page. The word “OLYMPUS.” stays pinned for about half a second, then scales down smoothly into a small antique-gold chapter marker near the upper-left content grid. The temple and cliff move upward more slowly than the foreground text, while Zeus moves even more slowly, creating three restrained depth layers—approximately 8% parallax for the temple and 4% for Zeus. Do not detach any object from the webpage or create a cinematic camera fly-through.
+0.70–1.65 SECONDS — THE HERO BECOMES A DEPTH PORTAL
+The virtual scroll begins. Keep the existing top navigation pinned for a moment while the black text panel and “ENTER OLYMPUS.” move a few pixels left and become masked by darkness rather than scrolling upward. The camera starts a deliberate forward dolly into the right side of the artwork. Zeus remains on the right edge as a massive foreground layer, the temple grows in the center, and the clouds and cliff separate into clear foreground, middle-ground, and background planes. Pass the seated statue without deforming it. The statue should slide naturally out of frame due only to camera parallax.
 
-As the scroll continues, enlarge the central temple by about 12% while preserving its exact geometry. Use the temple columns as clean vertical masking bars. The bright sky gradually dims into a dark polished-stone background below the hero. The gold “BEGIN” button compresses into a small rectangular gold progress indicator along the lower-left edge of the content grid.
+1.65–3.20 SECONDS — CROSS THE CLIFF TOWARD THE TEMPLE
+Continue forward above the rocky approach to Olympus. Move toward the temple stairs while the camera rises only slightly, as if the scroll is pulling the viewer along a designed path. Cypress trees, torch bowls, stone terraces, and cliff edges pass in layered parallax. The sun remains behind the temple and produces warm rim light on the columns. Tiny embers and dust drift through the light. Do not add people, monsters, lightning, or flying creatures. Keep the architecture geometrically stable.
 
-2.55–5.20 SECONDS — MYTHS SECTION BUILT FROM THE TEMPLE:
-Reveal a new below-the-fold editorial section through the temple-column masks. The exact large heading is “THE MYTHS LIVE HERE”. Place it in aged ivory on the left, aligned to the same grid as the original hero headline. Under the heading, reveal only these three large chapter labels: “GODS”, “HEROES”, “MONSTERS”. Use dark sculpted-stone panels with restrained gold rim light and Roman numerals I, II, III. Each panel enters sequentially from behind a temple column with a 0.12-second stagger. The panels should look carved and tactile, but still clearly be website cards with crisp rectangular geometry—not free-floating fantasy objects.
+3.20–4.45 SECONDS — ENTER THROUGH THE COLUMNS
+Approach the temple portico. The columns loom toward camera with strong perspective. The temple doors are already open. Pass cleanly between the columns and through the doorway. Use the bright sun behind the building to create a brief, elegant exposure transition from exterior gold into a darker interior, but never flash to pure white or cut to another shot. The roof and side walls may separate by a few inches like a refined architectural cutaway model, revealing the interior volume while keeping the temple recognizable and physically believable.
 
-Keep a faint, desaturated relief of the original temple and clouds in the pinned background. Add a thin antique-gold line that draws horizontally across the section and connects the three chapter cards. Introduce a minimal vertical scroll-progress mark on the far right using a gold dot and a fine line. Tiny dust motes and very faint ember particles may drift upward, but they must never obscure typography.
+4.45–6.55 SECONDS — SHOW THE OLYMPUS ACADEMY INTERIOR
+Reveal a grand, empty academy hall built from pale marble, dark stone, aged bronze, and warm gold firelight. The interior contains a long central aisle, carved floor mosaics, massive columns, bronze braziers with restrained flame, shelves of scrolls, stone reliefs of Greek myths, and a circular celestial teaching table or mechanical orrery at the center. Everything feels ceremonial, scholarly, and premium—not a fantasy video game dungeon. Glide forward along the aisle, then make a restrained 12–15 degree arc around the central teaching table so the viewer can see the room’s depth. The scroll-linked movement remains steady and controlled. No characters are present. Statues and reliefs remain still.
 
-5.20–7.25 SECONDS — JOURNEY AND FINAL CALL TO ACTION:
-Continue the same downward scroll. The three myth cards move upward and reduce slightly while fine gold constellation lines connect them and form a restrained map-like pattern. Reveal the final section with the exact heading “BEGIN THE JOURNEY”. Center it over a deep near-black marble surface with a distant, low-contrast silhouette of Olympus in the background. Add one primary antique-gold button labeled exactly “ENROLL”. The original helmet-laurel emblem may appear once as a faint embossed seal behind the heading, but do not create a new logo.
+6.55–7.45 SECONDS — REVEAL THE INNER ROTUNDA
+Continue through the central hall into an open circular rotunda at the far end. The rotunda overlooks the cloud sea through tall arches. A subtle antique-gold constellation map glows across the floor and central table, casting delicate lines of light onto the marble. The visual should feel like the hidden heart of the academy. The camera slows as it reaches the center, showing columns around the perimeter, the cloud horizon beyond, and warm beams entering from the arches.
 
-The final section should feel ceremonial and spacious: large serif heading, a thin gold divider, one short line of decorative Roman numerals, and the single CTA. Keep the visual hierarchy elegant and minimal. The sticky header may fade to 65% opacity so the final CTA dominates.
+7.45–8.00 SECONDS — PREMIUM FINAL HOLD
+Ease to a complete stop inside the rotunda, looking slightly across the central celestial map toward the open arches and golden clouds. Hold the composition without fading out. Keep the frame stable, spacious, and luxurious. A tiny scroll-progress line or gold diamond may remain at the far right edge as a subtle reminder that this is an interactive website, but do not add a browser frame or new text.
 
-7.25–8.00 SECONDS — SETTLE AND HOLD:
-Ease the scroll to a precise stop with “BEGIN THE JOURNEY” and “ENROLL” fully readable. Give the “ENROLL” button one subtle premium hover response: border brightens, fill warms slightly, and its arrow travels 7 pixels to the right. Hold the final composition steady for the remaining frames. Do not fade to black.
+ENVIRONMENTAL MOTION:
+Use slow cloud drift, moving volumetric light, faint flame flicker, sparse embers, dust motes, and extremely subtle reflective changes on bronze and marble. Environmental motion supports the camera journey but never becomes a storm or action scene.
 
-OVERALL MOTION CHARACTER:
-Cinematic, solemn, luxurious, mythic, controlled, editorial, high contrast, smooth and expensive. Motion should come from scroll-linked masks, pinned layers, subtle parallax, light, particles, and typography—not from fast camera moves. Maintain crisp desktop UI edges throughout. The result should resemble a polished screen recording of a custom $10,000 interactive course website.
+DESIRED RESULT:
+The final video begins as the exact Olympus Academy website and then seamlessly becomes an immersive, scroll-controlled journey into the temple, through the architecture, and around the academy interior. The viewer should clearly feel that the website artwork itself has opened into a three-dimensional world.
 
 STRICTLY AVOID:
-No browser chrome, no monitor or phone frame, no visible mouse cursor, no hands, no camera orbit, no handheld shake, no cuts, no reverse scroll, no fade to black, no lightning storm, no explosions, no new people, no moving statue, no talking Zeus, no face animation, no deformed anatomy, no warped temple, no duplicated columns, no liquid UI, no random words, no misspelled text, no replacement logo, no blue or purple palette, no neon, no generic SaaS cards, no excessive motion blur, no vignette that hides the interface, no watermark, and no subtitle overlay.
+No vertical long-page scroll, no new webpage section sliding upward, no ordinary card layout, no browser chrome, no laptop or phone mockup, no cursor, no hands, no cuts, no jump transition, no rapid drone flight, no orbit around the whole mountain, no camera shake, no moving Zeus, no animated statue face, no talking statue, no deformed anatomy, no melting marble, no duplicated columns, no warped temple, no collapsing architecture, no lightning storm, no explosion, no new people, no gods walking around, no winged creatures, no fantasy battle, no blue or purple neon, no sci-fi screens, no random writing, no misspelled text, no subtitles, no watermark, and no fade to black.
 ```
 
-## Eight-second beat sheet
+## Eight-second shot map
 
-| Time | Scroll beat | Required visible result |
+| Time | Camera action | What must be visible |
 |---|---|---|
-| 0.00–0.90 | Exact hero hold with subtle cloud/light motion | Original screenshot remains fully recognizable and legible |
-| 0.90–2.55 | Smooth downward scroll, sticky header, layered parallax | `OLYMPUS.` becomes a small chapter marker; temple enlarges |
-| 2.55–5.20 | Temple-column mask reveals the course chapters | `THE MYTHS LIVE HERE`; `GODS`, `HEROES`, `MONSTERS` |
-| 5.20–7.25 | Constellation-linked transition into final section | `BEGIN THE JOURNEY` and a single `ENROLL` CTA |
-| 7.25–8.00 | Ease-out and final hold | CTA remains fully readable; no fade |
+| 0.00–0.70 | Hold the exact website hero | Original UI, Zeus, temple, and gold sunlight |
+| 0.70–1.65 | Begin forward scroll-dolly into the artwork | UI masks away; Zeus becomes foreground parallax |
+| 1.65–3.20 | Cross the cliff toward the temple | Layered terraces, cypress trees, torches, temple growing |
+| 3.20–4.45 | Pass through columns and open doorway | Seamless exterior-to-interior transition |
+| 4.45–6.55 | Glide through the academy hall | Marble aisle, myth reliefs, scrolls, central orrery |
+| 6.55–7.45 | Enter the inner rotunda | Cloud sea, arches, gold constellation floor |
+| 7.45–8.00 | Settle and hold | Rich interior final composition; no flat CTA page |
 
-## Negative / avoid block
+## Short negative block
 
 ```text
-No browser frame, monitor, phone, cursor, hand, camera orbit, hard cut, reverse scroll, fade to black, moving or speaking Zeus, blinking statue, deformed marble anatomy, warped temple, duplicate architecture, random people, lightning explosion, blue/purple/neon colors, generic SaaS styling, gibberish text, altered logo, misspelled navigation, extra CTAs, liquid UI, excessive motion blur, heavy grain, watermark, captions, or audio.
+Do not vertically scroll a flat webpage. No below-the-fold cards, no browser frame, no device mockup, no cursor, no cuts, no shake, no fast drone flight, no moving Zeus, no facial animation, no deformed statue, no warped temple, no duplicated columns, no people, no monsters, no battle, no lightning, no neon, no random text, no watermark, no fade to black.
 ```
