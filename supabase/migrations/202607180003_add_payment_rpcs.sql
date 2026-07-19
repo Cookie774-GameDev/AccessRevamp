@@ -86,7 +86,7 @@ begin
       message = 'AccessRevamp request ID has already reached a terminal state';
   end if;
 
-  select catalog.rank, catalog.list_price_cents
+  select catalog."rank", catalog.list_price_cents
     into v_target_rank, v_gross_cents
     from public.tier_catalog as catalog
    where catalog.tier_key = p_target_tier_key
@@ -106,8 +106,8 @@ begin
   select
       entitlement.id,
       entitlement.highest_tier_key,
-      current_catalog.rank,
-      current_catalog.list_price_cents,
+      tier_current."rank",
+      tier_current.list_price_cents,
       entitlement.effective_paid_cents,
       source_order.status
     into
@@ -118,13 +118,13 @@ begin
       v_effective_paid_cents,
       v_source_order_status
     from public.entitlements as entitlement
-    join public.tier_catalog as current_catalog
-      on current_catalog.tier_key = entitlement.highest_tier_key
+    join public.tier_catalog as tier_current
+      on tier_current.tier_key = entitlement.highest_tier_key
     left join public.orders as source_order
       on source_order.id = entitlement.source_order_id
    where entitlement.user_id = p_user_id
      and entitlement.status = 'active'
-   order by current_catalog.rank desc, entitlement.effective_paid_cents desc
+   order by tier_current."rank" desc, entitlement.effective_paid_cents desc
    limit 1
    for update of entitlement;
 

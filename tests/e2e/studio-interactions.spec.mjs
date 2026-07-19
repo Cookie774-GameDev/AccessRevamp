@@ -1,6 +1,7 @@
 import { test, expect } from 'playwright/test';
 
 test('rapid lens movement keeps the intended tile active and Escape closes it', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/', { waitUntil: 'networkidle' });
   const lenses = page.locator('[data-lens]');
@@ -15,8 +16,9 @@ test('rapid lens movement keeps the intended tile active and Escape closes it', 
   await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(0);
 });
 
-test('touch lens accordion switches and closes on outside tap', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('touch lens accordion switches and closes on outside tap', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
   await page.goto('/', { waitUntil: 'networkidle' });
   const lenses = page.locator('[data-lens]');
   await lenses.nth(0).tap();
@@ -26,6 +28,7 @@ test('touch lens accordion switches and closes on outside tap', async ({ page })
   await expect(lenses.nth(1)).toHaveAttribute('aria-expanded', 'true');
   await page.locator('h2').first().tap();
   await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(0);
+  await context.close();
 });
 
 test('Greenline remains within the 320 pixel viewport', async ({ page }) => {

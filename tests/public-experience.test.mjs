@@ -44,9 +44,10 @@ test('the homepage contains the complete approved audit-lens story', async () =>
   ]) {
     assert.match(home, new RegExp(route.replaceAll('/', '\\/')));
   }
-  assert.match(home, /Original working demo — not a client engagement\./);
-  for (const category of ['Accessibility', 'Usability', 'Mobile', 'Performance', 'Content', 'SEO\/local discovery', 'Conversion', 'Monetization', 'Analytics', 'Social growth', 'Security hygiene']) {
-    assert.match(home, new RegExp(category, 'i'));
+  const [demoShell, lensData] = await Promise.all([read('src/demos/shared/demo-shell.js'), read('src/data/lenses.js')]);
+  assert.match(demoShell, /Original working demo — not a client engagement\./);
+  for (const category of ['Accessibility', 'Usability', 'Mobile', 'Performance', 'Content', 'SEO \/ local discovery', 'Conversion', 'Monetization', 'Analytics', 'Social growth', 'Security hygiene']) {
+    assert.match(lensData, new RegExp(category, 'i'));
   }
 });
 

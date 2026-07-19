@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [main, portfolio, home, work, styles] = await Promise.all([
+const [main, portfolio, home, work, styles, demoShell] = await Promise.all([
   readFile('src/main.js', 'utf8'),
   readFile('src/data/portfolio.js', 'utf8'),
   readFile('src/pages/home.js', 'utf8'),
   readFile('src/pages/work.js', 'utf8'),
   readFile('src/styles/pages.css', 'utf8'),
+  readFile('src/demos/shared/demo-shell.js', 'utf8'),
 ]);
 
 test('the portfolio is loaded as part of the production website', () => {
@@ -33,7 +34,7 @@ test('the portfolio contains three homepage concepts and three poster concepts',
 
 test('portfolio work is clearly disclosed as fictional concept work', () => {
   assert.equal((portfolio.match(/fictionalConcept:\s*true/g) || []).length, 7);
-  assert.equal((home.match(/Original working demo — not a client engagement\./g) || []).length, 1);
+  assert.match(demoShell, /Original working demo — not a client engagement\./);
   assert.match(work, /not client endorsements/i);
   assert.doesNotMatch(`${home}\n${work}`, /trusted by|client results|we increased|revenue lift/i);
 });

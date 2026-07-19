@@ -15,7 +15,7 @@ create table if not exists public.private_pricing_contexts (
   revoked_at timestamptz,
   last_viewed_at timestamptz,
   constraint private_pricing_contexts_expiry_check check (expires_at > created_at),
-  constraint private_pricing_contexts_status_check check (
+  constraint private_pricing_contexts_revocation_state_check check (
     (status = 'active' and revoked_at is null)
     or (status = 'revoked' and revoked_at is not null)
     or (status = 'expired' and revoked_at is null)
@@ -157,7 +157,7 @@ language plpgsql
 security definer
 set search_path = public, pg_temp
 as $$
-declare context_record public.private_pricing_contexts%rowtype;
+declare context_record public.private_pricing_contexts;
 begin
   if p_token_hash !~ '^[0-9a-f]{64}$' then return; end if;
 

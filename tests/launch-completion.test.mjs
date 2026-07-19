@@ -45,7 +45,7 @@ test('runtime and security-sensitive dependencies are exact and current for the 
 
 test('pricing buttons use only server-created Checkout with a validated hosted URL', () => {
   assert.match(main, /setupCheckout/);
-  assert.match(checkoutClient, /\.netlify\/functions\/create-checkout/);
+  assert.match(checkoutClient, /\/api\/create-checkout/);
   assert.match(checkoutClient, /crypto\.randomUUID\(\)/);
   assert.match(checkoutClient, /checkout\.stripe\.com/);
   assert.doesNotMatch(checkoutClient, /book\.stripe\.com|checkoutUrl/);

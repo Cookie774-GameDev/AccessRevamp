@@ -7,7 +7,7 @@ export function setupHomeExperience(root = document) {
   const cleanups = [];
   let active = null;
   let intentTimer;
-  let lockUntil = 0;
+  let keyboardMode = false;
 
   const listen = (target, type, handler, options) => {
     target?.addEventListener(type, handler, options);
@@ -24,7 +24,6 @@ export function setupHomeExperience(root = document) {
       tile.setAttribute('aria-expanded', String(expanded));
     });
     grid?.classList.toggle('has-expanded-lens', Boolean(active));
-    lockUntil = performance.now() + (reducedMotion ? 0 : 470);
     if (!first || !globalThis.requestAnimationFrame) return;
     requestAnimationFrame(() => tiles.forEach((tile) => {
       const a = first.get(tile);
@@ -49,9 +48,9 @@ export function setupHomeExperience(root = document) {
 
   tiles.forEach((tile) => {
     listen(tile, 'pointerenter', () => {
-      if (finePointer?.matches && performance.now() >= lockUntil) queueIntent(tile);
+      if (finePointer?.matches) queueIntent(tile);
     });
-    listen(tile, 'focus', () => setActive(tile));
+    listen(tile, 'focus', () => { if (keyboardMode || finePointer?.matches) setActive(tile); });
     listen(tile, 'keydown', (event) => {
       if (event.key === 'Escape') { event.preventDefault(); setActive(null); tile.blur(); }
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActive(active === tile ? null : tile); }
@@ -64,8 +63,8 @@ export function setupHomeExperience(root = document) {
     const tile = event.target.closest?.('[data-lens]');
     if (tile) setActive(active === tile ? null : tile);
   });
-  listen(document, 'pointerdown', (event) => { if (!grid?.contains(event.target)) setActive(null); });
-  listen(document, 'keydown', (event) => { if (event.key === 'Escape') setActive(null); });
+  listen(document, 'pointerdown', (event) => { keyboardMode = false; if (!grid?.contains(event.target)) setActive(null); });
+  listen(document, 'keydown', (event) => { keyboardMode = true; if (event.key === 'Escape') setActive(null); });
 
   const reveals = [...root.querySelectorAll('[data-reveal]')];
   let observer;

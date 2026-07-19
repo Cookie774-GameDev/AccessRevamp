@@ -10,14 +10,14 @@ test('contact preserves the strict public payload and accessible request states'
     assert.match(page, new RegExp(`name="${field}"`));
     assert.match(service, new RegExp(`${field}`));
   }
-  assert.match(service, /\.netlify\/functions\/contact/);
+  assert.match(service, /\/api\/contact/);
   assert.match(service, /response\.status === 429/);
   assert.match(page, /aria-live="polite"/);
 });
 
 test('checkout uses only a server-created Stripe URL and exposes busy/failure states', async () => {
   const service = await read('src/services/checkout.js');
-  assert.match(service, /\.netlify\/functions\/create-checkout/);
+  assert.match(service, /\/api\/create-checkout/);
   assert.match(service, /crypto\.randomUUID\(\)/);
   assert.match(service, /checkout\.stripe\.com/);
   assert.doesNotMatch(service, /book\.stripe\.com|checkoutUrl/);
