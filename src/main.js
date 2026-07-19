@@ -45,14 +45,7 @@ function underConstructionPage() {
   return shell(underConstructionContent());
 }
 
-const DEMO_MODULES = {
-  'greenline-lawn-and-grounds': () => Promise.all([import('./demos/greenline/page.js'), import('./demos/greenline/setup.js'), import('./demos/greenline/styles.css')]),
-  'firejar-spicy-peanut-butter': () => Promise.all([import('./demos/firejar/page.js'), import('./demos/firejar/setup.js'), import('./demos/firejar/styles.css')]),
-  'clearflow-plumbing': () => Promise.all([import('./demos/clearflow/page.js'), import('./demos/clearflow/setup.js'), import('./demos/clearflow/styles.css')]),
-  'verdant-cut': () => Promise.all([import('./demos/greenline/page.js'), import('./demos/greenline/setup.js'), import('./demos/greenline/styles.css')]),
-  'ember-and-jar': () => Promise.all([import('./demos/firejar/page.js'), import('./demos/firejar/setup.js'), import('./demos/firejar/styles.css')]),
-  'clearline-plumbing': () => Promise.all([import('./demos/clearflow/page.js'), import('./demos/clearflow/setup.js'), import('./demos/clearflow/styles.css')]),
-};
+const DEMO_MODULES = {};
 
 function demoLoadingPage({ slug }) {
   return shell(`<section class="section"><div class="container-narrow"><span class="eyebrow">Working demonstration</span><h1>Opening the demo…</h1><p role="status" data-demo-loader data-demo-slug="${slug}">Loading the route-specific experience.</p></div></section>`, { pathname: '/portfolio' });
