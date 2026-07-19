@@ -36,7 +36,21 @@ const server = createServer((request, response) => {
     'x-content-type-options': 'nosniff'
   };
   response.writeHead(200, headers);
-  if (request.method === 'HEAD') response.end(); else createReadStream(file).pipe(response);
+  if (request.method === 'HEAD') {
+    response.end();
+  } else {
+    const stream = createReadStream(file);
+    stream.on('error', (err) => {
+      if (!response.headersSent) {
+        response.writeHead(500);
+        response.end('Internal server error');
+      }
+    });
+    response.on('error', () => {
+      // Silent catch to prevent process crash on EPIPE/ECONNRESET when connection is closed
+    });
+    stream.pipe(response);
+  }
 });
 
 server.listen(port, '127.0.0.1', () => process.stdout.write(`AccessRevamp preview: http://127.0.0.1:${port}\n`));

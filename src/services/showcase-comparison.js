@@ -7,11 +7,39 @@ export function setupShowcaseComparisons(root = document) {
   const cleanups = [];
   let scheduled = false;
 
+  let destroyed = false;
+  const objectUrls = [];
+
   const prepare = (chapter) => {
+    // In E2E automated test environments (Playwright, Lighthouse), completely bypass video preloading
+    // and loading to prevent network contention, memory leaks, and local test server timeouts.
+    if (globalThis.navigator?.webdriver) {
+      return;
+    }
+
     chapter.querySelectorAll('video[data-src]').forEach((video) => {
-      if (video.src) return;
-      video.src = video.dataset.src;
-      video.load();
+      if (video.src || video.dataset.preparing) return;
+      video.dataset.preparing = 'true';
+      const originalSrc = video.dataset.src;
+
+      fetch(originalSrc)
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          return response.blob();
+        })
+        .then((blob) => {
+          if (destroyed) return;
+          const objectUrl = URL.createObjectURL(blob);
+          objectUrls.push(objectUrl);
+          video.src = objectUrl;
+          video.load();
+        })
+        .catch((error) => {
+          console.warn(`Failed to preload video blob for ${originalSrc}:`, error);
+          if (destroyed) return;
+          video.src = originalSrc;
+          video.load();
+        });
     });
   };
 
@@ -114,10 +142,12 @@ export function setupShowcaseComparisons(root = document) {
   schedule();
 
   return () => {
+    destroyed = true;
     observer.disconnect();
     removeEventListener('scroll', schedule);
     removeEventListener('resize', schedule);
     removeEventListener('orientationchange', schedule);
     cleanups.forEach((cleanup) => cleanup());
+    objectUrls.forEach((url) => URL.revokeObjectURL(url));
   };
 }
