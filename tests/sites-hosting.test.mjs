@@ -20,3 +20,12 @@ test('Sites metadata describes the finished AccessRevamp experience', async () =
   assert.match(layout, /Evidence-led website revamps/);
   assert.doesNotMatch(layout, /codex-preview|site-creator-vinext-starter/);
 });
+
+test('Sites worker routes customer APIs before the browser catch-all', async () => {
+  const worker = await readFile('worker/index.ts', 'utf8');
+  for (const route of ['/api/contact', '/api/free-snapshot', '/api/create-checkout', '/api/account-projects', '/api/pricing-context', '/api/stripe-webhook']) {
+    assert.match(worker, new RegExp(route.replaceAll('/', '\\/')));
+  }
+  assert.match(worker, /routes\.get\(pathname\)/);
+  assert.match(worker, /return handler\.fetch/);
+});
