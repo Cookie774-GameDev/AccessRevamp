@@ -1,72 +1,73 @@
-# Verdant Edge Lawn Care — Google Flow Prompt
+# Verdant Edge Lawn Care — Immersive Estate Tour Prompt
 
 ## Source image
 
 Use `ChatGPT Image Jul 19, 2026, 11_43_04 AM (1).png` as the source image and exact opening frame.
 
-## Paste-ready master prompt
+## Paste-ready Google Flow prompt
 
 ```text
-Use the uploaded VERDANT EDGE LAWN CARE hero screenshot as the exact first frame, visual bible, and immutable brand reference. Generate one continuous 8.0-second, 16:9, full-bleed cinematic desktop website-scroll showcase. The clip must look like a real premium landscape-care website being smoothly scrolled on a desktop viewport—an elegant high-budget editorial service site, not a slideshow, not an advertisement montage, and not a camera tour through a physical property. Lock the camera directly in front of the webpage. Keep the viewport fixed while the webpage content moves upward under one continuous downward trackpad scroll.
+Create an 8.0-second, 16:9, single-take, image-to-video sequence from the uploaded VERDANT EDGE LAWN CARE website hero.
 
-PRESERVE THE OPENING DESIGN EXACTLY:
-- Keep the leaf emblem, the words “VERDANT EDGE LAWN CARE,” the navigation “Services,” “About,” “Contact,” the phone button “(248) 555-0196,” the headline “Lawns that set the standard.”, the line “Thoughtful care. Premium results.”, the button “Get Your Custom Plan,” and the bottom proof strip with “Locally owned,” “15+,” “Years of elevating outdoor spaces,” and “Satisfaction guaranteed.”
-- Preserve the original estate, house, windows, roofline, garden layout, trees, lawn, flowerbeds, sunset placement, and left-side dark overlay. Do not replace the home, invent new architecture, or change the property geometry.
-- Maintain the same refined typography direction: large elegant high-contrast serif for “Lawns that,” graceful italic serif for “set the standard.”, clean humanist sans-serif for navigation and body text, quiet spacing, rounded sage CTA, and generous luxury-service composition.
+CRITICAL MOTION REQUIREMENT: DO NOT SCROLL A FLAT WEBPAGE UPWARD. DO NOT REVEAL NORMAL SERVICE CARDS OR A LONG LANDING PAGE. Treat the hero photograph as a dimensional luxury-estate environment. The viewer’s mouse-wheel scroll controls one smooth camera journey across the lawn, through the garden, into the home’s glass garden room, and out into a hidden rear courtyard. It must feel like an expensive immersive 3D website in which the hero scene opens and the visitor is shown around the property, similar to a premium architectural diorama or scroll-controlled estate tour.
 
-COLOR AND MATERIAL DIRECTION:
-Use only near-black evergreen #080A08, deep forest #0F120E, dark moss #2F3822, muted olive #626A48, soft sage #979B78, warm stone #877658, sunset amber #C58A49, and warm cream #F3F0E8. Keep greens natural, low-saturation, and sophisticated. Materials should feel like clipped grass, dark foliage, stone, brushed metal, matte dark-green glass, and soft evening sunlight. No neon green, bright cyan, electric blue, purple, or overly glossy gradients.
+OPENING FRAME AND BRAND FIDELITY:
+- Begin on the uploaded screenshot with the same composition: deep dark overlay on the left, “Lawns that set the standard.” headline, Verdant Edge Lawn Care logo, navigation, phone button, pale sage CTA, elegant stone house, pristine striped lawn, flower beds, trees, and sunset on the right.
+- Preserve the original refined landscape-service palette: near-black green #07100B, deep forest #102018, dark moss #25321E, muted olive #737B58, soft sage #9AA086, warm ivory #F1EFE8, stone gray #8A8175, and sunset gold #D7A04C.
+- Preserve the visual character: affluent but tasteful residential landscape, warm natural materials, mature trees, layered plantings, cut stone, immaculate grass, hydrangeas, ornamental grasses, subtle garden lighting, and golden-hour photography.
+- Keep the house’s architecture stable: same stone exterior, roofline, windows, central glass doors, terrace, steps, and proportions. Deliberate clean cutaway panels may move later, but the building must not melt, stretch, or turn into another property.
+- Existing opening text and logo should remain readable during the opening. As the camera enters the environment, the interface may mask sideways or fade behind foliage. Do not invent new readable service text, random prices, or extra phone numbers.
 
-AMBIENT HERO MOTION BEFORE THE SCROLL:
-For the first moment, preserve the screenshot while adding only subtle natural movement: a barely perceptible breeze through the nearest ornamental grasses and treetops, a gentle sun flare through the right-side trees, minute shifting highlights across the mown lawn stripes, and tiny floating pollen or dust in the backlight. Keep the house, windows, roof, steps, hedges, flowers, and lawn boundaries geometrically stable. Do not add people, vehicles, pets, sprinklers, mowers, or workers.
+CAMERA CHARACTER:
+The camera movement is driven by one continuous downward scroll gesture. It should feel like a scroll-scrubbed website, not a commercial drone shot. Use a calm forward dolly about waist height over the lawn, then a gentle rise near the terrace, then a controlled passage through the open glass doors. Use soft cinematic easing, stable horizon, strong foreground-to-background parallax, and a restrained 10-degree arc in the courtyard. No hard cut, no teleportation, no handheld shake, no whip pan, and no rapid orbit around the house.
 
-SCROLL BEHAVIOR AND STORY:
-Create one continuous downward scroll covering approximately 2.2 desktop viewport heights. Use restrained high-end scroll design: a sticky header, pinned image layers, elegant text masks, a proof strip that transforms into service navigation, and a final CTA. The motion should feel calm, deliberate, affluent, and trustworthy. Use smooth acceleration, one steady middle movement, and a controlled ease-out. No cuts, no jump transitions, and no reverse scroll.
+EXACT 8-SECOND CAMERA JOURNEY:
 
-0.00–0.90 SECONDS — HERO HOLD AND NATURAL MICRO-MOTION:
-Start on the exact uploaded hero. Add a very subtle 1% push-in, light breeze in the grasses, and a warm glint moving through the trees on the right. Let the arrow in “Get Your Custom Plan” travel about 6 pixels to the right and return once. Keep every word and UI element crisp. The house must not morph, breathe, bend, or shift.
+0.00–0.70 SECONDS — EXACT WEBSITE HERO HOLD
+Start almost exactly on the source screenshot. Hold the design long enough to recognize the brand. Add only subtle natural life: a slight breeze in leaves and ornamental grasses, tiny movement in flowers, warm sunlight flickering through tree branches, and a soft glow in the house windows. The striped lawn, house, typography, and interface remain steady and legible.
 
-0.90–2.45 SECONDS — FIRST SCROLL / HERO TO SERVICE SYSTEM:
-Begin one smooth downward trackpad scroll. The viewport stays fixed and the page moves upward. Compress the navigation into a refined 72-pixel translucent dark-evergreen sticky header. Keep the original leaf logo at left, the original navigation centered, and the phone button at right. The phone button may reduce slightly but must keep “(248) 555-0196” exactly readable.
+0.70–1.65 SECONDS — THE PAGE OPENS INTO THE LAWN
+The virtual scroll begins. Keep the existing top navigation and phone button pinned for a brief moment while the left headline and CTA slide only a few pixels toward the left and become softly masked by the dark gradient. Do not move the whole webpage upward. Instead, the camera crosses the boundary of the interface and begins a low, smooth forward dolly over the lawn. The dark left overlay recedes like a transparent layer, revealing more grass and garden depth beneath it.
 
-Move “Lawns that” upward with the page. Keep the italic phrase “set the standard.” pinned for approximately 0.45 seconds, then let it glide upward behind a soft rectangular mask. The estate photograph moves more slowly than the copy, with the lawn foreground moving slightly faster than the house and distant trees to create restrained depth. Maximum parallax should remain subtle: about 7% for the foreground lawn, 4% for the house, and 2% for the far trees.
+1.65–3.15 SECONDS — GLIDE THROUGH THE FRONT LANDSCAPE
+Move forward along the lawn’s mowing stripes toward the terrace. Let nearby grass blades, flowers, hydrangeas, and ornamental grasses pass with strong but elegant parallax. Stay on a designed path that skims beside the flower bed rather than flying randomly. The house grows steadily in frame. Warm sun flares through the trees only slightly. Add tiny floating pollen or dust in the light, but keep the image clean. No workers, mower, sprinkler, vehicles, pets, or people.
 
-Lift the existing bottom proof strip upward and transform it into a clean service-navigation band. Preserve the exact “15+” figure. The vertical separators grow smoothly, the small leaf icon draws itself with one thin sage stroke, and the three proof items align into a refined grid. Do not count the number upward or change it to another value.
+3.15–4.35 SECONDS — APPROACH AND ENTER THE GLASS GARDEN ROOM
+Rise gently up the stone steps and approach the central glass doors, which are already open. As the camera reaches the terrace, the front roof section and one stone wall panel may slide outward by a small controlled distance like a luxury architectural cutaway model, revealing the garden room without damaging the house. This should feel engineered and elegant, similar to a high-end miniature building unfolding during scroll. Pass naturally through the open doorway; do not pass through solid glass or stone.
 
-2.45–5.20 SECONDS — PREMIUM SERVICE SECTION:
-Reveal a new below-the-fold section with the exact heading “CARE, DESIGNED AROUND YOUR PROPERTY”. Place the heading in warm cream over a deep forest background, aligned to the original left margin. Beneath it, reveal only these three service labels: “WEEKLY CARE”, “SEASONAL DETAIL”, “ESTATE ENHANCEMENTS”. Use three tall, clean editorial panels with rounded corners matching the original CTA radius.
+4.35–5.65 SECONDS — SHOW THE GARDEN ROOM INTERIOR
+Enter a refined conservatory-like garden room that belongs to this same house: natural stone floor, warm wood, large black-framed windows, indoor olive trees and ferns, a simple central landscape-planning table with rolled plans and material samples, elegant seating, and soft sunset light. The space is empty and meticulously styled. Glide past the planning table with a very restrained 8–10 degree arc so the viewer can see the room’s depth, front garden through one side, and rear garden through the opposite doors. Keep all plants and furniture realistic and stable. No people and no readable documents.
 
-The original estate image remains a pinned background source and is reframed through the three panels: one panel shows the striped lawn and crisp edge line, one shows layered hedges and flowering beds, and one shows the stone approach and home exterior. These are crops and extensions of the same property style, not three unrelated stock images. Use a thin sage line that sweeps across the panels like a landscape-plan drawing, briefly tracing lawn borders and garden geometry before fading. Panel labels enter with a 0.10-second stagger and small upward mask reveals.
+5.65–7.20 SECONDS — CONTINUE INTO THE HIDDEN REAR COURTYARD
+Travel through the open rear doors into a private landscaped courtyard behind the house. Reveal clipped hedges, a small stone fountain or reflecting pool, layered white flowers, sculpted topiary, a curved path, soft pathway lights, and a framed view back toward the home. The rear space should feel like a secret extension of the front garden and use the same materials and plant palette. Make a gentle 10–12 degree camera arc around the fountain while continuing forward. Water may ripple softly; leaves move in a light breeze.
 
-Add subtle service micro-interactions: a fine border brightens as each panel reaches center; small leaf marks rotate no more than 8 degrees; a slim vertical scroll-progress line appears at far right. Keep all motion understated. No exaggerated before-and-after wipe, no distressed lawn, and no implication that the original property is neglected.
+7.20–8.00 SECONDS — FINAL ESTATE REVEAL AND HOLD
+Slowly rise just enough to reveal the courtyard composition, the garden room behind it, and part of the house as one cohesive landscaped environment. The previously separated architectural panels may remain cleanly open like a premium cutaway model, allowing the viewer to understand the route through the property. Ease to a stable final frame looking across the fountain, topiary, flowers, and warmly lit garden room. Hold without fading to black. A tiny olive scroll-progress mark may remain at the right edge, but do not create a new interface or CTA screen.
 
-5.20–7.25 SECONDS — TRUST TRANSITION AND FINAL CALL TO ACTION:
-Continue the same scroll. The three service panels rise and compress into a single horizontal line of small sage icons. Reveal a spacious final section over a near-black evergreen background with a softly blurred, close-up grass texture and warm sunset edge light. Use the exact heading “YOUR PROPERTY, THOUGHTFULLY MAINTAINED.” in an elegant serif, with “THOUGHTFULLY MAINTAINED.” set in the same muted italic sage style as the original hero phrase.
+NATURAL MOTION:
+Use restrained breeze in foliage, small flower movement, sunlight through leaves, subtle water ripple, soft reflections in glass, and gentle warm interior light. The property remains pristine and calm. Avoid dramatic weather, heavy lens flare, rapid season changes, or time-lapse growth.
 
-Place one primary rounded button labeled exactly “GET YOUR CUSTOM PLAN”. Add the phone number “(248) 555-0196” as a small secondary contact line, not a second large CTA. Reintroduce the proof language “Locally owned · 15+ years · Satisfaction guaranteed” in a quiet single line near the bottom, using the same words and values from the opening screenshot. Keep the composition calm and luxurious with ample negative space.
-
-7.25–8.00 SECONDS — SETTLE AND HOLD:
-Ease the scroll to a precise stop. The final heading and primary button must be fully visible and readable. Give the button one tasteful hover response: the muted-sage fill brightens slightly, its arrow glides 7 pixels right, and a soft shadow deepens. Let the nearby grass catch one final warm light shimmer, then hold the final frame. Do not fade to black.
-
-OVERALL MOTION CHARACTER:
-Quiet luxury, premium residential care, natural confidence, evening warmth, precise landscaping, controlled editorial motion. Use scroll-linked masking, restrained parallax, sticky navigation, elegant typography, and subtle environmental movement. The result should resemble a polished screen recording of a bespoke $10,000 lawn-care website built for an affluent local service brand.
+DESIRED RESULT:
+The clip begins as the exact Verdant Edge website and then seamlessly becomes an immersive scroll-controlled property tour. The visitor travels across the lawn, through the landscaping, into the glass garden room, and out to a hidden courtyard. It should feel like exploring the premium result of the lawn-care brand rather than watching a normal webpage scroll.
 
 STRICTLY AVOID:
-No browser chrome, no monitor or phone frame, no visible mouse cursor, no hands, no camera orbit, no drone flight, no walk-through of the house, no cuts, no reverse scroll, no fade to black, no added people, no landscapers, no mower, no sprinkler, no vehicles, no pets, no changing seasons, no storm, no day-to-night transformation, no warped house, no moving windows, no melting roof, no oversaturated green, no neon, no random flowers, no generic corporate blue, no gibberish text, no altered phone number, no replaced logo, no excessive motion blur, no watermark, no subtitles, and no audio.
+No vertical page scroll, no ordinary service-card sections, no browser chrome, no laptop or phone frame, no cursor, no hands, no cuts, no drone orbit, no camera shake, no passing through walls, no deformed house, no changing roof shape, no duplicated windows, no warped doors, no different mansion, no people, no workers, no mower, no tools, no truck, no pet, no sprinkler, no neglected-lawn before-and-after, no grass growing time-lapse, no storm, no rain, no day-to-night transition, no oversaturated neon green, no blue corporate palette, no random text, no changed phone number, no watermark, no subtitles, and no fade to black.
 ```
 
-## Eight-second beat sheet
+## Eight-second shot map
 
-| Time | Scroll beat | Required visible result |
+| Time | Camera action | What must be visible |
 |---|---|---|
-| 0.00–0.90 | Exact hero hold with restrained breeze and sunlight | Original hero, text, estate, and proof strip remain intact |
-| 0.90–2.45 | Smooth scroll, sticky header, proof strip becomes service band | Original phone number and `15+` stay readable |
-| 2.45–5.20 | Three refined service panels | `CARE, DESIGNED AROUND YOUR PROPERTY`; three exact service labels |
-| 5.20–7.25 | Transition into final trust/CTA section | `YOUR PROPERTY, THOUGHTFULLY MAINTAINED.` and primary CTA |
-| 7.25–8.00 | Ease-out and final hold | `GET YOUR CUSTOM PLAN` remains fully readable; no fade |
+| 0.00–0.70 | Hold exact website hero | Original interface, house, lawn, and sunset |
+| 0.70–1.65 | Interface masks away; camera enters lawn | Low forward movement, no flat page scroll |
+| 1.65–3.15 | Glide through striped lawn and flowers | Strong natural parallax toward the terrace |
+| 3.15–4.35 | Rise up steps and enter open doors | Clean architectural cutaway begins |
+| 4.35–5.65 | Travel through the garden room | Plants, planning table, warm interior, front/rear views |
+| 5.65–7.20 | Exit into hidden courtyard | Fountain, hedges, topiary, path lighting |
+| 7.20–8.00 | Slight rise, settle, and hold | Cohesive estate and cutaway route; no CTA page |
 
-## Negative / avoid block
+## Short negative block
 
 ```text
-No browser frame, device mockup, cursor, hand, camera orbit, drone move, house walk-through, hard cut, reverse scroll, fade to black, people, workers, mower, sprinkler, car, pet, storm, season change, day-to-night shift, deformed house, warped roof, moving windows, oversaturated or neon green, blue corporate palette, unrelated stock property, neglected-lawn before/after, gibberish text, changed phone number, altered logo, extra CTAs, excessive blur, watermark, captions, or audio.
+Do not vertically scroll a flat webpage. No service cards, no browser frame, no device mockup, no cursor, no cuts, no drone orbit, no camera shake, no house deformation, no passing through solid walls, no people, no workers, no mower, no truck, no pets, no sprinkler, no time-lapse growth, no weather change, no neon green, no random text, no watermark, no fade to black.
 ```
