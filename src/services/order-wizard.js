@@ -2,9 +2,12 @@ import { plans } from '../config.js';
 import { escapeHtml } from '../components/icons.js';
 
 const STORAGE_KEY = 'accessrevamp-order-draft-v1';
+const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
 const MAX_FILES = 8;
 const MAX_BYTES = 8 * 1024 * 1024;
+const PAID_PLANS = new Set(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']);
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip', 'application/x-zip-compressed']);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function setupOrderWizard(root = document) {
   const form = root.querySelector('[data-order-wizard]');
@@ -21,11 +24,20 @@ export function setupOrderWizard(root = document) {
   const fileList = form.querySelector('[data-order-file-list]');
   let current = 0;
   let files = [];
+  let requestId = crypto.randomUUID();
 
+  const selectedPlan = () => form.elements.orderPlan?.value || 'complete_revamp';
+  const exposeRequestId = () => { form.dataset.orderRequestId = requestId; };
+  const syncFileInput = () => {
+    if (typeof DataTransfer === 'undefined') return;
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    fileInput.files = transfer.files;
+  };
   const save = () => {
     const draft = {};
     new FormData(form).forEach((value, key) => { if (typeof value === 'string') draft[key] = value; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ current, draft })); } catch { /* Draft persistence is optional when storage is unavailable. */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ current, draft, requestId })); } catch { /* Draft persistence is optional when storage is unavailable. */ }
   };
   const restore = () => {
     try {
@@ -38,9 +50,19 @@ export function setupOrderWizard(root = document) {
         });
       });
       current = Math.min(4, Math.max(0, Number(saved.current) || 0));
+      if (UUID_PATTERN.test(saved.requestId || '')) requestId = saved.requestId;
     } catch { localStorage.removeItem(STORAGE_KEY); }
+
+    try {
+      const pendingPlan = sessionStorage.getItem(PENDING_PLAN_KEY);
+      if (PAID_PLANS.has(pendingPlan)) {
+        const planControl = form.querySelector(`input[name="orderPlan"][value="${pendingPlan}"]`);
+        if (planControl) planControl.checked = true;
+        sessionStorage.removeItem(PENDING_PLAN_KEY);
+      }
+    } catch { /* Plan preselection is optional. */ }
+    exposeRequestId();
   };
-  const selectedPlan = () => form.elements.orderPlan?.value || 'complete_revamp';
   const renderFiles = () => {
     fileList.innerHTML = files.map((file, index) => `<li><span>${escapeHtml(file.name)}</span><small>${(file.size / 1024 / 1024).toFixed(1)} MB</small><button type="button" data-order-remove-file="${index}" aria-label="Remove ${escapeHtml(file.name)}">Remove</button></li>`).join('');
   };
@@ -89,6 +111,7 @@ export function setupOrderWizard(root = document) {
   const onFiles = () => {
     const incoming = [...(fileInput.files || [])];
     files = incoming.filter((file) => ALLOWED.has(file.type) && file.size <= MAX_BYTES).slice(0, MAX_FILES);
+    syncFileInput();
     renderFiles();
     status.textContent = files.length === incoming.length ? `${files.length} reference file${files.length === 1 ? '' : 's'} selected.` : 'Some files were skipped. Use supported files no larger than 8MB.';
   };
@@ -96,6 +119,7 @@ export function setupOrderWizard(root = document) {
     const button = event.target.closest('[data-order-remove-file]');
     if (!button) return;
     files.splice(Number(button.dataset.orderRemoveFile), 1);
+    syncFileInput();
     renderFiles();
   };
   const onSubmit = (event) => event.preventDefault();
