@@ -1,0 +1,51 @@
+/* Paint and media-performance isolation. These rules preserve the existing layout and visual design. */
+.renaissance-home .site-header{
+  contain:paint;
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+
+.showcase-section{
+  contain:paint;
+}
+
+.showcase-chapter{
+  background:#121315;
+}
+
+.showcase-chapter__sticky{
+  --showcase-progress:0;
+  isolation:isolate;
+  contain:paint;
+  backface-visibility:hidden;
+  transform:translateZ(0);
+  background:radial-gradient(circle at calc(var(--showcase-progress)*100%) 40%,rgba(190,125,38,.16),transparent 38%);
+}
+
+.showcase-pair,
+.showcase-panel,
+.showcase-panel__media{
+  min-width:0;
+  contain:layout paint style;
+}
+
+.showcase-panel video{
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+
+.showcase-chapter[data-showcase-active="false"] .showcase-panel video{
+  visibility:hidden;
+}
+
+.showcase-chapter[data-showcase-active="true"] .showcase-panel video{
+  visibility:visible;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .showcase-chapter__sticky,
+  .showcase-panel video,
+  .renaissance-home .site-header{
+    transform:none;
+  }
+}
