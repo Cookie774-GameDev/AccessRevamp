@@ -1,6 +1,6 @@
 # Responsible outreach standard
 
-AccessRevamp may prepare up to 20 first-touch U.S. business messages per UTC day only after every database and human-review gate passes. Low volume does not remove commercial-email obligations.
+AccessRevamp may approve or send no more than 20 first-touch U.S. business messages per UTC day, and only after every database and human-review gate passes. The approved preparation ramp may produce up to 22 reviewed drafts, but overflow remains unsent until a separately reviewed change replaces the 20-message ceiling. Low volume does not remove commercial-email obligations.
 
 ## Allowed source data
 
