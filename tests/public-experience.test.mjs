@@ -5,7 +5,7 @@ import test from 'node:test';
 const read = (path) => readFile(path, 'utf8');
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-test('the homepage contains the complete approved audit-lens story', async () => {
+test('the homepage keeps the requested production story without the three removed sections', async () => {
   const home = await read('src/pages/home.js');
   for (const phrase of [
     'AccessRevamp transforms storefronts',
@@ -13,37 +13,26 @@ test('the homepage contains the complete approved audit-lens story', async () =>
     'Choose the transformation you need',
     'Keep every verified dollar',
     'Transformation studies',
-    'Eleven review lenses',
     'Before',
     'Direction',
     'Observe',
     'Verify',
     'Prioritize',
     'Design',
-    'Build',
+    'Implement',
     'Retest',
-    'Verdant Cut Co.',
-    'Ember & Jar',
-    'Clearline Plumbing',
-    'one subtle AI-assisted motion poster',
-    'five motion posters',
-    'Interaction references',
     'Bring one public website',
   ]) {
     assert.match(home, new RegExp(escapeRegExp(phrase), 'i'));
   }
   assert.match(home, /Object\.values\(plans\)/);
+  assert.doesNotMatch(home, /data-lens-grid|creative-bundle-section|class="section demo-section"/);
   for (const route of [
     '/portfolio/verdant-cut',
     '/portfolio/ember-and-jar',
     '/portfolio/clearline-plumbing',
   ]) {
-    assert.match(home, new RegExp(route.replaceAll('/', '\\/')));
-  }
-  const [demoShell, lensData] = await Promise.all([read('src/demos/shared/demo-shell.js'), read('src/data/lenses.js')]);
-  assert.match(demoShell, /Original working demo — not a client engagement\./);
-  for (const category of ['Accessibility', 'Usability', 'Mobile', 'Performance', 'Content', 'SEO \/ local discovery', 'Conversion', 'Monetization', 'Analytics', 'Social growth', 'Security hygiene']) {
-    assert.match(lensData, new RegExp(category, 'i'));
+    assert.doesNotMatch(home, new RegExp(route.replaceAll('/', '\\/')));
   }
 });
 
