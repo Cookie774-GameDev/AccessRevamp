@@ -23,9 +23,11 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   }
 });
 
-test('showcase controller streams and smoothly synchronizes both videos across a longer scroll distance', async () => {
+test('showcase controller renders presented frames smoothly while limiting active decoders', async () => {
   const source = await read('src/services/showcase-comparison.js');
   assert.match(source, /requestAnimationFrame/);
+  assert.match(source, /requestVideoFrameCallback/);
+  assert.match(source, /cancelVideoFrameCallback/);
   assert.match(source, /loadedmetadata/);
   assert.match(source, /loadeddata/);
   assert.match(source, /setPointerCapture/);
@@ -33,12 +35,15 @@ test('showcase controller streams and smoothly synchronizes both videos across a
   assert.match(source, /prefers-reduced-motion/);
   assert.match(source, /currentTime/);
   assert.match(source, /video\.src\s*=\s*originalSrc/);
-  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*180/);
-  assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.9/);
+  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*360/);
+  assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.24/);
+  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*90/);
   assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
   assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
+  assert.match(source, /data\.showcaseActive|dataset\.showcaseActive/);
+  assert.match(source, /preload\s*=\s*'metadata'/);
+  assert.match(source, /removeAttribute\('src'\)/);
   assert.match(source, /Math\.exp/);
-  assert.match(source, /seeked/);
   assert.doesNotMatch(source, /response\.blob\(\)/);
 });
 
@@ -57,11 +62,20 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(service, /reportValidity/);
 });
 
-test('production packaging keeps showcase video outside the Sites worker bundle', async () => {
+test('production packaging keeps media outside the worker and emits scrub-ready showcase videos', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const pruneScript = await readFile('scripts/prune-vinext-server-media.mjs', 'utf8');
+  const [pruneScript, optimizeScript] = await Promise.all([
+    readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
+    readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
+  ]);
 
   assert.match(packageJson.scripts.build, /prune-vinext-server-media\.mjs/);
+  assert.match(packageJson.scripts.build, /optimize-showcase-videos\.mjs/);
   assert.match(pruneScript, /dist.*server.*media/s);
   assert.match(pruneScript, /recursive:\s*true/);
+  assert.match(optimizeScript, /fps=24/);
+  assert.match(optimizeScript, /'-g', '3'/);
+  assert.match(optimizeScript, /'-bf', '0'/);
+  assert.match(optimizeScript, /fastdecode/);
+  assert.match(optimizeScript, /\+faststart/);
 });
