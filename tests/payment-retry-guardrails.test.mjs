@@ -20,13 +20,14 @@ test('terminal Checkout attempts rotate to a fresh request ID without reusing St
   assert.match(wizard, /requestId = nextRequestId/);
 });
 
-test('saved private references are replaced exactly, including an explicit empty selection', async () => {
+test('saved private references are transferred or replaced exactly across a fresh attempt', async () => {
   const draft = await read('netlify/functions/order-draft.mjs');
-  const oldPathsIndex = draft.indexOf('const oldPaths =');
-  const filesConditionalIndex = draft.indexOf('if (files.length)');
-  assert.ok(oldPathsIndex > filesConditionalIndex, 'replacement logic must not be trapped inside a files-only branch');
-  assert.match(draft, /order_draft_assets'\)\.delete\(\)\.in\('storage_path', oldPaths\)/);
-  assert.match(draft, /storage\.from\(BUCKET\)\.remove\(oldPaths\)/);
+  assert.match(draft, /rotatedFromDraftId && files\.length === 0/);
+  assert.match(draft, /\.update\(\{ draft_id: draftId \}\)/);
+  assert.match(draft, /const pathsToReplace =/);
+  assert.match(draft, /assetPaths\(admin, rotatedFromDraftId\)/);
+  assert.match(draft, /order_draft_assets'\)\.delete\(\)\.in\('storage_path', pathsToReplace\)/);
+  assert.match(draft, /storage\.from\(BUCKET\)\.remove\(pathsToReplace\)/);
   assert.match(draft, /order-draft-orphaned-assets/);
 });
 
@@ -50,12 +51,14 @@ test('the success page never treats a browser redirect as proof of payment', asy
   assert.match(page, /The browser redirect is not payment proof/);
   assert.doesNotMatch(page, /Checkout complete/);
   assert.match(page, /data-checkout-result/);
+  assert.match(page, /aria-live="polite"/);
   assert.match(service, /\/api\/checkout-status\?session_id=/);
   assert.match(service, /Do not pay again/);
   assert.match(service, /payload\.status === 'paid' && payload\.projectId/);
   assert.match(service, /localStorage\.removeItem\(STORAGE_KEY\)/);
   assert.match(statusFunction, /requireConfirmedUser/);
   assert.match(statusFunction, /\.from\('orders'\)/);
+  assert.match(statusFunction, /\.from\('entitlements'\)/);
   assert.match(statusFunction, /\.from\('upgrade_reservations'\)/);
   assert.match(statusFunction, /paid-order-incomplete/);
   assert.match(main, /setupCheckoutResult/);
