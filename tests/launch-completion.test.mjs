@@ -7,7 +7,9 @@ const [
   packageText,
   main,
   checkoutClient,
+  orderWizard,
   checkoutFunction,
+  paymentRuntime,
   webhook,
   scanner,
   previewFunction,
@@ -19,7 +21,9 @@ const [
   read('package.json'),
   read('src/main.js'),
   read('src/services/checkout.js'),
+  read('src/services/order-wizard.js'),
   read('netlify/functions/create-checkout.mjs'),
+  read('netlify/functions/_shared/payment-runtime.mjs'),
   read('netlify/functions/stripe-webhook.mjs'),
   read('scripts/scan-public-homepage.mjs'),
   read('netlify/functions/private-preview.mjs'),
@@ -43,32 +47,42 @@ test('runtime and security-sensitive dependencies are exact and current for the 
   }
 });
 
-test('pricing buttons use only server-created Checkout with a validated hosted URL', () => {
+test('pricing buttons save one stable request and use only server-created Checkout', () => {
   assert.match(main, /setupCheckout/);
+  assert.match(checkoutClient, /\/api\/order-draft/);
   assert.match(checkoutClient, /\/api\/create-checkout/);
-  assert.match(checkoutClient, /crypto\.randomUUID\(\)/);
+  assert.match(orderWizard, /crypto\.randomUUID\(\)/);
+  assert.match(orderWizard, /form\.dataset\.orderRequestId/);
+  assert.ok(checkoutClient.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < checkoutClient.indexOf('fetch(CHECKOUT_ENDPOINT'));
   assert.match(checkoutClient, /checkout\.stripe\.com/);
-  assert.doesNotMatch(checkoutClient, /book\.stripe\.com|checkoutUrl/);
+  assert.doesNotMatch(checkoutClient, /book\.stripe\.com|payment[_-]?link/i);
 });
 
-test('Checkout uses explicit API version, idempotency, server-only catalog selection, and exact metadata', () => {
+test('Checkout uses explicit API version, idempotency, a fail-closed database catalog, and exact metadata', () => {
   assert.match(checkoutFunction, /2026-06-24\.dahlia/);
   assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
-  assert.match(checkoutFunction, /getStripePriceForQuote/);
+  assert.match(checkoutFunction, /resolveCatalogPrice/);
+  assert.match(checkoutFunction, /requireCheckoutRuntime/);
+  assert.match(checkoutFunction, /\.from\('order_drafts'\)/);
   assert.match(checkoutFunction, /buildCheckoutMetadata/);
-  assert.doesNotMatch(checkoutFunction, /price_1Tu|STRIPE_QUICK_FIX/);
+  assert.match(checkoutFunction, /STRIPE_CHECKOUT_SECRET_KEY/);
+  assert.match(paymentRuntime, /stripe_price_catalog/);
+  assert.match(paymentRuntime, /configuration_verified_at/);
+  assert.doesNotMatch(checkoutFunction, /price_1T|STRIPE_QUICK_FIX/);
   assert.doesNotMatch(checkoutFunction, /payment_method_types/);
   assert.doesNotMatch(checkoutFunction, /automatic_tax:\s*\{\s*enabled:\s*true/);
 });
 
-test('webhook re-retrieves the Checkout Session and validates the exact Stripe price', () => {
+test('webhook re-retrieves Checkout and validates the exact database-authoritative Stripe price', () => {
   assert.match(webhook, /checkout\.sessions\.retrieve/);
   assert.match(webhook, /line_items\.data\.price/);
   assert.match(webhook, /identifier\(lineItem\.price\) !== expectedPriceId/);
-  assert.match(webhook, /getStripePriceForQuote/);
-  assert.doesNotMatch(webhook, /price_1Tu|STRIPE_QUICK_FIX/);
+  assert.match(webhook, /resolveCatalogPrice/);
+  assert.match(webhook, /STRIPE_WEBHOOK_READ_SECRET_KEY/);
+  assert.match(webhook, /constructEventAsync/);
+  assert.doesNotMatch(webhook, /price_1T|STRIPE_QUICK_FIX/);
   assert.match(webhook, /session\.mode !== 'payment'/);
-  assert.match(webhook, /STRIPE_EXPECT_LIVEMODE/);
+  assert.match(webhook, /expectedLivemode/);
 });
 
 test('scanner is passive and refuses private or state-changing traffic', () => {

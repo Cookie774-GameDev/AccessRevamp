@@ -15,16 +15,26 @@ test('contact preserves the strict public payload and accessible request states'
   assert.match(page, /aria-live="polite"/);
 });
 
-test('checkout uses only a server-created Stripe URL and exposes busy/failure states', async () => {
-  const service = await read('src/services/checkout.js');
-  assert.match(service, /\/api\/create-checkout/);
-  assert.match(service, /crypto\.randomUUID\(\)/);
-  assert.match(service, /checkout\.stripe\.com/);
-  assert.doesNotMatch(service, /book\.stripe\.com|checkoutUrl/);
-  assert.match(service, /aria-busy/);
-  assert.match(service, /Checkout unavailable/);
-  assert.match(service, /setAttribute\('disabled'/);
-  assert.match(service, /removeEventListener/);
+test('checkout saves one stable request and uses only a server-created Stripe URL', async () => {
+  const [checkout, wizard] = await Promise.all([
+    read('src/services/checkout.js'),
+    read('src/services/order-wizard.js'),
+  ]);
+  assert.match(checkout, /\/api\/order-draft/);
+  assert.match(checkout, /\/api\/create-checkout/);
+  assert.match(wizard, /crypto\.randomUUID\(\)/);
+  assert.match(wizard, /requestId/);
+  assert.match(checkout, /form\.dataset\.orderRequestId/);
+  assert.ok(
+    checkout.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < checkout.indexOf('fetch(CHECKOUT_ENDPOINT'),
+    'the project request must be saved before Checkout is created',
+  );
+  assert.match(checkout, /checkout\.stripe\.com/);
+  assert.doesNotMatch(checkout, /book\.stripe\.com|payment[_-]?link/i);
+  assert.match(checkout, /aria-busy/);
+  assert.match(checkout, /Checkout unavailable|Secure checkout is paused/);
+  assert.match(checkout, /setAttribute\('disabled'/);
+  assert.match(checkout, /removeEventListener/);
 });
 
 test('auth and dashboard cover missing configuration and explicitly scope customer reads', async () => {

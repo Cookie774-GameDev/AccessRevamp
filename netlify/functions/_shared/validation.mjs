@@ -13,6 +13,17 @@ const publicHttpUrl = z.string().trim().max(2048).refine((value) => {
   }
 }, 'Enter a valid public website URL.');
 
+const publicHttpsUrl = publicHttpUrl
+  .refine(Boolean, 'A public website URL is required.')
+  .refine((value) => {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    return url.protocol === 'https:'
+      && !/^(10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname)
+      && !hostname.endsWith('.local')
+      && !hostname.endsWith('.internal');
+  }, 'Enter a public HTTPS website URL.');
+
 export const contactSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required.').max(80),
   lastName: z.string().trim().max(80).default(''),
@@ -28,18 +39,33 @@ export const checkoutSchema = z.object({
   requestId: z.string().uuid(),
 }).strict();
 
+export const orderDraftTextSchema = z.object({
+  requestId: z.string().uuid(),
+  planKey: z.enum(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']),
+  fullName: z.string().trim().min(2).max(120),
+  businessName: z.string().trim().min(2).max(160),
+  websiteUrl: publicHttpsUrl,
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  phone: z.string().trim().max(40).default(''),
+  businessNiche: z.string().trim().min(2).max(160),
+  mainGoal: z.string().trim().min(20).max(4000),
+  requestedPages: z.string().trim().min(2).max(4000),
+  integrations: z.string().trim().max(4000).default(''),
+  styleDirection: z.string().trim().min(2).max(4000),
+  contentStatus: z.string().trim().min(2).max(120),
+  launchDate: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''),
+  referenceUrls: z.string().trim().max(5000).default(''),
+  specificRequest: z.string().trim().max(8000).default(''),
+  cinematicDirection: z.string().trim().max(8000).default(''),
+  termsAccepted: z.literal(true, { errorMap: () => ({ message: 'Terms acceptance is required before checkout.' }) }),
+}).strict();
+
 export const entitlementQuoteSchema = z.object({
   targetTier: z.enum(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']),
 }).strict();
 
 export const freeSnapshotSchema = z.object({
-  websiteUrl: publicHttpUrl.refine(Boolean, 'A public website URL is required.').refine((value) => {
-    const url = new URL(value);
-    const hostname = url.hostname.toLowerCase();
-    return url.protocol === 'https:'
-      && !/^(10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname)
-      && !hostname.endsWith('.local') && !hostname.endsWith('.internal');
-  }, 'Enter a public HTTPS website URL.'),
+  websiteUrl: publicHttpsUrl,
   contactEmail: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
   consent: z.literal(true, { errorMap: () => ({ message: 'Consent is required.' }) }),
   businessContext: z.string().trim().min(20).max(1200),

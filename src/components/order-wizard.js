@@ -42,9 +42,9 @@ export function orderWizard() {
           <label class="order-fields__wide">Freeform specific request<textarea name="specificRequest" rows="5"></textarea></label>
           <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5"></textarea></label>
         </div>
-        <label class="order-dropzone"><input type="file" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon('upload')}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>
+        <label class="order-dropzone"><input type="file" name="referenceFiles" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon('upload')}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>
         <ul class="order-file-list" data-order-file-list aria-live="polite"></ul>
-        <p class="order-note">Files move through the private intake after payment verification.</p>
+        <p class="order-note">Files are saved privately before secure checkout begins.</p>
       </div>
       <div class="order-wizard__panel" data-order-panel="3" hidden>
         <div class="order-wizard__heading"><span>Step 04</span><h3>Review and payment</h3></div>
@@ -53,7 +53,7 @@ export function orderWizard() {
       </div>
       <div class="order-wizard__panel" data-order-panel="4" hidden>
         <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
-        <div class="order-payment"><span class="sandbox-badge">Stripe test mode</span><p>The server creates checkout; a verified webhook marks payment.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
+        <div class="order-payment"><span class="sandbox-badge">Stripe test mode</span><p>Your request is saved before Stripe opens. A verified webhook—not the browser redirect—creates the paid order and project.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
       </div>
       <div class="order-wizard__actions"><button type="button" class="text-arrow" data-order-previous hidden>Back</button><p class="form-status" data-order-status role="status">Step 1 of 5</p><button type="button" class="button" data-order-next>Continue ${icon('arrow')}</button></div>
     </form>
