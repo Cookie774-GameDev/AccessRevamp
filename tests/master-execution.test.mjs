@@ -41,7 +41,7 @@ test('showcase controller renders presented frames smoothly while limiting activ
   assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
   assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
   assert.match(source, /data\.showcaseActive|dataset\.showcaseActive/);
-  assert.match(source, /preload\s*=\s*'metadata'/);
+  assert.match(source, /prepareChapter\(chapter, 'metadata'\)|preload\s*=\s*effectivePriority/);
   assert.match(source, /removeAttribute\('src'\)/);
   assert.match(source, /Math\.exp/);
   assert.doesNotMatch(source, /response\.blob\(\)/);
