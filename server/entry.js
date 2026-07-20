@@ -3810,7 +3810,7 @@ async function resolvePagesPageData(options) {
 }
 //#endregion
 //#region \0virtual:vinext-server-entry
-var buildId = "17024bf7-ea99-497f-8534-6ba7412e2acc";
+var buildId = "eab0f31b-0c5d-4729-9c06-c9f0144efa0f";
 var vinextConfig = {
 	"basePath": "",
 	"trailingSlash": false,
