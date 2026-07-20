@@ -36,3 +36,12 @@ test('payment results and private account routes are never search indexed', asyn
   assert.match(metadata, /Payment verification/);
   assert.doesNotMatch(metadata, /Payment received|checkout was completed/i);
 });
+
+test('missing terminal Stripe webhooks automatically pause new Checkout attempts', async () => {
+  const migration = await read('supabase/migrations/20260720170500_webhook_liveness_fail_closed.sql');
+  assert.match(migration, /status = 'checkout_created'/);
+  assert.match(migration, /expires_at < timezone\('utc', now\(\)\) - interval '60 minutes'/);
+  assert.match(migration, /stripe-webhook-liveness-failed/);
+  assert.match(migration, /set checkout_enabled = false/);
+  assert.match(migration, /accessrevamp-webhook-liveness/);
+});
