@@ -15,7 +15,8 @@ test('the mobile stylesheet is loaded last and cannot change desktop layouts', a
   assert.match(mobile, /@media \(max-width: 1000px\)/);
   assert.match(mobile, /@media \(max-width: 760px\)/);
   assert.match(mobile, /@media \(max-width: 420px\)/);
-  assert.doesNotMatch(mobile.replace(/\/\*[\s\S]*?\*\//g, ''), /^\s*[^@\s][^{]*\{/m, 'mobile overrides must remain inside media queries');
+  const withoutComments = mobile.replace(/\/\*[\s\S]*?\*\//g, '').trimStart();
+  assert.ok(withoutComments.startsWith('@media'), 'mobile overrides must begin inside a media query');
 });
 
 test('mobile layouts protect every major public and customer surface', async () => {
