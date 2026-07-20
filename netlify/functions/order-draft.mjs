@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { requireConfirmedUser } from './_shared/auth.mjs';
 import { assertMethod, assertSameOrigin, handleError, HttpError, json } from './_shared/http.mjs';
+import { recordPaymentIncident } from './_shared/payment-runtime.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { orderDraftTextSchema } from './_shared/validation.mjs';
 
@@ -8,6 +9,7 @@ const BUCKET = 'order-draft-assets';
 const MAX_REQUEST_BYTES = 70 * 1024 * 1024;
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_FILES = 8;
+const REUSABLE_TERMINAL_STATES = new Set(['expired', 'canceled']);
 const MIME_TYPES = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'image/avif',
   'video/mp4', 'video/webm', 'application/pdf', 'application/msword',
@@ -33,6 +35,15 @@ async function ensurePrivateBucket(admin) {
     allowedMimeTypes: [...MIME_TYPES],
   });
   if (created.error && !/already exists/i.test(created.error.message)) throw created.error;
+}
+
+async function currentAssetCount(admin, draftId) {
+  const { count, error } = await admin
+    .from('order_draft_assets')
+    .select('id', { count: 'exact', head: true })
+    .eq('draft_id', draftId);
+  if (error) throw error;
+  return count || 0;
 }
 
 export default async function orderDraft(request) {
@@ -84,9 +95,35 @@ export default async function orderDraft(request) {
       }
     }
 
+    const { data: existing, error: existingError } = await admin
+      .from('order_drafts')
+      .select('id,status,plan_key,email')
+      .eq('user_id', user.id)
+      .eq('request_id', payload.requestId)
+      .maybeSingle();
+    if (existingError) throw new HttpError(503, 'The saved project request could not be checked.');
+    if (existing?.status === 'paid') {
+      throw new HttpError(409, 'This project request is already paid. Start a new project request.');
+    }
+    if (existing?.status === 'checkout_created') {
+      if (existing.plan_key !== payload.planKey || existing.email !== user.email) {
+        throw new HttpError(409, 'An active checkout already exists for a different saved request.');
+      }
+      return json({
+        ok: true,
+        draftId: existing.id,
+        requestId: payload.requestId,
+        assetCount: await currentAssetCount(admin, existing.id),
+        status: existing.status,
+      });
+    }
+
+    const effectiveRequestId = existing && REUSABLE_TERMINAL_STATES.has(existing.status)
+      ? randomUUID()
+      : payload.requestId;
     const { data: draftId, error: draftError } = await admin.rpc('save_accessrevamp_order_draft', {
       p_user_id: user.id,
-      p_request_id: payload.requestId,
+      p_request_id: effectiveRequestId,
       p_payload: {
         plan_key: payload.planKey,
         full_name: payload.fullName,
@@ -114,39 +151,52 @@ export default async function orderDraft(request) {
       .eq('draft_id', draftId);
     if (oldAssets.error) throw oldAssets.error;
 
-    if (files.length) {
-      const nextAssets = [];
-      for (const file of files) {
-        const path = `${user.id}/${draftId}/${randomUUID()}-${cleanName(file.name)}`;
-        const upload = await admin.storage.from(BUCKET).upload(
-          path,
-          new Uint8Array(await file.arrayBuffer()),
-          { contentType: file.type, upsert: false },
-        );
-        if (upload.error) throw upload.error;
-        uploadedPaths.push(path);
-        nextAssets.push({
-          draft_id: draftId,
-          storage_path: path,
-          original_filename: cleanName(file.name),
-          content_type: file.type,
-          byte_size: file.size,
-        });
-      }
+    const nextAssets = [];
+    for (const file of files) {
+      const path = `${user.id}/${draftId}/${randomUUID()}-${cleanName(file.name)}`;
+      const upload = await admin.storage.from(BUCKET).upload(
+        path,
+        new Uint8Array(await file.arrayBuffer()),
+        { contentType: file.type, upsert: false },
+      );
+      if (upload.error) throw upload.error;
+      uploadedPaths.push(path);
+      nextAssets.push({
+        draft_id: draftId,
+        storage_path: path,
+        original_filename: cleanName(file.name),
+        content_type: file.type,
+        byte_size: file.size,
+      });
+    }
+    if (nextAssets.length) {
       const inserted = await admin.from('order_draft_assets').insert(nextAssets);
       if (inserted.error) throw inserted.error;
       insertedPaths.push(...nextAssets.map((asset) => asset.storage_path));
+    }
 
-      const oldPaths = (oldAssets.data || []).map((asset) => asset.storage_path).filter(Boolean);
-      if (oldPaths.length) {
-        const removedMetadata = await admin.from('order_draft_assets').delete().in('storage_path', oldPaths);
-        if (removedMetadata.error) throw removedMetadata.error;
-        await admin.storage.from(BUCKET).remove(oldPaths);
+    const oldPaths = (oldAssets.data || []).map((asset) => asset.storage_path).filter(Boolean);
+    if (oldPaths.length) {
+      const removedMetadata = await admin.from('order_draft_assets').delete().in('storage_path', oldPaths);
+      if (removedMetadata.error) throw removedMetadata.error;
+      const removedStorage = await admin.storage.from(BUCKET).remove(oldPaths);
+      if (removedStorage.error) {
+        await recordPaymentIncident(admin, {
+          dedupeKey: `order-draft-orphaned-assets:${draftId}`,
+          incidentType: 'configuration_failure',
+          severity: 'warning',
+          details: { draftId, objectCount: oldPaths.length },
+        });
       }
     }
 
-    const assetCount = files.length || (oldAssets.data || []).length;
-    return json({ ok: true, draftId, assetCount }, 201);
+    return json({
+      ok: true,
+      draftId,
+      requestId: effectiveRequestId,
+      assetCount: nextAssets.length,
+      status: 'draft',
+    }, 201);
   } catch (error) {
     if (admin && insertedPaths.length) {
       await admin.from('order_draft_assets').delete().in('storage_path', insertedPaths).catch(() => undefined);
