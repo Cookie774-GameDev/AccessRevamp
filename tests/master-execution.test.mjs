@@ -23,14 +23,17 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   }
 });
 
-test('showcase controller supports scroll, pointer, keyboard and reduced motion', async () => {
+test('showcase controller streams both videos and supports scroll, pointer, keyboard and reduced motion', async () => {
   const source = await read('src/services/showcase-comparison.js');
   assert.match(source, /requestAnimationFrame/);
   assert.match(source, /loadedmetadata/);
+  assert.match(source, /loadeddata/);
   assert.match(source, /setPointerCapture/);
   assert.match(source, /lostpointercapture/);
   assert.match(source, /prefers-reduced-motion/);
   assert.match(source, /currentTime/);
+  assert.match(source, /video\.src\s*=\s*originalSrc/);
+  assert.doesNotMatch(source, /response\.blob\(\)/);
 });
 
 test('homepage order wizard persists progress and hands the selected tier to checkout', async () => {
