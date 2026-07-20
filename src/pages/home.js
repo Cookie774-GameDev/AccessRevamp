@@ -2,9 +2,7 @@ import { plans } from '../config.js';
 import { planCard } from '../components/cards.js';
 import { icon } from '../components/icons.js';
 import { shell } from '../components/shell.js';
-import { demoBrands, picture, visualAssets } from '../data/visual-assets.js';
-import { lenses } from '../data/lenses.js';
-import { lensVisual } from '../components/lens-visuals.js';
+import { picture, visualAssets } from '../data/visual-assets.js';
 import { exampleWebsites, showcasePairs } from '../data/showcase-media.js';
 import { orderWizard } from '../components/order-wizard.js';
 
@@ -19,36 +17,11 @@ const processSteps = [
   ['06', 'Retest', 'Check the rebuilt experience and document what still needs attention.'],
 ];
 
-const demos = [
-  { href: '/portfolio/verdant-cut', number: '01', name: 'Verdant Cut Co.', type: 'Local service editorial system', action: 'Build a service plan', art: 'greenline', asset: demoBrands.greenline.interface },
-  { href: '/portfolio/ember-and-jar', number: '02', name: 'Ember & Jar', type: 'Tactile food commerce', action: 'Choose a heat level', art: 'firejar', asset: demoBrands.firejar.interface },
-  { href: '/portfolio/clearline-plumbing', number: '03', name: 'Clearline Plumbing', type: 'Technical local-service journey', action: 'Choose the right repair path', art: 'clearflow', asset: demoBrands.clearflow.interface },
-];
-
 const outcomes = [
   ['Confusion', 'clarity', 'Competing messages and actions', 'One understandable offer, proof sequence, and next step', visualAssets.auditBefore, visualAssets.auditAfter],
   ['Browsing', 'confident action', 'Products or services with equal visual weight', 'A hierarchy that helps visitors compare and decide', visualAssets.firejarHero, visualAssets.firejarInterface],
   ['Disconnected tools', 'one growth system', 'Website, content, and follow-up planned separately', 'Pages and creative assets built around the same campaign goal', visualAssets.evidenceLayers, visualAssets.clearflowInterface],
 ];
-
-const lensTile = (lens, index) => {
-  const number = String(index + 1).padStart(2, '0');
-  const id = `lens-detail-${index + 1}`;
-  return `<button class="lens-tile lens-tile--${lens.tone}" type="button" data-lens aria-expanded="false" aria-controls="${id}">
-    <span class="lens-tile__top"><b>${number}</b><span>Explore <i aria-hidden="true">+</i></span></span>
-    <span class="lens-tile__visual" data-lens-visual="${lens.visual}">${lensVisual(lens.visual)}</span>
-    <span class="lens-tile__summary"><strong>${lens.title}</strong><span>${lens.summary}</span></span>
-    <span class="lens-tile__detail" id="${id}"><span>We inspect this lens against the primary visitor task and record observable evidence before recommending a change.</span><b>What we check</b><span class="lens-tile__checks">${lens.checks.map((check) => `<i>${check}</i>`).join('')}</span><b>Practical direction</b><span>${lens.outcome}</span></span>
-  </button>`;
-};
-
-const demoCard = (demo) => `<article class="demo-card demo-card--${demo.art}" data-reveal>
-  <a class="demo-card__visual" href="${demo.href}" data-nav aria-label="Open ${demo.name} portfolio concept">
-    <span class="demo-card__image">${picture(demo.asset, { alt: `${demo.name} responsive fictional website concept`, sizes: '(max-width: 760px) 100vw, 55vw' })}</span>
-    <span class="demo-card__number">${demo.number}</span><span class="demo-card__action">${demo.action} ${icon('arrow')}</span>
-  </a>
-  <div class="demo-card__copy"><span class="micro-label">${demo.type}</span><h3><a href="${demo.href}" data-nav>${demo.name}</a></h3><p>Original working demo — not a client engagement.</p></div>
-</article>`;
 
 const transformationPanel = ([from, to, problem, change, before, after], index) => `<article class="transformation-panel" data-reveal>
   <div class="transformation-panel__media">
@@ -109,12 +82,6 @@ export function homePage() {
     <section class="section services-renaissance"><div class="container-wide"><div class="section-head"><div><span class="eyebrow">Four one-time depths</span><h2>Choose the transformation you need.</h2></div><p>The $50 purchase is never wasted: verified, settled value becomes credit toward $200 or $250.</p></div><div class="upgrade-ribbon" aria-label="Cumulative upgrade credit"><strong>Keep every verified dollar</strong><span>$50 → $200 <b>pay $150</b></span><span>$50 → $250 <b>pay $200</b></span><span>$200 → $250 <b>pay only $50</b></span></div><div class="pricing-grid">${pricing}</div><a class="text-arrow section-link" href="/pricing" data-nav>Compare every deliverable ${icon('arrow')}</a></div></section>
 
     ${orderWizard()}
-
-    <section class="section demo-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Original portfolio worlds</span><div><h2>Three industries. Three completely different design systems.</h2><p>Each concept is an original responsive mini-application with its own grid, typography, image treatment, motion, and conversion path.</p></div></div><div class="demo-showcase">${demos.map(demoCard).join('')}</div></div></section>
-
-    <section class="section spectrum-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Eleven review lenses</span><div><h2>One system, inspected from every useful angle.</h2><p>Open a lens to see what we check and the practical direction it can create.</p></div></div><div class="lens-mosaic" data-lens-grid>${lenses.map(lensTile).join('')}</div></div></section>
-
-    <section class="section creative-bundle-section"><div class="container-wide creative-bundle"><div><span class="eyebrow">Creative production included</span><h2>Your rebuilt website arrives with material to promote it.</h2><p>The $50 Homepage Reveal includes one subtle AI-assisted motion poster. The $200 Complete Website Revamp includes five motion posters, ten still posters, three business-card directions, and two brochure directions—all human-reviewed and based on customer-approved assets and claims.</p><a class="button" href="/pricing" data-nav>See the complete plan details ${icon('arrow')}</a></div><div class="creative-orbit" aria-label="Illustrative creative deliverable formats"><span>Motion<br>9:16</span><span>Still<br>1:1</span><span>Card<br>front/back</span><span>Brochure<br>two directions</span><i aria-hidden="true"></i></div></div></section>
 
     <section class="section faq-section"><div class="container-wide faq-layout"><div><span class="eyebrow">Straight answers</span><h2>Clear scope before checkout.</h2></div><div class="faq-list">${faq('What happens if I buy the $50 plan first?', 'The verified $50 purchase is credited toward a higher tier. Upgrade to the $200 plan for $150, or to the $250 plan for $200.')}${faq('Does the $250 plan include the $200 intake?', 'Yes. It includes the Complete Website Revamp scope, the same page and style brief, plus the cinematic sequence. A verified $200 customer upgrades for $50.')}${faq('Can I share designs I like?', 'Yes. Complete and Cinematic customers can choose page types, describe the style, upload reference images from a phone, and share website links. References guide the direction; AccessRevamp does not copy another brand’s logo, copy, imagery, or exact layout.')}${faq('Are the portfolio businesses real clients?', 'No. Every portfolio brand is an original working demo—not a client engagement.')}</div></div></section>
 
