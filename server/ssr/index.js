@@ -11895,7 +11895,7 @@ var client_references_default = {
 		};
 	},
 	"c63a9586085b": async () => {
-		const m = await import("./assets/accessrevamp-client-Ck1cMsI-.js");
+		const m = await import("./assets/accessrevamp-client-Bw8F2Jon.js");
 		return { get "AccessRevampClient"() {
 			return m["AccessRevampClient"];
 		} };

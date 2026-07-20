@@ -121,9 +121,9 @@
     <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid"><article><strong><span data-customer-count>87</span></strong><p>happy customers</p><small>Published count, not a live feed.</small></article><article><strong>3 days</strong><p>first website delivery</p><small>After payment and receipt of required assets.</small></article><article><strong>Desktop → mobile</strong><p>one connected system</p><small>Carefully ported to touch.</small></article></div></section>
 
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
-      <div><span class="eyebrow">One clearer growth system</span><h2>A better storefront is more than a better-looking homepage.</h2></div>
-      <p class="promise-lede">AccessRevamp improves the message, customer path, mobile experience, creative material, and next action as one connected design problem.</p>
-      <div class="promise-outcomes"><article><b>01</b><h3>Understand</h3><p>Make the offer immediately recognizable.</p></article><article><b>02</b><h3>Act</h3><p>Make the next useful step easier to complete.</p></article><article><b>03</b><h3>Connect</h3><p>Give the website and marketing work one direction.</p></article></div>
+      <div><span class="eyebrow">A guided customer journey</span><h2>Your website should feel like a clear conversation—not a maze.</h2></div>
+      <p class="promise-lede">AccessRevamp rebuilds the message, page order, mobile experience, and launch material together so every screen answers the next question and leads to one useful action.</p>
+      <div class="promise-outcomes"><article><b>01</b><h3>Explain</h3><p>Show what you offer, who it is for, and why it matters.</p></article><article><b>02</b><h3>Guide</h3><p>Arrange proof, pages, and calls to action in the order visitors need them.</p></article><article><b>03</b><h3>Launch</h3><p>Deliver the finished site with approved creative material ready to promote.</p></article></div>
     </div></section>
 
     <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid">${E.map(se).join(``)}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>
