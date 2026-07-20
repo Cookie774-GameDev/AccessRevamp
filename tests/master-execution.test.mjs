@@ -23,7 +23,7 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   }
 });
 
-test('showcase controller streams both videos and supports scroll, pointer, keyboard and reduced motion', async () => {
+test('showcase controller streams and smoothly synchronizes both videos across a longer scroll distance', async () => {
   const source = await read('src/services/showcase-comparison.js');
   assert.match(source, /requestAnimationFrame/);
   assert.match(source, /loadedmetadata/);
@@ -33,6 +33,12 @@ test('showcase controller streams both videos and supports scroll, pointer, keyb
   assert.match(source, /prefers-reduced-motion/);
   assert.match(source, /currentTime/);
   assert.match(source, /video\.src\s*=\s*originalSrc/);
+  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*180/);
+  assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.9/);
+  assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
+  assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
+  assert.match(source, /Math\.exp/);
+  assert.match(source, /seeked/);
   assert.doesNotMatch(source, /response\.blob\(\)/);
 });
 
