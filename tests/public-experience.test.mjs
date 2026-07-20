@@ -9,7 +9,8 @@ test('the homepage keeps the requested production story without the three remove
   const home = await read('src/pages/home.js');
   for (const phrase of [
     'AccessRevamp transforms storefronts',
-    'One clearer growth system',
+    'A guided customer journey',
+    'Your website should feel like a clear conversation—not a maze',
     'Choose the transformation you need',
     'Keep every verified dollar',
     'Transformation studies',
