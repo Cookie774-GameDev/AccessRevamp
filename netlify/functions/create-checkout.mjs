@@ -124,33 +124,31 @@ export function createCheckoutHandler({
       });
 
       const checkoutUrl = validatedStripeCheckoutUrl(session.url);
-      const [{ data: attached, error: attachError }, { error: draftAttachError }] = await Promise.all([
-        admin
-          .from('upgrade_reservations')
-          .update({
-            status: 'checkout_created',
-            checkout_session_id: session.id,
-            stripe_price_id: priceId,
-          })
-          .eq('id', reservation.reservation_id)
-          .eq('user_id', user.id)
-          .in('status', ['reserved', 'checkout_created'])
-          .select('id')
-          .maybeSingle(),
-        admin
-          .from('order_drafts')
-          .update({
-            status: 'checkout_created',
-            reservation_id: reservation.reservation_id,
-            checkout_session_id: session.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', draft.id)
-          .eq('user_id', user.id)
-          .eq('status', 'draft'),
-      ]);
+      const { data: attached, error: attachError } = await admin
+        .from('upgrade_reservations')
+        .update({
+          status: 'checkout_created',
+          checkout_session_id: session.id,
+          stripe_price_id: priceId,
+        })
+        .eq('id', reservation.reservation_id)
+        .eq('user_id', user.id)
+        .in('status', ['reserved', 'checkout_created'])
+        .select('id')
+        .maybeSingle();
 
-      if (attachError || draftAttachError || !attached) {
+      const { data: attachedDraft, error: draftAttachError } = await admin
+        .from('order_drafts')
+        .select('id')
+        .eq('id', draft.id)
+        .eq('user_id', user.id)
+        .eq('request_id', payload.requestId)
+        .eq('reservation_id', reservation.reservation_id)
+        .eq('checkout_session_id', session.id)
+        .eq('status', 'checkout_created')
+        .maybeSingle();
+
+      if (attachError || draftAttachError || !attached || !attachedDraft) {
         try { await stripe.checkout.sessions.expire(session.id); } catch { /* Best-effort orphan containment. */ }
         await recordPaymentIncident(admin, {
           dedupeKey: `checkout-attach-failed:${session.id}`,
