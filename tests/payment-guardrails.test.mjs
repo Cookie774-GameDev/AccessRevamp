@@ -34,7 +34,7 @@ test('checkout saves a confirmed order draft before creating one idempotent Stri
     read('src/components/order-wizard.js'),
   ]);
   assert.match(client, /ORDER_DRAFT_ENDPOINT/);
-  assert.ok(client.indexOf('ORDER_DRAFT_ENDPOINT') < client.indexOf('CHECKOUT_ENDPOINT'));
+  assert.ok(client.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < client.indexOf('fetch(CHECKOUT_ENDPOINT'));
   assert.match(client, /Your project request was not saved — no payment started/);
   assert.match(draft, /save_accessrevamp_order_draft/);
   assert.match(draft, /order-draft-assets/);
