@@ -1,0 +1,348 @@
+/*
+ * High-contrast dark treatment for the five-step project request wizard.
+ * Presentation only: the existing structure, fields, plan choices, and behavior stay unchanged.
+ */
+
+.renaissance-home .order-flow-section {
+  --order-dark: #101114;
+  --order-panel: #17181b;
+  --order-card: #202226;
+  --order-card-hover: #26282d;
+  --order-text: #fffdf8;
+  --order-text-soft: #e6e0d6;
+  --order-text-muted: #c9c3b9;
+  --order-line: rgba(255, 255, 255, .24);
+  --order-line-strong: rgba(255, 255, 255, .38);
+  --order-gold: #b97820;
+  --order-gold-soft: #f0d18c;
+  --order-coral: #f25b4b;
+  background: var(--order-dark);
+  color: var(--order-text);
+}
+
+.renaissance-home .order-flow-section .chapter-head--light,
+.renaissance-home .order-flow-section .chapter-head--light h2,
+.renaissance-home .order-flow-section .chapter-head--light p {
+  color: var(--order-text);
+}
+
+.renaissance-home .order-flow-section .chapter-head--light p {
+  color: var(--order-text-soft);
+}
+
+.renaissance-home .order-flow-section .chapter-index {
+  color: var(--order-gold-soft);
+}
+
+.renaissance-home .order-wizard {
+  border-color: var(--order-line-strong);
+  background: var(--order-panel);
+  color: var(--order-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .34), 7px 7px 0 rgba(185, 120, 32, .24);
+}
+
+.renaissance-home .order-wizard__steps {
+  border-bottom-color: var(--order-line);
+  background: #111214;
+}
+
+.renaissance-home .order-wizard__steps button {
+  border-right-color: var(--order-line);
+  background: transparent;
+  color: #f3eee5;
+  font-weight: 850;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .65);
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.renaissance-home .order-wizard__steps button:hover {
+  background: #25272b;
+  color: #fff;
+}
+
+.renaissance-home .order-wizard__steps button[aria-current="step"] {
+  background: var(--order-gold);
+  color: #101114;
+  text-shadow: none;
+  box-shadow: inset 0 -3px 0 #70400d;
+}
+
+.renaissance-home .order-wizard__steps button:focus-visible {
+  position: relative;
+  z-index: 2;
+  outline: 3px solid var(--order-gold-soft);
+  outline-offset: -4px;
+}
+
+.renaissance-home .order-wizard__panel {
+  background: var(--order-panel);
+  color: var(--order-text);
+}
+
+.renaissance-home .order-wizard__heading {
+  border-bottom: 1px solid var(--order-line);
+  padding-bottom: 1.35rem;
+}
+
+.renaissance-home .order-wizard__heading > span {
+  color: var(--order-gold-soft);
+  font-weight: 900;
+}
+
+.renaissance-home .order-wizard__heading h3 {
+  color: #fff;
+  font-weight: 650;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .72);
+}
+
+.renaissance-home .order-fields label,
+.renaissance-home .order-consent,
+.renaissance-home .order-dropzone {
+  color: #fff;
+  font-weight: 800;
+}
+
+.renaissance-home .order-fields label > span {
+  color: var(--order-text-muted);
+  font-weight: 650;
+}
+
+.renaissance-home .order-fields :is(input, textarea, select) {
+  border-color: #928a80;
+  background: #fbf5ea;
+  color: #17181b;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12);
+  caret-color: #17181b;
+}
+
+.renaissance-home .order-fields :is(input, textarea, select)::placeholder {
+  color: #645f58;
+  opacity: 1;
+}
+
+.renaissance-home .order-fields :is(input, textarea, select):hover {
+  border-color: #c9bda9;
+}
+
+.renaissance-home .order-fields :is(input, textarea, select):focus-visible {
+  border-color: var(--order-gold-soft);
+  outline: 3px solid rgba(240, 209, 140, .34);
+  outline-offset: 1px;
+}
+
+.renaissance-home .order-fields select option {
+  background: #fff;
+  color: #17181b;
+}
+
+.renaissance-home .order-plan > span {
+  border-color: var(--order-line-strong);
+  background: var(--order-card);
+  color: var(--order-text);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .2);
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.renaissance-home .order-plan:hover > span {
+  border-color: rgba(240, 209, 140, .72);
+  background: var(--order-card-hover);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, .28);
+}
+
+.renaissance-home .order-plan input[type="radio"] {
+  accent-color: var(--order-gold-soft);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .8));
+}
+
+.renaissance-home .order-plan input:checked + span {
+  border-color: var(--order-gold-soft);
+  box-shadow: inset 0 0 0 2px var(--order-gold), 0 14px 34px rgba(0, 0, 0, .3);
+}
+
+.renaissance-home .order-plan:has(input:focus-visible) > span {
+  outline: 3px solid var(--order-gold-soft);
+  outline-offset: 3px;
+}
+
+.renaissance-home .order-plan b {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .75);
+}
+
+.renaissance-home .order-plan strong {
+  color: var(--order-gold-soft);
+  font-weight: 900;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .7);
+}
+
+.renaissance-home .order-plan small {
+  color: #eee8df;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.renaissance-home .order-note {
+  border-left-color: var(--order-gold-soft);
+  background: rgba(185, 120, 32, .17);
+  color: #f7f1e8;
+  font-weight: 650;
+}
+
+.renaissance-home .order-dropzone {
+  border-color: var(--order-gold-soft);
+  background: #1d1f22;
+}
+
+.renaissance-home .order-dropzone:hover,
+.renaissance-home .order-dropzone:focus-within {
+  border-color: #fff;
+  background: #24262b;
+  outline: 3px solid rgba(240, 209, 140, .28);
+  outline-offset: 2px;
+}
+
+.renaissance-home .order-dropzone svg,
+.renaissance-home .order-dropzone strong {
+  color: #fff;
+}
+
+.renaissance-home .order-dropzone small {
+  color: var(--order-text-soft);
+}
+
+.renaissance-home .order-file-list {
+  color: var(--order-text);
+}
+
+.renaissance-home .order-file-list li {
+  border-bottom-color: var(--order-line);
+  background: #1d1f22;
+}
+
+.renaissance-home .order-file-list button {
+  border-color: #fff;
+  background: transparent;
+  color: #fff;
+}
+
+.renaissance-home .order-file-list button:hover {
+  border-color: var(--order-gold-soft);
+  color: var(--order-gold-soft);
+}
+
+.renaissance-home .order-summary {
+  border: 1px solid var(--order-line-strong);
+  background: var(--order-card);
+  color: var(--order-text);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .24);
+}
+
+.renaissance-home .order-summary dl,
+.renaissance-home .order-summary dl div,
+.renaissance-home .order-summary div {
+  border-color: var(--order-line);
+}
+
+.renaissance-home .order-summary :is(dd, strong, span, p, li) {
+  color: #f4eee5;
+}
+
+.renaissance-home .order-summary dt {
+  color: var(--order-gold-soft);
+  font-weight: 900;
+}
+
+.renaissance-home .order-consent {
+  border: 1px solid var(--order-line-strong);
+  background: #202226;
+}
+
+.renaissance-home .order-consent span {
+  color: #f3eee5;
+}
+
+.renaissance-home .order-consent a,
+.renaissance-home .order-payment a {
+  color: var(--order-gold-soft);
+  font-weight: 800;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: .18em;
+}
+
+.renaissance-home .order-payment {
+  border: 1px solid rgba(183, 245, 207, .42);
+  background: #17211c;
+  color: var(--order-text);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22);
+}
+
+.renaissance-home .order-payment p {
+  color: #edf4ef;
+}
+
+.renaissance-home .order-payment .sandbox-badge {
+  color: #b7f5cf;
+}
+
+.renaissance-home .order-wizard__actions {
+  border-top-color: var(--order-line);
+  background: #111214;
+}
+
+.renaissance-home .order-wizard__actions .text-arrow {
+  color: #fff;
+}
+
+.renaissance-home .order-wizard__actions .text-arrow:hover {
+  color: var(--order-gold-soft);
+}
+
+.renaissance-home .order-wizard__actions .form-status {
+  border: 1px solid var(--order-line);
+  border-left: 4px solid var(--order-coral);
+  background: #1d1f22;
+  color: #f0ebe3;
+  font-weight: 750;
+}
+
+.renaissance-home .order-wizard__actions .button {
+  border-color: #6d261f;
+  background: var(--order-coral);
+  color: #fff;
+}
+
+.renaissance-home .order-wizard__actions .button:hover {
+  border-color: var(--order-gold-soft);
+  background: #25272b;
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .renaissance-home .order-wizard,
+  .renaissance-home .order-wizard__steps,
+  .renaissance-home .order-wizard__actions {
+    background-color: var(--order-panel);
+  }
+
+  .renaissance-home .order-wizard__steps,
+  .renaissance-home .order-wizard__actions {
+    background: #111214;
+  }
+}
+
+@media (forced-colors: active) {
+  .renaissance-home .order-wizard,
+  .renaissance-home .order-plan > span,
+  .renaissance-home .order-summary,
+  .renaissance-home .order-consent,
+  .renaissance-home .order-payment {
+    border: 2px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .renaissance-home .order-wizard__steps button[aria-current="step"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
