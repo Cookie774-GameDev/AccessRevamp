@@ -1,29 +1,29 @@
 import { setupShowcaseComparisons } from '../services/showcase-comparison.js';
 import { setupOrderWizard } from '../services/order-wizard.js';
 
+const HERO_SETTLE_EPSILON = 0.08;
+
 export function setupHomeExperience(root = document) {
   root.classList.add('home-is-enhanced');
   const hero = root.querySelector('[data-reveal-hero]');
   const shell = root.querySelector('.renaissance-home');
-  const cursor = hero?.querySelector('[data-reveal-cursor]');
   const toggle = hero?.querySelector('[data-reveal-toggle]');
-  const grid = root.querySelector('[data-lens-grid]');
-  const tiles = grid ? [...grid.querySelectorAll('[data-lens]')] : [];
   const finePointer = globalThis.matchMedia?.('(hover: hover) and (pointer: fine)');
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const cleanups = [];
-  cleanups.push(setupShowcaseComparisons(root), setupOrderWizard(root));
-  let active = null;
-  let intentTimer;
-  let keyboardMode = false;
-  let frame = 0;
+  const cleanups = [setupShowcaseComparisons(root), setupOrderWizard(root)];
+
+  let heroFrame = 0;
+  let navFrame = 0;
   let heroRect;
   let heroActive = false;
   let heroVisible = true;
   let heroObserver;
   let pointerCaptured = false;
   let navTimer;
+  let revealTimer;
   let pageVisible = !document.hidden;
+  let navVisible;
+
   const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
   const smooth = { ...mouse };
   const gridOffset = { x: 0, y: 0 };
@@ -34,6 +34,62 @@ export function setupHomeExperience(root = document) {
   };
 
   const updateHeroRect = () => { heroRect = hero?.getBoundingClientRect(); };
+
+  const commitNavVisibility = () => {
+    navFrame = 0;
+    const next = scrollY > 24 || heroActive || Boolean(shell?.querySelector('.site-header:focus-within'));
+    if (next === navVisible) return;
+    navVisible = next;
+    shell?.classList.toggle('nav-is-visible', next);
+  };
+
+  const scheduleNavVisibility = () => {
+    if (!navFrame) navFrame = requestAnimationFrame(commitNavVisibility);
+  };
+
+  const stopHeroLoop = () => {
+    if (!heroFrame) return;
+    cancelAnimationFrame(heroFrame);
+    heroFrame = 0;
+  };
+
+  const paintHero = () => {
+    heroFrame = 0;
+    if (!pageVisible || !heroVisible || !hero) return;
+
+    const deltaX = mouse.x - smooth.x;
+    const deltaY = mouse.y - smooth.y;
+    smooth.x += deltaX * 0.12;
+    smooth.y += deltaY * 0.12;
+
+    const rect = heroRect || hero.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, smooth.x - rect.left));
+    const localY = Math.max(0, Math.min(rect.height, smooth.y - rect.top));
+    const cx = localX / Math.max(rect.width, 1) - 0.5;
+    const cy = localY / Math.max(rect.height, 1) - 0.5;
+    const targetGridX = cx * 16;
+    const targetGridY = cy * 16;
+    gridOffset.x += (targetGridX - gridOffset.x) * 0.08;
+    gridOffset.y += (targetGridY - gridOffset.y) * 0.08;
+
+    hero.style.setProperty('--reveal-x', `${localX}px`);
+    hero.style.setProperty('--reveal-y', `${localY}px`);
+    hero.style.setProperty('--grid-x', `${gridOffset.x.toFixed(2)}px`);
+    hero.style.setProperty('--grid-y', `${gridOffset.y.toFixed(2)}px`);
+
+    const moving = Math.abs(deltaX) > HERO_SETTLE_EPSILON
+      || Math.abs(deltaY) > HERO_SETTLE_EPSILON
+      || Math.abs(targetGridX - gridOffset.x) > HERO_SETTLE_EPSILON
+      || Math.abs(targetGridY - gridOffset.y) > HERO_SETTLE_EPSILON;
+    if (moving) heroFrame = requestAnimationFrame(paintHero);
+  };
+
+  const startHeroLoop = () => {
+    if (!heroFrame && !reducedMotion && pageVisible && heroVisible && hero) {
+      heroFrame = requestAnimationFrame(paintHero);
+    }
+  };
+
   const setHeroPointer = (event) => {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
@@ -41,36 +97,10 @@ export function setupHomeExperience(root = document) {
     hero?.classList.add('is-revealing');
     if (event.clientY <= 104) {
       clearTimeout(navTimer);
+      navVisible = true;
       shell?.classList.add('nav-is-visible');
     }
-  };
-
-  const paintHero = () => {
-    if (!pageVisible || !heroVisible || !hero) { frame = 0; return; }
-    smooth.x += (mouse.x - smooth.x) * .1;
-    smooth.y += (mouse.y - smooth.y) * .1;
-    const rect = heroRect || hero.getBoundingClientRect();
-    const localX = Math.max(0, Math.min(rect.width, smooth.x - rect.left));
-    const localY = Math.max(0, Math.min(rect.height, smooth.y - rect.top));
-    const cx = localX / Math.max(rect.width, 1) - .5;
-    const cy = localY / Math.max(rect.height, 1) - .5;
-    gridOffset.x += (cx * 16 - gridOffset.x) * .06;
-    gridOffset.y += (cy * 16 - gridOffset.y) * .06;
-    hero.style.setProperty('--reveal-x', `${localX}px`);
-    hero.style.setProperty('--reveal-y', `${localY}px`);
-    hero.style.setProperty('--grid-x', `${gridOffset.x.toFixed(2)}px`);
-    hero.style.setProperty('--grid-y', `${gridOffset.y.toFixed(2)}px`);
-    frame = requestAnimationFrame(paintHero);
-  };
-
-  const stopHeroLoop = () => {
-    if (!frame) return;
-    cancelAnimationFrame(frame);
-    frame = 0;
-  };
-
-  const startHeroLoop = () => {
-    if (!frame && !reducedMotion && pageVisible && heroVisible && hero) frame = requestAnimationFrame(paintHero);
+    startHeroLoop();
   };
 
   if (hero) {
@@ -87,29 +117,38 @@ export function setupHomeExperience(root = document) {
       }, { rootMargin: '20% 0px', threshold: 0 });
       heroObserver.observe(hero);
     }
-    startHeroLoop();
-    listen(hero, 'pointerenter', (event) => { setHeroPointer(event); startHeroLoop(); });
-    listen(hero, 'pointermove', (event) => { if (event.pointerType === 'touch' && !pointerCaptured) return; if (pointerCaptured) event.preventDefault(); setHeroPointer(event); });
+
+    listen(hero, 'pointerenter', setHeroPointer);
+    listen(hero, 'pointermove', (event) => {
+      if (event.pointerType === 'touch' && !pointerCaptured) return;
+      if (pointerCaptured) event.preventDefault();
+      setHeroPointer(event);
+    });
     listen(hero, 'pointerleave', () => {
       if (pointerCaptured) return;
       heroActive = false;
       hero.classList.remove('is-revealing');
-      navTimer = setTimeout(() => { if (scrollY < 24 && !shell?.querySelector('.site-header:focus-within')) shell?.classList.remove('nav-is-visible'); }, 520);
+      clearTimeout(navTimer);
+      navTimer = setTimeout(scheduleNavVisibility, 520);
     });
     listen(hero, 'pointerdown', (event) => {
       if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
       event.preventDefault();
       pointerCaptured = true;
-      hero.setPointerCapture(event.pointerId);
+      try { hero.setPointerCapture(event.pointerId); } catch { /* Best-effort pointer capture. */ }
       hero.style.touchAction = 'none';
       setHeroPointer(event);
     });
+
     const releasePointer = (event) => {
       if (!pointerCaptured) return;
       pointerCaptured = false;
-      if (hero.hasPointerCapture?.(event.pointerId)) hero.releasePointerCapture(event.pointerId);
+      try {
+        if (hero.hasPointerCapture?.(event.pointerId)) hero.releasePointerCapture(event.pointerId);
+      } catch { /* The browser may already have released the pointer. */ }
       hero.style.touchAction = '';
     };
+
     listen(hero, 'pointerup', releasePointer);
     listen(hero, 'pointercancel', releasePointer);
     listen(hero, 'lostpointercapture', releasePointer);
@@ -119,17 +158,27 @@ export function setupHomeExperience(root = document) {
       toggle.textContent = full ? 'Show reveal spotlight' : 'Reveal transformation';
       hero.classList.add('is-revealing');
     });
-    listen(globalThis, 'resize', updateHeroRect, { passive: true });
-    listen(globalThis, 'scroll', () => shell?.classList.toggle('nav-is-visible', scrollY > 24 || heroActive), { passive: true });
+    listen(globalThis, 'resize', () => {
+      updateHeroRect();
+      startHeroLoop();
+    }, { passive: true });
+    listen(globalThis, 'scroll', scheduleNavVisibility, { passive: true });
     listen(document, 'visibilitychange', () => {
       pageVisible = !document.hidden;
       if (pageVisible) startHeroLoop();
       else stopHeroLoop();
     });
-    listen(shell?.querySelector('.site-header'), 'focusin', () => shell?.classList.add('nav-is-visible'));
+    listen(shell?.querySelector('.site-header'), 'focusin', () => {
+      navVisible = true;
+      shell?.classList.add('nav-is-visible');
+    });
+    listen(shell?.querySelector('.site-header'), 'focusout', scheduleNavVisibility);
+
     if (!reducedMotion && !finePointer?.matches) {
       hero.classList.add('is-revealing');
-      setTimeout(() => { if (!pointerCaptured) hero.classList.remove('is-revealing'); }, 1800);
+      revealTimer = setTimeout(() => {
+        if (!pointerCaptured) hero.classList.remove('is-revealing');
+      }, 1800);
     }
   }
 
@@ -147,79 +196,35 @@ export function setupHomeExperience(root = document) {
         if (progress < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-    }), { threshold: .45 });
+    }), { threshold: 0.45 });
     countObserver.observe(customerCount);
-  } else if (customerCount) customerCount.textContent = '87';
-
-  const setActive = (next) => {
-    if (active === next) return;
-    const first = reducedMotion ? null : new Map(tiles.map((tile) => [tile, tile.getBoundingClientRect()]));
-    active = next || null;
-    tiles.forEach((tile) => {
-      const expanded = tile === active;
-      tile.classList.toggle('is-expanded', expanded);
-      tile.setAttribute('aria-expanded', String(expanded));
-    });
-    grid?.classList.toggle('has-expanded-lens', Boolean(active));
-    if (!first || !globalThis.requestAnimationFrame) return;
-    requestAnimationFrame(() => tiles.forEach((tile) => {
-      const a = first.get(tile);
-      const b = tile.getBoundingClientRect();
-      const x = a.left - b.left;
-      const y = a.top - b.top;
-      const sx = a.width / Math.max(b.width, 1);
-      const sy = a.height / Math.max(b.height, 1);
-      if (Math.abs(x) < 1 && Math.abs(y) < 1 && Math.abs(sx - 1) < .01 && Math.abs(sy - 1) < .01) return;
-      tile.getAnimations().forEach((animation) => animation.cancel());
-      tile.animate([
-        { transform: `translate(${x}px, ${y}px) scale(${sx}, ${sy})`, transformOrigin: 'top left' },
-        { transform: 'none', transformOrigin: 'top left' },
-      ], { duration: 450, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
-    }));
-  };
-
-  const queueIntent = (tile) => {
-    clearTimeout(intentTimer);
-    intentTimer = setTimeout(() => setActive(tile), 120);
-  };
-
-  tiles.forEach((tile) => {
-    listen(tile, 'pointerenter', () => {
-      if (finePointer?.matches) queueIntent(tile);
-    });
-    listen(tile, 'focus', () => { if (keyboardMode || finePointer?.matches) setActive(tile); });
-    listen(tile, 'keydown', (event) => {
-      if (event.key === 'Escape') { event.preventDefault(); setActive(null); tile.blur(); }
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActive(active === tile ? null : tile); }
-    });
-  });
-
-  listen(grid, 'pointerleave', () => { clearTimeout(intentTimer); if (finePointer?.matches) setActive(null); });
-  listen(grid, 'click', (event) => {
-    if (event.detail === 0) return;
-    if (finePointer?.matches) return;
-    const tile = event.target.closest?.('[data-lens]');
-    if (tile) setActive(active === tile ? null : tile);
-  });
-  listen(document, 'pointerdown', (event) => { keyboardMode = false; if (!grid?.contains(event.target)) setActive(null); });
-  listen(document, 'keydown', (event) => { keyboardMode = true; if (event.key === 'Escape') setActive(null); });
+  } else if (customerCount) {
+    customerCount.textContent = '87';
+  }
 
   const reveals = [...root.querySelectorAll('[data-reveal]')];
-  let observer;
+  let revealObserver;
   if (!reducedMotion && 'IntersectionObserver' in globalThis) {
-    observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
-      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    revealObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      revealObserver.unobserve(entry.target);
     }), { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    reveals.forEach((element) => observer.observe(element));
-  } else reveals.forEach((element) => element.classList.add('is-visible'));
+    reveals.forEach((element) => revealObserver.observe(element));
+  } else {
+    reveals.forEach((element) => element.classList.add('is-visible'));
+  }
+
+  scheduleNavVisibility();
 
   return () => {
-    clearTimeout(intentTimer);
     cleanups.forEach((cleanup) => cleanup?.());
-    observer?.disconnect();
+    revealObserver?.disconnect();
     countObserver?.disconnect();
     heroObserver?.disconnect();
     clearTimeout(navTimer);
+    clearTimeout(revealTimer);
+    if (navFrame) cancelAnimationFrame(navFrame);
     stopHeroLoop();
     hero?.removeAttribute('style');
     shell?.classList.remove('nav-is-visible');
