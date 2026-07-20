@@ -26,11 +26,14 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - Accurate, restrained, human-approved wording.
 - The AccessRevamp website address written exactly as `accessrevamp.com` in plain text, without intentional hyperlink formatting.
 - No questionnaire, intake, quote-form, checkout, payment, private-preview, tracking, shortened, or personalized sales URL in the first-touch body. A prospect-specific questionnaire may be sent only after a positive reply through the approved reply workflow.
-- Exact one-time price when a paid tier is mentioned: **$50**, **$200**, or **$250**, with server-verified cumulative credit explained separately when applicable.
-- Working reply path.
-- Valid postal address where required.
-- Clear opt-out. The sending system may add required `List-Unsubscribe` headers or a legally required compliance footer; these are compliance controls, not sales links.
+- Exact one-time pricing when the concise offers are mentioned: a Homepage Reveal is **$50**, and a Complete Website Revamp is **$200** with a full site upgrade plus **15 Canva posters: 5 animated and 10 still**.
+- Working reply path for the reply-yes quote request.
+- Sender-managed compliance footer containing a valid physical postal address and a clear unsubscribe control.
+- Required `List-Unsubscribe` headers when applicable. Compliance controls are not sales links.
+- No `Reply “no” to opt out` sentence or similar reply-no wording.
 - Disclosure that the review is AI-assisted and human-verified, not a legal certification.
+
+The physical postal address is retained for U.S. commercial-email compliance and honest sender identification. It does not guarantee inbox placement. Do not invent an address or send before the real postal identity and unsubscribe control are configured.
 
 ## Subject and tracking rules
 
@@ -38,12 +41,12 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - Never imply the business requested the review or partnered with AccessRevamp.
 - Do not attach archives, executables, or unfamiliar code.
 - Do not use tracking pixels in the initial workflow.
-- Keep the complete first-touch body, including greeting, signature, postal address, and opt-out, at 125 words or fewer.
+- Keep the complete first-touch body, including greeting, signature, postal address, and unsubscribe footer, at 125 words or fewer.
 - Use a reply-based call to action for a free, no-obligation quote. Do not use “cheap,” “secrets,” “guaranteed,” or fabricated urgency.
 - Send at most one follow-up, and stop immediately after an objection or opt-out.
 
 ## Approval and sending
 
-The backend stores drafts and approved queue items but intentionally does not provide an unattended commercial send loop. A sender may be connected only after legal review, mailbox and DNS authentication, bounce handling, complaint handling, suppression tests, a real postal identity, and a final human approval workflow.
+The backend stores drafts and approved queue items but intentionally does not provide an unattended commercial send loop. A sender may be connected only after legal review, mailbox and DNS authentication, bounce handling, complaint handling, suppression tests, a real postal identity, an operational unsubscribe mechanism, and a final human approval workflow.
 
-A reply requesting no further contact must be added to `suppression_list` immediately, even when a one-click link was not used.
+Any unsubscribe request or reply requesting no further contact must be added to `suppression_list` immediately. The recipient does not need to use a particular phrase or channel for the request to be honored.
