@@ -5,8 +5,8 @@ import './styles/motion.css';
 import './styles/image-led.css';
 import './styles/studio-redesign.css';
 import './styles/cinematic-renaissance.css';
-import './styles/order-wizard-light.css';
 import './styles/mobile.css';
+import './styles/order-wizard-dark-contrast.css';
 
 import { createRouter } from './app/router.js';
 import { updateDocumentMetadata } from './app/metadata.js';
