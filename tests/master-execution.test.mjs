@@ -62,20 +62,26 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(service, /reportValidity/);
 });
 
-test('production packaging keeps media outside the worker and emits scrub-ready showcase videos', async () => {
+test('production packaging requires ffmpeg and emits scrub-ready showcase videos', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const [pruneScript, optimizeScript] = await Promise.all([
+  const [pruneScript, optimizeScript, ciWorkflow, pagesWorkflow] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
+    readFile('.github/workflows/production-ci.yml', 'utf8'),
+    readFile('.github/workflows/deploy-pages.yml', 'utf8'),
   ]);
 
   assert.match(packageJson.scripts.build, /prune-vinext-server-media\.mjs/);
   assert.match(packageJson.scripts.build, /optimize-showcase-videos\.mjs/);
   assert.match(pruneScript, /dist.*server.*media/s);
   assert.match(pruneScript, /recursive:\s*true/);
+  assert.match(optimizeScript, /process\.env\.CI\s*===\s*'true'/);
+  assert.match(optimizeScript, /showcase-optimization\.json/);
   assert.match(optimizeScript, /fps=24/);
   assert.match(optimizeScript, /'-g', '3'/);
   assert.match(optimizeScript, /'-bf', '0'/);
   assert.match(optimizeScript, /fastdecode/);
   assert.match(optimizeScript, /\+faststart/);
+  assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
+  assert.match(pagesWorkflow, /Install FFmpeg for scrub-ready media/);
 });
