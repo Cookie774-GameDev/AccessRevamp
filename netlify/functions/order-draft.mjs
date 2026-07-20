@@ -46,6 +46,16 @@ async function currentAssetCount(admin, draftId) {
   return count || 0;
 }
 
+async function assetPaths(admin, draftId) {
+  if (!draftId) return [];
+  const { data, error } = await admin
+    .from('order_draft_assets')
+    .select('storage_path')
+    .eq('draft_id', draftId);
+  if (error) throw error;
+  return (data || []).map((asset) => asset.storage_path).filter(Boolean);
+}
+
 export default async function orderDraft(request) {
   const uploadedPaths = [];
   const insertedPaths = [];
@@ -118,9 +128,10 @@ export default async function orderDraft(request) {
       });
     }
 
-    const effectiveRequestId = existing && REUSABLE_TERMINAL_STATES.has(existing.status)
-      ? randomUUID()
-      : payload.requestId;
+    const rotatedFromDraftId = existing && REUSABLE_TERMINAL_STATES.has(existing.status)
+      ? existing.id
+      : null;
+    const effectiveRequestId = rotatedFromDraftId ? randomUUID() : payload.requestId;
     const { data: draftId, error: draftError } = await admin.rpc('save_accessrevamp_order_draft', {
       p_user_id: user.id,
       p_request_id: effectiveRequestId,
@@ -146,11 +157,25 @@ export default async function orderDraft(request) {
     if (draftError || !draftId) throw new HttpError(503, 'The project request could not be saved.');
 
     await ensurePrivateBucket(admin);
-    const oldAssets = await admin.from('order_draft_assets')
-      .select('storage_path')
-      .eq('draft_id', draftId);
-    if (oldAssets.error) throw oldAssets.error;
+    if (rotatedFromDraftId && files.length === 0) {
+      const transferred = await admin
+        .from('order_draft_assets')
+        .update({ draft_id: draftId })
+        .eq('draft_id', rotatedFromDraftId);
+      if (transferred.error) throw transferred.error;
+      return json({
+        ok: true,
+        draftId,
+        requestId: effectiveRequestId,
+        assetCount: await currentAssetCount(admin, draftId),
+        status: 'draft',
+      }, 201);
+    }
 
+    const pathsToReplace = [
+      ...await assetPaths(admin, draftId),
+      ...await assetPaths(admin, rotatedFromDraftId),
+    ];
     const nextAssets = [];
     for (const file of files) {
       const path = `${user.id}/${draftId}/${randomUUID()}-${cleanName(file.name)}`;
@@ -175,17 +200,16 @@ export default async function orderDraft(request) {
       insertedPaths.push(...nextAssets.map((asset) => asset.storage_path));
     }
 
-    const oldPaths = (oldAssets.data || []).map((asset) => asset.storage_path).filter(Boolean);
-    if (oldPaths.length) {
-      const removedMetadata = await admin.from('order_draft_assets').delete().in('storage_path', oldPaths);
+    if (pathsToReplace.length) {
+      const removedMetadata = await admin.from('order_draft_assets').delete().in('storage_path', pathsToReplace);
       if (removedMetadata.error) throw removedMetadata.error;
-      const removedStorage = await admin.storage.from(BUCKET).remove(oldPaths);
+      const removedStorage = await admin.storage.from(BUCKET).remove(pathsToReplace);
       if (removedStorage.error) {
         await recordPaymentIncident(admin, {
           dedupeKey: `order-draft-orphaned-assets:${draftId}`,
           incidentType: 'configuration_failure',
           severity: 'warning',
-          details: { draftId, objectCount: oldPaths.length },
+          details: { draftId, objectCount: pathsToReplace.length },
         });
       }
     }
