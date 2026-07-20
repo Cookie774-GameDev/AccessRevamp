@@ -22,20 +22,37 @@ export default async function checkoutStatus(request) {
       .maybeSingle();
     if (orderError) throw new HttpError(503, 'Payment status is temporarily unavailable.');
     if (order) {
-      const { data: project, error: projectError } = await admin
-        .from('customer_projects')
-        .select('id,status')
-        .eq('order_id', order.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (projectError) throw new HttpError(503, 'Project status is temporarily unavailable.');
-      if (order.status === 'paid' && !project) {
+      const [projectResult, entitlementResult] = await Promise.all([
+        admin
+          .from('customer_projects')
+          .select('id,status')
+          .eq('order_id', order.id)
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        admin
+          .from('entitlements')
+          .select('id,status,highest_tier_key')
+          .eq('source_order_id', order.id)
+          .eq('user_id', user.id)
+          .maybeSingle(),
+      ]);
+      if (projectResult.error || entitlementResult.error) {
+        throw new HttpError(503, 'Project status is temporarily unavailable.');
+      }
+      const project = projectResult.data;
+      const entitlement = entitlementResult.data;
+      if (order.status === 'paid'
+        && (!project || !entitlement || entitlement.status !== 'active')) {
         await recordPaymentIncident(admin, {
           dedupeKey: `paid-order-incomplete:${order.id}`,
           incidentType: 'unfulfilled_paid_checkout',
           orderId: order.id,
           stripeObjectId: sessionId,
-          details: { missingProject: true },
+          details: {
+            missingProject: !project,
+            missingEntitlement: !entitlement,
+            entitlementStatus: entitlement?.status || null,
+          },
         });
         return json({ status: 'processing' }, 202);
       }
