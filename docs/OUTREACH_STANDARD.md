@@ -25,13 +25,14 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - The public page reviewed and the affected element or task.
 - Accurate, restrained, human-approved wording.
 - The AccessRevamp website address written exactly as `accessrevamp.com` in plain text, without intentional hyperlink formatting.
-- No questionnaire, intake, quote-form, checkout, payment, private-preview, tracking, shortened, or personalized sales URL in the first-touch body. A prospect-specific questionnaire may be sent only after a positive reply through the approved reply workflow.
-- Exact one-time pricing when the concise offers are mentioned: a Homepage Reveal is **$50**, and a Complete Website Revamp is **$200** with a full site upgrade plus **15 Canva posters: 5 animated and 10 still**.
-- Working reply path for the reply-yes quote request.
+- No questionnaire, intake, quote-form, checkout, payment, private-preview, tracking, shortened, or personalized sales URL in the first-touch body. A prospect-specific questionnaire may be sent only through the approved reply workflow after the prospect expresses interest.
+- Exact concise pricing: a Homepage Reveal is **$50**, and a Complete Website Revamp is **$200** with a full site upgrade plus **15 animated Canva posters**.
+- No statement that AccessRevamp offers four options in the first email.
+- Working reply path that accepts any natural response; never require a keyword, exact phrase, or scripted answer.
 - Sender-managed compliance footer containing a valid physical postal address and a clear unsubscribe control.
 - Required `List-Unsubscribe` headers when applicable. Compliance controls are not sales links.
-- No `Reply “no” to opt out` sentence or similar reply-no wording.
-- Disclosure that the review is AI-assisted and human-verified, not a legal certification.
+- No reply-based opt-out sentence.
+- No prospect-facing disclosure of internal AI, scanner, automation, or review-process details.
 
 The physical postal address is retained for U.S. commercial-email compliance and honest sender identification. It does not guarantee inbox placement. Do not invent an address or send before the real postal identity and unsubscribe control are configured.
 
@@ -42,7 +43,8 @@ The physical postal address is retained for U.S. commercial-email compliance and
 - Do not attach archives, executables, or unfamiliar code.
 - Do not use tracking pixels in the initial workflow.
 - Keep the complete first-touch body, including greeting, signature, postal address, and unsubscribe footer, at 125 words or fewer.
-- Use a reply-based call to action for a free, no-obligation quote. Do not use “cheap,” “secrets,” “guaranteed,” or fabricated urgency.
+- End with one natural, low-pressure question offering a free, no-obligation quote. Let the prospect respond in their own words.
+- Do not use “cheap,” “secrets,” “guaranteed,” or fabricated urgency.
 - Send at most one follow-up, and stop immediately after an objection or opt-out.
 
 ## Approval and sending
