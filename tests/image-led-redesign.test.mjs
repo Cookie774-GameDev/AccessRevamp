@@ -3,22 +3,25 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 
 
-test('home renders an image-led hero and all expandable lenses', async () => {
+test('home keeps the image-led hero while the three requested sections stay removed', async () => {
   const source = await readFile(new URL('../src/pages/home.js', import.meta.url), 'utf8');
   assert.match(source, /class="reveal-hero"/);
   assert.match(source, /accessrevamp-atlas-base-desktop\.webp/);
   assert.match(source, /accessrevamp-atlas-gold-desktop\.webp/);
-  assert.match(source, /data-lens-grid/);
-  assert.match(source, /class="lens-tile/);
-  assert.match(source, /aria-expanded="false"/);
   assert.match(source, /Transformation studies/);
   assert.match(source, />Before</);
   assert.match(source, />Direction</);
+  assert.doesNotMatch(source, /class="section demo-section"/);
+  assert.doesNotMatch(source, /data-lens-grid/);
+  assert.doesNotMatch(source, /creative-bundle-section/);
 });
 
-test('portfolio and every fictional demo include meaningful local imagery', async () => {
+test('portfolio no longer links to the three deleted interactive demo pages', async () => {
   const portfolio = await readFile(new URL('../src/pages/work.js', import.meta.url), 'utf8');
-  assert.match(portfolio, /demo-card__image/);
+  assert.doesNotMatch(portfolio, /portfolio-demo-section/);
+  for (const route of ['/portfolio/verdant-cut', '/portfolio/ember-and-jar', '/portfolio/clearline-plumbing']) {
+    assert.doesNotMatch(portfolio, new RegExp(route.replaceAll('/', '\\/')));
+  }
 });
 
 test('homepage lifecycle binds and cleans the dedicated experience module', async () => {
