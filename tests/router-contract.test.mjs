@@ -224,7 +224,7 @@ test('preview metadata is token-independent and restores indexable robots metada
 
     assert.equal(fakeDocument.title, 'Private preview | AccessRevamp');
     assert.equal(description.content, 'A private AccessRevamp review preview.');
-    assert.equal(robots.content, 'noindex,nofollow');
+    assert.equal(robots.content, 'noindex,nofollow,noarchive');
     assert.doesNotMatch(`${fakeDocument.title}\n${description.content}`, /private-token-value/);
 
     updateDocumentMetadata('/pricing');
