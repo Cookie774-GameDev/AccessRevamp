@@ -17,7 +17,11 @@ import {
   json,
   readJsonBody,
 } from './_shared/http.mjs';
-import { getStripePriceForQuote } from './_shared/stripe-catalog.mjs';
+import {
+  recordPaymentIncident,
+  requireCheckoutRuntime,
+  resolveCatalogPrice,
+} from './_shared/payment-runtime.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { checkoutSchema } from './_shared/validation.mjs';
 
@@ -35,10 +39,12 @@ export function createCheckoutHandler({
   createStripe = (key) => new Stripe(key, {
     apiVersion: STRIPE_API_VERSION,
     maxNetworkRetries: 2,
-    appInfo: { name: 'AccessRevamp', version: '2.0.0' },
+    appInfo: { name: 'AccessRevamp', version: '3.0.0' },
   }),
 } = {}) {
   return async function checkoutHandler(request) {
+    let admin;
+    let reservation;
     try {
       assertMethod(request, 'POST');
       assertSameOrigin(request);
@@ -52,13 +58,28 @@ export function createCheckoutHandler({
         throw error;
       }
 
-      let admin;
       try {
         admin = getAdmin();
       } catch {
         throw new HttpError(503, 'Checkout service is unavailable.');
       }
       const user = await requireConfirmedUser(request, admin);
+      const runtime = await requireCheckoutRuntime(admin, process.env);
+
+      const { data: draft, error: draftError } = await admin
+        .from('order_drafts')
+        .select('id,plan_key,status,email')
+        .eq('user_id', user.id)
+        .eq('request_id', payload.requestId)
+        .maybeSingle();
+      if (draftError) throw new HttpError(503, 'The saved project request is unavailable.');
+      if (!draft
+        || draft.status !== 'draft'
+        || draft.plan_key !== payload.targetTier
+        || draft.email !== user.email) {
+        throw new HttpError(409, 'Save a matching project request before checkout.');
+      }
+
       const { data, error } = await admin.rpc('reserve_accessrevamp_upgrade', {
         p_user_id: user.id,
         p_target_tier_key: payload.targetTier,
@@ -66,14 +87,22 @@ export function createCheckoutHandler({
       });
       if (error) throw reservationError(error);
 
-      const reservation = normalizeReservation(data);
+      reservation = normalizeReservation(data);
       if (reservation.to_tier !== payload.targetTier) {
         throw new HttpError(503, 'Checkout reservation is unavailable.');
       }
       const quote = quoteFromReservation(reservation);
-      const { priceId } = getStripePriceForQuote(quote, process.env);
-      const metadata = buildCheckoutMetadata(reservation, user.id, payload.requestId);
-      const key = assertStripePaymentMode(process.env.STRIPE_SECRET_KEY, process.env);
+      const { priceId } = await resolveCatalogPrice(admin, quote, runtime.expectedLivemode);
+      const metadata = {
+        ...buildCheckoutMetadata(reservation, user.id, payload.requestId),
+        order_draft_id: draft.id,
+      };
+      const modeEnvironment = {
+        ...process.env,
+        STRIPE_EXPECT_LIVEMODE: String(runtime.expectedLivemode),
+        ACCESSREVAMP_LIVE_PAYMENT_APPROVED: String(runtime.livePaymentApproved),
+      };
+      const key = assertStripePaymentMode(process.env.STRIPE_CHECKOUT_SECRET_KEY, modeEnvironment);
       const stripe = createStripe(key);
       const origin = new URL(request.url).origin;
 
@@ -95,26 +124,55 @@ export function createCheckoutHandler({
       });
 
       const checkoutUrl = validatedStripeCheckoutUrl(session.url);
-      const { data: attached, error: attachError } = await admin
-        .from('upgrade_reservations')
-        .update({
-          status: 'checkout_created',
-          checkout_session_id: session.id,
-          stripe_price_id: priceId,
-        })
-        .eq('id', reservation.reservation_id)
-        .eq('user_id', user.id)
-        .in('status', ['reserved', 'checkout_created'])
-        .select('id')
-        .maybeSingle();
+      const [{ data: attached, error: attachError }, { error: draftAttachError }] = await Promise.all([
+        admin
+          .from('upgrade_reservations')
+          .update({
+            status: 'checkout_created',
+            checkout_session_id: session.id,
+            stripe_price_id: priceId,
+          })
+          .eq('id', reservation.reservation_id)
+          .eq('user_id', user.id)
+          .in('status', ['reserved', 'checkout_created'])
+          .select('id')
+          .maybeSingle(),
+        admin
+          .from('order_drafts')
+          .update({
+            status: 'checkout_created',
+            reservation_id: reservation.reservation_id,
+            checkout_session_id: session.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', draft.id)
+          .eq('user_id', user.id)
+          .eq('status', 'draft'),
+      ]);
 
-      if (attachError || !attached) {
-        try { await stripe.checkout.sessions.expire(session.id); } catch { /* best-effort orphan containment */ }
+      if (attachError || draftAttachError || !attached) {
+        try { await stripe.checkout.sessions.expire(session.id); } catch { /* Best-effort orphan containment. */ }
+        await recordPaymentIncident(admin, {
+          dedupeKey: `checkout-attach-failed:${session.id}`,
+          incidentType: 'configuration_failure',
+          stripeObjectId: session.id,
+          details: { reservationId: reservation.reservation_id, draftId: draft.id },
+        });
         throw new HttpError(503, 'Checkout reservation could not be finalized.');
       }
 
+      await admin.from('payment_runtime_settings')
+        .update({ last_checkout_created_at: new Date().toISOString() })
+        .eq('singleton', true);
       return json({ url: checkoutUrl }, 201);
     } catch (error) {
+      if (admin && reservation && Number(error?.status || 500) >= 500) {
+        await recordPaymentIncident(admin, {
+          dedupeKey: `checkout-create-failed:${reservation.reservation_id}`,
+          incidentType: 'configuration_failure',
+          details: { reservationId: reservation.reservation_id },
+        });
+      }
       return handleError(error);
     }
   };
