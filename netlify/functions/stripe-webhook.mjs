@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { getTier, quoteUpgrade } from '../../src/config/tier-catalog.js';
 import { assertStripePaymentMode, REQUIRED_CHECKOUT_METADATA_KEYS } from './_shared/checkout-contract.mjs';
 import { handleError, HttpError, json } from './_shared/http.mjs';
-import { getStripePriceForQuote } from './_shared/stripe-catalog.mjs';
+import { expectedLivemode, recordPaymentIncident, resolveCatalogPrice } from './_shared/payment-runtime.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
 const STRIPE_API_VERSION = '2026-06-24.dahlia';
@@ -15,11 +15,8 @@ const CHECKOUT_EVENTS = new Set([
 const REFUND_EVENTS = new Set(['charge.refunded', 'refund.updated']);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function assertExpectedMode(livemode, env = process.env) {
-  const expected = env.STRIPE_EXPECT_LIVEMODE;
-  if (!['true', 'false'].includes(expected || '') || livemode !== (expected === 'true')) {
-    throw new HttpError(503, 'Payment mode is not configured.');
-  }
+function assertExpectedMode(livemode, expected) {
+  if (livemode !== expected) throw new HttpError(503, 'Payment mode is not configured.');
 }
 
 function exactInteger(value, name) {
@@ -75,7 +72,7 @@ function requiredMetadata(session) {
     grossCents,
     creditCents,
     netCents,
-    quote,
+    quote: { transitionKey: `${fromTier}->${toTier}`, dueNowCents: netCents },
   };
 }
 
@@ -83,13 +80,13 @@ function identifier(value) {
   return typeof value === 'string' ? value : value?.id || '';
 }
 
-function normalizeCheckout(event, session, env) {
+async function normalizeCheckout(event, session, supabase, expectedMode) {
   const metadata = requiredMetadata(session);
+  const { priceId: expectedPriceId } = await resolveCatalogPrice(supabase, metadata.quote, expectedMode);
   const isTerminal = event.type === 'checkout.session.async_payment_failed'
     || event.type === 'checkout.session.expired';
   const lineItems = session.line_items?.data || [];
   const lineItem = lineItems[0];
-  const expectedPriceId = getStripePriceForQuote(metadata.quote, env).priceId;
   const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
   if (session.livemode !== event.livemode
     || session.mode !== 'payment'
@@ -125,12 +122,12 @@ function normalizeCheckout(event, session, env) {
   };
 }
 
-async function handleCheckoutEvent(event, stripe, supabase, env) {
+async function handleCheckoutEvent(event, stripe, supabase, expectedMode) {
   const eventSession = event.data.object;
   const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
     expand: ['line_items.data.price'],
   });
-  const normalized = normalizeCheckout(event, session, env);
+  const normalized = await normalizeCheckout(event, session, supabase, expectedMode);
 
   if (event.type === 'checkout.session.async_payment_failed'
     || event.type === 'checkout.session.expired') {
@@ -199,17 +196,20 @@ export function createWebhookHandler({
   createStripe = (key) => new Stripe(key, {
     apiVersion: STRIPE_API_VERSION,
     maxNetworkRetries: 2,
-    appInfo: { name: 'AccessRevamp', version: '2.0.0' },
+    appInfo: { name: 'AccessRevamp', version: '3.0.0' },
   }),
 } = {}) {
   return async function webhookHandler(request) {
+    let supabase;
+    let eventId = '';
     try {
       if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
       const signature = request.headers.get('stripe-signature');
       if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
         return json({ error: 'Webhook configuration is incomplete.' }, 503);
       }
-      const key = assertStripePaymentMode(process.env.STRIPE_SECRET_KEY, process.env);
+      const expected = expectedLivemode(process.env);
+      const key = assertStripePaymentMode(process.env.STRIPE_WEBHOOK_READ_SECRET_KEY, process.env);
       const stripe = createStripe(key);
       const rawBody = await request.text();
       if (new TextEncoder().encode(rawBody).byteLength > 1_000_000) {
@@ -220,11 +220,20 @@ export function createWebhookHandler({
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
-      assertExpectedMode(event.livemode, process.env);
-      const supabase = getAdmin();
+      eventId = event.id;
+      assertExpectedMode(event.livemode, expected);
+      supabase = getAdmin();
+      const { data: settings, error: settingsError } = await supabase
+        .from('payment_runtime_settings')
+        .select('expected_livemode')
+        .eq('singleton', true)
+        .maybeSingle();
+      if (settingsError || !settings || settings.expected_livemode !== expected) {
+        throw new HttpError(503, 'Payment mode is not configured.');
+      }
 
       if (CHECKOUT_EVENTS.has(event.type)) {
-        await handleCheckoutEvent(event, stripe, supabase, process.env);
+        await handleCheckoutEvent(event, stripe, supabase, expected);
       } else if (REFUND_EVENTS.has(event.type)) {
         const normalized = await normalizedRefund(event, stripe);
         if (normalized) {
@@ -232,8 +241,19 @@ export function createWebhookHandler({
           if (error) throw error;
         }
       }
+      await supabase.from('payment_runtime_settings')
+        .update({ last_successful_webhook_at: new Date().toISOString() })
+        .eq('singleton', true);
       return json({ received: true });
     } catch (error) {
+      if (supabase) {
+        await recordPaymentIncident(supabase, {
+          dedupeKey: `webhook-failure:${eventId || new Date().toISOString().slice(0, 16)}`,
+          incidentType: 'webhook_failure',
+          stripeObjectId: eventId || null,
+          details: { errorName: String(error?.name || 'Error').slice(0, 80) },
+        });
+      }
       return handleError(error);
     }
   };
