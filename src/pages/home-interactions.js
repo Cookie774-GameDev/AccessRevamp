@@ -19,6 +19,8 @@ export function setupHomeExperience(root = document) {
   let frame = 0;
   let heroRect;
   let heroActive = false;
+  let heroVisible = true;
+  let heroObserver;
   let pointerCaptured = false;
   let navTimer;
   let pageVisible = !document.hidden;
@@ -44,7 +46,7 @@ export function setupHomeExperience(root = document) {
   };
 
   const paintHero = () => {
-    if (!pageVisible || !hero) { frame = 0; return; }
+    if (!pageVisible || !heroVisible || !hero) { frame = 0; return; }
     smooth.x += (mouse.x - smooth.x) * .1;
     smooth.y += (mouse.y - smooth.y) * .1;
     const rect = heroRect || hero.getBoundingClientRect();
@@ -61,12 +63,30 @@ export function setupHomeExperience(root = document) {
     frame = requestAnimationFrame(paintHero);
   };
 
+  const stopHeroLoop = () => {
+    if (!frame) return;
+    cancelAnimationFrame(frame);
+    frame = 0;
+  };
+
   const startHeroLoop = () => {
-    if (!frame && !reducedMotion && hero) frame = requestAnimationFrame(paintHero);
+    if (!frame && !reducedMotion && pageVisible && heroVisible && hero) frame = requestAnimationFrame(paintHero);
   };
 
   if (hero) {
     updateHeroRect();
+    if ('IntersectionObserver' in globalThis) {
+      heroObserver = new IntersectionObserver(([entry]) => {
+        heroVisible = Boolean(entry?.isIntersecting);
+        if (heroVisible) {
+          updateHeroRect();
+          startHeroLoop();
+        } else {
+          stopHeroLoop();
+        }
+      }, { rootMargin: '20% 0px', threshold: 0 });
+      heroObserver.observe(hero);
+    }
     startHeroLoop();
     listen(hero, 'pointerenter', (event) => { setHeroPointer(event); startHeroLoop(); });
     listen(hero, 'pointermove', (event) => { if (event.pointerType === 'touch' && !pointerCaptured) return; if (pointerCaptured) event.preventDefault(); setHeroPointer(event); });
@@ -104,7 +124,7 @@ export function setupHomeExperience(root = document) {
     listen(document, 'visibilitychange', () => {
       pageVisible = !document.hidden;
       if (pageVisible) startHeroLoop();
-      else if (frame) { cancelAnimationFrame(frame); frame = 0; }
+      else stopHeroLoop();
     });
     listen(shell?.querySelector('.site-header'), 'focusin', () => shell?.classList.add('nav-is-visible'));
     if (!reducedMotion && !finePointer?.matches) {
@@ -198,8 +218,9 @@ export function setupHomeExperience(root = document) {
     cleanups.forEach((cleanup) => cleanup?.());
     observer?.disconnect();
     countObserver?.disconnect();
+    heroObserver?.disconnect();
     clearTimeout(navTimer);
-    if (frame) cancelAnimationFrame(frame);
+    stopHeroLoop();
     hero?.removeAttribute('style');
     shell?.classList.remove('nav-is-visible');
     root.classList.remove('home-is-enhanced');
