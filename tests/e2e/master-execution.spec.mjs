@@ -12,7 +12,9 @@ test('homepage presents four uncropped examples and three paired scrub chapters'
   expect(fit).toEqual(['contain', 'contain', 'contain', 'contain']);
 
   const chapter = page.locator('[data-showcase-chapter]').first();
+  expect(await chapter.evaluate((element) => element.offsetHeight / innerHeight)).toBeGreaterThan(5);
   await chapter.locator('video').evaluateAll((videos) => videos.forEach((video) => {
+    Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
     Object.defineProperty(video, 'duration', { configurable: true, value: 8 });
     Object.defineProperty(video, 'currentTime', { configurable: true, writable: true, value: 0 });
   }));
@@ -24,9 +26,9 @@ test('homepage presents four uncropped examples and three paired scrub chapters'
     scrollTo(0, documentTop + ((chapterElement.offsetHeight - innerHeight) * .55));
   });
   await expect.poll(async () => Number(await chapter.getAttribute('data-progress'))).toBeGreaterThan(.4);
+  await expect.poll(async () => chapter.locator('video').evaluateAll((videos) => Math.min(...videos.map((video) => video.currentTime)))).toBeGreaterThan(3);
   const mediaState = await chapter.locator('video').evaluateAll((videos) => videos.map((video) => ({ paused: video.paused, currentTime: video.currentTime })));
   expect(mediaState.every(({ paused }) => paused)).toBe(true);
-  expect(mediaState.every(({ currentTime }) => currentTime > 3)).toBe(true);
   expect(Math.abs(mediaState[0].currentTime - mediaState[1].currentTime)).toBeLessThan(.01);
 });
 
