@@ -1,4 +1,4 @@
-const SHOWCASE_MEDIA_VERSION = '20260720-fluid-v3';
+const SHOWCASE_MEDIA_VERSION = '20260720-fluid-v4';
 const versionedShowcase = (path) => `${path}?v=${SHOWCASE_MEDIA_VERSION}`;
 
 export const exampleWebsites = Object.freeze([
