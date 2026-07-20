@@ -1,0 +1,3 @@
+function e({name:e,purpose:t,body:n,rationale:r,accessibilityNotes:i}){return`<article class="demo-app"><header class="demo-bar"><a href="/portfolio" data-nav>← AccessRevamp portfolio</a><strong>Original working demo — not a client engagement.</strong></header>
+    <main class="demo-main"><div class="demo-kicker">${e} / independent concept build</div>${n}</main>
+    <footer class="demo-notes"><section><h2>Design rationale</h2><p>${r}</p></section><section><h2>Accessibility notes</h2><p>${i}</p></section><p>${t}. Every price, review, address, credential, availability message, and outcome shown here is fictional sample content.</p></footer></article>`}function t(e,t,n=`success`){e&&(e.dataset.state=n,e.textContent=t)}export{e as n,t};
