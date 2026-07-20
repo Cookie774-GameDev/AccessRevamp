@@ -35,6 +35,7 @@ import { setupContactForm } from './services/contact.js';
 import { setupAuthForm } from './services/auth.js';
 import { setupDashboard } from './services/dashboard.js';
 import { setupCheckout } from './services/checkout.js';
+import { setupCheckoutResult } from './services/checkout-result.js';
 import { setupFreeSnapshot } from './services/free-snapshot.js';
 import { setupAccountProjects } from './services/account-projects.js';
 import { setupProjectIntake } from './services/project-intake.js';
@@ -161,6 +162,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));
   if (pathname === '/project-intake') cleanups.push(setupProjectIntake());
   if (pathname === '/operator') cleanups.push(setupOperator());
+  if (pathname === '/success') cleanups.push(setupCheckoutResult(app));
 
   if (pattern === '/portfolio/:slug') {
     let active = true;
