@@ -1,3 +1,6 @@
+const SHOWCASE_MEDIA_VERSION = '20260720-fluid-v3';
+const versionedShowcase = (path) => `${path}?v=${SHOWCASE_MEDIA_VERSION}`;
+
 export const exampleWebsites = Object.freeze([
   {
     src: '/images/examples/local-brew-house.webp',
@@ -28,23 +31,23 @@ export const exampleWebsites = Object.freeze([
 export const showcasePairs = Object.freeze([
   {
     name: 'Verdant Edge Lawn Care',
-    normal: '/media/showcases/verdant-normal.mp4',
+    normal: versionedShowcase('/media/showcases/verdant-normal.mp4'),
     normalPoster: '/media/showcases/verdant-normal-poster.webp',
-    cinematic: '/media/showcases/verdant-cinematic.mp4',
+    cinematic: versionedShowcase('/media/showcases/verdant-cinematic.mp4'),
     cinematicPoster: '/media/showcases/verdant-cinematic-poster.webp',
   },
   {
     name: 'Northframe Studio',
-    normal: '/media/showcases/northframe-normal.mp4',
+    normal: versionedShowcase('/media/showcases/northframe-normal.mp4'),
     normalPoster: '/media/showcases/northframe-normal-poster.webp',
-    cinematic: '/media/showcases/northframe-cinematic.mp4',
+    cinematic: versionedShowcase('/media/showcases/northframe-cinematic.mp4'),
     cinematicPoster: '/media/showcases/northframe-cinematic-poster.webp',
   },
   {
     name: 'Olympus Academy',
-    normal: '/media/showcases/olympus-normal.mp4',
+    normal: versionedShowcase('/media/showcases/olympus-normal.mp4'),
     normalPoster: '/media/showcases/olympus-normal-poster.webp',
-    cinematic: '/media/showcases/olympus-cinematic.mp4',
+    cinematic: versionedShowcase('/media/showcases/olympus-cinematic.mp4'),
     cinematicPoster: '/media/showcases/olympus-cinematic-poster.webp',
   },
 ]);
