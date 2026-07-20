@@ -1,0 +1,50 @@
+{
+  "status": "optimized",
+  "generatedAt": "2026-07-20T04:20:04.335Z",
+  "encoder": {
+    "codec": "h264",
+    "maximumWidth": 1280,
+    "framesPerSecond": 24,
+    "keyframeInterval": 3,
+    "bFrames": 0,
+    "fastStart": true
+  },
+  "files": [
+    {
+      "filename": "verdant-normal.mp4",
+      "status": "optimized",
+      "originalBytes": 7497251,
+      "optimizedBytes": 8476442
+    },
+    {
+      "filename": "verdant-cinematic.mp4",
+      "status": "optimized",
+      "originalBytes": 9410738,
+      "optimizedBytes": 9269700
+    },
+    {
+      "filename": "northframe-normal.mp4",
+      "status": "optimized",
+      "originalBytes": 5223073,
+      "optimizedBytes": 4752956
+    },
+    {
+      "filename": "northframe-cinematic.mp4",
+      "status": "optimized",
+      "originalBytes": 5881480,
+      "optimizedBytes": 4885469
+    },
+    {
+      "filename": "olympus-normal.mp4",
+      "status": "optimized",
+      "originalBytes": 6230948,
+      "optimizedBytes": 7229253
+    },
+    {
+      "filename": "olympus-cinematic.mp4",
+      "status": "optimized",
+      "originalBytes": 7486726,
+      "optimizedBytes": 7377929
+    }
+  ]
+}
