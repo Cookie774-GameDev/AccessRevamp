@@ -1,4 +1,6 @@
-/** @typedef {'free_snapshot' | 'homepage_reveal' | 'complete_revamp' | 'cinematic_scroll'} TierKey */
+/**
+ * @typedef {'free_snapshot' | 'homepage_reveal' | 'complete_revamp' | 'cinematic_scroll'} TierKey
+ */
 
 /**
  * @typedef {object} Tier
@@ -73,7 +75,7 @@ export const TIERS = Object.freeze({
     displayPrice: '$200',
     currency: 'USD',
     cadence: 'one-time',
-    features: ['Every applicable $50 Homepage Reveal deliverable', 'Up to five agreed standard pages', 'Responsive accessibility and performance work', 'Five Canva-built AI-assisted motion poster ads', 'Ten still poster variations', 'Three business card variations', 'Two brochure variations', 'Before/after evidence and one retest summary', 'Upgrade to the $250 Cinematic plan later for only $50'],
+    features: ['Every applicable $50 Homepage Reveal deliverable', 'Up to five agreed standard pages', 'Responsive accessibility and performance work', '15 Canva-built animated poster ads total across the package', 'Three business card variations', 'Two brochure variations', 'Before/after evidence and one retest summary', 'Upgrade to the $250 Cinematic plan later for only $50'],
   }),
   cinematic_scroll: tier({
     key: 'cinematic_scroll',
