@@ -28,8 +28,11 @@ Never place any Stripe secret or the Supabase service-role key in a `VITE_` vari
 4. Confirm all six rows in `stripe_price_catalog` match active Stripe test prices exactly.
 5. Complete one authenticated test purchase and verify the same request ID appears in the draft, reservation, Stripe metadata, order, entitlement, and project.
 6. Confirm the signed webhook writes `stripe_events.processed_at`, creates exactly one order, and remains idempotent when replayed.
-7. Set `configuration_verified_at` to the current UTC timestamp. Only then may an operator set `checkout_enabled=true`.
-8. Do not enable live mode unless `expected_livemode=true`, `live_payment_approved=true`, live restricted keys are installed, and a separate live-mode review has been completed.
+7. Verify that an interrupted browser redirect reopens the same active Checkout Session and does not create another charge.
+8. Verify that a canceled or expired session rotates to a fresh request UUID while preserving its saved request and private reference files.
+9. Confirm `/success` shows a paid state only after `/api/checkout-status` finds the durable order, active entitlement, and project.
+10. Set `configuration_verified_at` to the current UTC timestamp. Only then may an operator set `checkout_enabled=true`.
+11. Do not enable live mode unless `expected_livemode=true`, `live_payment_approved=true`, live restricted keys are installed, and a separate live-mode review has been completed.
 
 ## Refund procedure
 
@@ -44,5 +47,7 @@ Automated refunds remain disabled until at least two active operators exist. Fin
 ## Incident response
 
 Review `payment_security_incidents` and `accessrevamp_audit_log` before changing payment settings. The scheduled anomaly scan runs every five minutes and reports stale Checkout reservations, unprocessed successful webhook events, incomplete paid orders, stale saved requests, and catalog mismatches.
+
+A separate webhook-liveness job runs every five minutes. If an expired Checkout Session remains unreconciled for more than one hour, it opens a critical incident and automatically disables new Checkout attempts. Re-enable Checkout only after the webhook endpoint, signing secret, event mode, and durable fulfillment records have been reverified.
 
 Never resolve an incident by deleting payment, event, reservation, authorization, or audit rows. Correct the configuration or reconcile the Stripe object, record the resolution, and retain the evidence.
