@@ -89,14 +89,21 @@ test('cinematic references are separated from portfolio work and credited', asyn
   assert.match(home, /not by AccessRevamp/);
 });
 
-test('outreach schedule records the requested ramp but enforces the safety cap', async () => {
+test('outreach schedule records the requested weekly ramp but enforces the safety cap', async () => {
   const schedule = await import('../src/config/outreach-schedule.js');
-  assert.equal(schedule.requestedDailyTarget(1), 15);
-  assert.equal(schedule.requestedDailyTarget(4), 15);
-  assert.equal(schedule.requestedDailyTarget(5), 20);
-  assert.equal(schedule.requestedDailyTarget(14), 20);
-  assert.equal(schedule.requestedDailyTarget(15), 22);
-  assert.equal(schedule.enforcedDailyDraftLimit(15), 20);
+  assert.equal(schedule.requestedDailyTarget(1), 10);
+  assert.equal(schedule.requestedDailyTarget(7), 10);
+  assert.equal(schedule.requestedDailyTarget(8), 12);
+  assert.equal(schedule.requestedDailyTarget(14), 12);
+  assert.equal(schedule.requestedDailyTarget(15), 15);
+  assert.equal(schedule.requestedDailyTarget(21), 15);
+  assert.equal(schedule.requestedDailyTarget(22), 18);
+  assert.equal(schedule.requestedDailyTarget(28), 18);
+  assert.equal(schedule.requestedDailyTarget(29), 20);
+  assert.equal(schedule.requestedDailyTarget(35), 20);
+  assert.equal(schedule.requestedDailyTarget(36), 22);
+  assert.equal(schedule.requestedDailyTarget(72), 22);
+  assert.equal(schedule.enforcedDailyDraftLimit(36), 20);
   assert.equal(schedule.OUTREACH_HARD_CAP, 20);
   assert.equal(schedule.SENDING_ENABLED, false);
 });
