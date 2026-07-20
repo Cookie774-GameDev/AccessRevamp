@@ -11,7 +11,7 @@
     "name": "rolldown-runtime"
   },
   "app/accessrevamp-client.tsx": {
-    "file": "assets/accessrevamp-client-CNkPCx-D.js",
+    "file": "assets/accessrevamp-client-DPytX4pu.js",
     "name": "accessrevamp-client",
     "src": "app/accessrevamp-client.tsx",
     "isDynamicEntry": true,
@@ -25,7 +25,7 @@
     ]
   },
   "node_modules/vinext/dist/shims/layout-segment-context.js": {
-    "file": "assets/layout-segment-context-gdOKp9zV.js",
+    "file": "assets/layout-segment-context-CwcEnwrz.js",
     "name": "layout-segment-context",
     "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
     "isDynamicEntry": true,
@@ -36,7 +36,7 @@
     ]
   },
   "src/main.js": {
-    "file": "assets/main-DWeCuTjV.js",
+    "file": "assets/main-E4eZ2NEh.js",
     "name": "main",
     "src": "src/main.js",
     "isDynamicEntry": true,
@@ -44,11 +44,11 @@
       "virtual:vinext-app-browser-entry"
     ],
     "css": [
-      "assets/main-CYTvFu8s.css"
+      "assets/main-BCMpHQh0.css"
     ]
   },
   "virtual:vinext-app-browser-entry": {
-    "file": "assets/index-B9--5BIE.js",
+    "file": "assets/index-nbuQhUeh.js",
     "name": "index",
     "src": "virtual:vinext-app-browser-entry",
     "isEntry": true,
