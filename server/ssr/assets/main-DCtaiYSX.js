@@ -678,23 +678,25 @@ function homePage() {
 //#region src/services/showcase-comparison.js
 var clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 var MEDIA_READY = 1;
-var SCROLL_SMOOTHING_MS = 180;
-var MAX_PROGRESS_PER_SECOND = .9;
-var PROGRESS_EPSILON = 35e-5;
-var SEEK_EPSILON_SECONDS = 1 / 48;
-var SEEK_SETTLE_TIMEOUT_MS = 220;
+var SCROLL_SMOOTHING_MS = 360;
+var MAX_PROGRESS_PER_SECOND = .24;
+var PROGRESS_EPSILON = 2e-4;
+var SEEK_EPSILON_SECONDS = 1 / 60;
+var FRAME_SETTLE_TIMEOUT_MS = 90;
 var DESKTOP_SCROLL_DISTANCE_VH = 520;
 var MOBILE_SCROLL_DISTANCE_VH = 560;
 var MOBILE_BREAKPOINT_PX = 700;
+var PRELOAD_RADIUS = 1;
 function setupShowcaseComparisons(root = document) {
 	const chapters = [...root.querySelectorAll("[data-showcase-chapter]")];
 	if (!chapters.length) return void 0;
 	const reducedMotion = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 	const saveData = Boolean(globalThis.navigator?.connection?.saveData);
 	const cleanups = [];
-	const chapterStates = new Map(chapters.map((chapter) => {
+	const chapterStates = new Map(chapters.map((chapter, index) => {
 		const initial = clamp(Number(chapter.dataset.progress || 0));
 		return [chapter, {
+			index,
 			targetProgress: initial,
 			renderedProgress: initial
 		}];
@@ -705,6 +707,7 @@ function setupShowcaseComparisons(root = document) {
 	let scrollFrame = 0;
 	let smoothingFrame = 0;
 	let lastSmoothingTime = 0;
+	let activeIndex = -1;
 	const supportsSmallViewportUnits = Boolean(globalThis.CSS?.supports?.("height", "1svh"));
 	const updateScrollDistance = () => {
 		const distance = innerWidth <= MOBILE_BREAKPOINT_PX ? MOBILE_SCROLL_DISTANCE_VH : DESKTOP_SCROLL_DISTANCE_VH;
@@ -713,52 +716,69 @@ function setupShowcaseComparisons(root = document) {
 			chapter.style.height = `${distance}${unit}`;
 		});
 	};
-	const finishSeek = (video, state) => {
-		if (!state.seeking) return;
-		state.seeking = false;
-		if (state.seekTimer) clearTimeout(state.seekTimer);
-		state.seekTimer = 0;
-		if (state.seekListener) video.removeEventListener("seeked", state.seekListener);
-		state.seekListener = null;
-		if (destroyed || video.readyState < MEDIA_READY) return;
-		if (Math.abs(video.currentTime - state.targetTime) > SEEK_EPSILON_SECONDS) requestAnimationFrame(() => flushSeek(video, state));
+	const clearFrameRequest = (video, state) => {
+		if (state.frameCallbackId && video.cancelVideoFrameCallback) try {
+			video.cancelVideoFrameCallback(state.frameCallbackId);
+		} catch {}
+		state.frameCallbackId = 0;
+		if (state.settleTimer) clearTimeout(state.settleTimer);
+		state.settleTimer = 0;
+		if (state.seekedListener) video.removeEventListener("seeked", state.seekedListener);
+		state.seekedListener = null;
+		state.pending = false;
 	};
-	const flushSeek = (video, state) => {
-		if (destroyed || state.seeking) return;
+	const requestVideoFrame = (video, state) => {
+		if (destroyed || state.chapterIndex !== activeIndex || state.pending) return;
 		if (video.readyState < MEDIA_READY || !Number.isFinite(video.duration) || video.duration <= 0) return;
 		const target = clamp(state.targetTime, 0, Math.max(0, video.duration - .001));
 		if (Math.abs(video.currentTime - target) <= SEEK_EPSILON_SECONDS) {
 			video.pause();
 			return;
 		}
-		state.seeking = true;
-		const settle = () => finishSeek(video, state);
-		state.seekListener = settle;
+		state.pending = true;
+		const settle = () => {
+			if (!state.pending) return;
+			clearFrameRequest(video, state);
+			if (destroyed || state.chapterIndex !== activeIndex) return;
+			if (Math.abs(video.currentTime - state.targetTime) > SEEK_EPSILON_SECONDS) requestAnimationFrame(() => requestVideoFrame(video, state));
+		};
+		if (video.requestVideoFrameCallback) state.frameCallbackId = video.requestVideoFrameCallback(settle);
+		state.seekedListener = settle;
 		video.addEventListener("seeked", settle, { once: true });
-		state.seekTimer = setTimeout(settle, SEEK_SETTLE_TIMEOUT_MS);
+		state.settleTimer = setTimeout(settle, FRAME_SETTLE_TIMEOUT_MS);
 		try {
 			video.pause();
 			video.currentTime = target;
 		} catch {
-			finishSeek(video, state);
+			settle();
 		}
 	};
-	const queueVideoSeek = (video, progress) => {
+	const queueVideoProgress = (video, chapterIndex, progress) => {
 		if (video.readyState < MEDIA_READY || !Number.isFinite(video.duration) || video.duration <= 0) return;
 		const playableEnd = Math.max(0, video.duration - .001);
 		const targetTime = progress >= 1 ? playableEnd : progress * playableEnd;
 		let state = videoStates.get(video);
 		if (!state) {
 			state = {
+				chapterIndex,
 				targetTime,
-				seeking: false,
-				seekTimer: 0,
-				seekListener: null
+				pending: false,
+				frameCallbackId: 0,
+				settleTimer: 0,
+				seekedListener: null
 			};
 			videoStates.set(video, state);
 			trackedVideos.add(video);
-		} else state.targetTime = targetTime;
-		flushSeek(video, state);
+		} else {
+			state.chapterIndex = chapterIndex;
+			state.targetTime = targetTime;
+		}
+		requestVideoFrame(video, state);
+	};
+	const syncChapterMedia = (chapter, progress) => {
+		const chapterIndex = chapterStates.get(chapter)?.index ?? -1;
+		if (chapterIndex !== activeIndex) return;
+		chapter.querySelectorAll("video").forEach((video) => queueVideoProgress(video, chapterIndex, progress));
 	};
 	const renderProgress = (chapter, next, source = "scroll") => {
 		const progress = clamp(next);
@@ -768,7 +788,58 @@ function setupShowcaseComparisons(root = document) {
 		const output = chapter.querySelector("[data-showcase-output]");
 		if (range && source !== "range") range.value = String(Math.round(progress * 100));
 		if (output) output.textContent = `${Math.round(progress * 100)}%`;
-		chapter.querySelectorAll("video").forEach((video) => queueVideoSeek(video, progress));
+		syncChapterMedia(chapter, progress);
+	};
+	const pauseChapter = (chapter) => {
+		chapter.querySelectorAll("video").forEach((video) => video.pause());
+	};
+	const prepareChapter = (chapter, priority = "metadata") => {
+		if (globalThis.navigator?.webdriver) return;
+		chapter.querySelectorAll("video[data-src]").forEach((video) => {
+			const effectivePriority = saveData || reducedMotion ? "metadata" : priority;
+			if (video.dataset.prepared === "true") {
+				if (effectivePriority === "auto") video.preload = "auto";
+				return;
+			}
+			const originalSrc = video.dataset.src;
+			if (!originalSrc) return;
+			video.dataset.prepared = "true";
+			video.preload = effectivePriority;
+			video.muted = true;
+			video.playsInline = true;
+			video.disableRemotePlayback = true;
+			video.src = originalSrc;
+			video.load();
+		});
+	};
+	const releaseChapter = (chapter) => {
+		chapter.querySelectorAll("video").forEach((video) => {
+			const state = videoStates.get(video);
+			if (state) clearFrameRequest(video, state);
+			video.pause();
+			video.preload = "none";
+			video.removeAttribute("src");
+			delete video.dataset.prepared;
+			video.load();
+		});
+	};
+	const setActiveIndex = (nextIndex) => {
+		if (nextIndex === activeIndex) return;
+		const previousIndex = activeIndex;
+		activeIndex = nextIndex;
+		chapters.forEach((chapter, index) => {
+			const active = index === activeIndex;
+			chapter.dataset.showcaseActive = String(active);
+			if (index === previousIndex && !active) pauseChapter(chapter);
+			if (active) prepareChapter(chapter, "auto");
+			else if (activeIndex >= 0 && Math.abs(index - activeIndex) <= PRELOAD_RADIUS) prepareChapter(chapter, "metadata");
+			else if (activeIndex >= 0 || index > 0) releaseChapter(chapter);
+		});
+		if (activeIndex >= 0) {
+			const activeChapter = chapters[activeIndex];
+			const progress = chapterStates.get(activeChapter)?.renderedProgress ?? Number(activeChapter.dataset.progress || 0);
+			syncChapterMedia(activeChapter, progress);
+		}
 	};
 	const animateTowardScroll = (time) => {
 		smoothingFrame = 0;
@@ -805,33 +876,31 @@ function setupShowcaseComparisons(root = document) {
 		if (state) {
 			state.targetProgress = progress;
 			state.renderedProgress = progress;
+			setActiveIndex(state.index);
 		}
 		renderProgress(chapter, progress, source);
 	};
-	const prepare = (chapter) => {
-		if (globalThis.navigator?.webdriver) return;
-		chapter.querySelectorAll("video[data-src]").forEach((video) => {
-			if (video.dataset.prepared === "true") return;
-			const originalSrc = video.dataset.src;
-			if (!originalSrc) return;
-			video.dataset.prepared = "true";
-			video.preload = saveData || reducedMotion ? "metadata" : "auto";
-			video.muted = true;
-			video.playsInline = true;
-			video.src = originalSrc;
-			video.load();
-		});
-	};
 	const readScrollTargets = () => {
 		scrollFrame = 0;
-		if (destroyed || reducedMotion) return;
-		chapters.forEach((chapter) => {
+		if (destroyed) return;
+		const viewportCenter = innerHeight / 2;
+		let nextActiveIndex = -1;
+		let closestDistance = Number.POSITIVE_INFINITY;
+		chapters.forEach((chapter, index) => {
 			if (chapter.dataset.dragging === "true") return;
 			const rect = chapter.getBoundingClientRect();
 			const travel = Math.max(1, rect.height - innerHeight);
 			const state = chapterStates.get(chapter);
-			if (state) state.targetProgress = clamp(-rect.top / travel);
+			if (!reducedMotion && state) state.targetProgress = clamp(-rect.top / travel);
+			if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
+				const distance = Math.abs(rect.top);
+				if (distance < closestDistance) {
+					closestDistance = distance;
+					nextActiveIndex = index;
+				}
+			}
 		});
+		setActiveIndex(nextActiveIndex);
 		ensureSmoothing();
 	};
 	const scheduleScrollRead = () => {
@@ -839,14 +908,15 @@ function setupShowcaseComparisons(root = document) {
 		scrollFrame = requestAnimationFrame(readScrollTargets);
 	};
 	chapters.forEach((chapter) => {
+		const state = chapterStates.get(chapter);
 		const stage = chapter.querySelector("[data-showcase-stage]");
 		const range = chapter.querySelector("[data-showcase-range]");
 		let pointerId = null;
 		let startY = 0;
 		let startProgress = 0;
 		const syncCurrentProgress = () => {
-			const state = chapterStates.get(chapter);
-			renderProgress(chapter, state?.renderedProgress ?? Number(chapter.dataset.progress || 0), "media");
+			const progress = state?.renderedProgress ?? Number(chapter.dataset.progress || 0);
+			syncChapterMedia(chapter, progress);
 		};
 		chapter.querySelectorAll("video").forEach((video) => {
 			for (const eventName of [
@@ -863,13 +933,14 @@ function setupShowcaseComparisons(root = document) {
 			video.addEventListener("error", onError, { once: true });
 			cleanups.push(() => video.removeEventListener("error", onError));
 		});
-		if (!stage || !range) return;
+		if (!stage || !range || !state) return;
 		const onPointerDown = (event) => {
 			if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
 			event.preventDefault();
+			setActiveIndex(state.index);
 			pointerId = event.pointerId;
 			startY = event.clientY;
-			startProgress = chapterStates.get(chapter)?.renderedProgress ?? Number(chapter.dataset.progress || 0);
+			startProgress = state.renderedProgress;
 			chapter.dataset.dragging = "true";
 			stage.classList.add("is-scrubbing");
 			stage.style.touchAction = "none";
@@ -880,7 +951,7 @@ function setupShowcaseComparisons(root = document) {
 		const onPointerMove = (event) => {
 			if (event.pointerId !== pointerId) return;
 			event.preventDefault();
-			const distance = Math.max(260, stage.clientHeight * 1.35);
+			const distance = Math.max(320, stage.clientHeight * 1.55);
 			setImmediateProgress(chapter, startProgress + (event.clientY - startY) / distance, "pointer");
 		};
 		const release = (event) => {
@@ -911,32 +982,21 @@ function setupShowcaseComparisons(root = document) {
 			stage.style.touchAction = "";
 		});
 	});
-	const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
-		if (!entry.isIntersecting) return;
-		const index = chapters.indexOf(entry.target);
-		[
-			index - 1,
-			index,
-			index + 1
-		].forEach((position) => chapters[position] && prepare(chapters[position]));
-	}), {
-		rootMargin: "160% 0px",
-		threshold: .01
-	});
 	const handleViewportChange = () => {
 		updateScrollDistance();
 		scheduleScrollRead();
 	};
-	chapters.forEach((chapter) => observer.observe(chapter));
+	chapters.forEach((chapter) => {
+		chapter.dataset.showcaseActive = "false";
+	});
 	updateScrollDistance();
-	prepare(chapters[0]);
+	prepareChapter(chapters[0], "metadata");
 	addEventListener("scroll", scheduleScrollRead, { passive: true });
 	addEventListener("resize", handleViewportChange, { passive: true });
 	addEventListener("orientationchange", handleViewportChange, { passive: true });
 	scheduleScrollRead();
 	return () => {
 		destroyed = true;
-		observer.disconnect();
 		removeEventListener("scroll", scheduleScrollRead);
 		removeEventListener("resize", handleViewportChange);
 		removeEventListener("orientationchange", handleViewportChange);
@@ -945,14 +1005,15 @@ function setupShowcaseComparisons(root = document) {
 		cleanups.forEach((cleanup) => cleanup());
 		trackedVideos.forEach((video) => {
 			const state = videoStates.get(video);
-			if (state?.seekTimer) clearTimeout(state.seekTimer);
-			if (state?.seekListener) video.removeEventListener("seeked", state.seekListener);
+			if (state) clearFrameRequest(video, state);
 		});
 		chapters.forEach((chapter) => {
 			chapter.style.removeProperty("height");
+			delete chapter.dataset.showcaseActive;
 			chapter.querySelectorAll("video").forEach((video) => {
 				video.pause();
 				video.removeAttribute("src");
+				delete video.dataset.prepared;
 				video.load();
 			});
 		});
@@ -1128,6 +1189,8 @@ function setupHomeExperience(root = document) {
 	let frame = 0;
 	let heroRect;
 	let heroActive = false;
+	let heroVisible = true;
+	let heroObserver;
 	let pointerCaptured = false;
 	let navTimer;
 	let pageVisible = !document.hidden;
@@ -1158,7 +1221,7 @@ function setupHomeExperience(root = document) {
 		}
 	};
 	const paintHero = () => {
-		if (!pageVisible || !hero) {
+		if (!pageVisible || !heroVisible || !hero) {
 			frame = 0;
 			return;
 		}
@@ -1177,11 +1240,29 @@ function setupHomeExperience(root = document) {
 		hero.style.setProperty("--grid-y", `${gridOffset.y.toFixed(2)}px`);
 		frame = requestAnimationFrame(paintHero);
 	};
+	const stopHeroLoop = () => {
+		if (!frame) return;
+		cancelAnimationFrame(frame);
+		frame = 0;
+	};
 	const startHeroLoop = () => {
-		if (!frame && !reducedMotion && hero) frame = requestAnimationFrame(paintHero);
+		if (!frame && !reducedMotion && pageVisible && heroVisible && hero) frame = requestAnimationFrame(paintHero);
 	};
 	if (hero) {
 		updateHeroRect();
+		if ("IntersectionObserver" in globalThis) {
+			heroObserver = new IntersectionObserver(([entry]) => {
+				heroVisible = Boolean(entry?.isIntersecting);
+				if (heroVisible) {
+					updateHeroRect();
+					startHeroLoop();
+				} else stopHeroLoop();
+			}, {
+				rootMargin: "20% 0px",
+				threshold: 0
+			});
+			heroObserver.observe(hero);
+		}
 		startHeroLoop();
 		listen(hero, "pointerenter", (event) => {
 			setHeroPointer(event);
@@ -1228,10 +1309,7 @@ function setupHomeExperience(root = document) {
 		listen(document, "visibilitychange", () => {
 			pageVisible = !document.hidden;
 			if (pageVisible) startHeroLoop();
-			else if (frame) {
-				cancelAnimationFrame(frame);
-				frame = 0;
-			}
+			else stopHeroLoop();
 		});
 		listen(shell?.querySelector(".site-header"), "focusin", () => shell?.classList.add("nav-is-visible"));
 		if (!reducedMotion && !finePointer?.matches) {
@@ -1350,8 +1428,9 @@ function setupHomeExperience(root = document) {
 		cleanups.forEach((cleanup) => cleanup?.());
 		observer?.disconnect();
 		countObserver?.disconnect();
+		heroObserver?.disconnect();
 		clearTimeout(navTimer);
-		if (frame) cancelAnimationFrame(frame);
+		stopHeroLoop();
 		hero?.removeAttribute("style");
 		shell?.classList.remove("nav-is-visible");
 		root.classList.remove("home-is-enhanced");
