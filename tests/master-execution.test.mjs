@@ -17,14 +17,19 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   assert.match(media, /blueline-plumbing\.webp/);
   assert.match(media, /spread-the-fire\.webp/);
   assert.match(media, /verdant-edge\.webp/);
+  assert.match(media, /20260720-fluid-v4/);
   for (const name of ['verdant-normal', 'verdant-cinematic', 'northframe-normal', 'northframe-cinematic', 'olympus-normal', 'olympus-cinematic']) {
     assert.match(media, new RegExp(`${name}\\.mp4`));
     assert.match(media, new RegExp(`${name}-poster\\.webp`));
   }
 });
 
-test('showcase controller renders presented frames smoothly while limiting active decoders', async () => {
-  const source = await read('src/services/showcase-comparison.js');
+test('showcase controller follows scroll fluidly without overloading the page', async () => {
+  const [source, performanceCss, homeInteractions] = await Promise.all([
+    read('src/services/showcase-comparison.js'),
+    read('src/styles/performance.css'),
+    read('src/pages/home-interactions.js'),
+  ]);
   assert.match(source, /requestAnimationFrame/);
   assert.match(source, /requestVideoFrameCallback/);
   assert.match(source, /cancelVideoFrameCallback/);
@@ -37,14 +42,24 @@ test('showcase controller renders presented frames smoothly while limiting activ
   assert.match(source, /video\.src\s*=\s*originalSrc/);
   assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*360/);
   assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.24/);
-  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*90/);
+  assert.match(source, /PRESENTATION_FPS\s*=\s*24/);
+  assert.match(source, /MAX_SEEK_STEP_SECONDS\s*=\s*1\s*\/\s*12/);
+  assert.match(source, /FORWARD_PLAY_THRESHOLD_SECONDS\s*=\s*0\.18/);
+  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*120/);
   assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
   assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
+  assert.match(source, /PRELOAD_ROOT_MARGIN\s*=\s*'220% 0px'/);
+  assert.match(source, /video\.play\(\)/);
   assert.match(source, /data\.showcaseActive|dataset\.showcaseActive/);
-  assert.match(source, /prepareChapter\(chapter, 'metadata'\)|preload\s*=\s*effectivePriority/);
   assert.match(source, /removeAttribute\('src'\)/);
   assert.match(source, /Math\.exp/);
   assert.doesNotMatch(source, /response\.blob\(\)/);
+  assert.match(source, /import '\.\.\/styles\/performance\.css'/);
+  assert.match(performanceCss, /\.showcase-chapter[\s\S]*background:#121315/);
+  assert.match(performanceCss, /\.showcase-chapter__sticky[\s\S]*contain:paint/);
+  assert.match(performanceCss, /\.showcase-panel__media[\s\S]*contain:layout paint style/);
+  assert.match(homeInteractions, /HERO_SETTLE_EPSILON/);
+  assert.doesNotMatch(homeInteractions, /data-lens-grid|queueIntent|has-expanded-lens/);
 });
 
 test('homepage order wizard persists progress and hands the selected tier to checkout', async () => {
@@ -62,7 +77,7 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(service, /reportValidity/);
 });
 
-test('production packaging requires ffmpeg and emits scrub-ready showcase videos', async () => {
+test('production packaging requires ffmpeg and emits low-overhead scrub-ready showcase videos', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
   const [pruneScript, optimizeScript, ciWorkflow, pagesWorkflow] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
@@ -77,8 +92,11 @@ test('production packaging requires ffmpeg and emits scrub-ready showcase videos
   assert.match(pruneScript, /recursive:\s*true/);
   assert.match(optimizeScript, /process\.env\.CI\s*===\s*'true'/);
   assert.match(optimizeScript, /showcase-optimization\.json/);
+  assert.match(optimizeScript, /maximumWidth:\s*1024/);
   assert.match(optimizeScript, /fps=24/);
-  assert.match(optimizeScript, /'-g', '3'/);
+  assert.match(optimizeScript, /'-g', '2'/);
+  assert.match(optimizeScript, /'-keyint_min', '2'/);
+  assert.match(optimizeScript, /'-crf', '24'/);
   assert.match(optimizeScript, /'-bf', '0'/);
   assert.match(optimizeScript, /fastdecode/);
   assert.match(optimizeScript, /\+faststart/);
