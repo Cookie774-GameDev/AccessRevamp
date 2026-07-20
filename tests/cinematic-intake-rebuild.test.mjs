@@ -30,8 +30,8 @@ test('paid plans expose the approved creative production bundle and upgrade path
     read('src/styles/cinematic-renaissance.css'),
   ]);
   assert.match(catalog, /One subtle AI-assisted motion poster ad/);
-  assert.match(catalog, /Five Canva-built AI-assisted motion poster ads/);
-  assert.match(catalog, /Ten still poster variations/);
+  assert.match(catalog, /15 Canva-built animated poster ads total across the package/);
+  assert.doesNotMatch(catalog, /still poster/i);
   assert.match(catalog, /Three business card variations/);
   assert.match(catalog, /Two brochure variations/);
   assert.match(catalog, /Upgrade to the \$200 plan later for only \$150/);
