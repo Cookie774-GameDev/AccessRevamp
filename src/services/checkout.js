@@ -52,7 +52,7 @@ export function setupCheckout() {
       return;
     }
 
-    const requestId = form.dataset.orderRequestId;
+    let requestId = form.dataset.orderRequestId;
     if (!validRequestId(requestId)) {
       setCheckoutFailure(control, 'Reload and try again');
       return;
@@ -83,10 +83,21 @@ export function setupCheckout() {
         body: draftBody,
       });
       const draftPayload = await draftResponse.json().catch(() => ({}));
-      if (!draftResponse.ok || !draftPayload.draftId) {
+      if (!draftResponse.ok || !draftPayload.draftId || !validRequestId(draftPayload.requestId)) {
         throw new Error(draftResponse.status === 401 || draftResponse.status === 403
           ? 'Sign in with the confirmed project email'
-          : 'Your project request was not saved — no payment started');
+          : draftResponse.status === 409
+            ? (draftPayload.error || 'This saved request cannot start another payment')
+            : 'Your project request was not saved — no payment started');
+      }
+
+      if (draftPayload.requestId !== requestId) {
+        requestId = draftPayload.requestId;
+        form.dataset.orderRequestId = requestId;
+        form.dispatchEvent(new CustomEvent('order-request-id-rotated', {
+          bubbles: false,
+          detail: { requestId },
+        }));
       }
 
       control.textContent = 'Opening secure Stripe checkout…';
@@ -102,7 +113,9 @@ export function setupCheckout() {
       if (!response.ok || Object.keys(payload).length !== 1 || !payload.url) {
         throw new Error(response.status === 503
           ? 'Secure checkout is paused — your request is saved'
-          : 'Checkout is temporarily unavailable — your request is saved');
+          : response.status === 409
+            ? 'The previous Checkout attempt ended — click once more to safely start a fresh attempt'
+            : 'Checkout is temporarily unavailable — your request is saved');
       }
       location.assign(validatedStripeUrl(payload.url));
     } catch (error) {
@@ -112,7 +125,8 @@ export function setupCheckout() {
       if (document.contains(control)
         && !['Sign in to continue', 'Complete the project request', 'Reload and try again'].includes(control.textContent)
         && !control.textContent.includes('saved')
-        && !control.textContent.includes('unavailable')) {
+        && !control.textContent.includes('unavailable')
+        && !control.textContent.includes('ended')) {
         control.innerHTML = originalHtml;
       }
       control.removeAttribute('aria-busy');
