@@ -12,8 +12,8 @@ test('the five-step order wizard keeps its black UI with explicit high-contrast 
   ]);
 
   const styleImports = [...main.matchAll(/^import '([^']+\.css)';$/gm)].map((match) => match[1]);
-  assert.equal(styleImports.at(-1), './styles/order-wizard-dark-contrast.css');
-  assert.ok(styleImports.includes('./styles/mobile.css'), 'mobile CSS import must remain present');
+  assert.equal(styleImports.at(-1), './styles/mobile.css');
+  assert.equal(styleImports.at(-2), './styles/order-wizard-dark-contrast.css');
   assert.doesNotMatch(main, /order-wizard-light\.css/);
 
   assert.match(component, /data-order-panel="0"/);
