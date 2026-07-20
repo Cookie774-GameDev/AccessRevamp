@@ -11,13 +11,19 @@ const [main, portfolio, home, work, styles, demoShell] = await Promise.all([
   readFile('src/demos/shared/demo-shell.js', 'utf8'),
 ]);
 
-test('the portfolio is loaded as part of the production website', () => {
+test('the remaining portfolio is loaded as part of the production website', () => {
   assert.match(main, /'\/work': workPage/);
   assert.match(main, /'\/work\/:slug'/);
-  assert.match(home, /\/portfolio\/verdant-cut/);
-  assert.match(home, /\/portfolio\/ember-and-jar/);
-  assert.match(home, /\/portfolio\/clearline-plumbing/);
   assert.match(work, /portfolioItems/);
+  for (const route of [
+    '/portfolio/verdant-cut',
+    '/portfolio/ember-and-jar',
+    '/portfolio/clearline-plumbing',
+  ]) {
+    const routePattern = new RegExp(route.replaceAll('/', '\\/'));
+    assert.doesNotMatch(home, routePattern);
+    assert.doesNotMatch(work, routePattern);
+  }
 });
 
 test('the portfolio contains three homepage concepts and three poster concepts', () => {
