@@ -11,15 +11,23 @@ test('homepage presents four uncropped examples and three paired scrub chapters'
   const fit = await page.locator('.example-website img').evaluateAll((images) => images.map((image) => getComputedStyle(image).objectFit));
   expect(fit).toEqual(['contain', 'contain', 'contain', 'contain']);
 
-  await page.evaluate(() => {
-    const chapter = document.querySelector('[data-showcase-chapter]');
-    document.documentElement.style.scrollBehavior = 'auto';
-    const documentTop = chapter.getBoundingClientRect().top + scrollY;
-    scrollTo(0, documentTop + ((chapter.offsetHeight - innerHeight) * .55));
-  });
   const chapter = page.locator('[data-showcase-chapter]').first();
+  await chapter.locator('video').evaluateAll((videos) => videos.forEach((video) => {
+    Object.defineProperty(video, 'duration', { configurable: true, value: 8 });
+    Object.defineProperty(video, 'currentTime', { configurable: true, writable: true, value: 0 });
+  }));
+
+  await page.evaluate(() => {
+    const chapterElement = document.querySelector('[data-showcase-chapter]');
+    document.documentElement.style.scrollBehavior = 'auto';
+    const documentTop = chapterElement.getBoundingClientRect().top + scrollY;
+    scrollTo(0, documentTop + ((chapterElement.offsetHeight - innerHeight) * .55));
+  });
   await expect.poll(async () => Number(await chapter.getAttribute('data-progress'))).toBeGreaterThan(.4);
-  expect(await chapter.locator('video').evaluateAll((videos) => videos.every((video) => video.paused))).toBe(true);
+  const mediaState = await chapter.locator('video').evaluateAll((videos) => videos.map((video) => ({ paused: video.paused, currentTime: video.currentTime })));
+  expect(mediaState.every(({ paused }) => paused)).toBe(true);
+  expect(mediaState.every(({ currentTime }) => currentTime > 3)).toBe(true);
+  expect(Math.abs(mediaState[0].currentTime - mediaState[1].currentTime)).toBeLessThan(.01);
 });
 
 test('mobile comparison stacks complete panels without horizontal overflow', async ({ page }) => {
