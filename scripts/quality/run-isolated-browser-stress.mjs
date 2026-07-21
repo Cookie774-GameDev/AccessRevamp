@@ -179,18 +179,33 @@ async function runViewport(browser, name, viewport) {
 }
 
 let browser;
+const results = [];
 try {
   await waitForServer();
   browser = await chromium.launch({
     headless: true,
     args: ['--autoplay-policy=no-user-gesture-required', '--disable-dev-shm-usage', '--disable-background-timer-throttling'],
   });
-  const results = [];
   results.push(await runViewport(browser, 'desktop', { width: 1440, height: 900 }));
   results.push(await runViewport(browser, 'mobile', { width: 390, height: 844 }));
   const report = { isolated: true, target: baseUrl, generatedAt: new Date().toISOString(), results };
   await writeFile(resolve(outputDir, 'browser-stress.json'), `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report));
+} catch (error) {
+  const report = {
+    isolated: true,
+    target: baseUrl,
+    generatedAt: new Date().toISOString(),
+    results,
+    error: {
+      name: String(error?.name || 'Error'),
+      message: String(error?.message || error).slice(0, 1000),
+      stack: String(error?.stack || '').slice(0, 8000),
+    },
+  };
+  await writeFile(resolve(outputDir, 'browser-stress-error.json'), `${JSON.stringify(report, null, 2)}\n`);
+  console.error(error);
+  throw error;
 } finally {
   await browser?.close().catch(() => undefined);
   server.kill('SIGTERM');
