@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   statuses: read
 
 concurrency:
@@ -16,9 +16,14 @@ concurrency:
 
 jobs:
   diagnose:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
       - name: Wait for the Netlify commit status
         id: netlify
         env:
@@ -28,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifacts/netlify-diagnostic
+          mkdir -p artifacts/netlify-diagnostic docs/evidence
           target=""
           state="pending"
           for attempt in $(seq 1 90); do
@@ -74,6 +79,26 @@ jobs:
             echo "Netlify deploy metadata returned HTTP ${code}."
           fi
 
+      - name: Write sanitized diagnostic summary
+        if: always()
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          NETLIFY_STATE: ${{ steps.netlify.outputs.state }}
+          NETLIFY_TARGET: ${{ steps.netlify.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          http_status="$(cat artifacts/netlify-diagnostic/http-status.txt 2>/dev/null || printf 'unavailable')"
+          deploy="$(cat artifacts/netlify-diagnostic/deploy-summary.json 2>/dev/null || printf 'null')"
+          jq -n \
+            --arg commit "${COMMIT_SHA}" \
+            --arg state "${NETLIFY_STATE:-unknown}" \
+            --arg target "${NETLIFY_TARGET:-}" \
+            --arg httpStatus "${http_status}" \
+            --argjson deploy "${deploy}" \
+            '{generated_at: (now | todate), commit: $commit, github_status: $state, target_url: $target, metadata_http_status: $httpStatus, deploy: $deploy}' \
+            > docs/evidence/netlify-diagnostic-latest.json
+
       - name: Upload sanitized diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,3 +107,18 @@ jobs:
           path: artifacts/netlify-diagnostic
           if-no-files-found: warn
           retention-days: 3
+
+      - name: Commit the sanitized summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/evidence/netlify-diagnostic-latest.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: record Netlify deploy diagnostic"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
