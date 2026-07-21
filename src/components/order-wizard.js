@@ -37,6 +37,7 @@ export function orderWizard() {
       <div class="order-wizard__panel" data-order-panel="2" hidden>
         <div class="order-wizard__heading"><span>Step 03</span><h3>Specific request and references</h3></div>
         <div class="order-fields order-fields--two">
+          <div class="order-summary order-question-plan order-fields__wide" data-order-question-plan aria-label="Selected plan and perks" aria-live="polite"></div>
           <label>Main website goal<textarea name="mainGoal" required minlength="20" rows="4"></textarea></label>
           <label>Requested pages and sections<textarea name="requestedPages" required rows="4" placeholder="Home, services, about, contact…"></textarea></label>
           <label>Required features and integrations<textarea name="integrations" rows="4" placeholder="Booking, ecommerce, CMS, analytics…"></textarea></label>
