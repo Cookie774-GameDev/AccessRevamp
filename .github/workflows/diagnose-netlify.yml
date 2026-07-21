@@ -60,7 +60,7 @@ jobs:
           deploy_id="${target##*/}"
           echo "deploy_id=${deploy_id}" >> "${GITHUB_OUTPUT}"
 
-      - name: Read public deploy metadata when available
+      - name: Read public deploy metadata and build log when available
         if: steps.netlify.outputs.deploy_id != ''
         env:
           DEPLOY_ID: ${{ steps.netlify.outputs.deploy_id }}
@@ -73,11 +73,36 @@ jobs:
             --write-out '%{http_code}' \
             "https://api.netlify.com/api/v1/deploys/${DEPLOY_ID}")"
           printf '%s\n' "${code}" > artifacts/netlify-diagnostic/http-status.txt
-          if [[ "${code}" == "200" ]]; then
-            jq '{id,state,error_message,deploy_time,created_at,updated_at,commit_ref,branch,review_id,deploy_ssl_url,deploy_url,url,framework,frameworks}' "${output}" | tee artifacts/netlify-diagnostic/deploy-summary.json
-          else
+          if [[ "${code}" != "200" ]]; then
             echo "Netlify deploy metadata returned HTTP ${code}."
+            exit 0
           fi
+
+          jq '{id,site_id,build_id,state,error_message,summary,required,required_functions,available_functions,deploy_time,created_at,updated_at,commit_ref,branch,review_id,context,deploy_ssl_url,deploy_url,url,framework,frameworks}' "${output}" \
+            | tee artifacts/netlify-diagnostic/deploy-summary.json
+
+          build_id="$(jq -r '.build_id // empty' "${output}")"
+          if [[ -z "${build_id}" ]]; then
+            printf 'unavailable\n' > artifacts/netlify-diagnostic/build-log-http-status.txt
+            exit 0
+          fi
+
+          log_code="$(curl --silent --show-error --location \
+            --output artifacts/netlify-diagnostic/build-log.raw \
+            --write-out '%{http_code}' \
+            "https://api.netlify.com/api/v1/builds/${build_id}/log")"
+          printf '%s\n' "${log_code}" > artifacts/netlify-diagnostic/build-log-http-status.txt
+          if [[ "${log_code}" == "200" ]]; then
+            sed -E \
+              -e 's/\x1B\[[0-9;]*[A-Za-z]//g' \
+              -e 's#https?://[^[:space:]]+#[url]#g' \
+              -e 's/[A-Za-z0-9_=-]{32,}/[redacted]/g' \
+              artifacts/netlify-diagnostic/build-log.raw \
+              | grep -Ei 'error|failed|failure|exit code|unsupported|limit|too large|size|ffmpeg|function|bundle|deploy' \
+              | tail -n 80 \
+              > artifacts/netlify-diagnostic/build-log-errors.txt || true
+          fi
+          rm -f artifacts/netlify-diagnostic/build-log.raw
 
       - name: Write sanitized diagnostic summary
         if: always()
@@ -89,14 +114,18 @@ jobs:
         run: |
           set -euo pipefail
           http_status="$(cat artifacts/netlify-diagnostic/http-status.txt 2>/dev/null || printf 'unavailable')"
+          log_status="$(cat artifacts/netlify-diagnostic/build-log-http-status.txt 2>/dev/null || printf 'unavailable')"
           deploy="$(cat artifacts/netlify-diagnostic/deploy-summary.json 2>/dev/null || printf 'null')"
+          error_lines="$(jq -Rs 'split("\n") | map(select(length > 0))' artifacts/netlify-diagnostic/build-log-errors.txt 2>/dev/null || printf '[]')"
           jq -n \
             --arg commit "${COMMIT_SHA}" \
             --arg state "${NETLIFY_STATE:-unknown}" \
             --arg target "${NETLIFY_TARGET:-}" \
             --arg httpStatus "${http_status}" \
+            --arg logStatus "${log_status}" \
             --argjson deploy "${deploy}" \
-            '{generated_at: (now | todate), commit: $commit, github_status: $state, target_url: $target, metadata_http_status: $httpStatus, deploy: $deploy}' \
+            --argjson errorLines "${error_lines}" \
+            '{generated_at: (now | todate), commit: $commit, github_status: $state, target_url: $target, metadata_http_status: $httpStatus, build_log_http_status: $logStatus, deploy: $deploy, sanitized_error_lines: $errorLines}' \
             > docs/evidence/netlify-diagnostic-latest.json
 
       - name: Upload sanitized diagnostics
