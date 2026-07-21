@@ -6,6 +6,7 @@ import './styles/image-led.css';
 import './styles/studio-redesign.css';
 import './styles/cinematic-renaissance.css';
 import './styles/order-wizard-dark-contrast.css';
+import './styles/project-approval.css';
 import './styles/mobile.css';
 
 import { createRouter } from './app/router.js';
