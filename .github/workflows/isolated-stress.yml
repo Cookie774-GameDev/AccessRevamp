@@ -62,6 +62,8 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Build the production application locally
+        env:
+          REQUIRE_FFMPEG_OPTIMIZATION: "true"
         run: npm run build
       - name: Stress only the loopback HTTP server
         shell: bash
