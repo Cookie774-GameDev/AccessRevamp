@@ -30,8 +30,7 @@ function releaseAsset() {
   if (!supportedPlatforms.has(currentPlatform) || !supportedArchitectures.has(currentArch)) {
     throw new Error(`No pinned FFmpeg build is configured for ${currentPlatform}-${currentArch}.`);
   }
-  const suffix = currentPlatform === 'win32' ? '.exe.gz' : '.gz';
-  return `ffmpeg-${currentPlatform}-${currentArch}${suffix}`;
+  return `ffmpeg-${currentPlatform}-${currentArch}.gz`;
 }
 
 async function downloadPinnedFfmpeg(destination) {
