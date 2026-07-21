@@ -1,0 +1,79 @@
+name: Isolated Stress Suite
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/isolated-stress.yml"
+      - "tests/isolated-*-stress.test.mjs"
+      - "tests/helpers/isolated-*.mjs"
+      - "scripts/quality/run-isolated-*.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessrevamp-isolated-stress-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  payment-concurrency:
+    name: In-memory payment concurrency
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify no credential-shaped values are present
+        run: npm run security:local
+      - name: Run isolated Checkout, webhook, and refund stress tests
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test tests/isolated-*-stress.test.mjs 2>&1 | tee isolated-payment-stress.txt
+      - name: Upload payment stress evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-payment-stress
+          path: isolated-payment-stress.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  local-http-and-browser:
+    name: Local HTTP and browser pressure
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install FFmpeg for scrub-ready media
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build the production application locally
+        run: npm run build
+      - name: Stress only the loopback HTTP server
+        run: node scripts/quality/run-isolated-http-stress.mjs
+      - name: Install isolated Chromium runtime
+        run: npx playwright install --with-deps chromium
+      - name: Stress desktop, mobile, routing, and six-video scrolling locally
+        run: node scripts/quality/run-isolated-browser-stress.mjs
+      - name: Upload local stress measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-http-browser-stress
+          path: artifacts/isolated-stress
+          if-no-files-found: warn
+          retention-days: 7
