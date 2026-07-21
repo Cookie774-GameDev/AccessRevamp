@@ -18,6 +18,7 @@ export function setupOrderWizard(root = document) {
   const next = form.querySelector('[data-order-next]');
   const status = form.querySelector('[data-order-status]');
   const summary = form.querySelector('[data-order-summary]');
+  const questionPlan = form.querySelector('[data-order-question-plan]');
   const checkout = form.querySelector('[data-order-checkout][data-checkout]');
   const cinematicFields = form.querySelector('[data-cinematic-fields]');
   const fileInput = form.querySelector('[data-order-file-input]');
@@ -66,6 +67,11 @@ export function setupOrderWizard(root = document) {
   const renderFiles = () => {
     fileList.innerHTML = files.map((file, index) => `<li><span>${escapeHtml(file.name)}</span><small>${(file.size / 1024 / 1024).toFixed(1)} MB</small><button type="button" data-order-remove-file="${index}" aria-label="Remove ${escapeHtml(file.name)}">Remove</button></li>`).join('');
   };
+  const renderQuestionPlan = () => {
+    const plan = plans[selectedPlan()];
+    if (!questionPlan || !plan) return;
+    questionPlan.innerHTML = `<dl><div><dt>Selected plan</dt><dd><strong>${escapeHtml(plan.name)}</strong> · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Plan focus</dt><dd>${escapeHtml(plan.summary)}</dd></div></dl><div><strong>Every included perk</strong><ul aria-label="${escapeHtml(plan.name)} included perks">${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul></div>`;
+  };
   const renderSummary = () => {
     const plan = plans[selectedPlan()];
     const value = (name) => escapeHtml(form.elements[name]?.value || 'Not provided');
@@ -82,6 +88,7 @@ export function setupOrderWizard(root = document) {
     next.hidden = current === 4;
     next.textContent = current === 3 ? 'Continue to payment' : 'Continue';
     status.textContent = `Step ${current + 1} of 5`;
+    if (current === 2) renderQuestionPlan();
     if (current >= 3) renderSummary();
     save();
   };
@@ -107,7 +114,13 @@ export function setupOrderWizard(root = document) {
     if (requested <= current) show(requested);
     else if (requested === current + 1 && validatePanel()) show(requested);
   };
-  const onChange = () => { updatePlanFields(); save(); };
+  const onChange = (event) => {
+    if (event.target?.name === 'orderPlan') {
+      updatePlanFields();
+      renderQuestionPlan();
+    }
+    save();
+  };
   const onFiles = () => {
     const incoming = [...(fileInput.files || [])];
     files = incoming.filter((file) => ALLOWED.has(file.type) && file.size <= MAX_BYTES).slice(0, MAX_FILES);
@@ -126,6 +139,7 @@ export function setupOrderWizard(root = document) {
 
   restore();
   updatePlanFields();
+  renderQuestionPlan();
   show(current);
   next.addEventListener('click', onNext);
   previous.addEventListener('click', onPrevious);
