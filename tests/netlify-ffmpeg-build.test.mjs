@@ -80,7 +80,7 @@ test('missing showcase media fails even when optimization is optional', async ()
   }
 });
 
-test('Netlify bootstraps an exact static FFmpeg version and requires optimized output', async () => {
+test('Netlify downloads an exact release asset with a long timeout and requires optimized output', async () => {
   const [netlify, bootstrap, optimizeScript, production, pages, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
     readFile('scripts/netlify-build.mjs', 'utf8'),
@@ -92,13 +92,15 @@ test('Netlify bootstraps an exact static FFmpeg version and requires optimized o
   assert.match(netlify, /command = "node scripts\/netlify-build\.mjs"/);
   assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "true"/);
   assert.match(netlify, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
-  assert.match(bootstrap, /ffmpeg-static@5\.3\.0/);
-  assert.match(bootstrap, /--no-save/);
-  assert.match(bootstrap, /--package-lock=false/);
-  assert.match(bootstrap, /--ignore-scripts=false/);
-  assert.match(bootstrap, /FFMPEG_BINARY_RELEASE: 'b6\.1\.1'/);
+  assert.match(bootstrap, /FFMPEG_RELEASE = 'b6\.1\.1'/);
+  assert.match(bootstrap, /DOWNLOAD_TIMEOUT_MS = 180_000/);
+  assert.match(bootstrap, /github\.com\/eugeneware\/ffmpeg-static\/releases\/download/);
+  assert.match(bootstrap, /ffmpeg-\$\{currentPlatform\}-\$\{currentArch\}\.gz/);
+  assert.match(bootstrap, /createGunzip\(\)/);
+  assert.match(bootstrap, /NETLIFY_CACHE_DIR/);
   assert.match(bootstrap, /REQUIRE_FFMPEG_OPTIMIZATION: 'true'/);
   assert.match(bootstrap, /MAX_SHOWCASE_VIDEO_BYTES: '9500000'/);
+  assert.doesNotMatch(bootstrap, /npm install|ffmpeg-static@/);
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
   assert.match(production, /node scripts\/netlify-build\.mjs/);
