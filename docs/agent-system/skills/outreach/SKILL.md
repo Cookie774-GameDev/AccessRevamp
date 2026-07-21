@@ -6,13 +6,13 @@ Prepare restrained, relevant, human-approved business messages based on one veri
 
 ## Volume math
 
-The database value of 1,000 is a hard technical ceiling, not an instruction to send. The operating cap is the lower of:
+The database value of 1,000 is a hard technical ceiling, not an instruction to send regardless of mailbox health. The operating cap is the lower of:
 
 - The configured database ceiling.
 - The number of active, authorized mailboxes multiplied by the cold-email limit per mailbox.
 - Provider, reputation, legal, complaint, and operator limits.
 
-With 10 mailboxes at 5 cold plus 5 provider-managed warm-up messages each, the allocation is 50 cold and 50 warm-up messages per day: 100 total, not 1,000.
+With 100 inboxes at five cold plus five provider-managed warm-up messages each, the nominal allocation is 500 cold and 500 warm-up messages per day: 1,000 total. The cold-outreach queue may process no more than 500 per day, and only when all 100 inboxes are actually registered, active, healthy, and outbound-authorized. Warm-up remains provider-managed and is not an AI-generated cold campaign.
 
 ## Message rules
 
@@ -20,7 +20,7 @@ With 10 mailboxes at 5 cold plus 5 provider-managed warm-up messages each, the a
 - Review the recipient’s public website immediately before drafting.
 - Use one human-verified detail: product, service, phrase, promise, page, or customer task.
 - State the honest sender and AccessRevamp identity.
-- Explain why the message is relevant without fear, legal threats, or guaranteed results.
+- Explain why the message is relevant without fear, legal threats, or promised results.
 - Include a working reply path, valid postal identity where required, and a clear opt-out.
 - Preferred opt-out: “Reply no thanks or use the opt-out link and we will not contact you again.”
 - End naturally: “If you have questions, feel free to ask.”
