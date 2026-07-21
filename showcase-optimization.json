@@ -1,6 +1,7 @@
 {
   "status": "optimized",
-  "generatedAt": "2026-07-21T03:57:03.189Z",
+  "generatedAt": "2026-07-21T04:13:51.911Z",
+  "optimizationRequired": true,
   "encoder": {
     "codec": "h264",
     "maximumWidth": 1024,
