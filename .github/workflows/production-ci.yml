@@ -52,4 +52,20 @@ jobs:
           MAX_SHOWCASE_VIDEO_BYTES: "9500000"
         run: npm run build
       - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high
+        id: production_audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm audit --omit=dev --audit-level=high --json 2>&1 | tee audit-output.json
+      - name: Upload dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-output
+          path: audit-output.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Enforce production dependency audit
+        if: steps.production_audit.outcome != 'success'
+        run: exit 1
