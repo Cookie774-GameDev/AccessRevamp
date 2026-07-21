@@ -24,6 +24,8 @@ test('catalog exposes the exact canonical one-time tiers', () => {
     ],
   );
   assert.equal(TIERS.complete_revamp.rank, 2);
+  assert.ok(TIERS.complete_revamp.features.includes('15 Canva-built animated poster ads total across the package'));
+  assert.equal(TIERS.complete_revamp.features.some((feature) => /still poster/i.test(feature)), false);
   assert.equal(Object.isFrozen(TIERS), true);
 });
 

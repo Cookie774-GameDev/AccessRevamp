@@ -4,7 +4,7 @@
 
 **Owner:** Operations with privacy/legal, security, product, and engineering review.
 
-**Authority:** [approved rebuild specification](superpowers/specs/2026-07-18-accessrevamp-production-rebuild-design.md) and the [account/operations plan](superpowers/plans/2026-07-18-accessrevamp-account-operations.md).
+**Authority:** [approved rebuild specification](superpowers/specs/2026-07-18-accessrevamp-production-rebuild-design.md), the [account/operations plan](superpowers/plans/2026-07-18-accessrevamp-account-operations.md), and the [first-touch cold-email prompt](COLD_EMAIL_SYSTEM_PROMPT.md).
 
 ## Purpose and boundary
 
@@ -20,16 +20,25 @@ Outreach may introduce a manually verified public-site observation and an option
 4. A person verifies every prospect-facing observation, evidence item, severity/confidence label, and claim.
 5. Check permanent suppression and prior opt-out before preview or draft creation.
 6. Create a private preview only from approved, rights-safe content; store only a token hash; set expiry and `noindex`.
-7. Draft plain, specific copy with real sender identity, reply path, postal address when required, preview expiry, and one-click opt-out.
-8. A different or explicitly accountable human approves the exact subject, body, recipient, finding, evidence, and link.
-9. Recheck suppression, daily ceiling, sender readiness, and global kill switch immediately before any future send.
-10. Record disposition, opt-out, bounce/complaint handling, and audit evidence.
+7. Draft plain, specific copy with real sender identity, reply path, the plain-text website address `accessrevamp.com`, no first-touch sales or intake link, no required reply keyword, and no reply-based opt-out wording.
+8. Append a sender-managed compliance footer containing the real physical postal address and a clear unsubscribe control, plus required `List-Unsubscribe` headers. These compliance controls are not sales links.
+9. A different or explicitly accountable human approves the exact subject, body, recipient, finding, evidence, $50 and $200 offer wording, 15-animated-poster scope, natural reply invitation, compliance footer, and the absence of a questionnaire, checkout, payment, preview, shortened, tracked, or personalized sales URL.
+10. Recheck suppression, daily ceiling, sender readiness, footer configuration, and global kill switch immediately before any future send.
+11. Record disposition, opt-out, bounce/complaint handling, and audit evidence.
 
 The database maximum is 20 queued/scheduled/sent items per UTC day. Lower operational limits may apply. Attempt 21 must fail transactionally. Suppression is permanent unless a lawful, audited correction process applies; contacting a different employee to evade an opt-out is prohibited.
 
 ## Official preparation ramp
 
-The requested operating target is recorded as 15 human-reviewed drafts per day for program days 1–4, 20 per day for days 5–14, and 22 per day from day 15 onward. The repository safety ceiling remains 20 per UTC day, so the enforced preparation limit clamps the final stage to 20 unless a separately reviewed policy change replaces that ceiling. This ramp governs capacity for distinct, eligible businesses; it never authorizes indefinite follow-up to the same recipient. Sending remains disabled, and every record still requires the full evidence, approval, suppression, opt-out, sender-readiness, and jurisdiction checks above.
+The requested first-touch target is 10 messages per day in week 1, 12 per day in week 2, 15 per day in week 3, 18 per day in week 4, 20 per day in week 5, 22 per day in week 6, and 22 per day for the following 30 days. The repository safety ceiling remains 20 per UTC day, so the week-6 and following-month stages may prepare up to 22 human-reviewed drafts but may approve or send no more than 20; overflow remains unsent. Any later increase requires a separately reviewed policy, schema, deliverability, complaint, suppression, legal, and sender-readiness change. This ramp governs distinct, eligible businesses; it never authorizes indefinite follow-up to the same recipient. Sending remains disabled, and every record still requires the full evidence, approval, suppression, unsubscribe, postal-identity, sender-readiness, and jurisdiction checks above.
+
+## First-touch offer and reply standard
+
+The concise first email may state: a Homepage Reveal is **$50**, and a Complete Website Revamp is **$200** with a full site upgrade plus **15 animated Canva posters**. Do not say AccessRevamp has four options in the first email. Do not disclose internal AI, scanner, or review-process details.
+
+End with a natural, low-pressure question offering a free, no-obligation quote. The prospect may answer in their own words; never require a keyword or scripted phrase. A separate reply-handling MD will interpret the response and draft the appropriate follow-up.
+
+Do not invent discounts, customers, reviews, testimonials, results, or guarantees.
 
 ## Claim standard
 
@@ -51,7 +60,7 @@ The rebuild provides a clearer operator workspace for research, approval, previe
 
 ### EXTERNALLY BLOCKED
 
-Real sender identity, reply-capable mailbox, postal address, domain authentication, bounce/complaint processing, jurisdiction review, and owned operator authorization are not present in source and cannot be inferred.
+Real sender identity, reply-capable mailbox, valid physical postal address, unsubscribe configuration, domain authentication, bounce/complaint processing, jurisdiction review, and owned operator authorization are not present in source and cannot be inferred.
 
 ### LAUNCH-ONLY
 
@@ -59,4 +68,4 @@ Changing `sending_enabled`, configuring a transport, scheduling a campaign, or s
 
 ## Validation
 
-Run suppression-first tests, attempt-21 ceiling tests, approval-integrity tests, opt-out idempotency tests, preview token/expiry/revocation tests, browser-role denial tests, and a code search proving no transport bypass. Final evidence states the number sent; for this rebuild it must remain zero unless the user later grants explicit, separate authorization.
+Run suppression-first tests, attempt-21 ceiling tests, approval-integrity tests, opt-out idempotency tests, compliance-footer tests, preview token/expiry/revocation tests, browser-role denial tests, and a code search proving no transport bypass. Final evidence states the number sent; for this rebuild it must remain zero unless the user later grants explicit, separate authorization.

@@ -3,12 +3,14 @@ export const SENDING_ENABLED = false;
 
 export function requestedDailyTarget(programDay) {
   if (!Number.isInteger(programDay) || programDay < 1) throw new RangeError('Program day must be a positive integer.');
-  if (programDay <= 4) return 15;
-  if (programDay <= 14) return 20;
+  if (programDay <= 7) return 10;
+  if (programDay <= 14) return 12;
+  if (programDay <= 21) return 15;
+  if (programDay <= 28) return 18;
+  if (programDay <= 35) return 20;
   return 22;
 }
 
 export function enforcedDailyDraftLimit(programDay) {
   return Math.min(requestedDailyTarget(programDay), OUTREACH_HARD_CAP);
 }
-
