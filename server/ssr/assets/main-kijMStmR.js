@@ -523,6 +523,7 @@ function orderWizard() {
       <div class="order-wizard__panel" data-order-panel="2" hidden>
         <div class="order-wizard__heading"><span>Step 03</span><h3>Specific request and references</h3></div>
         <div class="order-fields order-fields--two">
+          <div class="order-summary order-question-plan order-fields__wide" data-order-question-plan aria-label="Selected plan and perks" aria-live="polite"></div>
           <label>Main website goal<textarea name="mainGoal" required minlength="20" rows="4"></textarea></label>
           <label>Requested pages and sections<textarea name="requestedPages" required rows="4" placeholder="Home, services, about, contact…"></textarea></label>
           <label>Required features and integrations<textarea name="integrations" rows="4" placeholder="Booking, ecommerce, CMS, analytics…"></textarea></label>
@@ -1164,6 +1165,7 @@ function setupOrderWizard(root = document) {
 	const next = form.querySelector("[data-order-next]");
 	const status = form.querySelector("[data-order-status]");
 	const summary = form.querySelector("[data-order-summary]");
+	const questionPlan = form.querySelector("[data-order-question-plan]");
 	const checkout = form.querySelector("[data-order-checkout][data-checkout]");
 	const cinematicFields = form.querySelector("[data-cinematic-fields]");
 	const fileInput = form.querySelector("[data-order-file-input]");
@@ -1221,6 +1223,11 @@ function setupOrderWizard(root = document) {
 	const renderFiles = () => {
 		fileList.innerHTML = files.map((file, index) => `<li><span>${escapeHtml(file.name)}</span><small>${(file.size / 1024 / 1024).toFixed(1)} MB</small><button type="button" data-order-remove-file="${index}" aria-label="Remove ${escapeHtml(file.name)}">Remove</button></li>`).join("");
 	};
+	const renderQuestionPlan = () => {
+		const plan = plans[selectedPlan()];
+		if (!questionPlan || !plan) return;
+		questionPlan.innerHTML = `<dl><div><dt>Selected plan</dt><dd><strong>${escapeHtml(plan.name)}</strong> · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Plan focus</dt><dd>${escapeHtml(plan.summary)}</dd></div></dl><div><strong>Every included perk</strong><ul aria-label="${escapeHtml(plan.name)} included perks">${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("")}</ul></div>`;
+	};
 	const renderSummary = () => {
 		const plan = plans[selectedPlan()];
 		const value = (name) => escapeHtml(form.elements[name]?.value || "Not provided");
@@ -1241,6 +1248,7 @@ function setupOrderWizard(root = document) {
 		next.hidden = current === 4;
 		next.textContent = current === 3 ? "Continue to payment" : "Continue";
 		status.textContent = `Step ${current + 1} of 5`;
+		if (current === 2) renderQuestionPlan();
 		if (current >= 3) renderSummary();
 		save();
 	};
@@ -1268,8 +1276,11 @@ function setupOrderWizard(root = document) {
 		if (requested <= current) show(requested);
 		else if (requested === current + 1 && validatePanel()) show(requested);
 	};
-	const onChange = () => {
-		updatePlanFields();
+	const onChange = (event) => {
+		if (event.target?.name === "orderPlan") {
+			updatePlanFields();
+			renderQuestionPlan();
+		}
 		save();
 	};
 	const onFiles = () => {
@@ -1296,6 +1307,7 @@ function setupOrderWizard(root = document) {
 	const onSubmit = (event) => event.preventDefault();
 	restore();
 	updatePlanFields();
+	renderQuestionPlan();
 	show(current);
 	next.addEventListener("click", onNext);
 	previous.addEventListener("click", onPrevious);

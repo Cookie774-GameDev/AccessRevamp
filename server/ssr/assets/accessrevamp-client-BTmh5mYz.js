@@ -4,7 +4,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react(), 1);
 var import_jsx_runtime = require_jsx_runtime();
 function AccessRevampClient() {
 	(0, import_react.useEffect)(() => {
-		import("./main-wM2ie2PM.js");
+		import("./main-kijMStmR.js");
 	}, []);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
 		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
