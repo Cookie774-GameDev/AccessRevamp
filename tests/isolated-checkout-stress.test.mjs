@@ -47,7 +47,7 @@ test('40-customer burst keeps every user, request, plan and session isolated', {
     token: fixture.token,
     requestId: fixture.draft.request_id,
     targetTier: fixture.draft.plan_key,
-  }))));
+  })))));
 
   assert.deepEqual(new Set(responses.map((response) => response.status)), new Set([201]));
   assert.equal(stripe.checkoutCreations, fixtures.length);
