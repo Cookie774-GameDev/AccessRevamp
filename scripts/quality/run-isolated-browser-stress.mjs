@@ -55,6 +55,7 @@ async function runViewport(browser, name, viewport) {
   const consoleErrors = [];
   const pageErrors = [];
   const localRequestFailures = [];
+  const expectedMediaAborts = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text().slice(0, 300));
   });
@@ -62,7 +63,12 @@ async function runViewport(browser, name, viewport) {
   page.on('requestfailed', (request) => {
     const url = new URL(request.url());
     if (['127.0.0.1', 'localhost'].includes(url.hostname)) {
-      localRequestFailures.push({ url: request.url(), error: request.failure()?.errorText || 'unknown' });
+      const error = request.failure()?.errorText || 'unknown';
+      if (error === 'net::ERR_ABORTED' && url.pathname.startsWith('/media/showcases/')) {
+        expectedMediaAborts.push({ url: request.url(), error });
+      } else {
+        localRequestFailures.push({ url: request.url(), error });
+      }
     }
   });
 
@@ -166,6 +172,7 @@ async function runViewport(browser, name, viewport) {
     consoleErrors,
     pageErrors,
     localRequestFailures,
+    expectedMediaAborts,
   };
 
   assert.equal(pageErrors.length, 0, JSON.stringify(pageErrors));
