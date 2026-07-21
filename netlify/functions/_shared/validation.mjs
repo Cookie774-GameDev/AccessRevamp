@@ -56,9 +56,26 @@ export const orderDraftTextSchema = z.object({
   launchDate: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''),
   referenceUrls: z.string().trim().max(5000).default(''),
   specificRequest: z.string().trim().max(8000).default(''),
+  cinematicSceneCount: z.union([z.literal(''), z.enum(['3', '4'])]).default(''),
   cinematicDirection: z.string().trim().max(8000).default(''),
+  portfolioConsent: z.boolean().default(false),
   termsAccepted: z.literal(true, { errorMap: () => ({ message: 'Terms acceptance is required before checkout.' }) }),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (value.planKey === 'cinematic_scroll' && !['3', '4'].includes(value.cinematicSceneCount)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['cinematicSceneCount'],
+      message: 'Choose three or four cinematic scenes.',
+    });
+  }
+  if (value.planKey !== 'cinematic_scroll' && value.cinematicSceneCount) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['cinematicSceneCount'],
+      message: 'Cinematic scene count is available only with the Cinematic Scroll Site.',
+    });
+  }
+});
 
 export const entitlementQuoteSchema = z.object({
   targetTier: z.enum(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']),
