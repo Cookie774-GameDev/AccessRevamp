@@ -12,7 +12,7 @@ Review public headers, TLS/redirect behavior, cookies, scripts, dependencies, fo
 
 ### Authorized active mode
 
-Allowed only when `project_security_authorizations` has a matching active, unexpired record. Follow the exact targets, methods, time window, exclusions, request rate, data rules, and emergency-stop contact. The database rejects active-security findings without the authorization ID.
+Active testing is allowed only when `project_security_authorizations` has a matching active, unexpired record. Follow the exact targets, methods, time window, exclusions, request rate, data rules, and emergency-stop contact. The database rejects active-security findings without the authorization ID.
 
 ## Prohibited actions
 
