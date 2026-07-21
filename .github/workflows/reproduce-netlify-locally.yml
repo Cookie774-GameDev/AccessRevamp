@@ -1,0 +1,52 @@
+name: Reproduce Netlify build locally
+
+on:
+  push:
+    branches:
+      - fix/netlify-static-ffmpeg
+    paths:
+      - ".github/workflows/reproduce-netlify-locally.yml"
+      - "netlify.toml"
+      - "netlify/functions/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/**"
+      - "src/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessrevamp-netlify-local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run the complete Netlify build locally
+        shell: bash
+        run: |
+          set -o pipefail
+          npx --yes netlify-cli@latest build --offline --context deploy-preview --debug 2>&1 | tee netlify-local-build.log
+      - name: Upload the local Netlify build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-local-build-log
+          path: netlify-local-build.log
+          if-no-files-found: warn
+          retention-days: 3
