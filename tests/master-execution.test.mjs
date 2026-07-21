@@ -106,7 +106,9 @@ test('production packaging verifies every video and keeps every deploy path scru
   assert.match(optimizeScript, /'-bf', '0'/);
   assert.match(optimizeScript, /fastdecode/);
   assert.match(optimizeScript, /\+faststart/);
-  assert.match(netlifyBuild, /ffmpeg-static@5\.3\.0/);
+  assert.match(netlifyBuild, /FFMPEG_RELEASE = 'b6\.1\.1'/);
+  assert.match(netlifyBuild, /github\.com\/eugeneware\/ffmpeg-static\/releases\/download/);
+  assert.match(netlifyBuild, /createGunzip\(\)/);
   assert.match(netlifyBuild, /REQUIRE_FFMPEG_OPTIMIZATION: 'true'/);
   assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(ciWorkflow, /node scripts\/netlify-build\.mjs/);
