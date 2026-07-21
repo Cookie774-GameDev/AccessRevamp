@@ -47,6 +47,40 @@ test('ambiguous provider response loss retries with one idempotent refund', asyn
   assert.ok(fixture.authorization.stripe_refund_id?.startsWith('re_test_'));
 });
 
+test('refund kill switch rejects 150 execution attempts before Stripe', { timeout: 30_000 }, async () => {
+  const fixture = setup();
+  const originalRpc = fixture.harness.admin.rpc;
+  fixture.harness.admin.rpc = async (name, args) => {
+    if (name === 'claim_accessrevamp_refund_execution') {
+      return { data: null, error: { code: '55000', message: 'Refund execution is paused' } };
+    }
+    return originalRpc(name, args);
+  };
+
+  const responses = await Promise.all(Array.from({ length: 150 }, () => fixture.handler(refundRequest(
+    fixture.token,
+    fixture.authorization.id,
+  ))));
+
+  assert.ok(responses.every((response) => response.status === 409));
+  assert.equal(fixture.stripe.refundAttempts, 0);
+  assert.equal(fixture.stripe.refundCreations, 0);
+  assert.equal(fixture.authorization.status, 'approved');
+});
+
+test('inactive operator flood cannot claim or create a refund', { timeout: 30_000 }, async () => {
+  const fixture = setup();
+  fixture.harness.operators.clear();
+  const responses = await Promise.all(Array.from({ length: 100 }, () => fixture.handler(refundRequest(
+    fixture.token,
+    fixture.authorization.id,
+  ))));
+
+  assert.ok(responses.every((response) => response.status === 403));
+  assert.equal(fixture.stripe.refundAttempts, 0);
+  assert.equal(fixture.authorization.status, 'approved');
+});
+
 test('hostile refund requests never call Stripe', { timeout: 30_000 }, async () => {
   const fixture = setup();
   const invalid = [
