@@ -170,14 +170,23 @@ async function testTouchContainment(page) {
       dragging: chapter.dataset.dragging || '',
       touchAction: stage.style.touchAction,
     };
+    const scrollingElement = document.scrollingElement;
     const scrollBeforeResume = scrollY;
-    scrollBy(0, 120);
-    await new Promise((resolvePromise) => requestAnimationFrame(resolvePromise));
+    const maximum = Math.max(0, scrollingElement.scrollHeight - innerHeight);
+    const target = scrollBeforeResume + 180 <= maximum
+      ? scrollBeforeResume + 180
+      : Math.max(0, scrollBeforeResume - 180);
+    const previousBehavior = scrollingElement.style.scrollBehavior;
+    scrollingElement.style.scrollBehavior = 'auto';
+    scrollTo(0, target);
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 60));
+    const resumedScrollDelta = scrollY - scrollBeforeResume;
+    scrollingElement.style.scrollBehavior = previousBehavior;
     return {
       before,
       during,
       released,
-      resumedScrollDelta: scrollY - scrollBeforeResume,
+      resumedScrollDelta,
     };
   });
 
@@ -187,7 +196,7 @@ async function testTouchContainment(page) {
   assert.ok(Math.abs(result.during.progress - result.before.progress) > 0.08, 'Touch scrub did not change progress.');
   assert.equal(result.released.dragging, '');
   assert.equal(result.released.touchAction, '');
-  assert.ok(result.resumedScrollDelta > 50, 'Normal page scrolling did not resume after pointer release.');
+  assert.ok(Math.abs(result.resumedScrollDelta) > 50, 'Normal page scrolling did not resume after pointer release.');
   return result;
 }
 
