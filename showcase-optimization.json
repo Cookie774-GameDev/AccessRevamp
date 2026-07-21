@@ -1,7 +1,8 @@
 {
   "status": "optimized",
-  "generatedAt": "2026-07-21T04:13:51.911Z",
+  "generatedAt": "2026-07-21T05:13:32.882Z",
   "optimizationRequired": true,
+  "maximumOutputBytes": null,
   "encoder": {
     "codec": "h264",
     "maximumWidth": 1024,
@@ -14,38 +15,38 @@
     {
       "filename": "verdant-normal.mp4",
       "status": "optimized",
-      "originalBytes": 7497251,
-      "optimizedBytes": 6601633
+      "originalBytes": 6601633,
+      "optimizedBytes": 6527481
     },
     {
       "filename": "verdant-cinematic.mp4",
       "status": "optimized",
-      "originalBytes": 9410738,
-      "optimizedBytes": 6922048
+      "originalBytes": 6922050,
+      "optimizedBytes": 6785864
     },
     {
       "filename": "northframe-normal.mp4",
       "status": "optimized",
-      "originalBytes": 5223073,
-      "optimizedBytes": 3504806
+      "originalBytes": 3504810,
+      "optimizedBytes": 3481682
     },
     {
       "filename": "northframe-cinematic.mp4",
       "status": "optimized",
-      "originalBytes": 5881480,
-      "optimizedBytes": 3504629
+      "originalBytes": 3504608,
+      "optimizedBytes": 3453880
     },
     {
       "filename": "olympus-normal.mp4",
       "status": "optimized",
-      "originalBytes": 6230948,
-      "optimizedBytes": 5699751
+      "originalBytes": 5699754,
+      "optimizedBytes": 5618665
     },
     {
       "filename": "olympus-cinematic.mp4",
       "status": "optimized",
-      "originalBytes": 7486726,
-      "optimizedBytes": 5553071
+      "originalBytes": 5553071,
+      "optimizedBytes": 5438861
     }
   ]
 }

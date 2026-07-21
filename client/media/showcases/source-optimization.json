@@ -1,0 +1,71 @@
+{
+  "status": "optimized",
+  "encoderVersion": "accessrevamp-scrub-v5",
+  "generatedAt": "2026-07-21T04:47:07.864Z",
+  "maximumBytes": 9500000,
+  "encoder": {
+    "codec": "h264",
+    "maximumWidth": 1024,
+    "framesPerSecond": 24,
+    "keyframeInterval": 2,
+    "bFrames": 0,
+    "crf": 24,
+    "fastStart": true
+  },
+  "files": [
+    {
+      "filename": "verdant-normal.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 7497251,
+      "originalSha256": "1152bc1c5b6adf4a2d17580eba56d0b7bb23545e77abf5303ab9ef3136269124",
+      "optimizedBytes": 6601633,
+      "optimizedSha256": "2b021826e6ea95a63c881a3bd2103a6781a8d8a2eb3f8233ae2ca04da37edd9e",
+      "status": "optimized"
+    },
+    {
+      "filename": "verdant-cinematic.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 9410738,
+      "originalSha256": "a341b3d1e0e4c0f6d55fcab4e99eabaf2e165f92d27383fb60ac136e6b6455d5",
+      "optimizedBytes": 6922050,
+      "optimizedSha256": "2c606c9ecfa80d54431cefbf7242e347c5aa304dac05147696333194dee5b16f",
+      "status": "optimized"
+    },
+    {
+      "filename": "northframe-normal.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 5223073,
+      "originalSha256": "14ad9440a5bde3362070c13ed8a3b94d430b8000857a0bc88d7578d150555994",
+      "optimizedBytes": 3504810,
+      "optimizedSha256": "3ad0e172c7100ebb6c408cf71ecb55a64dd361ffe40a23f145df1df7fde7ebad",
+      "status": "optimized"
+    },
+    {
+      "filename": "northframe-cinematic.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 5881480,
+      "originalSha256": "dc92c8078b5276dc90f10deefa6b49bc8265b530aa0bd962e8bdb97973d1ad1e",
+      "optimizedBytes": 3504608,
+      "optimizedSha256": "59a9f23a6fd92b2aa3d5601d6c19d72193879eac7368204cf5ce6f271604272d",
+      "status": "optimized"
+    },
+    {
+      "filename": "olympus-normal.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 6230948,
+      "originalSha256": "ae2f1acec5a25bd6f568bbb7d38ce5880b59b5db0d8492406860899bcc0fe781",
+      "optimizedBytes": 5699754,
+      "optimizedSha256": "3ddfd7e9e5379190831d5f09910ff24895f5f9c21d0b6fe62e7faa414d7c66ab",
+      "status": "optimized"
+    },
+    {
+      "filename": "olympus-cinematic.mp4",
+      "encoderVersion": "accessrevamp-scrub-v5",
+      "originalBytes": 7486726,
+      "originalSha256": "8c0a99bb7e8f7ec4534ef63fce0f601a4debc7cb463be57f49f362ff5487ceb5",
+      "optimizedBytes": 5553071,
+      "optimizedSha256": "24ca16a879e7f6d7dfb0ef4790bfae1e753e833197963e4474512891135ac959",
+      "status": "optimized"
+    }
+  ]
+}
