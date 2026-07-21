@@ -16,7 +16,7 @@ Assemble a concise, accurate, usable customer package from verified findings, ap
 - Customer-facing claims must be verified and brief.
 - Do not overwhelm the customer with raw scanner output.
 - Separate blocking issues, serious issues, improvements, and ideas.
-- Explain business impact without guaranteed revenue or legal claims.
+- Explain business impact without promising revenue or making legal claims.
 - Include exactly what was delivered, what was not included, and what still requires customer action.
 - Verify every URL and artifact before including it.
 - Keep all files under 9,000,000 bytes or split them into numbered parts with hashes.
