@@ -145,7 +145,11 @@ export class PaymentHarness {
       return { data: query.value, error: null };
     }
     if (query.op === 'update') {
-      if (query.table === 'upgrade_reservations' && this.forceAttachFailure) return { data: single ? null : [], error: null };
+      if (query.table === 'upgrade_reservations'
+        && this.forceAttachFailure
+        && query.value?.status === 'checkout_created') {
+        return { data: single ? null : [], error: null };
+      }
       for (const row of rows) {
         Object.assign(row, structuredClone(query.value));
         if (query.table === 'upgrade_reservations') this.syncDraft(row);
