@@ -47,6 +47,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Production build
+        env:
+          REQUIRE_FFMPEG_OPTIMIZATION: "true"
         run: npm run build
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high

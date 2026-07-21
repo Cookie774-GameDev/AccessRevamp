@@ -7,6 +7,7 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+  REQUIRE_FFMPEG_OPTIMIZATION = "false"
 
 [functions]
   node_bundler = "esbuild"
