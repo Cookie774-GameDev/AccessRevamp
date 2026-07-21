@@ -39,7 +39,7 @@ export function createCheckoutHandler({
   createStripe = (key) => new Stripe(key, {
     apiVersion: STRIPE_API_VERSION,
     maxNetworkRetries: 2,
-    appInfo: { name: 'AccessRevamp', version: '3.0.0' },
+    appInfo: { name: 'AccessRevamp', version: '3.1.0' },
   }),
 } = {}) {
   return async function checkoutHandler(request) {
@@ -74,7 +74,7 @@ export function createCheckoutHandler({
         .maybeSingle();
       if (draftError) throw new HttpError(503, 'The saved project request is unavailable.');
       if (!draft
-        || draft.status !== 'draft'
+        || !['draft', 'checkout_created'].includes(draft.status)
         || draft.plan_key !== payload.targetTier
         || draft.email !== user.email) {
         throw new HttpError(409, 'Save a matching project request before checkout.');
@@ -150,6 +150,18 @@ export function createCheckoutHandler({
 
       if (attachError || draftAttachError || !attached || !attachedDraft) {
         try { await stripe.checkout.sessions.expire(session.id); } catch { /* Best-effort orphan containment. */ }
+        await Promise.allSettled([
+          admin.from('upgrade_reservations')
+            .update({ status: 'canceled', updated_at: new Date().toISOString() })
+            .eq('id', reservation.reservation_id)
+            .eq('user_id', user.id)
+            .in('status', ['reserved', 'checkout_created']),
+          admin.from('order_drafts')
+            .update({ status: 'canceled', updated_at: new Date().toISOString() })
+            .eq('id', draft.id)
+            .eq('user_id', user.id)
+            .in('status', ['draft', 'checkout_created']),
+        ]);
         await recordPaymentIncident(admin, {
           dedupeKey: `checkout-attach-failed:${session.id}`,
           incidentType: 'configuration_failure',

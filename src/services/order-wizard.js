@@ -122,6 +122,13 @@ export function setupOrderWizard(root = document) {
     syncFileInput();
     renderFiles();
   };
+  const onRequestIdRotated = (event) => {
+    const nextRequestId = event.detail?.requestId;
+    if (!UUID_PATTERN.test(nextRequestId || '')) return;
+    requestId = nextRequestId;
+    exposeRequestId();
+    save();
+  };
   const onSubmit = (event) => event.preventDefault();
 
   restore();
@@ -132,6 +139,7 @@ export function setupOrderWizard(root = document) {
   form.addEventListener('click', onStep);
   form.addEventListener('input', onChange);
   form.addEventListener('change', onChange);
+  form.addEventListener('order-request-id-rotated', onRequestIdRotated);
   form.addEventListener('submit', onSubmit);
   fileInput.addEventListener('change', onFiles);
   fileList.addEventListener('click', onRemove);
@@ -141,6 +149,7 @@ export function setupOrderWizard(root = document) {
     form.removeEventListener('click', onStep);
     form.removeEventListener('input', onChange);
     form.removeEventListener('change', onChange);
+    form.removeEventListener('order-request-id-rotated', onRequestIdRotated);
     form.removeEventListener('submit', onSubmit);
     fileInput.removeEventListener('change', onFiles);
     fileList.removeEventListener('click', onRemove);

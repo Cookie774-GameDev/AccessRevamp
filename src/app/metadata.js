@@ -24,10 +24,22 @@ export const routeMetadata = Object.freeze({
   '/refunds': ['Refund policy', 'How cancellation and refund requests are handled before final digital delivery.'],
   '/legal': ['Legal overview', 'AccessRevamp public policies and service boundaries.'],
   '/cinematic-scroll': ['Cinematic evidence story', 'Move from scattered signals through verified evidence and redesigned hierarchy to one clear action.'],
-  '/success': ['Payment received', 'Your AccessRevamp checkout was completed.'],
-  '/cancel': ['Checkout canceled', 'No AccessRevamp payment was completed.'],
+  '/success': ['Payment verification', 'Verify the durable AccessRevamp order created by a signed Stripe webhook.'],
+  '/cancel': ['Checkout return', 'Return safely from Stripe Checkout without assuming a payment result.'],
   '/preview/:token': ['Private preview', 'A private AccessRevamp review preview.'],
 });
+
+const noIndexPatterns = new Set([
+  '/login',
+  '/signup',
+  '/account/projects',
+  '/project-intake',
+  '/dashboard',
+  '/operator',
+  '/success',
+  '/cancel',
+  '/preview/:token',
+]);
 
 export function updateDocumentMetadata(pathname, pattern = pathname) {
   const [title, description] = routeMetadata[pattern] || ['Page not found', 'AccessRevamp'];
@@ -35,6 +47,6 @@ export function updateDocumentMetadata(pathname, pattern = pathname) {
   document.querySelector('meta[name="description"]')?.setAttribute('content', description);
   document.querySelector('meta[name="robots"]')?.setAttribute(
     'content',
-    pattern === '/preview/:token' ? 'noindex,nofollow' : 'index,follow,max-image-preview:large',
+    noIndexPatterns.has(pattern) ? 'noindex,nofollow,noarchive' : 'index,follow,max-image-preview:large',
   );
 }
