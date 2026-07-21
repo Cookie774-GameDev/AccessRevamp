@@ -64,11 +64,19 @@ jobs:
       - name: Build the production application locally
         run: npm run build
       - name: Stress only the loopback HTTP server
-        run: node scripts/quality/run-isolated-http-stress.mjs
+        shell: bash
+        run: |
+          mkdir -p artifacts/isolated-stress
+          set -o pipefail
+          node scripts/quality/run-isolated-http-stress.mjs 2>&1 | tee artifacts/isolated-stress/http-stress.log
       - name: Install isolated Chromium runtime
         run: npx playwright install --with-deps chromium
       - name: Stress desktop, mobile, routing, and six-video scrolling locally
-        run: node scripts/quality/run-isolated-browser-stress.mjs
+        shell: bash
+        run: |
+          mkdir -p artifacts/isolated-stress
+          set -o pipefail
+          node scripts/quality/run-isolated-browser-stress.mjs 2>&1 | tee artifacts/isolated-stress/browser-stress.log
       - name: Upload local stress measurements
         if: always()
         uses: actions/upload-artifact@v4
