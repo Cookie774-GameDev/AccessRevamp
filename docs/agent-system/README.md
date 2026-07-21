@@ -18,7 +18,7 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 
 External email transport, automated mailbox warm-up, automated spam-classification actions, active security testing, external creative generation, live Stripe Checkout, and automated refunds remain disabled until their independent readiness gates pass.
 
-Icemail’s Azure allocation of five cold plus five warm-up messages per mailbox means ten mailboxes support 50 cold and 50 warm-up messages per day: 100 total. The database’s 1,000 value is a technical ceiling only. Reaching 1,000 at that allocation would require 100 healthy authorized mailboxes and still requires provider, reputation, legal, complaint, suppression, and operator readiness.
+The corrected operating assumption is 100 inboxes with five cold and five provider-managed warm-up messages per inbox each day. That equals 500 cold messages plus 500 warm-up messages: 1,000 total messages per day. The cold-outreach queue is still capped at the lower of 500, the configured database ceiling, the number of active authorized mailboxes, and provider, reputation, legal, complaint, suppression, and operator limits. The system must not force 1,000 sends when any mailbox or safety gate is unavailable.
 
 ## Canonical plans
 
