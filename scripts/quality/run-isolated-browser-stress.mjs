@@ -84,7 +84,8 @@ async function runViewport(browser, name, viewport) {
   const setChapterProgress = async (progress, steps) => page.evaluate(async ({ progress: next, steps: count }) => {
     const chapter = document.querySelector('[data-showcase-chapter]');
     const travel = Math.max(1, chapter.offsetHeight - innerHeight);
-    const target = chapter.offsetTop + travel * next;
+    const documentTop = chapter.getBoundingClientRect().top + scrollY;
+    const target = documentTop + travel * next;
     const start = scrollY;
     const frameGaps = [];
     let previous = performance.now();
