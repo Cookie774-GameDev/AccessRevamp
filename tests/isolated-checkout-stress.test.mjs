@@ -79,6 +79,57 @@ test('350 malformed or hostile requests never reach Stripe', { timeout: 30_000 }
   assert.equal(fixture.harness.reservations.size, 0);
 });
 
+test('runtime kill switches reject 300 attempts before reservation or Stripe', { timeout: 30_000 }, async () => {
+  const disabled = setup();
+  disabled.harness.settings.checkout_enabled = false;
+  const disabledResponses = await Promise.all(Array.from({ length: 100 }, () => disabled.handler(checkoutRequest({
+    token: disabled.token,
+    requestId: disabled.draft.request_id,
+    targetTier: disabled.draft.plan_key,
+  }))));
+  assert.ok(disabledResponses.every((response) => response.status === 503));
+  assert.equal(disabled.harness.reservations.size, 0);
+  assert.equal(disabled.stripe.checkoutAttempts, 0);
+
+  const stale = setup();
+  stale.harness.settings.configuration_verified_at = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+  const staleResponses = await Promise.all(Array.from({ length: 100 }, () => stale.handler(checkoutRequest({
+    token: stale.token,
+    requestId: stale.draft.request_id,
+    targetTier: stale.draft.plan_key,
+  }))));
+  assert.ok(staleResponses.every((response) => response.status === 503));
+  assert.equal(stale.harness.reservations.size, 0);
+  assert.equal(stale.stripe.checkoutAttempts, 0);
+
+  const modeMismatch = setup();
+  modeMismatch.harness.settings.expected_livemode = true;
+  const modeResponses = await Promise.all(Array.from({ length: 100 }, () => modeMismatch.handler(checkoutRequest({
+    token: modeMismatch.token,
+    requestId: modeMismatch.draft.request_id,
+    targetTier: modeMismatch.draft.plan_key,
+  }))));
+  assert.ok(modeResponses.every((response) => response.status === 503));
+  assert.equal(modeMismatch.harness.reservations.size, 0);
+  assert.equal(modeMismatch.stripe.checkoutAttempts, 0);
+});
+
+test('catalog mismatch never creates Stripe sessions and records one deduplicated incident', { timeout: 30_000 }, async () => {
+  const fixture = setup('homepage_reveal');
+  fixture.harness.catalog.get('none->homepage_reveal').net_cents = 5_001;
+
+  const responses = await Promise.all(Array.from({ length: 120 }, () => fixture.handler(checkoutRequest({
+    token: fixture.token,
+    requestId: fixture.draft.request_id,
+    targetTier: fixture.draft.plan_key,
+  }))));
+
+  assert.ok(responses.every((response) => response.status === 503));
+  assert.equal(fixture.stripe.checkoutAttempts, 0);
+  assert.equal(fixture.harness.reservations.size, 1);
+  assert.equal([...fixture.harness.incidents.keys()].filter((key) => key.startsWith('checkout-create-failed:')).length, 1);
+});
+
 test('attachment failure expires Stripe and cancels both saved states', async () => {
   const fixture = setup();
   fixture.harness.forceAttachFailure = true;
