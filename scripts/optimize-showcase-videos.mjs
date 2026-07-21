@@ -62,12 +62,26 @@ if (missing.length) {
 
 const available = spawnSync(ffmpeg, ['-version'], { stdio: 'ignore' });
 if (available.status !== 0) {
+  const oversized = maximumOutputBytes
+    ? manifest.files.filter((file) => file.sourceBytes > maximumOutputBytes)
+    : [];
+  if (oversized.length) {
+    manifest.status = 'oversized-media';
+    manifest.files = manifest.files.map((file) => ({
+      ...file,
+      status: file.sourceBytes > maximumOutputBytes ? 'oversized' : 'preserved',
+      maximumOutputBytes,
+    }));
+    await writeManifest();
+    throw new Error(`Checked-in showcase video exceeds the deploy limit: ${oversized.map((file) => file.filename).join(', ')}`);
+  }
+
   manifest.status = 'ffmpeg-unavailable';
   manifest.files = manifest.files.map((file) => ({ ...file, status: 'preserved' }));
   await writeManifest();
-  const message = 'ffmpeg is unavailable; using the checked-in showcase videos without re-encoding.';
+  const message = 'ffmpeg is unavailable; using the checked-in scrub-ready showcase videos without re-encoding.';
   if (requireOptimization) throw new Error(message);
-  console.warn(`${message} Deploy builds remain valid because every required video was verified first.`);
+  console.warn(`${message} Every required file passed the configured deploy-size limit.`);
   process.exit(0);
 }
 
