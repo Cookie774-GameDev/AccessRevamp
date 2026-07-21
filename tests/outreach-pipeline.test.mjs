@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 const importer = await readFile('scripts/import-reviewed-prospects.mjs', 'utf8');
 const approver = await readFile('scripts/approve-outreach.mjs', 'utf8');
+const exporter = await readFile('scripts/export-approved-outreach.mjs', 'utf8');
 
-test('reviewed-prospect imports are capped and create drafts only', () => {
+test('reviewed-prospect imports remain small, human-reviewable batches that create drafts only', () => {
   assert.match(importer, /lines\.length > 20/);
   assert.match(importer, /status: 'draft'/);
   assert.match(importer, /No email was sent/);
@@ -26,4 +27,12 @@ test('approval does not contain a mail transport', () => {
   assert.match(approver, /status: 'approved'/);
   assert.match(approver, /No email was sent/);
   assert.doesNotMatch(approver, /nodemailer|sendgrid|resend\.emails|gmail\.users\.messages\.send/i);
+});
+
+test('approved export follows the configured database limit but never exceeds 1000', () => {
+  assert.match(exporter, /from\('outreach_settings'\)/);
+  assert.match(exporter, /select\('daily_limit'\)/);
+  assert.match(exporter, /Math\.min\([\s\S]*1000\)/);
+  assert.match(exporter, /\.limit\(exportLimit\)/);
+  assert.match(exporter, /No email was sent/);
 });
