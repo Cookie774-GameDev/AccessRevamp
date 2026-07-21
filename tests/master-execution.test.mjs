@@ -79,10 +79,11 @@ test('homepage order wizard persists progress and hands the selected tier to che
 
 test('production packaging verifies every video and keeps every deploy path scrub-ready', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const [pruneScript, optimizeScript, netlifyBuild, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
+  const [pruneScript, optimizeScript, sourceOptimizer, sourceWorkflow, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
-    readFile('scripts/netlify-build.mjs', 'utf8'),
+    readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
+    readFile('.github/workflows/optimize-source-showcases.yml', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('netlify.toml', 'utf8'),
@@ -106,15 +107,15 @@ test('production packaging verifies every video and keeps every deploy path scru
   assert.match(optimizeScript, /'-bf', '0'/);
   assert.match(optimizeScript, /fastdecode/);
   assert.match(optimizeScript, /\+faststart/);
-  assert.match(netlifyBuild, /FFMPEG_RELEASE = 'b6\.1\.1'/);
-  assert.match(netlifyBuild, /github\.com\/eugeneware\/ffmpeg-static\/releases\/download/);
-  assert.match(netlifyBuild, /createGunzip\(\)/);
-  assert.match(netlifyBuild, /REQUIRE_FFMPEG_OPTIMIZATION: 'true'/);
+  assert.match(sourceOptimizer, /ENCODER_VERSION = 'accessrevamp-scrub-v5'/);
+  assert.match(sourceOptimizer, /MAXIMUM_BYTES = 9_500_000/);
+  assert.match(sourceOptimizer, /optimizedSha256/);
+  assert.match(sourceWorkflow, /contents: write/);
   assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
-  assert.match(ciWorkflow, /node scripts\/netlify-build\.mjs/);
+  assert.match(ciWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   assert.match(pagesWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(pagesWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  assert.match(netlifyConfig, /command = "node scripts\/netlify-build\.mjs"/);
-  assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "true"/);
+  assert.match(netlifyConfig, /command = "npm run build"/);
+  assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
   assert.match(netlifyConfig, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
 });
