@@ -17,11 +17,13 @@ const files = await Promise.all([
   read('netlify.toml'),
   read('supabase/migrations/20260721230000_customer_workflow_orchestration.sql'),
   read('supabase/migrations/20260721230100_mailbox_and_outreach_controls.sql'),
+  read('supabase/migrations/20260721230300_correct_mailbox_count_to_100.sql'),
   read('supabase/migrations/20260721230200_customer_workflow_functions.sql'),
   read('docs/agent-system/mainagent.md'),
   read('docs/agent-system/subagentforcustomer.md'),
   read('docs/agent-system/subagentforwebsite.md'),
   read('docs/agent-system/skills/security-audit/SKILL.md'),
+  read('docs/agent-system/skills/outreach/SKILL.md'),
 ]);
 
 const [
@@ -37,11 +39,13 @@ const [
   netlify,
   workflowSql,
   mailboxSql,
+  capacitySql,
   functionsSql,
   mainAgent,
   customerAgent,
   websiteAgent,
   securitySkill,
+  outreachSkill,
 ] = files;
 
 test('cinematic orders collect three or four scenes and keep portfolio permission optional', () => {
@@ -102,14 +106,19 @@ test('external side effects fail closed until separately enabled', () => {
 test('outreach stays human-reviewed, mailbox-aware, and within 175 words', () => {
   assert.match(mailboxSql, /target_message_words integer not null default 150/);
   assert.match(mailboxSql, /maximum_message_words integer not null default 175/);
-  assert.match(mailboxSql, /configured_mailbox_count integer not null default 10/);
   assert.match(mailboxSql, /cold_messages_per_mailbox integer not null default 5/);
   assert.match(mailboxSql, /warm_messages_per_mailbox integer not null default 5/);
+  assert.match(capacitySql, /configured_mailbox_count set default 100/);
+  assert.match(capacitySql, /configured_mailbox_count = 100/);
+  assert.match(capacitySql, /configured_total_allocation integer/);
+  assert.match(capacitySql, /active_authorized_mailboxes/);
   assert.match(mailboxSql, /spam_classification_automation_enabled boolean not null default false check \(not spam_classification_automation_enabled\)/);
   assert.match(mailboxSql, /human_approved_by is not null/);
   assert.match(mailboxSql, /Message must include an opt-out instruction/);
   assert.match(mailboxSql, /v_active_mailboxes \* greatest\(v_settings\.cold_messages_per_mailbox, 0\)/);
   assert.match(mailboxSql, /least\(greatest\(v_settings\.daily_limit, 1\), 1000, v_mailbox_operating_cap\)/);
+  assert.match(outreachSkill, /100 inboxes/i);
+  assert.match(outreachSkill, /500 cold and 500 warm-up messages per day/i);
 });
 
 test('agent contracts require evidence, payment reconciliation, safe security scope, and visual QA', () => {
