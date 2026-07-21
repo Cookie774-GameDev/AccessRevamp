@@ -95,17 +95,19 @@ test('Netlify fails before upload when a checked-in clip exceeds the configured 
   }
 });
 
-test('Netlify deploys pre-optimized sources while controlled workflows retain strict FFmpeg builds', async () => {
-  const [netlify, sourceOptimizer, sourceWorkflow, optimizeScript, production, pages, isolated] = await Promise.all([
+test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sources', async () => {
+  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, pages, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
     readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
-    readFile('.github/workflows/optimize-source-showcases.yml', 'utf8'),
+    readFile('public/media/showcases/source-optimization.json', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('.github/workflows/isolated-stress.yml', 'utf8'),
   ]);
+  const sourceManifest = JSON.parse(sourceManifestText);
   assert.match(netlify, /command = "npm run build"/);
+  assert.match(netlify, /NETLIFY_NEXT_PLUGIN_SKIP = "true"/);
   assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
   assert.match(netlify, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
   assert.match(sourceOptimizer, /ENCODER_VERSION = 'accessrevamp-scrub-v5'/);
@@ -113,8 +115,9 @@ test('Netlify deploys pre-optimized sources while controlled workflows retain st
   assert.match(sourceOptimizer, /optimizedSha256/);
   assert.match(sourceOptimizer, /'-g', '2'/);
   assert.match(sourceOptimizer, /'-bf', '0'/);
-  assert.match(sourceWorkflow, /contents: write/);
-  assert.match(sourceWorkflow, /github-actions\[bot\]/);
+  assert.equal(sourceManifest.status, 'optimized');
+  assert.equal(sourceManifest.files.length, showcaseFiles.length);
+  assert.ok(sourceManifest.files.every((file) => file.status === 'optimized' && file.optimizedBytes <= 9_500_000));
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
   assert.match(production, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
