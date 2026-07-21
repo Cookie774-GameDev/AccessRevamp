@@ -14,6 +14,7 @@
     "scan": "node scripts/scan-public-homepage.mjs",
     "stripe:test-catalog:sync": "node scripts/stripe/sync-test-catalog.mjs",
     "stripe:test-catalog:verify": "node scripts/stripe/verify-test-catalog.mjs",
+    "approval:issue": "node scripts/issue-project-approval-link.mjs",
     "verify:assets": "node scripts/verify-generated-assets.mjs",
     "optimize:showcases": "node scripts/optimize-showcase-videos.mjs",
     "export:sample-report": "node scripts/export-report-png.mjs",
