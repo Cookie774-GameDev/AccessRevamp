@@ -16,10 +16,15 @@ const showcaseFiles = [
 ];
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
 const requireOptimization = process.env.REQUIRE_FFMPEG_OPTIMIZATION === 'true';
+const configuredMaximum = Number(process.env.MAX_SHOWCASE_VIDEO_BYTES || 0);
+const maximumOutputBytes = Number.isSafeInteger(configuredMaximum) && configuredMaximum > 0
+  ? configuredMaximum
+  : 0;
 const manifest = {
   status: 'pending',
   generatedAt: new Date().toISOString(),
   optimizationRequired: requireOptimization,
+  maximumOutputBytes: maximumOutputBytes || null,
   encoder: {
     codec: 'h264',
     maximumWidth: 1024,
@@ -57,12 +62,26 @@ if (missing.length) {
 
 const available = spawnSync(ffmpeg, ['-version'], { stdio: 'ignore' });
 if (available.status !== 0) {
+  const oversized = maximumOutputBytes
+    ? manifest.files.filter((file) => file.sourceBytes > maximumOutputBytes)
+    : [];
+  if (oversized.length) {
+    manifest.status = 'oversized-media';
+    manifest.files = manifest.files.map((file) => ({
+      ...file,
+      status: file.sourceBytes > maximumOutputBytes ? 'oversized' : 'preserved',
+      maximumOutputBytes,
+    }));
+    await writeManifest();
+    throw new Error(`Checked-in showcase video exceeds the deploy limit: ${oversized.map((file) => file.filename).join(', ')}`);
+  }
+
   manifest.status = 'ffmpeg-unavailable';
   manifest.files = manifest.files.map((file) => ({ ...file, status: 'preserved' }));
   await writeManifest();
-  const message = 'ffmpeg is unavailable; using the checked-in showcase videos without re-encoding.';
+  const message = 'ffmpeg is unavailable; using the checked-in scrub-ready showcase videos without re-encoding.';
   if (requireOptimization) throw new Error(message);
-  console.warn(`${message} Deploy builds remain valid because every required video was verified first.`);
+  console.warn(`${message} Every required file passed the configured deploy-size limit.`);
   process.exit(0);
 }
 
@@ -93,27 +112,40 @@ for (const filename of showcaseFiles) {
     output,
   ], { stdio: 'inherit' });
 
+  const entry = manifest.files.find((file) => file.filename === filename);
   if (result.status !== 0) {
     await rm(output, { force: true });
-    const entry = manifest.files.find((file) => file.filename === filename);
     Object.assign(entry, { status: 'failed', exitCode: result.status });
     manifest.status = 'encoding-failed';
     await writeManifest();
     throw new Error(`Failed to optimize ${filename} for scroll scrubbing.`);
   }
 
+  const outputDetails = await stat(output);
+  if (maximumOutputBytes && outputDetails.size > maximumOutputBytes) {
+    await rm(output, { force: true });
+    Object.assign(entry, {
+      status: 'oversized',
+      originalBytes: beforeBytes,
+      optimizedBytes: outputDetails.size,
+      maximumOutputBytes,
+    });
+    delete entry.sourceBytes;
+    manifest.status = 'oversized-media';
+    await writeManifest();
+    throw new Error(`Optimized showcase video exceeds the deploy limit: ${filename}`);
+  }
+
   await rm(input, { force: true });
   await rename(output, input);
-  const after = await stat(input);
-  const entry = manifest.files.find((file) => file.filename === filename);
   Object.assign(entry, {
     status: 'optimized',
     originalBytes: beforeBytes,
-    optimizedBytes: after.size,
+    optimizedBytes: outputDetails.size,
   });
   delete entry.sourceBytes;
   const beforeMb = (beforeBytes / 1024 / 1024).toFixed(1);
-  const afterMb = (after.size / 1024 / 1024).toFixed(1);
+  const afterMb = (outputDetails.size / 1024 / 1024).toFixed(1);
   console.log(`Optimized ${filename}: ${beforeMb} MB -> ${afterMb} MB`);
 }
 

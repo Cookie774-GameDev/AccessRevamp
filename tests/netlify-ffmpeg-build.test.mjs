@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-const script = resolve('scripts/optimize-showcase-videos.mjs');
+const optimizer = resolve('scripts/optimize-showcase-videos.mjs');
 const showcaseFiles = [
   'verdant-normal.mp4',
   'verdant-cinematic.mp4',
@@ -15,18 +15,18 @@ const showcaseFiles = [
   'olympus-cinematic.mp4',
 ];
 
-async function makeFixture({ missing } = {}) {
+async function makeFixture({ missing, bytes = 64 } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'accessrevamp-ffmpeg-'));
   const media = join(root, 'dist', 'media', 'showcases');
   await mkdir(media, { recursive: true });
   await Promise.all(showcaseFiles
     .filter((filename) => filename !== missing)
-    .map((filename) => writeFile(join(media, filename), `checked-in-${filename}`)));
+    .map((filename) => writeFile(join(media, filename), Buffer.alloc(bytes, filename.length))));
   return root;
 }
 
-function runOptimizer(root, requireOptimization) {
-  return spawnSync(process.execPath, [script], {
+function runOptimizer(root, { requireOptimization = false, maximumBytes = 0 } = {}) {
+  return spawnSync(process.execPath, [optimizer], {
     cwd: root,
     encoding: 'utf8',
     env: {
@@ -34,16 +34,17 @@ function runOptimizer(root, requireOptimization) {
       CI: 'true',
       FFMPEG_PATH: join(root, 'definitely-not-installed', 'ffmpeg'),
       REQUIRE_FFMPEG_OPTIMIZATION: requireOptimization ? 'true' : 'false',
+      MAX_SHOWCASE_VIDEO_BYTES: maximumBytes ? String(maximumBytes) : '',
     },
   });
 }
 
-test('Netlify-style CI builds preserve verified videos when FFmpeg is unavailable', async () => {
+test('Netlify preserves verified scrub-ready clips when system FFmpeg is unavailable', async () => {
   const root = await makeFixture();
   try {
-    const result = runOptimizer(root, false);
+    const result = runOptimizer(root);
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stderr, /using the checked-in showcase videos/i);
+    assert.match(result.stderr, /checked-in scrub-ready showcase videos/i);
     const manifest = JSON.parse(await readFile(join(root, 'dist', 'showcase-optimization.json'), 'utf8'));
     assert.equal(manifest.status, 'ffmpeg-unavailable');
     assert.equal(manifest.optimizationRequired, false);
@@ -54,10 +55,10 @@ test('Netlify-style CI builds preserve verified videos when FFmpeg is unavailabl
   }
 });
 
-test('CI can explicitly require FFmpeg optimization', async () => {
+test('strict FFmpeg-equipped builds still fail closed when the executable is missing', async () => {
   const root = await makeFixture();
   try {
-    const result = runOptimizer(root, true);
+    const result = runOptimizer(root, { requireOptimization: true });
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /ffmpeg is unavailable/i);
     const manifest = JSON.parse(await readFile(join(root, 'dist', 'showcase-optimization.json'), 'utf8'));
@@ -67,10 +68,10 @@ test('CI can explicitly require FFmpeg optimization', async () => {
   }
 });
 
-test('missing showcase media fails even when optimization is optional', async () => {
+test('missing showcase media fails even when re-encoding is optional', async () => {
   const root = await makeFixture({ missing: 'olympus-cinematic.mp4' });
   try {
-    const result = runOptimizer(root, false);
+    const result = runOptimizer(root);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /Missing required showcase video/i);
     const manifest = JSON.parse(await readFile(join(root, 'dist', 'showcase-optimization.json'), 'utf8'));
@@ -80,15 +81,47 @@ test('missing showcase media fails even when optimization is optional', async ()
   }
 });
 
-test('Netlify is optional while FFmpeg-equipped GitHub builds remain strict', async () => {
-  const [netlify, production, pages, isolated] = await Promise.all([
+test('Netlify fails before upload when a checked-in clip exceeds the configured limit', async () => {
+  const root = await makeFixture({ bytes: 256 });
+  try {
+    const result = runOptimizer(root, { maximumBytes: 128 });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Checked-in showcase video exceeds the deploy limit/i);
+    const manifest = JSON.parse(await readFile(join(root, 'dist', 'showcase-optimization.json'), 'utf8'));
+    assert.equal(manifest.status, 'oversized-media');
+    assert.ok(manifest.files.every((file) => file.status === 'oversized'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sources', async () => {
+  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, pages, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
+    readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
+    readFile('public/media/showcases/source-optimization.json', 'utf8'),
+    readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('.github/workflows/isolated-stress.yml', 'utf8'),
   ]);
+  const sourceManifest = JSON.parse(sourceManifestText);
+  assert.match(netlify, /command = "npm run build"/);
+  assert.match(netlify, /NETLIFY_NEXT_PLUGIN_SKIP = "true"/);
   assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
-  for (const workflow of [production, pages, isolated]) {
+  assert.match(netlify, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
+  assert.match(sourceOptimizer, /ENCODER_VERSION = 'accessrevamp-scrub-v5'/);
+  assert.match(sourceOptimizer, /MAXIMUM_BYTES = 9_500_000/);
+  assert.match(sourceOptimizer, /optimizedSha256/);
+  assert.match(sourceOptimizer, /'-g', '2'/);
+  assert.match(sourceOptimizer, /'-bf', '0'/);
+  assert.equal(sourceManifest.status, 'optimized');
+  assert.equal(sourceManifest.files.length, showcaseFiles.length);
+  assert.ok(sourceManifest.files.every((file) => file.status === 'optimized' && file.optimizedBytes <= 9_500_000));
+  assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
+  assert.match(optimizeScript, /oversized-media/);
+  assert.match(production, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
+  for (const workflow of [pages, isolated]) {
     assert.match(workflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   }
 });

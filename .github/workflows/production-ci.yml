@@ -49,6 +49,7 @@ jobs:
       - name: Production build
         env:
           REQUIRE_FFMPEG_OPTIMIZATION: "true"
+          MAX_SHOWCASE_VIDEO_BYTES: "9500000"
         run: npm run build
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
