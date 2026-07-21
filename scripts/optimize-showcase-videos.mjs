@@ -15,10 +15,11 @@ const showcaseFiles = [
   'olympus-cinematic.mp4',
 ];
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-const strict = process.env.CI === 'true';
+const requireOptimization = process.env.REQUIRE_FFMPEG_OPTIMIZATION === 'true';
 const manifest = {
   status: 'pending',
   generatedAt: new Date().toISOString(),
+  optimizationRequired: requireOptimization,
   encoder: {
     codec: 'h264',
     maximumWidth: 1024,
@@ -34,33 +35,40 @@ const writeManifest = async () => {
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 };
 
+const inputs = new Map();
+for (const filename of showcaseFiles) {
+  const input = join(showcaseDirectory, filename);
+  try {
+    await access(input, fsConstants.R_OK);
+    const details = await stat(input);
+    inputs.set(filename, { input, beforeBytes: details.size });
+    manifest.files.push({ filename, status: 'verified', sourceBytes: details.size });
+  } catch {
+    manifest.files.push({ filename, status: 'missing' });
+  }
+}
+
+const missing = manifest.files.filter((file) => file.status === 'missing');
+if (missing.length) {
+  manifest.status = 'missing-media';
+  await writeManifest();
+  throw new Error(`Missing required showcase video${missing.length === 1 ? '' : 's'}: ${missing.map((file) => file.filename).join(', ')}`);
+}
+
 const available = spawnSync(ffmpeg, ['-version'], { stdio: 'ignore' });
 if (available.status !== 0) {
   manifest.status = 'ffmpeg-unavailable';
+  manifest.files = manifest.files.map((file) => ({ ...file, status: 'preserved' }));
   await writeManifest();
-  const message = 'ffmpeg is unavailable; showcase videos cannot be made scrub-ready.';
-  if (strict) throw new Error(message);
-  console.warn(`${message} Keeping the original local-build videos.`);
+  const message = 'ffmpeg is unavailable; using the checked-in showcase videos without re-encoding.';
+  if (requireOptimization) throw new Error(message);
+  console.warn(`${message} Deploy builds remain valid because every required video was verified first.`);
   process.exit(0);
 }
 
 for (const filename of showcaseFiles) {
-  const input = join(showcaseDirectory, filename);
-  try {
-    await access(input, fsConstants.R_OK | fsConstants.W_OK);
-  } catch {
-    manifest.files.push({ filename, status: 'missing' });
-    if (strict) {
-      manifest.status = 'missing-media';
-      await writeManifest();
-      throw new Error(`Missing required showcase video: ${filename}`);
-    }
-    console.warn(`Skipping missing showcase video: ${filename}`);
-    continue;
-  }
-
+  const { input, beforeBytes } = inputs.get(filename);
   const output = join(showcaseDirectory, `.${filename}.scrub-ready.mp4`);
-  const before = await stat(input);
   const result = spawnSync(ffmpeg, [
     '-y',
     '-hide_banner',
@@ -87,7 +95,8 @@ for (const filename of showcaseFiles) {
 
   if (result.status !== 0) {
     await rm(output, { force: true });
-    manifest.files.push({ filename, status: 'failed', exitCode: result.status });
+    const entry = manifest.files.find((file) => file.filename === filename);
+    Object.assign(entry, { status: 'failed', exitCode: result.status });
     manifest.status = 'encoding-failed';
     await writeManifest();
     throw new Error(`Failed to optimize ${filename} for scroll scrubbing.`);
@@ -96,13 +105,14 @@ for (const filename of showcaseFiles) {
   await rm(input, { force: true });
   await rename(output, input);
   const after = await stat(input);
-  manifest.files.push({
-    filename,
+  const entry = manifest.files.find((file) => file.filename === filename);
+  Object.assign(entry, {
     status: 'optimized',
-    originalBytes: before.size,
+    originalBytes: beforeBytes,
     optimizedBytes: after.size,
   });
-  const beforeMb = (before.size / 1024 / 1024).toFixed(1);
+  delete entry.sourceBytes;
+  const beforeMb = (beforeBytes / 1024 / 1024).toFixed(1);
   const afterMb = (after.size / 1024 / 1024).toFixed(1);
   console.log(`Optimized ${filename}: ${beforeMb} MB -> ${afterMb} MB`);
 }
@@ -112,6 +122,6 @@ manifest.status = manifest.files.length === showcaseFiles.length && manifest.fil
   : 'partial';
 await writeManifest();
 
-if (strict && manifest.status !== 'optimized') {
+if (requireOptimization && manifest.status !== 'optimized') {
   throw new Error(`Showcase optimization finished with status: ${manifest.status}`);
 }
