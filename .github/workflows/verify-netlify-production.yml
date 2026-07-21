@@ -1,0 +1,92 @@
+name: Verify Netlify production
+
+on:
+  push:
+    branches:
+      - verify/netlify-production-d711
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EXPECTED_COMMIT: d711e1ed1e29e9534424dd9464cb5ca89721ca42
+      PRODUCTION_URL: https://accessrevamp.netlify.app
+      SITE_ID: 1e31bb1c-2a13-4b27-83b4-cf3660d101ea
+    steps:
+      - name: Wait for the production site and verify merged media
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=false
+          for attempt in $(seq 1 90); do
+            root_code="$(curl --silent --show-error --location --output root.html --write-out '%{http_code}' "${PRODUCTION_URL}/" || true)"
+            manifest_code="$(curl --silent --show-error --location --output manifest.json --write-out '%{http_code}' "${PRODUCTION_URL}/media/showcases/source-optimization.json" || true)"
+            if [[ "${root_code}" == "200" && "${manifest_code}" == "200" ]] \
+              && grep -q 'AccessRevamp' root.html \
+              && jq -e '
+                .status == "optimized"
+                and .encoderVersion == "accessrevamp-scrub-v5"
+                and (.files | length) == 6
+                and all(.files[]; .status == "optimized" and .optimizedBytes <= 9500000)
+              ' manifest.json >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 6
+          done
+          if [[ "${ready}" != "true" ]]; then
+            echo "The merged Netlify production deployment did not become verifiable in time."
+            exit 1
+          fi
+
+          deploys_code="$(curl --silent --show-error --location \
+            --output deploys.json \
+            --write-out '%{http_code}' \
+            "https://api.netlify.com/api/v1/sites/${SITE_ID}/deploys?per_page=20" || true)"
+          if [[ "${deploys_code}" == "200" ]]; then
+            jq -e --arg commit "${EXPECTED_COMMIT}" '
+              any(.[]; .context == "production" and .state == "ready" and .commit_ref == $commit)
+            ' deploys.json >/dev/null || {
+              echo "Production site is updated, but the public deploy list has not exposed the merged commit yet."
+            }
+          fi
+
+          echo "Netlify production is serving the merged, scrub-ready AccessRevamp build."
+
+      - name: Publish production verification status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          OUTCOME: ${{ steps.verify.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${OUTCOME}" == "success" ]]; then
+            state=success
+            description="Netlify production serves the merged build"
+          else
+            state=failure
+            description="Netlify production verification failed"
+          fi
+          jq -n \
+            --arg state "${state}" \
+            --arg description "${description}" \
+            --arg target_url "${PRODUCTION_URL}" \
+            '{state: $state, context: "netlify-production/verification", description: $description, target_url: $target_url}' \
+            > status.json
+          curl --fail --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            --data @status.json \
+            "https://api.github.com/repos/${REPOSITORY}/statuses/${EXPECTED_COMMIT}" \
+            > /dev/null
