@@ -1,6 +1,6 @@
 /*
  * High-contrast dark treatment for the five-step project request wizard.
- * Presentation only: the existing structure, fields, plan choices, and behavior stay unchanged.
+ * Presentation only: checkout behavior and the five-step flow stay unchanged.
  */
 
 .renaissance-home .order-flow-section {
@@ -136,6 +136,7 @@
 }
 
 .renaissance-home .order-plan > span {
+  height: 100%;
   border-color: var(--order-line-strong);
   background: var(--order-card);
   color: var(--order-text);
@@ -180,6 +181,33 @@
   color: #eee8df;
   font-weight: 650;
   line-height: 1.55;
+}
+
+.renaissance-home .order-plan__perks {
+  display: grid;
+  align-content: start;
+  gap: .65rem;
+  margin-top: 1.35rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--order-line);
+}
+
+.renaissance-home .order-plan__perk {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .6rem;
+  align-items: start;
+  color: #f3eee5;
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.renaissance-home .order-plan__perk-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: .12rem;
+  color: var(--order-gold-soft);
 }
 
 .renaissance-home .order-note {
@@ -329,6 +357,15 @@
   .renaissance-home .order-wizard__actions {
     background: #111214;
   }
+
+  .renaissance-home .order-plan__perks {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .renaissance-home .order-plan__perk {
+    font-size: .82rem;
+  }
 }
 
 @media (forced-colors: active) {
@@ -344,5 +381,9 @@
   .renaissance-home .order-wizard__steps button[aria-current="step"] {
     background: Highlight;
     color: HighlightText;
+  }
+
+  .renaissance-home .order-plan__perk-icon {
+    color: CanvasText;
   }
 }
