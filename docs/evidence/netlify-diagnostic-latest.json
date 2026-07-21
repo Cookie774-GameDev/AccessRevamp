@@ -1,36 +1,10 @@
 {
-  "generated_at": "2026-07-21T05:01:59.205Z",
-  "commit": "45187f44a6491a9d529498cd758242cfb8f43969",
-  "github_status": "failure",
-  "target_url": "https://app.netlify.com/projects/accessrevamp/deploys/6a5efd297482e100086fa95c",
-  "deploy_http_status": "200",
-  "build_http_status": "401",
-  "deploy": {
-    "id": "6a5efd297482e100086fa95c",
-    "site_id": "1e31bb1c-2a13-4b27-83b4-cf3660d101ea",
-    "build_id": "6a5efd297482e100086fa95a",
-    "state": "error",
-    "error_message": null,
-    "summary": {
-      "status": "unavailable",
-      "messages": []
-    },
-    "required": null,
-    "required_functions": null,
-    "available_functions": null,
-    "deploy_time": null,
-    "created_at": "2026-07-21T05:01:29.861Z",
-    "updated_at": "2026-07-21T05:01:56.125Z",
-    "commit_ref": "45187f44a6491a9d529498cd758242cfb8f43969",
-    "branch": "fix/netlify-static-ffmpeg",
-    "review_id": 37,
-    "context": "deploy-preview",
-    "deploy_ssl_url": "https://deploy-preview-37--accessrevamp.netlify.app",
-    "deploy_url": "http://deploy-preview-37--accessrevamp.netlify.app",
-    "url": "http://accessrevamp.netlify.app",
-    "framework": null,
-    "frameworks": null,
-    "plugin_state": "failed_build"
-  },
+  "generated_at": "2026-07-21T05:05:58.181Z",
+  "commit": "d8113bda55c5656f80a3da71552c6d55d961ecb6",
+  "github_status": "success",
+  "target_url": "https://deploy-preview-37--accessrevamp.netlify.app",
+  "deploy_http_status": "404",
+  "build_http_status": "unavailable",
+  "deploy": null,
   "build": null
 }
