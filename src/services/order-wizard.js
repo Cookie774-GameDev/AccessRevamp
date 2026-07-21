@@ -20,7 +20,9 @@ export function setupOrderWizard(root = document) {
   const summary = form.querySelector('[data-order-summary]');
   const questionPlan = form.querySelector('[data-order-question-plan]');
   const checkout = form.querySelector('[data-order-checkout][data-checkout]');
-  const cinematicFields = form.querySelector('[data-cinematic-fields]');
+  const cinematicFields = [...form.querySelectorAll('[data-cinematic-fields]')];
+  const cinematicSceneCount = form.elements.cinematicSceneCount;
+  const cinematicDirection = form.elements.cinematicDirection;
   const fileInput = form.querySelector('[data-order-file-input]');
   const fileList = form.querySelector('[data-order-file-list]');
   let current = 0;
@@ -73,13 +75,29 @@ export function setupOrderWizard(root = document) {
     questionPlan.innerHTML = `<dl><div><dt>Selected plan</dt><dd><strong>${escapeHtml(plan.name)}</strong> · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Plan focus</dt><dd>${escapeHtml(plan.summary)}</dd></div></dl><div><strong>Every included perk</strong><ul aria-label="${escapeHtml(plan.name)} included perks">${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul></div>`;
   };
   const renderSummary = () => {
-    const plan = plans[selectedPlan()];
+    const planKey = selectedPlan();
+    const plan = plans[planKey];
     const value = (name) => escapeHtml(form.elements[name]?.value || 'Not provided');
-    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
+    const cinematicSummary = planKey === 'cinematic_scroll'
+      ? `<div><dt>Cinematic scope</dt><dd>${value('cinematicSceneCount')} scenes · ${value('cinematicDirection')}</dd></div>`
+      : '';
+    const portfolioSummary = form.elements.portfolioConsent?.checked
+      ? 'Optional portfolio permission granted; future use remains revocable.'
+      : 'No portfolio permission granted.';
+    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div>${cinematicSummary}<div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
     checkout.dataset.checkout = plan.key;
     checkout.textContent = `Continue with ${plan.name}`;
   };
-  const updatePlanFields = () => { cinematicFields.hidden = selectedPlan() !== 'cinematic_scroll'; };
+  const updatePlanFields = () => {
+    const enabled = selectedPlan() === 'cinematic_scroll';
+    cinematicFields.forEach((field) => { field.hidden = !enabled; });
+    if (cinematicSceneCount) {
+      cinematicSceneCount.disabled = !enabled;
+      cinematicSceneCount.required = enabled;
+      if (!enabled) cinematicSceneCount.value = '';
+    }
+    if (cinematicDirection) cinematicDirection.disabled = !enabled;
+  };
   const show = (index) => {
     current = Math.min(4, Math.max(0, index));
     panels.forEach((panel, panelIndex) => { panel.hidden = panelIndex !== current; });
