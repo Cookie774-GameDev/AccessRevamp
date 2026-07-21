@@ -1,0 +1,51 @@
+name: Optimize source showcase media
+
+on:
+  push:
+    branches:
+      - fix/netlify-static-ffmpeg
+    paths:
+      - ".github/workflows/optimize-source-showcases.yml"
+      - "scripts/optimize-source-showcase-videos.mjs"
+      - "public/media/showcases/*.mp4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: accessrevamp-source-showcases-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  optimize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Optimize all six source clips
+        run: node scripts/optimize-source-showcase-videos.mjs
+      - name: Verify and commit optimized media
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add public/media/showcases/*.mp4 public/media/showcases/source-optimization.json
+          if git diff --cached --quiet; then
+            echo "Source showcase media was already optimized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: commit Netlify-ready showcase videos"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
