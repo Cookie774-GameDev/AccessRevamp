@@ -79,15 +79,16 @@ test('homepage order wizard persists progress and hands the selected tier to che
 
 test('production packaging verifies every video and keeps every deploy path scrub-ready', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const [pruneScript, optimizeScript, sourceOptimizer, sourceWorkflow, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
+  const [pruneScript, optimizeScript, sourceOptimizer, sourceManifestText, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
-    readFile('.github/workflows/optimize-source-showcases.yml', 'utf8'),
+    readFile('public/media/showcases/source-optimization.json', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('netlify.toml', 'utf8'),
   ]);
+  const sourceManifest = JSON.parse(sourceManifestText);
 
   assert.match(packageJson.scripts.build, /prune-vinext-server-media\.mjs/);
   assert.match(packageJson.scripts.build, /optimize-showcase-videos\.mjs/);
@@ -110,12 +111,15 @@ test('production packaging verifies every video and keeps every deploy path scru
   assert.match(sourceOptimizer, /ENCODER_VERSION = 'accessrevamp-scrub-v5'/);
   assert.match(sourceOptimizer, /MAXIMUM_BYTES = 9_500_000/);
   assert.match(sourceOptimizer, /optimizedSha256/);
-  assert.match(sourceWorkflow, /contents: write/);
+  assert.equal(sourceManifest.status, 'optimized');
+  assert.equal(sourceManifest.files.length, 6);
+  assert.ok(sourceManifest.files.every((file) => file.status === 'optimized' && file.optimizedBytes <= 9_500_000));
   assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(ciWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   assert.match(pagesWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(pagesWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   assert.match(netlifyConfig, /command = "npm run build"/);
+  assert.match(netlifyConfig, /NETLIFY_NEXT_PLUGIN_SKIP = "true"/);
   assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
   assert.match(netlifyConfig, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
 });
