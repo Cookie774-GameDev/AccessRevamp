@@ -88,6 +88,27 @@ try {
   })));
   assert.ok(postResponses.every((response) => response.status === 405));
 
+  const mediaPath = '/media/showcases/verdant-normal.mp4';
+  const mediaHead = await timedFetch(`${baseUrl}${mediaPath}`, { method: 'HEAD' });
+  assert.equal(mediaHead.status, 200);
+  assert.match(mediaHead.headers.get('content-type') || '', /^video\/mp4/);
+  assert.equal(mediaHead.headers.get('accept-ranges'), 'bytes');
+  const mediaSize = Number(mediaHead.headers.get('content-length'));
+  assert.ok(Number.isSafeInteger(mediaSize) && mediaSize > 1024);
+
+  const mediaRange = await timedFetch(`${baseUrl}${mediaPath}`, { headers: { range: 'bytes=0-1023' } });
+  assert.equal(mediaRange.status, 206);
+  assert.equal(mediaRange.headers.get('content-range'), `bytes 0-1023/${mediaSize}`);
+  assert.equal((await mediaRange.arrayBuffer()).byteLength, 1024);
+
+  const invalidRange = await timedFetch(`${baseUrl}${mediaPath}`, { headers: { range: `bytes=${mediaSize}-` } });
+  assert.equal(invalidRange.status, 416);
+  assert.equal(invalidRange.headers.get('content-range'), `bytes */${mediaSize}`);
+
+  const missingMedia = await timedFetch(`${baseUrl}/media/showcases/not-a-real-file.mp4`);
+  assert.equal(missingMedia.status, 404);
+  assert.doesNotMatch(await missingMedia.text(), /<html/i);
+
   const indexHtml = await readFile(resolve('dist/index.html'), 'utf8');
   const assetPath = indexHtml.match(/(?:src|href)="(\/assets\/[^\"]+)"/)?.[1] || '/';
   await Promise.all(Array.from({ length: 100 }, async () => {
