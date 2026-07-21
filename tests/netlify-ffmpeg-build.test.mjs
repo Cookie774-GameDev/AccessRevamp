@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-const script = resolve('scripts/optimize-showcase-videos.mjs');
+const optimizer = resolve('scripts/optimize-showcase-videos.mjs');
 const showcaseFiles = [
   'verdant-normal.mp4',
   'verdant-cinematic.mp4',
@@ -26,7 +26,7 @@ async function makeFixture({ missing } = {}) {
 }
 
 function runOptimizer(root, requireOptimization) {
-  return spawnSync(process.execPath, [script], {
+  return spawnSync(process.execPath, [optimizer], {
     cwd: root,
     encoding: 'utf8',
     env: {
@@ -38,7 +38,7 @@ function runOptimizer(root, requireOptimization) {
   });
 }
 
-test('Netlify-style CI builds preserve verified videos when FFmpeg is unavailable', async () => {
+test('optional local builds preserve verified videos when FFmpeg is unavailable', async () => {
   const root = await makeFixture();
   try {
     const result = runOptimizer(root, false);
@@ -54,7 +54,7 @@ test('Netlify-style CI builds preserve verified videos when FFmpeg is unavailabl
   }
 });
 
-test('CI can explicitly require FFmpeg optimization', async () => {
+test('strict deploy builds reject a missing FFmpeg executable', async () => {
   const root = await makeFixture();
   try {
     const result = runOptimizer(root, true);
@@ -80,15 +80,29 @@ test('missing showcase media fails even when optimization is optional', async ()
   }
 });
 
-test('Netlify is optional while FFmpeg-equipped GitHub builds remain strict', async () => {
-  const [netlify, production, pages, isolated] = await Promise.all([
+test('Netlify bootstraps an exact static FFmpeg version and requires optimized output', async () => {
+  const [netlify, bootstrap, optimizeScript, production, pages, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
+    readFile('scripts/netlify-build.mjs', 'utf8'),
+    readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('.github/workflows/isolated-stress.yml', 'utf8'),
   ]);
-  assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
-  for (const workflow of [production, pages, isolated]) {
+  assert.match(netlify, /command = "node scripts\/netlify-build\.mjs"/);
+  assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "true"/);
+  assert.match(netlify, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
+  assert.match(bootstrap, /ffmpeg-static@5\.3\.0/);
+  assert.match(bootstrap, /--no-save/);
+  assert.match(bootstrap, /--package-lock=false/);
+  assert.match(bootstrap, /--ignore-scripts=false/);
+  assert.match(bootstrap, /FFMPEG_BINARY_RELEASE: 'b6\.1\.1'/);
+  assert.match(bootstrap, /REQUIRE_FFMPEG_OPTIMIZATION: 'true'/);
+  assert.match(bootstrap, /MAX_SHOWCASE_VIDEO_BYTES: '9500000'/);
+  assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
+  assert.match(optimizeScript, /oversized-media/);
+  assert.match(production, /node scripts\/netlify-build\.mjs/);
+  for (const workflow of [pages, isolated]) {
     assert.match(workflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   }
 });
