@@ -25,11 +25,11 @@ Outreach may introduce a manually verified public-site observation and an option
 9. Recheck suppression, daily ceiling, sender readiness, and global kill switch immediately before any future send.
 10. Record disposition, opt-out, bounce/complaint handling, and audit evidence.
 
-The database maximum is 20 queued/scheduled/sent items per UTC day. Lower operational limits may apply. Attempt 21 must fail transactionally. Suppression is permanent unless a lawful, audited correction process applies; contacting a different employee to evade an opt-out is prohibited.
+The database hard maximum is 1,000 queued/scheduled/sent items per UTC day. Lower mailbox, provider, reputation, legal, and operational limits may apply. Attempt 1,001 must fail transactionally, including under concurrent queue workers. Suppression is permanent unless a lawful, audited correction process applies; contacting a different employee to evade an opt-out is prohibited.
 
 ## Official preparation ramp
 
-The requested operating target is recorded as 15 human-reviewed drafts per day for program days 1–4, 20 per day for days 5–14, and 22 per day from day 15 onward. The repository safety ceiling remains 20 per UTC day, so the enforced preparation limit clamps the final stage to 20 unless a separately reviewed policy change replaces that ceiling. This ramp governs capacity for distinct, eligible businesses; it never authorizes indefinite follow-up to the same recipient. Sending remains disabled, and every record still requires the full evidence, approval, suppression, opt-out, sender-readiness, and jurisdiction checks above.
+The recommended preparation ramp remains 15 human-reviewed drafts per day for program days 1–4, 20 per day for days 5–14, and 22 per day from day 15 onward. The 1,000-per-day database value is only a technical ceiling and does not authorize starting at that volume. Any higher operating rate requires mailbox reputation, bounce and complaint monitoring, legal review, and a separately approved sender plan. Sending remains disabled, and every record still requires the full evidence, approval, suppression, opt-out, sender-readiness, and jurisdiction checks above.
 
 ## Claim standard
 
@@ -43,7 +43,7 @@ Google Drive may store internal operator context only. It is not read by public 
 
 ### IMPLEMENTED
 
-Current schema and scripts include contact provenance, structured findings/evidence, hashed expiring previews, suppression, opt-out, approval records, audit records, a database daily ceiling, and disabled-by-default sending posture.
+Current schema and scripts include contact provenance, structured findings/evidence, hashed expiring previews, suppression, opt-out, approval records, audit records, a concurrency-safe database daily ceiling, and disabled-by-default sending posture.
 
 ### PLANNED
 
@@ -59,4 +59,4 @@ Changing `sending_enabled`, configuring a transport, scheduling a campaign, or s
 
 ## Validation
 
-Run suppression-first tests, attempt-21 ceiling tests, approval-integrity tests, opt-out idempotency tests, preview token/expiry/revocation tests, browser-role denial tests, and a code search proving no transport bypass. Final evidence states the number sent; for this rebuild it must remain zero unless the user later grants explicit, separate authorization.
+Run suppression-first tests, attempt-1,001 ceiling tests, concurrent queue-transition tests, approval-integrity tests, opt-out idempotency tests, preview token/expiry/revocation tests, browser-role denial tests, and a code search proving no transport bypass. Final evidence states the number sent; for this rebuild it must remain zero unless the user later grants explicit, separate authorization.
