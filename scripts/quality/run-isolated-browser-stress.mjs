@@ -126,19 +126,19 @@ async function stressChapter(page, viewportName, chapterIndex) {
   const frameGaps = [];
   frameGaps.push(...await setChapterProgress(page, chapterIndex, 0.04, 20));
   await waitForChapterMedia(page, chapterIndex);
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(500);
   const start = await readChapter(page, chapterIndex);
 
-  frameGaps.push(...await setChapterProgress(page, chapterIndex, 0.82, 120));
-  await page.waitForTimeout(2_800);
+  frameGaps.push(...await setChapterProgress(page, chapterIndex, 0.82, 180));
+  await page.waitForTimeout(3_800);
   const forward = await readChapter(page, chapterIndex);
   assert.ok(forward.progress > 0.68, `${viewportName} ${forward.name} forward progress stalled at ${forward.progress}`);
   assert.ok(forward.normalized.every((value, index) => value > start.normalized[index] + 0.28), `${viewportName} ${forward.name} videos did not advance: ${forward.normalized}`);
   assert.ok(forward.errors.every((code) => code === 0), `${viewportName} ${forward.name} media error codes: ${forward.errors}`);
   assert.ok(Math.abs(forward.normalized[0] - forward.normalized[1]) < 0.07, `${viewportName} ${forward.name} paired videos drifted: ${forward.normalized}`);
 
-  frameGaps.push(...await setChapterProgress(page, chapterIndex, 0.20, 105));
-  await page.waitForTimeout(2_700);
+  frameGaps.push(...await setChapterProgress(page, chapterIndex, 0.20, 150));
+  await page.waitForTimeout(3_400);
   const reverse = await readChapter(page, chapterIndex);
   assert.ok(reverse.progress < forward.progress - 0.25, `${viewportName} ${reverse.name} reverse progress did not move: ${reverse.progress}`);
   assert.ok(reverse.normalized.every((value, index) => value < forward.normalized[index] - 0.22), `${viewportName} ${reverse.name} videos did not reverse: ${reverse.normalized}`);
