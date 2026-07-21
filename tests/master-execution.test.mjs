@@ -77,11 +77,12 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(service, /reportValidity/);
 });
 
-test('production packaging verifies every video and keeps scrub optimization strict where FFmpeg is installed', async () => {
+test('production packaging verifies every video and keeps every deploy path scrub-ready', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const [pruneScript, optimizeScript, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
+  const [pruneScript, optimizeScript, netlifyBuild, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
+    readFile('scripts/netlify-build.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
     readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('netlify.toml', 'utf8'),
@@ -94,7 +95,8 @@ test('production packaging verifies every video and keeps scrub optimization str
   assert.match(optimizeScript, /REQUIRE_FFMPEG_OPTIMIZATION/);
   assert.doesNotMatch(optimizeScript, /process\.env\.CI\s*===\s*'true'/);
   assert.match(optimizeScript, /Missing required showcase video/);
-  assert.match(optimizeScript, /using the checked-in showcase videos without re-encoding/);
+  assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
+  assert.match(optimizeScript, /oversized-media/);
   assert.match(optimizeScript, /showcase-optimization\.json/);
   assert.match(optimizeScript, /maximumWidth:\s*1024/);
   assert.match(optimizeScript, /fps=24/);
@@ -104,9 +106,13 @@ test('production packaging verifies every video and keeps scrub optimization str
   assert.match(optimizeScript, /'-bf', '0'/);
   assert.match(optimizeScript, /fastdecode/);
   assert.match(optimizeScript, /\+faststart/);
+  assert.match(netlifyBuild, /ffmpeg-static@5\.3\.0/);
+  assert.match(netlifyBuild, /REQUIRE_FFMPEG_OPTIMIZATION: 'true'/);
   assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
-  assert.match(ciWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
+  assert.match(ciWorkflow, /node scripts\/netlify-build\.mjs/);
   assert.match(pagesWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(pagesWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
+  assert.match(netlifyConfig, /command = "node scripts\/netlify-build\.mjs"/);
+  assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "true"/);
+  assert.match(netlifyConfig, /MAX_SHOWCASE_VIDEO_BYTES = "9500000"/);
 });
