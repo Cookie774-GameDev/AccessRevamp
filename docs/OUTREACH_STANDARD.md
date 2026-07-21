@@ -1,6 +1,6 @@
 # Responsible outreach standard
 
-AccessRevamp may prepare up to 20 first-touch U.S. business messages per UTC day only after every database and human-review gate passes. Low volume does not remove commercial-email obligations.
+AccessRevamp has a hard database ceiling of 1,000 first-touch U.S. business messages per UTC day only after every database and human-review gate passes. This is a maximum, not a recommended starting volume; lower mailbox, provider, reputation, legal, and operational limits still apply, and sending remains disabled until launch readiness is approved.
 
 ## Allowed source data
 
