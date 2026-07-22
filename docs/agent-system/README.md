@@ -9,10 +9,11 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 - Automatic workflow bootstrap after a durable paid order creates a customer project.
 - Cinematic scene choice of three or four during the order brief.
 - Separate optional portfolio permission; purchase alone does not grant publication rights.
-- Hashed, expiring, one-use customer approval links.
+- Hashed, expiring, one-use customer approval links scoped to the intended project option group and revision round.
 - Google Drive customer-folder root, customer template, runbooks, and a Payment and Workflow Ledger.
 - Artifact guardrail of 9,000,000 bytes per file.
 - Mailbox-aware outreach records with a 150-word target and 175-word hard maximum.
+- Root `CLAUDE.md`, safe `.claude/settings.json`, and a verified Windows installer for the complete operations folder.
 
 ## Safety state
 
@@ -28,16 +29,35 @@ The corrected operating assumption is 100 inboxes with five cold and five provid
 
 The reference to $209 was treated as a typo because the active website and Stripe sandbox catalog use $200.
 
-## Files
+## Agent files
 
 - [`mainagent.md`](./mainagent.md)
 - [`subagentforcustomer.md`](./subagentforcustomer.md)
 - [`subagentforwebsite.md`](./subagentforwebsite.md)
 - [`subagentfordesign.md`](./subagentfordesign.md)
 - [`subagentforsecurity.md`](./subagentforsecurity.md)
+- [`subagentforintegrations.md`](./subagentforintegrations.md)
 - [`integrationworker.md`](./integrationworker.md)
-- `skills/` — reusable operating skills.
-- `templates/` — per-customer skill, design, folder, payment, approval, and delivery structures.
+
+## Canonical skills
+
+- `cinematic-scroll`
+- `customer-delivery`
+- `design-brief`
+- `growth-optimization`
+- `outreach`
+- `payment-reconciliation`
+- `quality-assurance`
+- `security-audit`
+- `website-audit`
+- `website-build`
+- `website-research`
+
+Each skill lives at `skills/<name>/SKILL.md`. The `templates/` folder contains per-customer skill, design, folder, payment, approval, and delivery structures.
+
+## Claude Code installation
+
+See [`CLAUDE_INSTALL.md`](./CLAUDE_INSTALL.md), or run `INSTALL_CLAUDE_OPERATIONS.cmd` from the repository root. The installer writes the complete system to the actual Windows Documents known folder at `Claude\AccessRevamp`, backs up any prior installation, and runs local verification before writing an installation receipt.
 
 ## Deployment truth
 
