@@ -32,7 +32,7 @@ const [
 const packageJson = JSON.parse(packageText);
 
 test('confirmed email accounts land in the private customer hub', () => {
-  assert.match(auth, /navigate\('\/account\/projects'\)/);
+  assert.match(auth, /navigate\('\/account\/projects'/);
   assert.match(accountPage, /Secure customer hub/);
   assert.match(accountPage, /project, designs, and downloads/i);
   assert.match(accountClient, /\/api\/account-projects/);

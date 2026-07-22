@@ -39,6 +39,8 @@ class Mutex {
 }
 
 const jitter = () => new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * 3)));
+const encodeJwtPart = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+const verifiedAccessToken = (sessionId, nonce) => `${encodeJwtPart({ alg: 'none', typ: 'JWT' })}.${encodeJwtPart({ session_id: sessionId, nonce })}.${Buffer.from(String(nonce)).toString('base64url')}`;
 
 class Query {
   constructor(harness, table) {
@@ -61,6 +63,7 @@ class Query {
 export class PaymentHarness {
   constructor() {
     this.users = new Map();
+    this.verifiedSessions = new Map();
     this.operators = new Map();
     this.drafts = new Map();
     this.reservations = new Map();
@@ -99,10 +102,13 @@ export class PaymentHarness {
     };
   }
 
-  addUser(email = `user-${randomUUID()}@example.test`, token = `token-${randomUUID()}`) {
+  addUser(email = `user-${randomUUID()}@example.test`, tokenNonce = randomUUID()) {
     const user = { id: randomUUID(), email: email.toLowerCase(), email_confirmed_at: new Date().toISOString() };
+    const sessionId = randomUUID();
+    const token = verifiedAccessToken(sessionId, tokenNonce);
     this.users.set(token, user);
-    return { user, token };
+    this.verifiedSessions.set(sessionId, { session_id: sessionId, user_id: user.id });
+    return { user, token, sessionId };
   }
 
   addDraft(user, planKey = 'complete_revamp') {
@@ -128,6 +134,7 @@ export class PaymentHarness {
 
   rows(table) {
     return ({
+      accessrevamp_verified_sessions: [...this.verifiedSessions.values()],
       payment_runtime_settings: [this.settings], stripe_price_catalog: [...this.catalog.values()],
       order_drafts: [...this.drafts.values()], upgrade_reservations: [...this.reservations.values()],
       accessrevamp_operators: [...this.operators.values()], orders: [...this.orders.values()],

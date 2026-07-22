@@ -79,6 +79,12 @@ jobs:
           mkdir -p artifacts/isolated-stress
           set -o pipefail
           node scripts/quality/run-isolated-browser-stress.mjs 2>&1 | tee artifacts/isolated-stress/browser-stress.log
+      - name: Stress branded authentication routes on desktop and mobile
+        shell: bash
+        run: |
+          mkdir -p artifacts/isolated-stress
+          set -o pipefail
+          node scripts/quality/run-isolated-auth-stress.mjs 2>&1 | tee artifacts/isolated-stress/auth-browser-stress.log
       - name: Upload local stress measurements
         if: always()
         uses: actions/upload-artifact@v4
