@@ -42,12 +42,11 @@ alter table public.orders
         when 'cinematic_scroll' then 25000
         else null
       end
-      and credit_cents = case
-        when plan_key = 'homepage_reveal' then 0
-        when plan_key = 'complete_revamp' then any (array[0,5000])
-        when plan_key = 'cinematic_scroll' then any (array[0,5000,20000])
-        else false
-      end
+      and (
+        (plan_key = 'homepage_reveal' and credit_cents = 0)
+        or (plan_key = 'complete_revamp' and credit_cents = any (array[0,5000]))
+        or (plan_key = 'cinematic_scroll' and credit_cents = any (array[0,5000,20000]))
+      )
       and net_cents = gross_cents - credit_cents
       and net_cents > 0
       and amount_total = net_cents
