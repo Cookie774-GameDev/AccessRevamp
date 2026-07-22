@@ -22,12 +22,13 @@ VITE_SUPABASE_URL
 VITE_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
+AUTH_RATE_LIMIT_SECRET
 VITE_SITE_URL
 ACCESSREVAMP_SITE_URL
 ALLOWED_ORIGINS
 ```
 
-The publishable key is allowed in browser code. The service-role key is server-only and must never use a `VITE_` prefix.
+The publishable key is allowed in browser code. The service-role key is server-only and must never use a `VITE_` prefix. `AUTH_RATE_LIMIT_SECRET` must be at least 24 random characters; `CONTACT_RATE_LIMIT_SECRET` is accepted as a temporary fallback.
 
 ## Apply the hosted email branding
 
@@ -83,7 +84,7 @@ Operator workspace: `/operator`
 
 - Signup returns no session and displays the confirmation state.
 - A confirmation link returns to `/login?confirmed=1`, signs out its temporary session, and asks for the password.
-- Wrong passwords produce a generic error and no challenge row.
+- Wrong passwords produce a generic error and no challenge row. Per-account/IP and per-IP database rate limits apply before password validation.
 - Correct passwords generate a short-lived challenge and one-time email link.
 - A magic-link session without a matching password challenge receives HTTP 403 from customer APIs.
 - A completed challenge can be used once and then appears in `accessrevamp_verified_sessions`.

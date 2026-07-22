@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { requireConfirmedUser } from '../netlify/functions/_shared/auth.mjs';
+import { createAuthLoginStartHandler } from '../netlify/functions/auth-login-start.mjs';
 
 const read = (path) => readFile(path, 'utf8');
 
@@ -103,11 +104,52 @@ test('signup requires confirmation and every sign-in requires password then emai
   );
   assert.match(authStart, /shouldCreateUser:\s*false/);
   assert.match(authStart, /accessrevamp_login_challenges/);
+  assert.match(authStart, /consume_accessrevamp_auth_attempt/);
+  assert.match(authStart, /AUTH_RATE_LIMIT_SECRET/);
+  assert.match(authStart, /Too many sign-in attempts/);
   assert.match(authStart, /randomBytes\(32\)/);
   assert.match(authStart, /createHash\('sha256'\)/);
   assert.doesNotMatch(authStart, /return json\([\s\S]*challengeToken/);
   assert.match(authComplete, /requireVerifiedSession:\s*false/);
   assert.match(authComplete, /complete_accessrevamp_email_signin/);
+});
+
+test('database rate limiting blocks password validation before credential work begins', async () => {
+  const previousOrigins = process.env.ALLOWED_ORIGINS;
+  const previousSecret = process.env.AUTH_RATE_LIMIT_SECRET;
+  process.env.ALLOWED_ORIGINS = 'https://accessrevamp.test';
+  process.env.AUTH_RATE_LIMIT_SECRET = 'auth-rate-limit-secret-at-least-24-chars';
+  let passwordCalls = 0;
+  const handler = createAuthLoginStartHandler({
+    getAdmin: () => ({
+      async rpc(name) {
+        assert.equal(name, 'consume_accessrevamp_auth_attempt');
+        return { data: null, error: { message: 'Authentication rate limit exceeded.' } };
+      },
+    }),
+    createPublicClient: () => ({
+      auth: {
+        async signInWithPassword() { passwordCalls += 1; return { data: null, error: null }; },
+        async signOut() {},
+      },
+    }),
+  });
+
+  try {
+    const response = await handler(new Request('https://accessrevamp.test/api/auth-login-start', {
+      method: 'POST',
+      headers: { origin: 'https://accessrevamp.test', 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'owner@example.com', password: 'WrongPassword!1' }),
+    }));
+    assert.equal(response.status, 429);
+    assert.equal(passwordCalls, 0);
+    assert.match(await response.text(), /Too many sign-in attempts/);
+  } finally {
+    if (previousOrigins == null) delete process.env.ALLOWED_ORIGINS;
+    else process.env.ALLOWED_ORIGINS = previousOrigins;
+    if (previousSecret == null) delete process.env.AUTH_RATE_LIMIT_SECRET;
+    else process.env.AUTH_RATE_LIMIT_SECRET = previousSecret;
+  }
 });
 
 test('customer API authentication requires an application-verified Supabase session', async () => {
@@ -153,6 +195,9 @@ test('database migration binds verification to auth.sessions and adds restrictiv
   assert.match(migration, /session_id uuid primary key references auth\.sessions\(id\) on delete cascade/);
   assert.match(migration, /accessrevamp_session_is_verified/);
   assert.match(migration, /complete_accessrevamp_email_signin/);
+  assert.match(migration, /consume_accessrevamp_auth_attempt/);
+  assert.match(migration, /v_count >= 25/);
+  assert.match(migration, /v_count >= 8/);
   assert.match(migration, /as restrictive/gi);
   for (const table of [
     'profiles',

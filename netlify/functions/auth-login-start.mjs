@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 import {
   assertJsonSize,
   assertMethod,
@@ -7,6 +7,7 @@ import {
   HttpError,
   json,
   readJsonBody,
+  requestIp,
 } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { createSupabasePublicClient } from './_shared/supabase-public.mjs';
@@ -41,6 +42,26 @@ function challengeHash(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
+function requestRateKey(secret, scope, value) {
+  return createHmac('sha256', secret).update(`${scope}:${value}`).digest('hex');
+}
+
+async function consumeAuthAttempt(admin, request, email, env = process.env) {
+  const secret = String(env.AUTH_RATE_LIMIT_SECRET || env.CONTACT_RATE_LIMIT_SECRET || '');
+  if (secret.length < 24) throw new HttpError(503, 'Sign-in protection is unavailable.');
+  const ip = requestIp(request);
+  const result = await admin.rpc('consume_accessrevamp_auth_attempt', {
+    p_ip_key: requestRateKey(secret, 'auth-ip', ip),
+    p_account_key: requestRateKey(secret, 'auth-account', `${ip}:${email}`),
+  });
+  if (result.error) {
+    if (/rate limit/i.test(result.error.message || '')) {
+      throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
+    }
+    throw new HttpError(503, 'Sign-in protection is unavailable.');
+  }
+}
+
 export function createAuthLoginStartHandler({
   getAdmin = getSupabaseAdmin,
   createPublicClient = createSupabasePublicClient,
@@ -56,6 +77,8 @@ export function createAuthLoginStartHandler({
       assertSameOrigin(request);
       assertJsonSize(request);
       const credentials = normalizeCredentials(await readJsonBody(request));
+      admin = getAdmin();
+      await consumeAuthAttempt(admin, request, credentials.email);
 
       passwordClient = createPublicClient();
       const passwordResult = await passwordClient.auth.signInWithPassword(credentials);
@@ -72,7 +95,6 @@ export function createAuthLoginStartHandler({
         throw new HttpError(401, 'Email or password is incorrect.');
       }
 
-      admin = getAdmin();
       const currentTime = now();
       const challengeToken = createToken();
       const hashedToken = challengeHash(challengeToken);
@@ -85,9 +107,9 @@ export function createAuthLoginStartHandler({
         .lte('expires_at', new Date(currentTime).toISOString());
       await admin
         .from('accessrevamp_login_challenges')
-        .update({ status: 'canceled' })
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
+        .delete()
+        .neq('status', 'pending')
+        .lt('created_at', new Date(currentTime - 30 * 24 * 60 * 60 * 1000).toISOString());
 
       const challengeResult = await admin
         .from('accessrevamp_login_challenges')
@@ -109,7 +131,7 @@ export function createAuthLoginStartHandler({
       // before sending the one-time email link so both factors are mandatory.
       await passwordClient.auth.signOut({ scope: 'local' }).catch(() => undefined);
 
-      const verificationUrl = new URL('/login', new URL(request.url).origin);
+      const verificationUrl = new URL('/login', request.headers.get('origin'));
       verificationUrl.searchParams.set('verification', challengeToken);
       const emailResult = await passwordClient.auth.signInWithOtp({
         email: authenticatedEmail,
@@ -121,6 +143,13 @@ export function createAuthLoginStartHandler({
       if (emailResult.error) {
         throw new HttpError(503, 'The verification email could not be sent. Try again shortly.');
       }
+
+      await admin
+        .from('accessrevamp_login_challenges')
+        .update({ status: 'canceled' })
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .neq('id', challengeId);
 
       return json({
         ok: true,

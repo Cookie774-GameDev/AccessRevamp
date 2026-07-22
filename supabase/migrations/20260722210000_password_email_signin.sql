@@ -45,6 +45,86 @@ revoke all on table public.accessrevamp_verified_sessions from public, anon, aut
 grant all on table public.accessrevamp_login_challenges to service_role;
 grant all on table public.accessrevamp_verified_sessions to service_role;
 
+create or replace function public.consume_accessrevamp_auth_attempt(
+  p_ip_key text,
+  p_account_key text
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_now timestamptz := timezone('utc', now());
+  v_window timestamptz;
+  v_count integer;
+  v_first_key text;
+  v_second_key text;
+begin
+  if p_ip_key is null or p_ip_key !~ '^[a-f0-9]{64}$'
+    or p_account_key is null or p_account_key !~ '^[a-f0-9]{64}$'
+    or p_ip_key = p_account_key then
+    raise exception 'Invalid authentication rate key.' using errcode = '22023';
+  end if;
+
+  v_first_key := least(p_ip_key, p_account_key);
+  v_second_key := greatest(p_ip_key, p_account_key);
+  perform pg_advisory_xact_lock(hashtextextended(v_first_key, 0));
+  perform pg_advisory_xact_lock(hashtextextended(v_second_key, 0));
+
+  select window_started_at, request_count
+    into v_window, v_count
+  from public.contact_rate_limits
+  where rate_key = p_ip_key
+  for update;
+
+  if not found or v_window < v_now - interval '1 hour' then
+    insert into public.contact_rate_limits (rate_key, window_started_at, request_count, updated_at)
+    values (p_ip_key, v_now, 1, v_now)
+    on conflict (rate_key) do update
+      set window_started_at = excluded.window_started_at,
+          request_count = 1,
+          updated_at = excluded.updated_at;
+  else
+    if v_count >= 25 then
+      raise exception 'Authentication rate limit exceeded.' using errcode = 'P0001';
+    end if;
+    update public.contact_rate_limits
+    set request_count = request_count + 1,
+        updated_at = v_now
+    where rate_key = p_ip_key;
+  end if;
+
+  select window_started_at, request_count
+    into v_window, v_count
+  from public.contact_rate_limits
+  where rate_key = p_account_key
+  for update;
+
+  if not found or v_window < v_now - interval '1 hour' then
+    insert into public.contact_rate_limits (rate_key, window_started_at, request_count, updated_at)
+    values (p_account_key, v_now, 1, v_now)
+    on conflict (rate_key) do update
+      set window_started_at = excluded.window_started_at,
+          request_count = 1,
+          updated_at = excluded.updated_at;
+  else
+    if v_count >= 8 then
+      raise exception 'Authentication rate limit exceeded.' using errcode = 'P0001';
+    end if;
+    update public.contact_rate_limits
+    set request_count = request_count + 1,
+        updated_at = v_now
+    where rate_key = p_account_key;
+  end if;
+end;
+$$;
+
+revoke all on function public.consume_accessrevamp_auth_attempt(text, text)
+  from public, anon, authenticated;
+grant execute on function public.consume_accessrevamp_auth_attempt(text, text)
+  to service_role;
+
 create or replace function public.accessrevamp_session_is_verified()
 returns boolean
 language sql
