@@ -1,0 +1,50 @@
+name: Refresh security lockfile
+
+on:
+  push:
+    branches:
+      - feature/customer-agent-orchestration
+    paths:
+      - package.json
+      - .github/workflows/refresh-security-lockfile.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: accessrevamp-security-lockfile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Refresh the locked dependency graph
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify the secure production dependency graph
+        run: npm audit --omit=dev --audit-level=high
+      - name: Commit the updated lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "The lockfile already matches the security overrides."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: refresh secure production lockfile"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
