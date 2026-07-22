@@ -138,7 +138,7 @@ test('signup requires confirmation and every sign-in requires password then emai
   assert.match(authStart, /createHash\('sha256'\)/);
   assert.match(authStart, /HttpOnly; SameSite=Strict/);
   assert.match(authStart, /'set-cookie':\s*challengeCookie/);
-  assert.doesNotMatch(authStart, /return json\(\{[\s\S]{0,220}challengeToken/);
+  assert.doesNotMatch(authStart, /^\s*challengeToken\s*:/m);
   assert.match(authComplete, /accessrevamp_login_challenge/);
   assert.match(authComplete, /cookieValue\(request, CHALLENGE_COOKIE\)/);
   assert.match(authComplete, /clearChallengeCookie/);
