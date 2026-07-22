@@ -84,6 +84,17 @@ jobs:
         with:
           node-version: 22
       - name: Verify browser bundle and server authentication configuration
+        shell: bash
         env:
           DEPLOY_PREVIEW_URL: https://deploy-preview-${{ github.event.pull_request.number }}--accessrevamp.netlify.app
-        run: npm run verify:netlify-auth-preview
+        run: |
+          set -o pipefail
+          npm run verify:netlify-auth-preview 2>&1 | tee netlify-auth-preview.txt
+      - name: Upload Netlify authentication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-auth-preview
+          path: netlify-auth-preview.txt
+          if-no-files-found: warn
+          retention-days: 7
