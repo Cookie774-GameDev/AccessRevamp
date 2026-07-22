@@ -6,7 +6,7 @@
 
 ## Current operating task
 
-Maintain and complete the AccessRevamp 100-inbox customer-acquisition and paid-delivery system. The nominal allocation is 100 inboxes × 5 cold + 5 provider-managed warm-up messages per day: 500 cold + 500 warm-up = 1,000 total. Capacity metadata never overrides mailbox health, provider rules, suppression, complaints, human approval, or law.
+Maintain and complete the AccessRevamp 100-inbox customer-acquisition and paid-delivery system. The nominal allocation is 100 inboxes × 5 cold + 5 provider-managed warm-up messages per day: 500 cold + 500 provider-managed warm-up = 1,000 total. Capacity metadata never overrides mailbox health, provider rules, suppression, complaints, human approval, or law.
 
 The paid catalog is Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250. Stripe remains sandbox-only until a real website-originated sandbox Checkout, signed webhook, Supabase fulfillment, Drive ledger entry, and customer workflow are verified end to end.
 
