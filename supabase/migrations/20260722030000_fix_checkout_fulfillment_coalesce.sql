@@ -7,7 +7,7 @@ create or replace function public.fulfill_accessrevamp_checkout(p_payload jsonb)
 returns table(order_id uuid, entitlement_id uuid, project_id uuid, is_duplicate boolean)
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog
 as $$
 declare
   v_event_id text := p_payload ->> 'event_id';
