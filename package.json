@@ -20,6 +20,7 @@
     "approval:issue": "node scripts/issue-project-approval-link.mjs",
     "verify:assets": "node scripts/verify-generated-assets.mjs",
     "verify:supabase-public": "node scripts/quality/verify-supabase-public.mjs",
+    "verify:netlify-auth-preview": "node scripts/quality/verify-netlify-auth-preview.mjs",
     "optimize:showcases": "node scripts/optimize-showcase-videos.mjs",
     "export:sample-report": "node scripts/export-report-png.mjs",
     "quality:budgets": "node scripts/quality/check-budgets.mjs",
