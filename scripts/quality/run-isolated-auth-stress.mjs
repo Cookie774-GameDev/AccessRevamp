@@ -51,6 +51,10 @@ async function inspectAuthPage(page, expectedMode) {
     const submit = form?.querySelector('button[type="submit"]');
     const status = form?.querySelector('[data-auth-status]');
     const inputs = [...document.querySelectorAll('[data-auth-form] input')];
+    const codeStep = document.querySelector('[data-auth-code-step]');
+    const codeForm = document.querySelector('[data-auth-code-form]');
+    const codeInput = codeForm?.querySelector('input[name="code"]');
+    const codeSubmit = codeForm?.querySelector('button[type="submit"]');
     return {
       mode: root?.dataset.authMode,
       panel: Boolean(panel),
@@ -59,6 +63,14 @@ async function inspectAuthPage(page, expectedMode) {
       status: status?.textContent?.trim() || '',
       phoneInputs: inputs.filter((input) => input.type === 'tel' || input.name === 'phone').length,
       passwordInputs: inputs.filter((input) => input.type === 'password').length,
+      codeStep: Boolean(codeStep),
+      codeStepHidden: codeStep?.hidden ?? false,
+      codeForm: Boolean(codeForm),
+      codeSubmit: Boolean(codeSubmit),
+      codeInputMode: codeInput?.inputMode || '',
+      codeAutocomplete: codeInput?.autocomplete || '',
+      codePattern: codeInput?.pattern || '',
+      codeMaxLength: codeInput?.maxLength || 0,
       backgroundImage: getComputedStyle(experience).backgroundImage,
       headerBackground: getComputedStyle(header).backgroundColor,
       headerCtaBackground: getComputedStyle(headerCta).backgroundColor,
@@ -68,6 +80,46 @@ async function inspectAuthPage(page, expectedMode) {
       expectedMode: mode,
     };
   }, expectedMode);
+}
+
+async function exerciseCodePanel(page, mode) {
+  await page.goto(`${baseUrl}/${mode}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.evaluate(({ storageKey, mode: nextMode }) => {
+    sessionStorage.setItem(storageKey, JSON.stringify({
+      mode: nextMode,
+      kind: nextMode === 'signup' ? 'signup' : 'login',
+      email: 'code-panel@example.test',
+      emailHint: 'co••••••••@example.test',
+      expiresAt: Date.now() + 300_000,
+    }));
+  }, { storageKey: 'accessrevamp.auth.pending-code.v1', mode });
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.waitForSelector('[data-auth-code-step]:not([hidden])', { timeout: 10_000 });
+  const panel = await page.evaluate(() => {
+    const input = document.querySelector('[data-auth-code-form] input[name="code"]');
+    const step = document.querySelector('[data-auth-code-step]');
+    const style = getComputedStyle(input);
+    return {
+      visible: !step.hidden,
+      inputMode: input.inputMode,
+      autocomplete: input.autocomplete,
+      pattern: input.pattern,
+      maxLength: input.maxLength,
+      fontFamily: style.fontFamily,
+      letterSpacing: style.letterSpacing,
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    };
+  });
+  assert.equal(panel.visible, true);
+  assert.equal(panel.inputMode, 'numeric');
+  assert.equal(panel.autocomplete, 'one-time-code');
+  assert.equal(panel.pattern, '[0-9]{6}');
+  assert.equal(panel.maxLength, 6);
+  assert.match(panel.fontFamily, /Courier/i);
+  assert.notEqual(panel.letterSpacing, 'normal');
+  assert.ok(panel.scrollWidth <= panel.clientWidth + 1, `${mode} code panel horizontal overflow`);
+  return panel;
 }
 
 async function runViewport(browser, name, viewport) {
@@ -106,6 +158,14 @@ async function runViewport(browser, name, viewport) {
         assert.doesNotMatch(sample.status, /supabase is not connected|account access is unavailable/i);
         assert.equal(sample.phoneInputs, 0);
         assert.equal(sample.passwordInputs, mode === 'signup' ? 2 : 1);
+        assert.equal(sample.codeStep, true);
+        assert.equal(sample.codeStepHidden, true);
+        assert.equal(sample.codeForm, true);
+        assert.equal(sample.codeSubmit, true);
+        assert.equal(sample.codeInputMode, 'numeric');
+        assert.equal(sample.codeAutocomplete, 'one-time-code');
+        assert.equal(sample.codePattern, '[0-9]{6}');
+        assert.equal(sample.codeMaxLength, 6);
         assert.match(sample.backgroundImage, /gradient/i);
         assert.equal(headerChannels.length, 3, `${name} ${route} header background could not be measured`);
         assert.ok(Math.max(...headerChannels) < 45, `${name} ${route} header is too bright: ${sample.headerBackground}`);
@@ -124,6 +184,10 @@ async function runViewport(browser, name, viewport) {
     }
   }
 
+  const codePanels = {
+    signup: await exerciseCodePanel(page, 'signup'),
+    login: await exerciseCodePanel(page, 'login'),
+  };
   assert.deepEqual(pageErrors, []);
   assert.deepEqual(consoleErrors, []);
   await context.close();
@@ -137,6 +201,7 @@ async function runViewport(browser, name, viewport) {
       max: Number(Math.max(...durations).toFixed(2)),
     },
     samples: samples.length,
+    codePanels,
     pageErrors,
     consoleErrors,
   };

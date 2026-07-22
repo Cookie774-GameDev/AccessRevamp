@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
 const API_ORIGIN = 'https://api.supabase.com';
+const PRODUCTION_SITE_URL = 'https://accessrevamp.com';
+const EMAIL_OTP_SECONDS = 10 * 60;
 const root = new URL('../../', import.meta.url);
 
 function required(name) {
@@ -25,14 +27,24 @@ function secureSiteUrl() {
     process.env.SUPABASE_AUTH_SITE_URL
     || process.env.ACCESSREVAMP_SITE_URL
     || process.env.VITE_SITE_URL
-    || '',
+    || PRODUCTION_SITE_URL,
   ).trim().replace(/\/$/, '');
-  if (!value) throw new Error('SUPABASE_AUTH_SITE_URL or ACCESSREVAMP_SITE_URL is required.');
   const url = new URL(value);
   if (url.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(url.hostname)) {
     throw new Error('The Auth site URL must use HTTPS.');
   }
+  if (process.env.CI && ['localhost', '127.0.0.1'].includes(url.hostname)) {
+    throw new Error('Hosted Auth cannot be configured with a localhost Site URL in CI.');
+  }
   return url.toString().replace(/\/$/, '');
+}
+
+function productionOrigins(siteUrl) {
+  const current = new URL(siteUrl);
+  const origins = new Set([current.origin]);
+  if (current.hostname === 'accessrevamp.com') origins.add('https://www.accessrevamp.com');
+  if (current.hostname === 'www.accessrevamp.com') origins.add('https://accessrevamp.com');
+  return [...origins];
 }
 
 function redirectAllowList(siteUrl) {
@@ -40,11 +52,15 @@ function redirectAllowList(siteUrl) {
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
-  const defaults = [
-    `${siteUrl}/login`,
-    `${siteUrl}/login?confirmed=1`,
-    `${siteUrl}/login?verification=*`,
-  ];
+  const defaults = productionOrigins(siteUrl).flatMap((origin) => [
+    `${origin}/login`,
+    `${origin}/signup`,
+    `${origin}/account/projects`,
+    `${origin}/reset-password`,
+    // Compatibility only for verification links issued before the OTP rollout.
+    `${origin}/login?confirmed=1`,
+    `${origin}/login?verification=*`,
+  ]);
   return [...new Set([...configured, ...defaults])].join(',');
 }
 
@@ -100,15 +116,21 @@ const [confirmation, magicLink, recovery] = await Promise.all([
   readFile(new URL('supabase/templates/accessrevamp-recovery.html', root), 'utf8'),
 ]);
 
+for (const [name, template] of [['confirmation', confirmation], ['magic link', magicLink]]) {
+  if (!template.includes('{{ .Token }}')) throw new Error(`The ${name} template must contain {{ .Token }}.`);
+  if (template.includes('{{ .ConfirmationURL }}')) throw new Error(`The ${name} template must not contain a verification link.`);
+}
+
 const payload = {
   external_email_enabled: true,
   mailer_secure_email_change_enabled: true,
   mailer_autoconfirm: false,
+  mailer_otp_exp: EMAIL_OTP_SECONDS,
   site_url: siteUrl,
   uri_allow_list: redirectAllowList(siteUrl),
-  mailer_subjects_confirmation: 'Confirm your AccessRevamp workspace',
+  mailer_subjects_confirmation: 'Your AccessRevamp confirmation code',
   mailer_templates_confirmation_content: confirmation,
-  mailer_subjects_magic_link: 'Finish your secure AccessRevamp sign-in',
+  mailer_subjects_magic_link: 'Your AccessRevamp secure sign-in code',
   mailer_templates_magic_link_content: magicLink,
   mailer_subjects_recovery: 'Reset your AccessRevamp password',
   mailer_templates_recovery_content: recovery,
@@ -117,12 +139,20 @@ const payload = {
 
 if (process.argv.includes('--verify')) {
   const current = await authRequest(`/v1/projects/${ref}/config/auth`, accessToken);
+  const currentConfirmation = String(current.mailer_templates_confirmation_content || '');
+  const currentMagicLink = String(current.mailer_templates_magic_link_content || '');
   const checks = {
     emailProviderEnabled: current.external_email_enabled === true,
     emailConfirmationRequired: current.mailer_autoconfirm === false,
+    emailOtpExpiresInTenMinutes: Number(current.mailer_otp_exp) === EMAIL_OTP_SECONDS,
     siteUrlMatches: String(current.site_url || '').replace(/\/$/, '') === siteUrl,
-    confirmationTemplateBranded: String(current.mailer_templates_confirmation_content || '').includes('AccessRevamp'),
-    signInTemplateBranded: String(current.mailer_templates_magic_link_content || '').includes('AccessRevamp'),
+    productionSiteIsNotLocalhost: !/localhost|127\.0\.0\.1/i.test(String(current.site_url || '')),
+    confirmationTemplateBranded: currentConfirmation.includes('AccessRevamp'),
+    confirmationTemplateUsesCode: currentConfirmation.includes('{{ .Token }}'),
+    confirmationTemplateHasNoVerifyLink: !currentConfirmation.includes('{{ .ConfirmationURL }}'),
+    signInTemplateBranded: currentMagicLink.includes('AccessRevamp'),
+    signInTemplateUsesCode: currentMagicLink.includes('{{ .Token }}'),
+    signInTemplateHasNoVerifyLink: !currentMagicLink.includes('{{ .ConfirmationURL }}'),
     customSmtpConfigured: Boolean(current.smtp_host && current.smtp_admin_email),
   };
   console.log(JSON.stringify(checks, null, 2));
@@ -138,6 +168,8 @@ if (process.argv.includes('--verify')) {
     updated: true,
     projectRef: ref,
     siteUrl,
+    emailVerificationMode: 'six-digit-code',
+    emailOtpExpiresInSeconds: EMAIL_OTP_SECONDS,
     customSmtpConfigured: Boolean(payload.smtp_host),
     credentialsPrinted: false,
   }, null, 2));

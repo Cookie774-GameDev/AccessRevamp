@@ -2,6 +2,7 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/pages.css';
 import './styles/auth.css';
+import './styles/auth-otp.css';
 import './styles/motion.css';
 import './styles/image-led.css';
 import './styles/studio-redesign.css';

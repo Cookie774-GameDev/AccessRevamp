@@ -13,6 +13,8 @@ import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { createSupabasePublicClient } from './_shared/supabase-public.mjs';
 
 const CHALLENGE_LIFETIME_MS = 10 * 60 * 1000;
+const CHALLENGE_COOKIE = 'accessrevamp_login_challenge';
+const CHALLENGE_COOKIE_PATH = '/api/auth-login-complete';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalizeCredentials(payload) {
@@ -40,6 +42,11 @@ function maskEmail(email) {
 
 function challengeHash(token) {
   return createHash('sha256').update(token).digest('hex');
+}
+
+function challengeCookie(request, token, maximumAgeSeconds) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+  return `${CHALLENGE_COOKIE}=${encodeURIComponent(token)}; Path=${CHALLENGE_COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=${maximumAgeSeconds}${secure}`;
 }
 
 function requestRateKey(secret, scope, value) {
@@ -128,20 +135,23 @@ export function createAuthLoginStartHandler({
       challengeId = challengeResult.data.id;
 
       // The password-created session is never returned to the browser. Revoke it
-      // before sending the one-time email link so both factors are mandatory.
+      // before sending the six-digit email code so both factors remain mandatory.
       await passwordClient.auth.signOut({ scope: 'local' }).catch(() => undefined);
 
-      const verificationUrl = new URL('/login', request.headers.get('origin'));
-      verificationUrl.searchParams.set('verification', challengeToken);
+      // A redirect is retained only for compatibility with already-sent legacy
+      // link templates. The current hosted template displays {{ .Token }} and the
+      // application verifies that code explicitly instead of consuming a link.
+      const legacyVerificationUrl = new URL('/login', request.headers.get('origin'));
+      legacyVerificationUrl.searchParams.set('verification', challengeToken);
       const emailResult = await passwordClient.auth.signInWithOtp({
         email: authenticatedEmail,
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: verificationUrl.toString(),
+          emailRedirectTo: legacyVerificationUrl.toString(),
         },
       });
       if (emailResult.error) {
-        throw new HttpError(503, 'The verification email could not be sent. Try again shortly.');
+        throw new HttpError(503, 'The verification code could not be sent. Try again shortly.');
       }
 
       await admin
@@ -155,7 +165,9 @@ export function createAuthLoginStartHandler({
         ok: true,
         emailHint: maskEmail(authenticatedEmail),
         expiresIn: CHALLENGE_LIFETIME_MS / 1000,
-      }, 202);
+      }, 202, {
+        'set-cookie': challengeCookie(request, challengeToken, CHALLENGE_LIFETIME_MS / 1000),
+      });
     } catch (error) {
       if (admin && challengeId) {
         await admin
