@@ -123,6 +123,7 @@ var routeMetadata = Object.freeze({
 	"/signup": ["Create an account", "Create your AccessRevamp project workspace."],
 	"/account/projects": ["Projects", "View your AccessRevamp projects and orders."],
 	"/project-intake": ["Project brief", "Choose pages, share references, and upload private visual direction for a verified Complete or Cinematic project."],
+	"/approve/:token": ["Private project approval", "Review and confirm one AccessRevamp project direction through a private, expiring link."],
 	"/dashboard": ["Dashboard", "View your AccessRevamp projects and orders."],
 	"/operator": ["Operator workspace", "Restricted AccessRevamp evidence, preview, delivery, refund, and queue operations."],
 	"/privacy": ["Privacy", "How AccessRevamp handles contact, account, and order information."],
@@ -140,6 +141,7 @@ var noIndexPatterns = /* @__PURE__ */ new Set([
 	"/signup",
 	"/account/projects",
 	"/project-intake",
+	"/approve/:token",
 	"/dashboard",
 	"/operator",
 	"/success",
@@ -532,7 +534,8 @@ function orderWizard() {
           <label>Desired launch date<input name="launchDate" type="date"></label>
           <label class="order-fields__wide">Reference website URLs<textarea name="referenceUrls" rows="3" placeholder="One public URL per line"></textarea></label>
           <label class="order-fields__wide">Freeform specific request<textarea name="specificRequest" rows="5"></textarea></label>
-          <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5"></textarea></label>
+          <label class="order-fields__wide" data-cinematic-fields hidden>How many cinematic scenes?<select name="cinematicSceneCount" disabled><option value="">Choose three or four</option><option value="3">3 scenes — provider budget capped at 150 credits</option><option value="4">4 scenes — provider budget capped at 200 credits</option></select><small>You will review two complete visual sequences before any scene video is generated.</small></label>
+          <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5" disabled></textarea></label>
         </div>
         <label class="order-dropzone"><input type="file" name="referenceFiles" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon("upload")}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>
         <ul class="order-file-list" data-order-file-list aria-live="polite"></ul>
@@ -542,6 +545,7 @@ function orderWizard() {
         <div class="order-wizard__heading"><span>Step 04</span><h3>Review and payment</h3></div>
         <div class="order-summary" data-order-summary></div>
         <label class="order-consent"><input type="checkbox" name="termsAccepted" required> <span>I agree to the <a href="/terms" data-nav>terms</a> and acknowledge the <a href="/privacy" data-nav>privacy notice</a>.</span></label>
+        <label class="order-consent"><input type="checkbox" name="portfolioConsent"> <span>Optional: I give AccessRevamp permission to show approved, non-sensitive project visuals in its portfolio. This is not required to buy and may be revoked for future use.</span></label>
       </div>
       <div class="order-wizard__panel" data-order-panel="4" hidden>
         <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
@@ -1167,7 +1171,9 @@ function setupOrderWizard(root = document) {
 	const summary = form.querySelector("[data-order-summary]");
 	const questionPlan = form.querySelector("[data-order-question-plan]");
 	const checkout = form.querySelector("[data-order-checkout][data-checkout]");
-	const cinematicFields = form.querySelector("[data-cinematic-fields]");
+	const cinematicFields = [...form.querySelectorAll("[data-cinematic-fields]")];
+	const cinematicSceneCount = form.elements.cinematicSceneCount;
+	const cinematicDirection = form.elements.cinematicDirection;
 	const fileInput = form.querySelector("[data-order-file-input]");
 	const fileList = form.querySelector("[data-order-file-list]");
 	let current = 0;
@@ -1229,14 +1235,26 @@ function setupOrderWizard(root = document) {
 		questionPlan.innerHTML = `<dl><div><dt>Selected plan</dt><dd><strong>${escapeHtml(plan.name)}</strong> · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Plan focus</dt><dd>${escapeHtml(plan.summary)}</dd></div></dl><div><strong>Every included perk</strong><ul aria-label="${escapeHtml(plan.name)} included perks">${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("")}</ul></div>`;
 	};
 	const renderSummary = () => {
-		const plan = plans[selectedPlan()];
+		const planKey = selectedPlan();
+		const plan = plans[planKey];
 		const value = (name) => escapeHtml(form.elements[name]?.value || "Not provided");
-		summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value("fullName")} · ${value("email")}</dd></div><div><dt>Business</dt><dd>${value("businessName")} · ${value("businessNiche")}</dd></div><div><dt>Website</dt><dd>${value("websiteUrl")}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div><div><dt>Request</dt><dd>${value("mainGoal")}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(", ") : "None"}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("")}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
+		const cinematicSummary = planKey === "cinematic_scroll" ? `<div><dt>Cinematic scope</dt><dd>${value("cinematicSceneCount")} scenes · ${value("cinematicDirection")}</dd></div>` : "";
+		const portfolioSummary = form.elements.portfolioConsent?.checked ? "Optional portfolio permission granted; future use remains revocable." : "No portfolio permission granted.";
+		summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value("fullName")} · ${value("email")}</dd></div><div><dt>Business</dt><dd>${value("businessName")} · ${value("businessNiche")}</dd></div><div><dt>Website</dt><dd>${value("websiteUrl")}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div>${cinematicSummary}<div><dt>Request</dt><dd>${value("mainGoal")}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(", ") : "None"}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("")}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
 		checkout.dataset.checkout = plan.key;
 		checkout.textContent = `Continue with ${plan.name}`;
 	};
 	const updatePlanFields = () => {
-		cinematicFields.hidden = selectedPlan() !== "cinematic_scroll";
+		const enabled = selectedPlan() === "cinematic_scroll";
+		cinematicFields.forEach((field) => {
+			field.hidden = !enabled;
+		});
+		if (cinematicSceneCount) {
+			cinematicSceneCount.disabled = !enabled;
+			cinematicSceneCount.required = enabled;
+			if (!enabled) cinematicSceneCount.value = "";
+		}
+		if (cinematicDirection) cinematicDirection.disabled = !enabled;
 	};
 	const show = (index) => {
 		current = Math.min(4, Math.max(0, index));
@@ -1988,24 +2006,27 @@ var refundPolicy = Object.freeze({
 var pages = {
 	privacy: {
 		title: "Privacy notice",
-		intro: "AccessRevamp collects only the information you choose to provide through contact, account, project, and checkout journeys.",
+		intro: "AccessRevamp collects only the information you choose to provide through contact, account, project, approval, and checkout journeys.",
 		items: [
 			"Contact submissions are used to answer your request.",
 			"Supabase handles authentication and protects customer records with row-level security.",
 			"Stripe handles payment-card details; AccessRevamp stores only the identifiers needed to reconcile orders.",
+			"Project research, uploaded references, approval choices, and delivery records are kept within the customer project and are not made public by default.",
 			"Suppression records may be retained so an outreach opt-out remains effective.",
 			"Personal information is not sold."
 		]
 	},
 	terms: {
 		title: "Service terms",
-		intro: "Every AccessRevamp purchase is governed by the selected plan and the written scope confirmed for delivery.",
+		intro: "Every AccessRevamp purchase is governed by the selected plan, the confirmed intake, customer approvals, and the written delivery scope.",
 		items: [
-			"Homepage Reveal includes a reviewed report and one landing-page direction; its written scope states whether delivery is coded, conceptual, or both.",
-			"Complete Website Revamp covers up to five agreed standard content pages unless written scope says otherwise.",
-			"Cinematic Scroll Site is bounded to one sequence, up to four story beats, one revision, and accessible fallbacks.",
-			"Accessibility and security observations are not certification, penetration testing, or legal advice.",
-			"Timelines may change when access, assets, content, third-party tools, or approvals are delayed."
+			"Homepage Reveal includes a human-reviewed report, growth guidance, and five homepage directions—three normal and two cinematic—unless the written scope says otherwise.",
+			"Complete Website Revamp covers up to five agreed standard content pages, approved implementation, up to two design-option revision rounds, five animated poster directions, ten still poster directions, and the written delivery scope.",
+			"Cinematic Scroll Site includes the Complete Website Revamp process plus a customer-selected three- or four-scene sequence, two complete visual sequence options, accessible reduced-motion fallbacks, and provider-credit limits stated during intake.",
+			"AI-assisted concepts may be used during ideation. Final website media must be customer-owned, properly licensed, or separately approved; AccessRevamp does not promise unreviewed generated imagery in the published site.",
+			"Accessibility and security observations are not certification, penetration testing, or legal advice. Active security testing requires separate written authorization defining the exact target and scope.",
+			"Timelines may change when access, assets, content, third-party tools, customer approvals, or provider availability are delayed.",
+			"Purchase does not automatically grant portfolio rights. Portfolio publication requires a separate optional permission, excludes sensitive material, and may be revoked for future use."
 		]
 	},
 	accessibility: {
@@ -2020,11 +2041,12 @@ var pages = {
 	},
 	legal: {
 		title: "Legal overview",
-		intro: "The public policies explain how AccessRevamp handles service scope, privacy, accessibility, and refunds.",
+		intro: "The public policies explain how AccessRevamp handles service scope, privacy, accessibility, outreach, portfolio permission, and refunds.",
 		items: [
 			"Review privacy before sharing personal information.",
 			"Review terms and the written project scope before purchasing.",
 			"Review the refund policy before final digital delivery.",
+			"Portfolio permission is separate from purchase and is not required.",
 			"These public notices should receive qualified legal review before commercial launch."
 		]
 	},
@@ -2032,18 +2054,18 @@ var pages = {
 		title: "Outreach standards",
 		intro: "Business outreach must be relevant, limited, identifiable, evidence-backed, human-approved, and easy to stop.",
 		items: [
-			"Only publicly listed business contact details may be used.",
-			"The reviewed public page and contact source must be recorded.",
-			"Unverified security concerns are never used as scare claims.",
-			"A working reply address, business identity, postal address, and clear opt-out are required.",
-			"Suppressed recipients remain excluded from future sends."
+			"Only intentionally published business contact details may be used, and the exact public source must be recorded.",
+			"Every message must be based on a human-verified observation from the reviewed public page and remain at or below the configured 175-word maximum.",
+			"Unverified security concerns, legal threats, fake reply subjects, and invented business claims are never used.",
+			"A working reply address, accurate sender identity, valid postal address, and clear reply-or-link opt-out are required.",
+			"Suppressed recipients remain excluded from future sends, and automated spam-classification manipulation is prohibited."
 		]
 	}
 };
 function legalPage(kind) {
-	if (kind === "refunds") return shell(`<section class="page-hero"><div class="container-narrow"><span class="eyebrow">Last updated July 17, 2026</span><h1>${refundPolicy.title}</h1><p class="lede">${refundPolicy.summary}</p></div></section><section class="section"><div class="container-narrow legal-copy"><h2>Before final delivery</h2><p>${refundPolicy.delivery}</p><h2>Cinematic timing</h2><p>${refundPolicy.timing}</p><h2>Rights preserved</h2><p>${refundPolicy.rights}</p><p>Use the <a href="/contact" data-nav>contact form</a> to request cancellation or a refund and include only non-sensitive project context.</p></div></section>`, { pathname: "/refunds" });
+	if (kind === "refunds") return shell(`<section class="page-hero"><div class="container-narrow"><span class="eyebrow">Last updated July 21, 2026</span><h1>${refundPolicy.title}</h1><p class="lede">${refundPolicy.summary}</p></div></section><section class="section"><div class="container-narrow legal-copy"><h2>Before final delivery</h2><p>${refundPolicy.delivery}</p><h2>Cinematic timing</h2><p>${refundPolicy.timing}</p><h2>Rights preserved</h2><p>${refundPolicy.rights}</p><p>Use the <a href="/contact" data-nav>contact form</a> to request cancellation or a refund and include only non-sensitive project context.</p></div></section>`, { pathname: "/refunds" });
 	const page = pages[kind] || pages.legal;
-	return shell(`<section class="page-hero"><div class="container-narrow"><span class="eyebrow">Last updated July 17, 2026</span><h1>${page.title}</h1><p class="lede">${page.intro}</p></div></section><section class="section"><div class="container-narrow legal-copy"><h2>Core commitments</h2><ul>${page.items.map((item) => `<li>${item}</li>`).join("")}</ul><h2>Questions or requests</h2><p>Use the <a href="/contact" data-nav>contact form</a>. Never include passwords, card details, or access tokens.</p></div></section>`, { pathname: kind === "outreach" ? "/outreach-standards" : `/${kind}` });
+	return shell(`<section class="page-hero"><div class="container-narrow"><span class="eyebrow">Last updated July 21, 2026</span><h1>${page.title}</h1><p class="lede">${page.intro}</p></div></section><section class="section"><div class="container-narrow legal-copy"><h2>Core commitments</h2><ul>${page.items.map((item) => `<li>${item}</li>`).join("")}</ul><h2>Questions or requests</h2><p>Use the <a href="/contact" data-nav>contact form</a>. Never include passwords, card details, or access tokens.</p></div></section>`, { pathname: kind === "outreach" ? "/outreach-standards" : `/${kind}` });
 }
 //#endregion
 //#region src/pages/free-snapshot.js
@@ -2138,6 +2160,23 @@ function projectIntakePage() {
 		pathname: "/project-intake",
 		pageClass: "project-intake-page"
 	});
+}
+//#endregion
+//#region src/pages/project-approval.js
+function projectApprovalPage({ token = "" } = {}) {
+	return shell(`<section class="page-hero"><div class="container-narrow" data-project-approval data-approval-token="${escapeHtml(token)}">
+    <span class="eyebrow">Private customer approval</span>
+    <h1>Review your AccessRevamp options.</h1>
+    <p class="lede">This link is unique, expires automatically, and can be used only once.</p>
+    <div class="order-summary" data-approval-summary aria-live="polite"><p>Loading your project options…</p></div>
+    <form class="order-wizard" data-approval-form hidden>
+      <fieldset data-approval-options><legend>Choose one option</legend><div class="order-plan-grid" data-approval-option-grid></div></fieldset>
+      <label>Optional notes<textarea name="notes" rows="5" maxlength="2000" placeholder="Tell us what you like or what must change."></textarea></label>
+      <label class="order-consent"><input type="checkbox" name="confirm" required> <span>I confirm this selection for the project shown above.</span></label>
+      <button class="button button--sun" type="submit">Confirm selection</button>
+      <p class="form-status" data-approval-status role="status"></p>
+    </form>
+  </div></section>`, { pathname: "/approve" });
 }
 //#endregion
 //#region src/pages/operator.js
@@ -23567,6 +23606,103 @@ function setupProjectIntake() {
 	};
 }
 //#endregion
+//#region src/services/project-approval.js
+var purposeLabels = Object.freeze({
+	homepage_selection: "Homepage direction",
+	revision_selection: "Revision direction",
+	cinematic_sequence_selection: "Cinematic sequence",
+	scene_selection: "Scene direction",
+	final_approval: "Final approval",
+	portfolio_consent: "Portfolio permission"
+});
+var planLabels = Object.freeze({
+	homepage_reveal: "Homepage Reveal",
+	complete_revamp: "Complete Website Revamp",
+	cinematic_scroll: "Cinematic Scroll Site"
+});
+async function responseJson(response) {
+	const body = await response.json().catch(() => ({}));
+	if (!response.ok) throw new Error(body.error || "The approval request could not be completed.");
+	return body;
+}
+function setupProjectApproval(root = document) {
+	const container = root.querySelector("[data-project-approval]");
+	if (!container) return void 0;
+	const token = container.dataset.approvalToken || "";
+	const summary = container.querySelector("[data-approval-summary]");
+	const form = container.querySelector("[data-approval-form]");
+	const fieldset = container.querySelector("[data-approval-options]");
+	const grid = container.querySelector("[data-approval-option-grid]");
+	const status = container.querySelector("[data-approval-status]");
+	const submit = form.querySelector("button[type=\"submit\"]");
+	const controller = new AbortController();
+	let approval;
+	const renderOptions = (options) => {
+		grid.innerHTML = options.map((option) => {
+			const label = option.sequenceKey ? `Sequence ${escapeHtml(option.sequenceKey)}` : `Option ${escapeHtml(String(option.optionNumber))}`;
+			const scene = option.sceneNumber ? ` · Scene ${escapeHtml(String(option.sceneNumber))}` : "";
+			const image = option.imageUrl ? `<img class="approval-option__image" src="${escapeHtml(option.imageUrl)}" alt="${label}${scene} preview" loading="lazy" decoding="async">` : "<span class=\"approval-option__placeholder\">Preview is being prepared.</span>";
+			return `<label class="order-plan approval-option"><input type="radio" name="selectedOption" value="${escapeHtml(option.id)}" required><span>${image}<b>${label}${scene}</b><small>${escapeHtml(option.promptSummary || "Review this direction carefully before confirming.")}</small></span></label>`;
+		}).join("");
+	};
+	const load = async () => {
+		try {
+			const data = await responseJson(await fetch(`/api/project-approval?token=${encodeURIComponent(token)}`, {
+				method: "GET",
+				headers: { accept: "application/json" },
+				signal: controller.signal,
+				credentials: "same-origin"
+			}));
+			approval = data;
+			const project = data.project;
+			const scene = project.cinematicSceneCount ? `<div><dt>Cinematic scope</dt><dd>${escapeHtml(String(project.cinematicSceneCount))} scenes</dd></div>` : "";
+			summary.innerHTML = `<dl><div><dt>Project</dt><dd>${escapeHtml(project.name)}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(planLabels[project.planKey] || project.planKey)}</dd></div><div><dt>Approval</dt><dd>${escapeHtml(purposeLabels[data.purpose] || data.purpose)}</dd></div>${scene}<div><dt>Link expires</dt><dd>${escapeHtml(new Date(data.expiresAt).toLocaleString())}</dd></div></dl>`;
+			if (data.options.length) renderOptions(data.options);
+			else fieldset.hidden = true;
+			form.hidden = false;
+			status.textContent = "Review the project and submit one confirmed choice.";
+		} catch (error) {
+			if (error.name === "AbortError") return;
+			summary.innerHTML = `<p>${escapeHtml(error.message)}</p><p>Ask AccessRevamp for a new private approval link.</p>`;
+		}
+	};
+	const submitApproval = async (event) => {
+		event.preventDefault();
+		if (!approval || !form.reportValidity()) return;
+		const selected = form.elements.selectedOption?.value;
+		const selectedOptionIds = selected ? [selected] : [];
+		submit.disabled = true;
+		status.textContent = "Saving your approval…";
+		try {
+			await responseJson(await fetch(`/api/project-approval?token=${encodeURIComponent(token)}`, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					accept: "application/json"
+				},
+				body: JSON.stringify({
+					selectedOptionIds,
+					notes: form.elements.notes.value
+				}),
+				signal: controller.signal,
+				credentials: "same-origin"
+			}));
+			form.hidden = true;
+			summary.innerHTML += "<p><strong>Your selection was saved.</strong> AccessRevamp can now continue the next approved project stage. Do not submit payment again.</p>";
+		} catch (error) {
+			if (error.name === "AbortError") return;
+			status.textContent = error.message;
+			submit.disabled = false;
+		}
+	};
+	form.addEventListener("submit", submitApproval);
+	load();
+	return () => {
+		controller.abort();
+		form.removeEventListener("submit", submitApproval);
+	};
+}
+//#endregion
 //#region src/services/operator.js
 function setupOperator() {
 	const host = document.querySelector("[data-operator-content]");
@@ -23714,6 +23850,7 @@ var routes = {
 	"/signup": () => authPage("signup"),
 	"/account/projects": accountProjectsPage,
 	"/project-intake": projectIntakePage,
+	"/approve/:token": projectApprovalPage,
 	"/dashboard": dashboardPage,
 	"/operator": operatorPage,
 	"/privacy": () => legalPage("privacy"),
@@ -23790,6 +23927,7 @@ function renderRoute({ pathname, pattern, params, view }) {
 	if (pathname === "/dashboard") cleanups.push(setupDashboard(router.navigate));
 	if (pathname === "/account/projects") cleanups.push(setupAccountProjects(router.navigate));
 	if (pathname === "/project-intake") cleanups.push(setupProjectIntake());
+	if (pattern === "/approve/:token") cleanups.push(setupProjectApproval(app));
 	if (pathname === "/operator") cleanups.push(setupOperator());
 	if (pathname === "/success") cleanups.push(setupCheckoutResult(app));
 	if (pattern === "/portfolio/:slug") {
