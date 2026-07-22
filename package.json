@@ -25,12 +25,16 @@
     "security:authorized": "node scripts/quality/run-authorized-security.mjs",
     "load:authorized": "node scripts/quality/run-authorized-load.mjs",
     "verify:requirements": "node scripts/quality/verify-requirements.mjs",
+    "mailbox:mcp": "node tools/mailbox-mcp/server.mjs",
+    "mailbox:mcp:doctor": "node tools/mailbox-mcp/doctor.mjs",
     "test": "node --test tests/*.test.mjs",
     "lint": "node scripts/check.mjs",
     "check": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "@axe-core/playwright": "4.12.1",
+    "@azure/identity": "4.13.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@supabase/supabase-js": "2.110.7",
     "next": "16.2.6",
     "playwright": "1.61.1",
@@ -53,6 +57,8 @@
     "wrangler": "4.92.0"
   },
   "overrides": {
+    "@hono/node-server": "2.0.11",
+    "fast-uri": "3.1.4",
     "postcss": "8.5.10",
     "sharp": "0.35.0"
   }

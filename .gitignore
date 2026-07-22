@@ -5,6 +5,10 @@ dist/
 .env
 .env.*
 !.env.example
+.mcp.json
+.codex/config.toml
+!.mcp.json.example
+!.codex/config.toml.example
 .DS_Store
 *.log
 coverage/
