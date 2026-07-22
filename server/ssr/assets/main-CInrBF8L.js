@@ -1905,9 +1905,111 @@ function contactPage() {
 }
 //#endregion
 //#region src/pages/auth.js
+var protocolStep = (number, title, copy) => `<article class="auth-protocol__step">
+  <span>${number}</span>
+  <div><strong>${title}</strong><p>${copy}</p></div>
+</article>`;
 function authPage(mode) {
 	const signup = mode === "signup";
-	return shell(`<section class="auth-section"><div class="auth-card">${brandLink({ className: "auth-brand" })}<span class="eyebrow">Customer workspace</span><h1>${signup ? "Create your account" : "Welcome back"}</h1><p>${signup ? "Use the email connected to your project or purchase. Email confirmation may be required." : "Sign in to view orders and project progress protected by Supabase row-level security."}</p><form data-auth-form data-mode="${mode}" novalidate>${signup ? "<label>Full name<input name=\"fullName\" autocomplete=\"name\" maxlength=\"120\" required /></label>" : ""}<label>Email<input type="email" name="email" autocomplete="email" required /></label><label>Password<input type="password" name="password" autocomplete="${signup ? "new-password" : "current-password"}" minlength="10" required /></label><button class="button button--full" type="submit">${signup ? "Create account" : "Sign in"}</button><p class="form-status" role="status" aria-live="polite"></p></form><p class="auth-switch">${signup ? "Already have an account? <a href=\"/login\" data-nav>Sign in</a>" : "Need an account? <a href=\"/signup\" data-nav>Create one</a>"}</p><div class="auth-security">${icon("shield")}<span>Supabase handles authentication. AccessRevamp does not store your password in its application tables.</span></div></div></section>`, { pathname: `/${mode}` });
+	const title = signup ? "Open your private project workspace." : "Enter the workroom.";
+	const introduction = signup ? "Create the confirmed account that will hold your brief, references, design reviews, progress updates, and final website files." : "AccessRevamp protects customer work with a password check followed by a fresh verification email for every new sign-in.";
+	return shell(`<section class="auth-experience" data-auth-page data-auth-mode="${mode}">
+    <div class="auth-experience__grid" aria-hidden="true"></div>
+    <div class="auth-orbit auth-orbit--one" aria-hidden="true"></div>
+    <div class="auth-orbit auth-orbit--two" aria-hidden="true"></div>
+
+    <div class="container-wide auth-layout">
+      <aside class="auth-story" aria-label="AccessRevamp account security">
+        ${brandLink({ className: "auth-brand" })}
+        <div class="auth-story__copy">
+          <span class="auth-kicker"><i></i> Access / verified</span>
+          <h1>${title}</h1>
+          <p>${introduction}</p>
+        </div>
+
+        <div class="auth-protocol" aria-label="Sign-in protocol">
+          ${protocolStep("01", signup ? "Confirm ownership" : "Correct password", signup ? "Supabase sends a confirmation message to the email you register." : "Your password is checked first and never sent to AccessRevamp application tables.")}
+          ${protocolStep("02", "Verify the inbox", signup ? "Open the secure confirmation link before the account can be used." : "A new one-time AccessRevamp sign-in link is sent to the confirmed email.")}
+          ${protocolStep("03", "Enter the workspace", "Only the fully verified session can read customer projects, designs, and downloads.")}
+        </div>
+
+        <div class="auth-story__footer">
+          ${icon("shield", "auth-story__shield")}
+          <p><strong>Private by default.</strong> Customer files use expiring links. Passwords stay inside Supabase Auth.</p>
+        </div>
+      </aside>
+
+      <div class="auth-panel-wrap">
+        <div class="auth-panel">
+          <div class="auth-panel__topline"><span>Customer identity</span><span>${signup ? "New account" : "Two-step sign-in"}</span></div>
+          <header class="auth-panel__header">
+            <span class="eyebrow">Secure customer hub</span>
+            <h2>${signup ? "Create account" : "Sign in"}</h2>
+            <p>${signup ? "Use the same email connected to your AccessRevamp order or project." : "Both the password and inbox verification are required."}</p>
+          </header>
+
+          <form class="auth-form" data-auth-form data-mode="${mode}" novalidate>
+            ${signup ? `<label class="auth-field">
+    <span>Full name</span>
+    <input name="fullName" autocomplete="name" maxlength="120" placeholder="Your name" required />
+  </label>` : ""}
+            <label class="auth-field">
+              <span>Email address</span>
+              <input type="email" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@business.com" required />
+            </label>
+            <label class="auth-field">
+              <span>Password</span>
+              <input type="password" name="password" autocomplete="${signup ? "new-password" : "current-password"}" minlength="${signup ? "12" : "1"}" maxlength="1024" placeholder="${signup ? "12+ characters" : "Your password"}" required />
+            </label>
+            ${signup ? `<label class="auth-field">
+              <span>Confirm password</span>
+              <input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" maxlength="1024" placeholder="Repeat your password" required />
+            </label>
+            <div class="auth-password-rules" data-password-rules aria-label="Password requirements">
+              <span data-password-rule="length">${icon("check")} 12 or more characters</span>
+              <span data-password-rule="mix">${icon("check")} Uppercase, lowercase, and number</span>
+              <span data-password-rule="symbol">${icon("check")} At least one symbol</span>
+            </div>` : ""}
+
+            <button class="button auth-submit" type="submit">
+              <span>${signup ? "Create secure account" : "Check password & send email"}</span>${icon("arrow")}
+            </button>
+            <p class="auth-status form-status" data-auth-status role="status" aria-live="polite"></p>
+          </form>
+
+          <section class="auth-email-step" data-auth-email-step hidden aria-live="polite">
+            <div class="auth-email-step__mark">${icon("check")}</div>
+            <span class="auth-kicker"><i></i> Password accepted</span>
+            <h2>Check your email.</h2>
+            <p>We sent a one-time sign-in link to <strong data-auth-email-hint>your confirmed address</strong>. Open it in this browser to finish.</p>
+            <div class="auth-email-step__note">The link expires shortly and cannot replace the password step.</div>
+            <button class="button button--ghost auth-restart" type="button" data-auth-restart>Use a different account</button>
+          </section>
+
+          <section class="auth-email-step" data-auth-completing hidden aria-live="polite">
+            <div class="auth-email-step__loader" aria-hidden="true"></div>
+            <span class="auth-kicker"><i></i> Verifying session</span>
+            <h2>Opening your workspace.</h2>
+            <p>AccessRevamp is validating the one-time email link against the password challenge.</p>
+          </section>
+
+          <div class="auth-panel__switch">
+            <p>${signup ? "Already registered?" : "Need a customer account?"}</p>
+            <a href="/${signup ? "login" : "signup"}" data-nav>${signup ? "Sign in securely" : "Create your account"} ${icon("arrow")}</a>
+          </div>
+
+          <div class="auth-panel__legal">
+            <span>${icon("shield")} Email verification required</span>
+            <span>No phone number required</span>
+            <span><a href="/privacy" data-nav>Privacy</a> · <a href="/terms" data-nav>Terms</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`, {
+		pathname: `/${mode}`,
+		pageClass: "auth-page"
+	});
 }
 //#endregion
 //#region src/pages/dashboard.js
@@ -22909,44 +23011,229 @@ function getSupabase() {
 }
 //#endregion
 //#region src/services/auth.js
+var LOGIN_START_ENDPOINT = "/api/auth-login-start";
+var LOGIN_COMPLETE_ENDPOINT = "/api/auth-login-complete";
+var PASSWORD_RULES = Object.freeze({
+	length: (value) => value.length >= 12,
+	mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
+	symbol: (value) => /[^A-Za-z0-9]/.test(value)
+});
+function setStatus(status, message, tone = "") {
+	status.textContent = message;
+	if (tone) status.dataset.tone = tone;
+	else delete status.dataset.tone;
+}
+function cleanAuthUrl() {
+	const clean = new URL(location.href);
+	clean.searchParams.delete("verification");
+	clean.searchParams.delete("confirmed");
+	clean.hash = "";
+	history.replaceState({}, "", `${clean.pathname}${clean.search}`);
+}
+async function readJson(response) {
+	return response.json().catch(() => ({}));
+}
+async function waitForSession(supabase, timeoutMs = 9e3) {
+	const current = await supabase.auth.getSession();
+	if (current.error) throw current.error;
+	if (current.data?.session) return current.data.session;
+	return new Promise((resolve, reject) => {
+		let settled = false;
+		let subscription;
+		let timeout;
+		const finish = (callback, value) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timeout);
+			subscription?.unsubscribe();
+			callback(value);
+		};
+		subscription = supabase.auth.onAuthStateChange((_event, session) => {
+			if (session) finish(resolve, session);
+		}).data.subscription;
+		timeout = setTimeout(() => finish(reject, /* @__PURE__ */ new Error("The email link did not create a valid session.")), timeoutMs);
+	});
+}
 function setupAuthForm(navigate) {
+	const page = document.querySelector("[data-auth-page]");
 	const form = document.querySelector("[data-auth-form]");
-	if (!form) return void 0;
-	const onSubmit = async (event) => {
-		event.preventDefault();
-		const status = form.querySelector(".form-status");
-		const submit = form.querySelector("button[type=\"submit\"]");
-		const supabase = getSupabase();
-		if (!supabase) {
-			status.textContent = "Supabase is not connected on this preview.";
-			return;
-		}
-		if (!form.reportValidity()) return;
-		const data = new FormData(form);
-		const email = String(data.get("email") || "").trim();
-		const password = String(data.get("password") || "");
-		submit.disabled = true;
-		status.textContent = "Securing your session…";
-		try {
-			const result = form.dataset.mode === "signup" ? await supabase.auth.signUp({
-				email,
-				password,
-				options: { data: { full_name: String(data.get("fullName") || "").trim() } }
-			}) : await supabase.auth.signInWithPassword({
+	if (!page || !form) return void 0;
+	const status = form.querySelector("[data-auth-status]");
+	const submit = form.querySelector("button[type=\"submit\"]");
+	const submitLabel = submit?.querySelector("span");
+	const passwordInput = form.elements.password;
+	const confirmPasswordInput = form.elements.confirmPassword;
+	const emailStep = page.querySelector("[data-auth-email-step]");
+	const completingStep = page.querySelector("[data-auth-completing]");
+	const emailHint = page.querySelector("[data-auth-email-hint]");
+	const restart = page.querySelector("[data-auth-restart]");
+	const mode = form.dataset.mode;
+	const signup = mode === "signup";
+	const supabase = getSupabase();
+	let disposed = false;
+	let busy = false;
+	const show = (panel) => {
+		form.hidden = panel !== "form";
+		if (emailStep) emailStep.hidden = panel !== "email";
+		if (completingStep) completingStep.hidden = panel !== "completing";
+	};
+	const setBusy = (next, label = null) => {
+		busy = next;
+		submit.disabled = next;
+		submit.toggleAttribute("aria-busy", next);
+		if (label && submitLabel) submitLabel.textContent = label;
+	};
+	const updatePasswordRules = () => {
+		if (!signup || !passwordInput) return;
+		const value = passwordInput.value;
+		Object.entries(PASSWORD_RULES).forEach(([key, validate]) => {
+			page.querySelector(`[data-password-rule="${key}"]`)?.classList.toggle("is-valid", validate(value));
+		});
+	};
+	const validateSignupPassword = () => {
+		if (!signup) return true;
+		const password = passwordInput.value;
+		const valid = Object.values(PASSWORD_RULES).every((validate) => validate(password));
+		passwordInput.setCustomValidity(valid ? "" : "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.");
+		confirmPasswordInput.setCustomValidity(confirmPasswordInput.value === password ? "" : "Passwords do not match.");
+		return valid && confirmPasswordInput.value === password;
+	};
+	const startLogin = async (email, password) => {
+		const response = await fetch(LOGIN_START_ENDPOINT, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
 				email,
 				password
-			});
-			if (result.error) throw result.error;
-			if (form.dataset.mode === "signup" && !result.data.session) status.textContent = "Check your email to confirm the account, then sign in.";
-			else navigate("/account/projects");
+			})
+		});
+		const result = await readJson(response);
+		if (!response.ok) throw new Error(result.error || "Secure sign-in could not be started.");
+		return result;
+	};
+	const completeLogin = async (session, challengeToken) => {
+		const response = await fetch(LOGIN_COMPLETE_ENDPOINT, {
+			method: "POST",
+			headers: {
+				authorization: `Bearer ${session.access_token}`,
+				"content-type": "application/json"
+			},
+			body: JSON.stringify({ challengeToken })
+		});
+		const result = await readJson(response);
+		if (!response.ok) throw new Error(result.error || "Email verification could not be completed.");
+		return result;
+	};
+	const handleEmailLink = async (challengeToken) => {
+		show("completing");
+		try {
+			const session = await waitForSession(supabase);
+			if (!session.user?.email_confirmed_at) throw new Error("Confirm your email before signing in.");
+			await completeLogin(session, challengeToken);
+			if (disposed) return;
+			cleanAuthUrl();
+			navigate("/account/projects", { replace: true });
 		} catch (error) {
-			status.textContent = error.message || "Authentication failed.";
-		} finally {
-			submit.disabled = false;
+			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			if (disposed) return;
+			cleanAuthUrl();
+			show("form");
+			setStatus(status, error.message || "The verification link is invalid or expired. Start again.", "error");
+			passwordInput?.focus();
 		}
 	};
+	const handleSignupConfirmation = async () => {
+		show("completing");
+		try {
+			if (!(await waitForSession(supabase)).user?.email_confirmed_at) throw new Error("Email confirmation was not completed.");
+			await supabase.auth.signOut({ scope: "local" });
+			if (disposed) return;
+			cleanAuthUrl();
+			show("form");
+			setStatus(status, "Email confirmed. Sign in with your password to receive a fresh verification link.", "success");
+			form.elements.email?.focus();
+		} catch (error) {
+			if (disposed) return;
+			cleanAuthUrl();
+			show("form");
+			setStatus(status, error.message || "Email confirmation could not be verified.", "error");
+		}
+	};
+	const onSubmit = async (event) => {
+		event.preventDefault();
+		if (busy || !supabase) return;
+		if (signup) validateSignupPassword();
+		if (!form.reportValidity()) return;
+		const data = new FormData(form);
+		const email = String(data.get("email") || "").trim().toLowerCase();
+		const password = String(data.get("password") || "");
+		setBusy(true, signup ? "Creating protected account…" : "Checking password…");
+		setStatus(status, signup ? "Preparing your confirmed customer identity…" : "Validating your password securely…");
+		try {
+			if (signup) {
+				const fullName = String(data.get("fullName") || "").trim();
+				const redirectTo = `${location.origin}/login?confirmed=1`;
+				const result = await supabase.auth.signUp({
+					email,
+					password,
+					options: {
+						emailRedirectTo: redirectTo,
+						data: { full_name: fullName }
+					}
+				});
+				if (result.error) throw result.error;
+				if (result.data?.session) {
+					await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+					throw new Error("Email confirmation is not enforced by the connected Supabase project. Account access was blocked for safety.");
+				}
+				form.dataset.complete = "true";
+				[...form.elements].forEach((control) => {
+					control.disabled = true;
+				});
+				if (submitLabel) submitLabel.textContent = "Confirmation email sent";
+				setStatus(status, "Check your email to confirm your AccessRevamp account, then return to sign in.", "success");
+				return;
+			}
+			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			const result = await startLogin(email, password);
+			passwordInput.value = "";
+			if (emailHint) emailHint.textContent = result.emailHint || email;
+			show("email");
+		} catch (error) {
+			setStatus(status, error.message || "Authentication failed.", "error");
+		} finally {
+			if (!form.dataset.complete) setBusy(false, signup ? "Create secure account" : "Check password & send email");
+		}
+	};
+	const onRestart = async () => {
+		await supabase?.auth.signOut({ scope: "local" }).catch(() => void 0);
+		show("form");
+		setStatus(status, "Enter the password again to request a new one-time email link.");
+		form.elements.email?.focus();
+	};
 	form.addEventListener("submit", onSubmit);
-	return () => form.removeEventListener("submit", onSubmit);
+	restart?.addEventListener("click", onRestart);
+	passwordInput?.addEventListener("input", updatePasswordRules);
+	confirmPasswordInput?.addEventListener("input", validateSignupPassword);
+	updatePasswordRules();
+	if (!supabase) {
+		setStatus(status, "Supabase is not connected on this deployment. Account access is unavailable.", "error");
+		submit.disabled = true;
+	} else {
+		const params = new URLSearchParams(location.search);
+		const verification = params.get("verification");
+		const confirmed = params.get("confirmed") === "1";
+		if (verification && mode === "login") handleEmailLink(verification);
+		else if (confirmed && mode === "login") handleSignupConfirmation();
+		else supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+	}
+	return () => {
+		disposed = true;
+		form.removeEventListener("submit", onSubmit);
+		restart?.removeEventListener("click", onRestart);
+		passwordInput?.removeEventListener("input", updatePasswordRules);
+		confirmPasswordInput?.removeEventListener("input", validateSignupPassword);
+	};
 }
 //#endregion
 //#region src/services/dashboard.js
@@ -24078,6 +24365,14 @@ function setupPricingContext(root = document) {
 }
 //#endregion
 //#region src/main.js
+function normalizeSupabaseConfirmationReturn() {
+	if (location.pathname === "/login" || !location.hash) return;
+	const authFragment = new URLSearchParams(location.hash.replace(/^#/, ""));
+	const type = authFragment.get("type");
+	if (!authFragment.get("access_token") || !["signup", "email"].includes(type)) return;
+	history.replaceState({}, "", `/login?confirmed=1${location.hash}`);
+}
+normalizeSupabaseConfirmationReturn();
 var app = document.querySelector("#app");
 function underConstructionPage() {
 	return shell(underConstructionPage$1());
