@@ -1,0 +1,72 @@
+name: Supabase Auth Branding
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/templates/accessrevamp-*.html"
+      - "scripts/supabase/apply-auth-branding.mjs"
+      - ".github/workflows/supabase-auth-branding.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessrevamp-supabase-auth-branding
+  cancel-in-progress: false
+
+jobs:
+  apply-hosted-auth-branding:
+    name: Apply official email-code templates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: vbkkimvedmklebghtkzs
+      SUPABASE_AUTH_SITE_URL: https://accessrevamp.com
+      SUPABASE_AUTH_REDIRECT_URLS: https://accessrevamp.com/login,https://accessrevamp.com/signup,https://www.accessrevamp.com/login,https://www.accessrevamp.com/signup
+      SUPABASE_SMTP_ADMIN_EMAIL: ${{ secrets.SUPABASE_SMTP_ADMIN_EMAIL }}
+      SUPABASE_SMTP_HOST: ${{ secrets.SUPABASE_SMTP_HOST }}
+      SUPABASE_SMTP_PORT: ${{ secrets.SUPABASE_SMTP_PORT }}
+      SUPABASE_SMTP_USER: ${{ secrets.SUPABASE_SMTP_USER }}
+      SUPABASE_SMTP_PASS: ${{ secrets.SUPABASE_SMTP_PASS }}
+      SUPABASE_SMTP_SENDER_NAME: AccessRevamp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check protected Management API credential
+        id: credential
+        shell: bash
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SUPABASE_ACCESS_TOKEN is not configured. Hosted email templates were not changed."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Apply official AccessRevamp code emails and production URL
+        if: steps.credential.outputs.configured == 'true'
+        run: node scripts/supabase/apply-auth-branding.mjs
+      - name: Verify hosted Auth configuration
+        if: steps.credential.outputs.configured == 'true'
+        run: node scripts/supabase/apply-auth-branding.mjs --verify
+      - name: Write safe deployment summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Supabase Auth branding"
+            if [ "${{ steps.credential.outputs.configured }}" = "true" ]; then
+              echo "Official six-digit AccessRevamp templates and the production Site URL were applied and verified."
+            else
+              echo "No hosted setting was changed because the repository secret \`SUPABASE_ACCESS_TOKEN\` is missing."
+            fi
+            if [ -n "$SUPABASE_SMTP_HOST" ] && [ -n "$SUPABASE_SMTP_ADMIN_EMAIL" ]; then
+              echo "Custom SMTP values were supplied to the guarded configuration script."
+            else
+              echo "Custom SMTP was not supplied; the existing Supabase mail transport remains in use."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
