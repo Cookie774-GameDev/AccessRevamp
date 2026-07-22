@@ -10518,7 +10518,7 @@ function createServerConsumerManifest() {
 	return {};
 }
 //#endregion
-//#region node_modules/react-server-dom-webpack/cjs/react-server-dom-webpack-client.edge.production.js
+//#region node_modules/@vitejs/plugin-rsc/dist/vendor/react-server-dom/cjs/react-server-dom-webpack-client.edge.production.js
 /**
 * @license React
 * react-server-dom-webpack-client.edge.production.js
@@ -11895,7 +11895,7 @@ var client_references_default = {
 		};
 	},
 	"c63a9586085b": async () => {
-		const m = await import("./assets/accessrevamp-client-DFpIgzUc.js");
+		const m = await import("./assets/accessrevamp-client-DWNPCDAU.js");
 		return { get "AccessRevampClient"() {
 			return m["AccessRevampClient"];
 		} };
