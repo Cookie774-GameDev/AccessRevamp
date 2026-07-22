@@ -28,7 +28,7 @@ export function setupAuthForm(navigate) {
       if (form.dataset.mode === 'signup' && !result.data.session) {
         status.textContent = 'Check your email to confirm the account, then sign in.';
       } else {
-        navigate('/dashboard');
+        navigate('/account/projects');
       }
     } catch (error) {
       status.textContent = error.message || 'Authentication failed.';
