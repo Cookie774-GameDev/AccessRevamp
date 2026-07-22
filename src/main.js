@@ -1,6 +1,7 @@
 import './styles/base.css';
 import './styles/components.css';
 import './styles/pages.css';
+import './styles/auth.css';
 import './styles/motion.css';
 import './styles/image-led.css';
 import './styles/studio-redesign.css';
@@ -45,6 +46,15 @@ import { setupProjectApproval } from './services/project-approval.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
 
+function normalizeSupabaseConfirmationReturn() {
+  if (location.pathname === '/login' || !location.hash) return;
+  const authFragment = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const type = authFragment.get('type');
+  if (!authFragment.get('access_token') || !['signup', 'email'].includes(type)) return;
+  history.replaceState({}, '', `/login?confirmed=1${location.hash}`);
+}
+
+normalizeSupabaseConfirmationReturn();
 const app = document.querySelector('#app');
 
 function underConstructionPage() {
