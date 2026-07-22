@@ -182,7 +182,7 @@ begin
     v_to_tier,
     'intake_pending'
   )
-  on conflict (order_id) do update
+  on conflict on constraint customer_projects_order_id_key do update
     set updated_at = pg_catalog.now()
   returning public.customer_projects.id into v_project_id;
 
