@@ -12,19 +12,21 @@ test('showcase scrolling keeps the approved physical scroll distance', async () 
   assert.match(source, /1svh/);
 });
 
-test('showcase progress is gently eased and media advances through presented frames', async () => {
+test('showcase progress directly tracks scroll and retargets in-flight video seeks', async () => {
   const source = await read('src/services/showcase-comparison.js');
-  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*360/);
-  assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.24/);
   assert.match(source, /PRESENTATION_FPS\s*=\s*24/);
-  assert.match(source, /MAX_SEEK_STEP_SECONDS\s*=\s*1\s*\/\s*12/);
-  assert.match(source, /FORWARD_PLAY_THRESHOLD_SECONDS\s*=\s*0\.18/);
-  assert.match(source, /Math\.exp/);
+  assert.match(source, /MEDIA_SYNC_EPSILON_SECONDS\s*=\s*1\s*\/\s*48/);
+  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*160/);
   assert.match(source, /targetProgress/);
   assert.match(source, /renderedProgress/);
+  assert.match(source, /state\.renderedProgress\s*=\s*state\.targetProgress/);
   assert.match(source, /requestVideoFrameCallback/);
-  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*120/);
+  assert.match(source, /video\.currentTime\s*=\s*targetTime/);
+  assert.match(source, /state\.pendingSeek/);
+  assert.match(source, /presentActiveChapter\(time, activeChanged\)/);
   assert.match(source, /showcaseActive/);
   assert.match(source, /removeAttribute\('src'\)/);
+  assert.doesNotMatch(source, /SCROLL_SMOOTHING_MS|MAX_PROGRESS_PER_SECOND|MAX_SEEK_STEP_SECONDS/);
+  assert.doesNotMatch(source, /video\.play\(\)/);
   assert.doesNotMatch(source, /createObjectURL|response\.blob/);
 });
