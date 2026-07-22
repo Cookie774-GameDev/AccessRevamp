@@ -11,9 +11,31 @@ import {
 } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 
+const CHALLENGE_COOKIE = 'accessrevamp_login_challenge';
+const CHALLENGE_COOKIE_PATH = '/api/auth-login-complete';
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
 
-function readChallengeToken(payload) {
+function cookieValue(request, name) {
+  const header = request.headers.get('cookie') || '';
+  for (const part of header.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 0 || part.slice(0, separator).trim() !== name) continue;
+    try { return decodeURIComponent(part.slice(separator + 1).trim()); } catch { return ''; }
+  }
+  return '';
+}
+
+function clearChallengeCookie(request) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+  return `${CHALLENGE_COOKIE}=; Path=${CHALLENGE_COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=0${secure}`;
+}
+
+async function readChallengeToken(request) {
+  const cookieToken = cookieValue(request, CHALLENGE_COOKIE);
+  if (TOKEN_PATTERN.test(cookieToken)) return cookieToken;
+
+  // Compatibility fallback for links issued before the six-digit code rollout.
+  const payload = await readJsonBody(request);
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new HttpError(422, 'Verification details are invalid.');
   }
@@ -32,7 +54,7 @@ export function createAuthLoginCompleteHandler({ getAdmin = getSupabaseAdmin } =
       assertMethod(request, 'POST');
       assertSameOrigin(request);
       assertJsonSize(request);
-      const challengeToken = readChallengeToken(await readJsonBody(request));
+      const challengeToken = await readChallengeToken(request);
       const admin = getAdmin();
       const user = await requireConfirmedUser(request, admin, { requireVerifiedSession: false });
       const challengeHash = createHash('sha256').update(challengeToken).digest('hex');
@@ -55,9 +77,13 @@ export function createAuthLoginCompleteHandler({ getAdmin = getSupabaseAdmin } =
       return json({
         ok: true,
         verifiedAt: result.data.verified_at || new Date().toISOString(),
+      }, 200, {
+        'set-cookie': clearChallengeCookie(request),
       });
     } catch (error) {
-      return handleError(error);
+      const response = handleError(error);
+      response.headers.set('set-cookie', clearChallengeCookie(request));
+      return response;
     }
   };
 }
