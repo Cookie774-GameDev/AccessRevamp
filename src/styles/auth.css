@@ -3,15 +3,42 @@
   background: #050608;
   color: #f8f6ef;
 }
-.auth-page .site-shell { background: #050608; }
-.auth-page .site-header {
+.site-shell.auth-page { background: #050608; }
+.site-shell.auth-page .site-header {
   border-bottom: 1px solid rgba(255,255,255,.12);
-  background: rgba(5,6,8,.86);
+  background: rgba(5,6,8,.94);
   color: #fff;
   backdrop-filter: blur(18px);
 }
-.auth-page :is(.brand-wordmark, .desktop-nav a, .nav-signin) { color: #fff; }
-.auth-page .brand-wordmark span { color: var(--mint); }
+.site-shell.auth-page :is(.brand-wordmark, .desktop-nav a, .nav-signin) { color: #d7dce6; }
+.site-shell.auth-page .desktop-nav a:hover,
+.site-shell.auth-page .desktop-nav a[aria-current="page"],
+.site-shell.auth-page .nav-signin:hover { color: #fff; }
+.site-shell.auth-page .brand-wordmark span { color: var(--mint); }
+.site-shell.auth-page .nav-actions .button {
+  border-color: rgba(255,255,255,.24);
+  background: #bd4838;
+  color: #fff;
+  box-shadow: none;
+}
+.site-shell.auth-page .nav-actions .button:hover {
+  background: #d25543;
+  color: #fff;
+  box-shadow: 0 6px 0 rgba(167,243,208,.22);
+}
+.site-shell.auth-page .menu-button {
+  border-color: rgba(255,255,255,.22);
+  background: #11151d;
+  color: #d7dce6;
+}
+.site-shell.auth-page .mobile-nav {
+  border-top-color: rgba(255,255,255,.14);
+  background: #0a0d13;
+}
+.site-shell.auth-page .mobile-nav a {
+  border-bottom-color: rgba(255,255,255,.12);
+  color: #d7dce6;
+}
 .auth-page .site-footer {
   border-top-color: rgba(255,255,255,.14);
   background: #080a0f;
