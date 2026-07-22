@@ -1917,7 +1917,7 @@ var protocolStep = (number, title, copy) => `<article class="auth-protocol__step
 function authPage(mode) {
 	const signup = mode === "signup";
 	const title = signup ? "Open your private project workspace." : "Enter the workroom.";
-	const introduction = signup ? "Create the confirmed account that will hold your brief, references, design reviews, progress updates, and final website files." : "AccessRevamp protects customer work with a password check followed by a fresh verification email for every new sign-in.";
+	const introduction = signup ? "Create the confirmed account that will hold your brief, references, design reviews, progress updates, and final website files." : "AccessRevamp protects customer work with a password check followed by a fresh six-digit email code for every new sign-in.";
 	return shell(`<section class="auth-experience" data-auth-page data-auth-mode="${mode}">
     <div class="auth-experience__grid" aria-hidden="true"></div>
     <div class="auth-orbit auth-orbit--one" aria-hidden="true"></div>
@@ -1933,24 +1933,24 @@ function authPage(mode) {
         </div>
 
         <div class="auth-protocol" aria-label="Sign-in protocol">
-          ${protocolStep("01", signup ? "Confirm ownership" : "Correct password", signup ? "Supabase sends a confirmation message to the email you register." : "Your password is checked first and never sent to AccessRevamp application tables.")}
-          ${protocolStep("02", "Verify the inbox", signup ? "Open the secure confirmation link before the account can be used." : "A new one-time AccessRevamp sign-in link is sent to the confirmed email.")}
-          ${protocolStep("03", "Enter the workspace", "Only the fully verified session can read customer projects, designs, and downloads.")}
+          ${protocolStep("01", signup ? "Create the identity" : "Correct password", signup ? "Register the email and password that will protect the private customer workspace." : "Your password is checked first and never stored in AccessRevamp application tables.")}
+          ${protocolStep("02", "Copy the email code", signup ? "AccessRevamp sends a six-digit confirmation code to the inbox you registered." : "A fresh six-digit code is sent to the already confirmed email address.")}
+          ${protocolStep("03", "Enter the workspace", "Paste the code into AccessRevamp. Only the fully verified session can read customer projects, designs, and downloads.")}
         </div>
 
         <div class="auth-story__footer">
           ${icon("shield", "auth-story__shield")}
-          <p><strong>Private by default.</strong> Customer files use expiring links. Passwords stay inside Supabase Auth.</p>
+          <p><strong>Private by default.</strong> Customer files use expiring links. Passwords stay inside Supabase Auth, and verification codes are one-time use.</p>
         </div>
       </aside>
 
       <div class="auth-panel-wrap">
         <div class="auth-panel">
-          <div class="auth-panel__topline"><span>Customer identity</span><span>${signup ? "New account" : "Two-step sign-in"}</span></div>
+          <div class="auth-panel__topline"><span>Customer identity</span><span>${signup ? "New account" : "Password + email code"}</span></div>
           <header class="auth-panel__header">
             <span class="eyebrow">Secure customer hub</span>
             <h2>${signup ? "Create account" : "Sign in"}</h2>
-            <p>${signup ? "Use the same email connected to your AccessRevamp order or project." : "Both the password and inbox verification are required."}</p>
+            <p>${signup ? "Use the same email connected to your AccessRevamp order or project." : "Both the correct password and the six-digit inbox code are required."}</p>
           </header>
 
           <form class="auth-form" data-auth-form data-mode="${mode}" novalidate>
@@ -1977,25 +1977,52 @@ function authPage(mode) {
             </div>` : ""}
 
             <button class="button auth-submit" type="submit">
-              <span>${signup ? "Create secure account" : "Check password & send email"}</span>${icon("arrow")}
+              <span>${signup ? "Create account & send code" : "Check password & send code"}</span>${icon("arrow")}
             </button>
             <p class="auth-status form-status" data-auth-status role="status" aria-live="polite"></p>
           </form>
 
-          <section class="auth-email-step" data-auth-email-step hidden aria-live="polite">
+          <section class="auth-code-step" data-auth-code-step hidden aria-live="polite">
             <div class="auth-email-step__mark">${icon("check")}</div>
-            <span class="auth-kicker"><i></i> Password accepted</span>
-            <h2>Check your email.</h2>
-            <p>We sent a one-time sign-in link to <strong data-auth-email-hint>your confirmed address</strong>. Open it in this browser to finish.</p>
-            <div class="auth-email-step__note">The link expires shortly and cannot replace the password step.</div>
-            <button class="button button--ghost auth-restart" type="button" data-auth-restart>Use a different account</button>
+            <span class="auth-kicker"><i></i> <span data-auth-code-kicker>${signup ? "Account code sent" : "Password accepted"}</span></span>
+            <h2>Enter your 6-digit code.</h2>
+            <p>We sent an official AccessRevamp verification code to <strong data-auth-email-hint>your email address</strong>. Copy it from the email and paste it below.</p>
+
+            <form class="auth-code-form" data-auth-code-form novalidate>
+              <label class="auth-code-field">
+                <span>Verification code</span>
+                <input
+                  type="text"
+                  name="code"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  minlength="6"
+                  maxlength="6"
+                  placeholder="000000"
+                  aria-describedby="auth-code-help"
+                  required
+                />
+              </label>
+              <p class="auth-code-help" id="auth-code-help">Six digits · one-time use · expires shortly</p>
+              <button class="button auth-submit auth-code-submit" type="submit">
+                <span>${signup ? "Confirm email address" : "Verify code & enter workspace"}</span>${icon("arrow")}
+              </button>
+              <p class="auth-status" data-auth-code-status role="status" aria-live="polite"></p>
+            </form>
+
+            <div class="auth-code-actions">
+              <button class="auth-text-button" type="button" data-auth-resend${signup ? "" : " hidden"}>Send a new code</button>
+              <button class="auth-text-button" type="button" data-auth-restart>${signup ? "Change account details" : "Enter password again"}</button>
+            </div>
+            <div class="auth-email-step__note">AccessRevamp support will never ask for this code. Do not forward the email or share the code with anyone.</div>
           </section>
 
           <section class="auth-email-step" data-auth-completing hidden aria-live="polite">
             <div class="auth-email-step__loader" aria-hidden="true"></div>
-            <span class="auth-kicker"><i></i> Verifying session</span>
-            <h2>Opening your workspace.</h2>
-            <p>AccessRevamp is validating the one-time email link against the password challenge.</p>
+            <span class="auth-kicker"><i></i> Verifying code</span>
+            <h2>${signup ? "Confirming your inbox." : "Opening your workspace."}</h2>
+            <p>AccessRevamp is validating the one-time code and securing this browser session.</p>
           </section>
 
           <div class="auth-panel__switch">
@@ -2004,7 +2031,7 @@ function authPage(mode) {
           </div>
 
           <div class="auth-panel__legal">
-            <span>${icon("shield")} Email verification required</span>
+            <span>${icon("shield")} Six-digit email code required</span>
             <span>No phone number required</span>
             <span><a href="/privacy" data-nav>Privacy</a> · <a href="/terms" data-nav>Terms</a></span>
           </div>
@@ -23018,12 +23045,15 @@ function getSupabase() {
 //#region src/services/auth.js
 var LOGIN_START_ENDPOINT = "/api/auth-login-start";
 var LOGIN_COMPLETE_ENDPOINT = "/api/auth-login-complete";
+var PENDING_STORAGE_KEY = "accessrevamp.auth.pending-code.v1";
+var OTP_PATTERN = /^[0-9]{6}$/;
 var PASSWORD_RULES = Object.freeze({
 	length: (value) => value.length >= 12,
 	mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
 	symbol: (value) => /[^A-Za-z0-9]/.test(value)
 });
 function setStatus(status, message, tone = "") {
+	if (!status) return;
 	status.textContent = message;
 	if (tone) status.dataset.tone = tone;
 	else delete status.dataset.tone;
@@ -23034,6 +23064,39 @@ function cleanAuthUrl() {
 	clean.searchParams.delete("confirmed");
 	clean.hash = "";
 	history.replaceState({}, "", `${clean.pathname}${clean.search}`);
+}
+function maskEmail(email) {
+	const [local = "", domain = ""] = String(email || "").split("@");
+	if (!local || !domain) return email;
+	const visible = local.slice(0, Math.min(2, local.length));
+	return `${visible}${"•".repeat(Math.max(3, local.length - visible.length))}@${domain}`;
+}
+function normalizeCode(value) {
+	return String(value || "").replace(/\D/g, "").slice(0, 6);
+}
+function savePending(flow) {
+	try {
+		sessionStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(flow));
+	} catch {}
+}
+function removePending() {
+	try {
+		sessionStorage.removeItem(PENDING_STORAGE_KEY);
+	} catch {}
+}
+function restorePending(mode) {
+	try {
+		const value = JSON.parse(sessionStorage.getItem(PENDING_STORAGE_KEY) || "null");
+		if (!value || value.mode !== mode || Number(value.expiresAt || 0) <= Date.now()) {
+			removePending();
+			return null;
+		}
+		if (!value.email || !["signup", "login"].includes(value.kind)) return null;
+		return value;
+	} catch {
+		removePending();
+		return null;
+	}
 }
 async function readJson(response) {
 	return response.json().catch(() => ({}));
@@ -23056,7 +23119,7 @@ async function waitForSession(supabase, timeoutMs = 9e3) {
 		subscription = supabase.auth.onAuthStateChange((_event, session) => {
 			if (session) finish(resolve, session);
 		}).data.subscription;
-		timeout = setTimeout(() => finish(reject, /* @__PURE__ */ new Error("The email link did not create a valid session.")), timeoutMs);
+		timeout = setTimeout(() => finish(reject, /* @__PURE__ */ new Error("The legacy email link did not create a valid session.")), timeoutMs);
 	});
 }
 function setupAuthForm(navigate) {
@@ -23068,18 +23131,27 @@ function setupAuthForm(navigate) {
 	const submitLabel = submit?.querySelector("span");
 	const passwordInput = form.elements.password;
 	const confirmPasswordInput = form.elements.confirmPassword;
-	const emailStep = page.querySelector("[data-auth-email-step]");
+	const codeStep = page.querySelector("[data-auth-code-step]");
+	const codeForm = page.querySelector("[data-auth-code-form]");
+	const codeInput = codeForm?.elements.code;
+	const codeSubmit = codeForm?.querySelector("button[type=\"submit\"]");
+	const codeSubmitLabel = codeSubmit?.querySelector("span");
+	const codeStatus = codeForm?.querySelector("[data-auth-code-status]");
 	const completingStep = page.querySelector("[data-auth-completing]");
 	const emailHint = page.querySelector("[data-auth-email-hint]");
+	const codeKicker = page.querySelector("[data-auth-code-kicker]");
 	const restart = page.querySelector("[data-auth-restart]");
+	const resend = page.querySelector("[data-auth-resend]");
 	const mode = form.dataset.mode;
 	const signup = mode === "signup";
 	const supabase = getSupabase();
 	let disposed = false;
 	let busy = false;
+	let codeBusy = false;
+	let pending = null;
 	const show = (panel) => {
 		form.hidden = panel !== "form";
-		if (emailStep) emailStep.hidden = panel !== "email";
+		if (codeStep) codeStep.hidden = panel !== "code";
 		if (completingStep) completingStep.hidden = panel !== "completing";
 	};
 	const setBusy = (next, label = null) => {
@@ -23087,6 +23159,14 @@ function setupAuthForm(navigate) {
 		submit.disabled = next;
 		submit.toggleAttribute("aria-busy", next);
 		if (label && submitLabel) submitLabel.textContent = label;
+	};
+	const setCodeBusy = (next, label = null) => {
+		codeBusy = next;
+		if (codeSubmit) {
+			codeSubmit.disabled = next;
+			codeSubmit.toggleAttribute("aria-busy", next);
+		}
+		if (label && codeSubmitLabel) codeSubmitLabel.textContent = label;
 	};
 	const updatePasswordRules = () => {
 		if (!signup || !passwordInput) return;
@@ -23106,6 +23186,7 @@ function setupAuthForm(navigate) {
 	const startLogin = async (email, password) => {
 		const response = await fetch(LOGIN_START_ENDPOINT, {
 			method: "POST",
+			credentials: "same-origin",
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({
 				email,
@@ -23116,26 +23197,40 @@ function setupAuthForm(navigate) {
 		if (!response.ok) throw new Error(result.error || "Secure sign-in could not be started.");
 		return result;
 	};
-	const completeLogin = async (session, challengeToken) => {
+	const completeLogin = async (session, legacyChallengeToken = "") => {
+		const body = legacyChallengeToken ? { challengeToken: legacyChallengeToken } : {};
 		const response = await fetch(LOGIN_COMPLETE_ENDPOINT, {
 			method: "POST",
+			credentials: "same-origin",
 			headers: {
 				authorization: `Bearer ${session.access_token}`,
 				"content-type": "application/json"
 			},
-			body: JSON.stringify({ challengeToken })
+			body: JSON.stringify(body)
 		});
 		const result = await readJson(response);
 		if (!response.ok) throw new Error(result.error || "Email verification could not be completed.");
 		return result;
 	};
-	const handleEmailLink = async (challengeToken) => {
+	const beginCodeFlow = (flow) => {
+		pending = flow;
+		savePending(flow);
+		if (emailHint) emailHint.textContent = flow.emailHint || maskEmail(flow.email);
+		if (codeKicker) codeKicker.textContent = flow.kind === "signup" ? "Account code sent" : "Password accepted";
+		if (resend) resend.hidden = flow.kind !== "signup";
+		codeForm?.reset();
+		setStatus(codeStatus, "Enter the six digits from the newest AccessRevamp email.");
+		show("code");
+		queueMicrotask(() => codeInput?.focus());
+	};
+	const handleLegacyEmailLink = async (challengeToken) => {
 		show("completing");
 		try {
 			const session = await waitForSession(supabase);
 			if (!session.user?.email_confirmed_at) throw new Error("Confirm your email before signing in.");
 			await completeLogin(session, challengeToken);
 			if (disposed) return;
+			removePending();
 			cleanAuthUrl();
 			navigate("/account/projects", { replace: true });
 		} catch (error) {
@@ -23143,11 +23238,11 @@ function setupAuthForm(navigate) {
 			if (disposed) return;
 			cleanAuthUrl();
 			show("form");
-			setStatus(status, error.message || "The verification link is invalid or expired. Start again.", "error");
+			setStatus(status, error.message || "The legacy verification link is invalid or expired. Start again.", "error");
 			passwordInput?.focus();
 		}
 	};
-	const handleSignupConfirmation = async () => {
+	const handleLegacySignupConfirmation = async () => {
 		show("completing");
 		try {
 			if (!(await waitForSession(supabase)).user?.email_confirmed_at) throw new Error("Email confirmation was not completed.");
@@ -23155,7 +23250,7 @@ function setupAuthForm(navigate) {
 			if (disposed) return;
 			cleanAuthUrl();
 			show("form");
-			setStatus(status, "Email confirmed. Sign in with your password to receive a fresh verification link.", "success");
+			setStatus(status, "Email confirmed. Sign in with your password to receive a fresh six-digit code.", "success");
 			form.elements.email?.focus();
 		} catch (error) {
 			if (disposed) return;
@@ -23173,16 +23268,15 @@ function setupAuthForm(navigate) {
 		const email = String(data.get("email") || "").trim().toLowerCase();
 		const password = String(data.get("password") || "");
 		setBusy(true, signup ? "Creating protected account…" : "Checking password…");
-		setStatus(status, signup ? "Preparing your confirmed customer identity…" : "Validating your password securely…");
+		setStatus(status, signup ? "Creating the account and preparing your email code…" : "Validating your password securely…");
 		try {
 			if (signup) {
 				const fullName = String(data.get("fullName") || "").trim();
-				const redirectTo = `${location.origin}/login?confirmed=1`;
 				const result = await supabase.auth.signUp({
 					email,
 					password,
 					options: {
-						emailRedirectTo: redirectTo,
+						emailRedirectTo: `${location.origin}/login?confirmed=1`,
 						data: { full_name: fullName }
 					}
 				});
@@ -23191,33 +23285,120 @@ function setupAuthForm(navigate) {
 					await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
 					throw new Error("Email confirmation is not enforced by the connected Supabase project. Account access was blocked for safety.");
 				}
-				form.dataset.complete = "true";
-				[...form.elements].forEach((control) => {
-					control.disabled = true;
+				passwordInput.value = "";
+				confirmPasswordInput.value = "";
+				updatePasswordRules();
+				beginCodeFlow({
+					mode,
+					kind: "signup",
+					email,
+					emailHint: maskEmail(email),
+					expiresAt: Date.now() + 600 * 1e3
 				});
-				if (submitLabel) submitLabel.textContent = "Confirmation email sent";
-				setStatus(status, "Check your email to confirm your AccessRevamp account, then return to sign in.", "success");
 				return;
 			}
 			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
 			const result = await startLogin(email, password);
 			passwordInput.value = "";
-			if (emailHint) emailHint.textContent = result.emailHint || email;
-			show("email");
+			beginCodeFlow({
+				mode,
+				kind: "login",
+				email,
+				emailHint: result.emailHint || maskEmail(email),
+				expiresAt: Date.now() + Number(result.expiresIn || 600) * 1e3
+			});
 		} catch (error) {
 			setStatus(status, error.message || "Authentication failed.", "error");
 		} finally {
-			if (!form.dataset.complete) setBusy(false, signup ? "Create secure account" : "Check password & send email");
+			setBusy(false, signup ? "Create account & send code" : "Check password & send code");
+		}
+	};
+	const onCodeInput = () => {
+		const normalized = normalizeCode(codeInput?.value);
+		if (codeInput && codeInput.value !== normalized) codeInput.value = normalized;
+		codeInput?.setCustomValidity(normalized && !OTP_PATTERN.test(normalized) ? "Enter the complete six-digit code." : "");
+	};
+	const onCodeSubmit = async (event) => {
+		event.preventDefault();
+		if (codeBusy || !pending || !supabase || !codeInput) return;
+		onCodeInput();
+		const code = normalizeCode(codeInput.value);
+		if (!OTP_PATTERN.test(code)) {
+			codeInput.setCustomValidity("Enter the complete six-digit code.");
+			codeForm.reportValidity();
+			return;
+		}
+		setCodeBusy(true, pending.kind === "signup" ? "Confirming email…" : "Verifying code…");
+		setStatus(codeStatus, "Checking the newest code securely…");
+		try {
+			const result = await supabase.auth.verifyOtp({
+				email: pending.email,
+				token: code,
+				type: "email"
+			});
+			if (result.error) throw result.error;
+			const session = result.data?.session;
+			if (!session?.access_token || !session.user?.email_confirmed_at) throw new Error("The code did not create a confirmed session.");
+			show("completing");
+			if (pending.kind === "signup") {
+				await supabase.auth.signOut({ scope: "local" });
+				removePending();
+				pending = null;
+				if (disposed) return;
+				navigate("/login?confirmed=code", { replace: true });
+				return;
+			}
+			await completeLogin(session);
+			removePending();
+			pending = null;
+			if (disposed) return;
+			navigate("/account/projects", { replace: true });
+		} catch (error) {
+			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			if (disposed) return;
+			show("code");
+			setStatus(codeStatus, error.message || "The code is invalid or expired. Use the newest email or start again.", "error");
+			codeInput.focus();
+			codeInput.select();
+		} finally {
+			setCodeBusy(false, signup ? "Confirm email address" : "Verify code & enter workspace");
+		}
+	};
+	const onResend = async () => {
+		if (!pending || pending.kind !== "signup" || codeBusy || !supabase) return;
+		setCodeBusy(true);
+		setStatus(codeStatus, "Sending a new confirmation code…");
+		try {
+			const result = await supabase.auth.resend({
+				type: "signup",
+				email: pending.email
+			});
+			if (result.error) throw result.error;
+			pending.expiresAt = Date.now() + 600 * 1e3;
+			savePending(pending);
+			codeForm?.reset();
+			setStatus(codeStatus, "A new code was sent. Use the newest AccessRevamp email.", "success");
+			codeInput?.focus();
+		} catch (error) {
+			setStatus(codeStatus, error.message || "A new code could not be sent yet. Try again shortly.", "error");
+		} finally {
+			setCodeBusy(false);
 		}
 	};
 	const onRestart = async () => {
+		removePending();
+		pending = null;
 		await supabase?.auth.signOut({ scope: "local" }).catch(() => void 0);
+		codeForm?.reset();
 		show("form");
-		setStatus(status, "Enter the password again to request a new one-time email link.");
+		setStatus(status, signup ? "Enter the account details again to request a new confirmation code." : "Enter the password again to request a new one-time code.");
 		form.elements.email?.focus();
 	};
 	form.addEventListener("submit", onSubmit);
+	codeForm?.addEventListener("submit", onCodeSubmit);
+	codeInput?.addEventListener("input", onCodeInput);
 	restart?.addEventListener("click", onRestart);
+	resend?.addEventListener("click", onResend);
 	passwordInput?.addEventListener("input", updatePasswordRules);
 	confirmPasswordInput?.addEventListener("input", validateSignupPassword);
 	updatePasswordRules();
@@ -23227,15 +23408,27 @@ function setupAuthForm(navigate) {
 	} else {
 		const params = new URLSearchParams(location.search);
 		const verification = params.get("verification");
-		const confirmed = params.get("confirmed") === "1";
-		if (verification && mode === "login") handleEmailLink(verification);
-		else if (confirmed && mode === "login") handleSignupConfirmation();
-		else supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+		const confirmed = params.get("confirmed");
+		if (verification && mode === "login") handleLegacyEmailLink(verification);
+		else if (confirmed === "1" && mode === "login") handleLegacySignupConfirmation();
+		else if (confirmed === "code" && mode === "login") {
+			cleanAuthUrl();
+			supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			setStatus(status, "Email confirmed. Enter your password and we will send a fresh six-digit sign-in code.", "success");
+			form.elements.email?.focus();
+		} else {
+			supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			const restored = restorePending(mode);
+			if (restored) beginCodeFlow(restored);
+		}
 	}
 	return () => {
 		disposed = true;
 		form.removeEventListener("submit", onSubmit);
+		codeForm?.removeEventListener("submit", onCodeSubmit);
+		codeInput?.removeEventListener("input", onCodeInput);
 		restart?.removeEventListener("click", onRestart);
+		resend?.removeEventListener("click", onResend);
 		passwordInput?.removeEventListener("input", updatePasswordRules);
 		confirmPasswordInput?.removeEventListener("input", validateSignupPassword);
 	};
