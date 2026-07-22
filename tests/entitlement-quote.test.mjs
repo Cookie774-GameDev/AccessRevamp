@@ -4,7 +4,10 @@ import assert from 'node:assert/strict';
 import { createEntitlementQuoteHandler } from '../netlify/functions/entitlement-quote.mjs';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
+const SESSION_ID = '22222222-2222-4222-8222-222222222222';
 const ORIGIN = 'https://accessrevamp.test';
+const encodeJwtPart = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+const VERIFIED_TOKEN = `${encodeJwtPart({ alg: 'none', typ: 'JWT' })}.${encodeJwtPart({ session_id: SESSION_ID })}.test-signature`;
 
 function createAdmin({ entitlement = null, queryError = null } = {}) {
   return {
@@ -21,6 +24,24 @@ function createAdmin({ entitlement = null, queryError = null } = {}) {
       }),
     },
     from(table) {
+      if (table === 'accessrevamp_verified_sessions') {
+        const filters = [];
+        return {
+          select(columns) {
+            assert.equal(columns, 'session_id');
+            return this;
+          },
+          eq(column, value) {
+            filters.push([column, value]);
+            return this;
+          },
+          async maybeSingle() {
+            assert.deepEqual(filters, [['session_id', SESSION_ID], ['user_id', USER_ID]]);
+            return { data: { session_id: SESSION_ID }, error: null };
+          },
+        };
+      }
+
       assert.equal(table, 'entitlements');
       const filters = [];
       return {
@@ -47,7 +68,7 @@ function quoteRequest(body, overrides = {}) {
     method: overrides.method || 'POST',
     headers: {
       origin: overrides.origin || ORIGIN,
-      authorization: overrides.authorization || 'Bearer verified.token',
+      authorization: overrides.authorization || `Bearer ${VERIFIED_TOKEN}`,
       'content-type': overrides.contentType || 'application/json',
       ...(overrides.includeLength === false ? {} : { 'content-length': String(Buffer.byteLength(text)) }),
     },
