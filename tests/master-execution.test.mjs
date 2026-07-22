@@ -24,7 +24,7 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   }
 });
 
-test('showcase controller follows scroll fluidly without overloading the page', async () => {
+test('showcase controller keeps both videos locked to the current scroll position', async () => {
   const [source, performanceCss, homeInteractions] = await Promise.all([
     read('src/services/showcase-comparison.js'),
     read('src/styles/performance.css'),
@@ -40,19 +40,20 @@ test('showcase controller follows scroll fluidly without overloading the page', 
   assert.match(source, /prefers-reduced-motion/);
   assert.match(source, /currentTime/);
   assert.match(source, /video\.src\s*=\s*originalSrc/);
-  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*360/);
-  assert.match(source, /MAX_PROGRESS_PER_SECOND\s*=\s*0\.24/);
   assert.match(source, /PRESENTATION_FPS\s*=\s*24/);
-  assert.match(source, /MAX_SEEK_STEP_SECONDS\s*=\s*1\s*\/\s*12/);
-  assert.match(source, /FORWARD_PLAY_THRESHOLD_SECONDS\s*=\s*0\.18/);
-  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*120/);
+  assert.match(source, /MEDIA_SYNC_EPSILON_SECONDS\s*=\s*1\s*\/\s*48/);
+  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*160/);
   assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
   assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
   assert.match(source, /PRELOAD_ROOT_MARGIN\s*=\s*'220% 0px'/);
-  assert.match(source, /video\.play\(\)/);
+  assert.match(source, /state\.renderedProgress\s*=\s*state\.targetProgress/);
+  assert.match(source, /video\.currentTime\s*=\s*targetTime/);
+  assert.match(source, /const activeChanged = nextActiveIndex !== activeIndex/);
+  assert.match(source, /presentActiveChapter\(time, activeChanged\)/);
+  assert.doesNotMatch(source, /SCROLL_SMOOTHING_MS|MAX_PROGRESS_PER_SECOND|MAX_SEEK_STEP_SECONDS/);
+  assert.doesNotMatch(source, /video\.play\(\)/);
   assert.match(source, /data\.showcaseActive|dataset\.showcaseActive/);
   assert.match(source, /removeAttribute\('src'\)/);
-  assert.match(source, /Math\.exp/);
   assert.doesNotMatch(source, /response\.blob\(\)/);
   assert.match(source, /import '\.\.\/styles\/performance\.css'/);
   assert.match(performanceCss, /\.showcase-chapter[\s\S]*background:#121315/);
