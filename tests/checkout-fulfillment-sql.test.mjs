@@ -28,6 +28,8 @@ test('fulfillment remains idempotent and creates all durable customer records', 
   assert.match(migration, /insert into public\.orders/);
   assert.match(migration, /insert into public\.entitlements/);
   assert.match(migration, /insert into public\.customer_projects/);
+  assert.match(migration, /on conflict on constraint customer_projects_order_id_key do update/);
+  assert.doesNotMatch(migration, /on conflict \(order_id\) do update/);
   assert.match(migration, /insert into public\.accessrevamp_audit_log/);
   assert.match(migration, /update public\.stripe_events[\s\S]*processed_at = pg_catalog\.now\(\)/);
 });
