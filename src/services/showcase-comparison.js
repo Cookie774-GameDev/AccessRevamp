@@ -2,18 +2,10 @@ import '../styles/performance.css';
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const MEDIA_READY = 1;
-const SCROLL_SMOOTHING_MS = 360;
-const MAX_PROGRESS_PER_SECOND = 0.24;
-const PROGRESS_EPSILON = 0.0002;
 const PRESENTATION_FPS = 24;
 const PRESENTATION_INTERVAL_MS = 1000 / PRESENTATION_FPS;
-const MEDIA_SYNC_EPSILON_SECONDS = 1 / 30;
-const MAX_SEEK_STEP_SECONDS = 1 / 12;
-const FORWARD_PLAY_THRESHOLD_SECONDS = 0.18;
-const FORWARD_CATCHUP_WINDOW_SECONDS = 0.32;
-const MIN_PLAYBACK_RATE = 0.75;
-const MAX_PLAYBACK_RATE = 2;
-const FRAME_SETTLE_TIMEOUT_MS = 120;
+const MEDIA_SYNC_EPSILON_SECONDS = 1 / 48;
+const FRAME_SETTLE_TIMEOUT_MS = 160;
 const DESKTOP_SCROLL_DISTANCE_VH = 520;
 const MOBILE_SCROLL_DISTANCE_VH = 560;
 const MOBILE_BREAKPOINT_PX = 700;
@@ -46,8 +38,6 @@ export function setupShowcaseComparisons(root = document) {
   let destroyed = false;
   let pageVisible = !document.hidden;
   let scrollFrame = 0;
-  let smoothingFrame = 0;
-  let lastSmoothingTime = 0;
   let activeIndex = -1;
   let idlePreloadId = 0;
   const supportsSmallViewportUnits = Boolean(globalThis.CSS?.supports?.('height', '1svh'));
@@ -58,120 +48,67 @@ export function setupShowcaseComparisons(root = document) {
     chapters.forEach((chapter) => { chapter.style.height = `${distance}${unit}`; });
   };
 
-  const stopVideo = (video, state) => {
-    if (!video.paused) video.pause();
+  const clearSeekWait = (video, state) => {
     if (state?.frameCallbackId && video.cancelVideoFrameCallback) {
       try { video.cancelVideoFrameCallback(state.frameCallbackId); } catch { /* Best-effort cleanup. */ }
     }
-    if (state?.animationFrameId) cancelAnimationFrame(state.animationFrameId);
     if (state?.settleTimer) clearTimeout(state.settleTimer);
     if (state?.seekedListener) video.removeEventListener('seeked', state.seekedListener);
     if (state) {
       state.frameCallbackId = 0;
-      state.animationFrameId = 0;
       state.settleTimer = 0;
       state.seekedListener = null;
-      state.pendingSeek = false;
-      state.driveScheduled = false;
-      state.playPromise = null;
     }
   };
 
-  const scheduleVideoDrive = (video, state) => {
-    if (destroyed || !pageVisible || state.chapterIndex !== activeIndex || state.driveScheduled) return;
-    state.driveScheduled = true;
-    const run = () => {
-      state.driveScheduled = false;
-      state.frameCallbackId = 0;
-      state.animationFrameId = 0;
-      driveVideo(video, state);
-    };
-
-    if (!video.paused && video.requestVideoFrameCallback) {
-      state.frameCallbackId = video.requestVideoFrameCallback(run);
-    } else {
-      state.animationFrameId = requestAnimationFrame(run);
-    }
+  const stopVideo = (video, state) => {
+    if (!video.paused) video.pause();
+    clearSeekWait(video, state);
+    if (state) state.pendingSeek = false;
   };
 
-  const finishSeek = (video, state) => {
-    if (!state.pendingSeek) return;
-    state.pendingSeek = false;
-    if (state.frameCallbackId && video.cancelVideoFrameCallback) {
-      try { video.cancelVideoFrameCallback(state.frameCallbackId); } catch { /* Best-effort cleanup. */ }
-    }
-    state.frameCallbackId = 0;
-    if (state.settleTimer) clearTimeout(state.settleTimer);
-    state.settleTimer = 0;
-    if (state.seekedListener) video.removeEventListener('seeked', state.seekedListener);
-    state.seekedListener = null;
+  const seekVideoToLatest = (video, state) => {
     if (destroyed || !pageVisible || state.chapterIndex !== activeIndex) return;
-    scheduleVideoDrive(video, state);
-  };
+    if (video.readyState < MEDIA_READY || !Number.isFinite(video.duration) || video.duration <= 0) return;
 
-  const seekOneStep = (video, state, difference) => {
-    if (state.pendingSeek) return;
+    const targetTime = clamp(state.targetTime, 0, Math.max(0, video.duration - 0.001));
+    if (Math.abs(video.currentTime - targetTime) <= MEDIA_SYNC_EPSILON_SECONDS) {
+      if (!video.paused) video.pause();
+      return;
+    }
+
     if (!video.paused) video.pause();
 
-    const step = clamp(difference, -MAX_SEEK_STEP_SECONDS, MAX_SEEK_STEP_SECONDS);
-    const nextTime = clamp(video.currentTime + step, 0, Math.max(0, video.duration - 0.001));
-    if (Math.abs(nextTime - video.currentTime) < 0.001) return;
+    if (state.pendingSeek) {
+      try {
+        video.currentTime = targetTime;
+      } catch {
+        // Metadata can arrive before the browser exposes a seekable range.
+      }
+      return;
+    }
 
     state.pendingSeek = true;
-    const settle = () => finishSeek(video, state);
-    if (video.requestVideoFrameCallback) {
-      state.frameCallbackId = video.requestVideoFrameCallback(settle);
-    }
+    const settle = () => {
+      if (!state.pendingSeek) return;
+      state.pendingSeek = false;
+      clearSeekWait(video, state);
+      if (destroyed || !pageVisible || state.chapterIndex !== activeIndex) return;
+      seekVideoToLatest(video, state);
+    };
+
     state.seekedListener = settle;
     video.addEventListener('seeked', settle, { once: true });
     state.settleTimer = setTimeout(settle, FRAME_SETTLE_TIMEOUT_MS);
 
     try {
-      video.currentTime = nextTime;
-    } catch {
-      finishSeek(video, state);
-    }
-  };
-
-  const driveVideo = (video, state) => {
-    if (destroyed || !pageVisible || state.chapterIndex !== activeIndex) {
-      stopVideo(video, state);
-      return;
-    }
-    if (video.readyState < MEDIA_READY || !Number.isFinite(video.duration) || video.duration <= 0) return;
-
-    const difference = state.targetTime - video.currentTime;
-    if (Math.abs(difference) <= MEDIA_SYNC_EPSILON_SECONDS) {
-      if (!video.paused) video.pause();
-      return;
-    }
-
-    if (difference > FORWARD_PLAY_THRESHOLD_SECONDS && !reducedMotion) {
-      const nextRate = clamp(difference / FORWARD_CATCHUP_WINDOW_SECONDS, MIN_PLAYBACK_RATE, MAX_PLAYBACK_RATE);
-      if (Math.abs(video.playbackRate - nextRate) > 0.05) video.playbackRate = nextRate;
-
-      if (video.paused && !state.playPromise) {
-        const playPromise = video.play();
-        if (playPromise?.then) {
-          state.playPromise = playPromise;
-          playPromise.then(() => {
-            if (state.playPromise === playPromise) state.playPromise = null;
-            scheduleVideoDrive(video, state);
-          }).catch(() => {
-            if (state.playPromise === playPromise) state.playPromise = null;
-            if (!destroyed && pageVisible && state.chapterIndex === activeIndex) {
-              seekOneStep(video, state, state.targetTime - video.currentTime);
-            }
-          });
-          return;
-        }
+      video.currentTime = targetTime;
+      if (video.requestVideoFrameCallback) {
+        state.frameCallbackId = video.requestVideoFrameCallback(settle);
       }
-
-      scheduleVideoDrive(video, state);
-      return;
+    } catch {
+      settle();
     }
-
-    seekOneStep(video, state, difference);
   };
 
   const queueVideoProgress = (video, chapterIndex, progress) => {
@@ -185,12 +122,9 @@ export function setupShowcaseComparisons(root = document) {
         chapterIndex,
         targetTime,
         frameCallbackId: 0,
-        animationFrameId: 0,
         settleTimer: 0,
         seekedListener: null,
         pendingSeek: false,
-        driveScheduled: false,
-        playPromise: null,
       };
       videoStates.set(video, state);
       trackedVideos.add(video);
@@ -198,7 +132,8 @@ export function setupShowcaseComparisons(root = document) {
       state.chapterIndex = chapterIndex;
       state.targetTime = targetTime;
     }
-    scheduleVideoDrive(video, state);
+
+    seekVideoToLatest(video, state);
   };
 
   const syncChapterMedia = (chapter, progress) => {
@@ -285,41 +220,19 @@ export function setupShowcaseComparisons(root = document) {
     }
   };
 
-  const animateTowardScroll = (time) => {
-    smoothingFrame = 0;
-    if (destroyed || reducedMotion || !pageVisible || activeIndex < 0) return;
-
+  const presentActiveChapter = (time, force = false) => {
+    if (activeIndex < 0) return;
     const chapter = chapters[activeIndex];
     const state = chapterStates.get(chapter);
     if (!state || chapter.dataset.dragging === 'true') return;
 
-    const delta = lastSmoothingTime ? Math.min(64, Math.max(1, time - lastSmoothingTime)) : 16.67;
-    lastSmoothingTime = time;
-    const difference = state.targetProgress - state.renderedProgress;
+    state.renderedProgress = state.targetProgress;
+    const terminal = state.renderedProgress <= 0 || state.renderedProgress >= 1;
+    if (!force && !terminal && state.lastPresentationTime
+      && time - state.lastPresentationTime < PRESENTATION_INTERVAL_MS) return;
 
-    if (Math.abs(difference) <= PROGRESS_EPSILON) {
-      state.renderedProgress = state.targetProgress;
-      renderProgress(chapter, state);
-      lastSmoothingTime = 0;
-      return;
-    }
-
-    const blend = 1 - Math.exp(-delta / SCROLL_SMOOTHING_MS);
-    const maxStep = MAX_PROGRESS_PER_SECOND * (delta / 1000);
-    state.renderedProgress = clamp(state.renderedProgress + clamp(difference * blend, -maxStep, maxStep));
-
-    if (!state.lastPresentationTime || time - state.lastPresentationTime >= PRESENTATION_INTERVAL_MS) {
-      state.lastPresentationTime = time;
-      renderProgress(chapter, state);
-    }
-
-    smoothingFrame = requestAnimationFrame(animateTowardScroll);
-  };
-
-  const ensureSmoothing = () => {
-    if (!smoothingFrame && !reducedMotion && pageVisible && activeIndex >= 0) {
-      smoothingFrame = requestAnimationFrame(animateTowardScroll);
-    }
+    state.lastPresentationTime = time;
+    renderProgress(chapter, state);
   };
 
   const setImmediateProgress = (chapter, next, source) => {
@@ -333,7 +246,7 @@ export function setupShowcaseComparisons(root = document) {
     renderProgress(chapter, state, source);
   };
 
-  const readScrollTargets = () => {
+  const readScrollTargets = (time = performance.now()) => {
     scrollFrame = 0;
     if (destroyed) return;
 
@@ -361,8 +274,11 @@ export function setupShowcaseComparisons(root = document) {
       }
     });
 
+    // Present the old active chapter before switching so a fast scroll still
+    // commits its exact 0% or 100% frame instead of abandoning an in-flight seek.
+    const activeChanged = nextActiveIndex !== activeIndex;
+    presentActiveChapter(time, activeChanged);
     setActiveIndex(nextActiveIndex);
-    ensureSmoothing();
   };
 
   const scheduleScrollRead = () => {
@@ -454,8 +370,6 @@ export function setupShowcaseComparisons(root = document) {
   const handleVisibilityChange = () => {
     pageVisible = !document.hidden;
     if (!pageVisible) {
-      if (smoothingFrame) cancelAnimationFrame(smoothingFrame);
-      smoothingFrame = 0;
       chapters.forEach((chapter) => chapter.querySelectorAll('video').forEach((video) => stopVideo(video, videoStates.get(video))));
     } else {
       scheduleScrollRead();
@@ -483,7 +397,6 @@ export function setupShowcaseComparisons(root = document) {
     removeEventListener('orientationchange', handleViewportChange);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     if (scrollFrame) cancelAnimationFrame(scrollFrame);
-    if (smoothingFrame) cancelAnimationFrame(smoothingFrame);
     if (globalThis.cancelIdleCallback && idlePreloadId) globalThis.cancelIdleCallback(idlePreloadId);
     else if (idlePreloadId) clearTimeout(idlePreloadId);
     cleanups.forEach((cleanup) => cleanup());
