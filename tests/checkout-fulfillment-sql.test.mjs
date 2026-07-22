@@ -9,6 +9,8 @@ const migration = await readFile(
 const functionBody = migration.slice(migration.indexOf('as $$'));
 
 test('checkout fulfillment uses valid PostgreSQL COALESCE syntax', () => {
+  assert.match(migration, /security definer[\s\S]*set search_path = pg_catalog/);
+  assert.doesNotMatch(migration, /set search_path = public/);
   assert.match(functionBody, /coalesce\(v_reservation\.from_tier_key, 'none'\) <> v_from_tier/);
   assert.doesNotMatch(functionBody, /pg_catalog\.coalesce/);
 });
