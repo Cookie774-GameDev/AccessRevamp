@@ -3,10 +3,18 @@ import assert from 'node:assert/strict';
 
 import { requireConfirmedUser } from '../netlify/functions/_shared/auth.mjs';
 
+const USER_ID = '11111111-1111-4111-8111-111111111111';
+const SESSION_ID = '22222222-2222-4222-8222-222222222222';
+
 function requestWithAuthorization(value) {
   return new Request('https://accessrevamp.test/.netlify/functions/entitlement-quote', {
     headers: value ? { authorization: value } : {},
   });
+}
+
+function jwtWithSession(sessionId) {
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ session_id: sessionId })}.test-signature`;
 }
 
 test('confirmed-user boundary requires one strict bearer token', async () => {
@@ -22,6 +30,7 @@ test('confirmed-user boundary requires one strict bearer token', async () => {
 
 test('confirmed-user boundary trusts only Supabase getUser verified claims', async () => {
   let receivedToken;
+  const filters = [];
   const admin = {
     auth: {
       getUser: async (token) => {
@@ -29,7 +38,7 @@ test('confirmed-user boundary trusts only Supabase getUser verified claims', asy
         return {
           data: {
             user: {
-              id: '11111111-1111-4111-8111-111111111111',
+              id: USER_ID,
               email: 'Owner@Example.com',
               email_confirmed_at: '2026-07-18T00:00:00.000Z',
             },
@@ -38,14 +47,33 @@ test('confirmed-user boundary trusts only Supabase getUser verified claims', asy
         };
       },
     },
+    from(table) {
+      assert.equal(table, 'accessrevamp_verified_sessions');
+      return {
+        select(columns) {
+          assert.equal(columns, 'session_id');
+          return this;
+        },
+        eq(column, value) {
+          filters.push([column, value]);
+          return this;
+        },
+        async maybeSingle() {
+          assert.deepEqual(filters, [['session_id', SESSION_ID], ['user_id', USER_ID]]);
+          return { data: { session_id: SESSION_ID }, error: null };
+        },
+      };
+    },
   };
+  const token = jwtWithSession(SESSION_ID);
 
-  const user = await requireConfirmedUser(requestWithAuthorization('Bearer verified.token-value'), admin);
+  const user = await requireConfirmedUser(requestWithAuthorization(`Bearer ${token}`), admin);
 
-  assert.equal(receivedToken, 'verified.token-value');
+  assert.equal(receivedToken, token);
   assert.deepEqual(user, {
-    id: '11111111-1111-4111-8111-111111111111',
+    id: USER_ID,
     email: 'owner@example.com',
+    sessionId: SESSION_ID,
   });
 });
 
@@ -61,7 +89,7 @@ test('confirmed-user boundary rejects invalid and unconfirmed identities without
   const unconfirmed = {
     auth: {
       getUser: async () => ({
-        data: { user: { id: '11111111-1111-4111-8111-111111111111', email: 'owner@example.com', email_confirmed_at: null } },
+        data: { user: { id: USER_ID, email: 'owner@example.com', email_confirmed_at: null } },
         error: null,
       }),
     },
