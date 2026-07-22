@@ -12,6 +12,16 @@ Customers create or sign in to a confirmed Supabase email account and land at `/
 
 Private file links are generated on demand and expire after 15 minutes. Raw storage paths, service-role credentials, internal task payloads, and unpublished artifacts are never returned to the browser.
 
+## Operator bootstrap
+
+Public signup never grants administrative access. After the owner has signed up and confirmed their email, run this command from a trusted shell that has `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`:
+
+```bash
+OPERATOR_EMAIL=owner@example.com npm run operator:grant
+```
+
+The script refuses unknown or unconfirmed users and never prints a credential.
+
 ## Operator workflow
 
 An active `accessrevamp_operators` user opens `/operator` and can publish a timeline update or a project file.
