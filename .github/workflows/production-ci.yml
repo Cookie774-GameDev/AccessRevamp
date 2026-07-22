@@ -38,6 +38,8 @@ jobs:
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-output.txt
+      - name: Verify connected Supabase Auth project
+        run: npm run verify:supabase-public
       - name: Upload test output
         if: always()
         uses: actions/upload-artifact@v4
