@@ -297,13 +297,18 @@ var plans = Object.freeze({
 		reducedMotionFallback: true
 	})
 });
+var paymentMode = "test";
+var DEFAULT_SUPABASE_URL = "https://vbkkimvedmklebghtkzs.supabase.co";
+var DEFAULT_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_WD8hNud9SZMDg6uK0N2cAA_4hnxz2ta";
+var supabaseUrl = DEFAULT_SUPABASE_URL;
+var supabaseKey = DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 var siteConfig = Object.freeze({
 	name: "AccessRevamp",
 	siteUrl: window.location.origin.replace(/\/$/, ""),
 	contactEmail: "",
-	supabaseUrl: "",
-	supabaseKey: "",
-	paymentMode: "test",
+	supabaseUrl: supabaseUrl.replace(/\/$/, ""),
+	supabaseKey,
+	paymentMode,
 	checkoutIsSandbox: true
 });
 Object.freeze([
