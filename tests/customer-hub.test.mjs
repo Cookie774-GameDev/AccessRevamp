@@ -14,6 +14,8 @@ const [
   operatorRoute,
   migration,
   styles,
+  packageText,
+  grantOperator,
 ] = await Promise.all([
   read('src/services/auth.js'),
   read('src/pages/account-projects.js'),
@@ -24,7 +26,10 @@ const [
   read('app/api/operator-overview/route.ts'),
   read('supabase/migrations/20260722190000_customer_delivery_hub.sql'),
   read('src/styles/customer-hub.css'),
+  read('package.json'),
+  read('scripts/grant-operator.mjs'),
 ]);
+const packageJson = JSON.parse(packageText);
 
 test('confirmed email accounts land in the private customer hub', () => {
   assert.match(auth, /navigate\('\/account\/projects'\)/);
@@ -66,6 +71,15 @@ test('operator publishing uses direct signed uploads and atomic database publica
   assert.match(operatorClient, /Upload and publish/);
   assert.match(operatorRoute, /export const POST/);
   assert.doesNotMatch(operatorClient, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+});
+
+test('operator bootstrap requires an existing confirmed owner and server credentials', () => {
+  assert.equal(packageJson.scripts['operator:grant'], 'node scripts/grant-operator.mjs');
+  assert.match(grantOperator, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(grantOperator, /auth\.admin\.listUsers/);
+  assert.match(grantOperator, /email_confirmed_at/);
+  assert.match(grantOperator, /accessrevamp_operators/);
+  assert.doesNotMatch(grantOperator, /signUp\(|createUser\(/);
 });
 
 test('customer hub migration keeps storage private and browser access owner-scoped', () => {
