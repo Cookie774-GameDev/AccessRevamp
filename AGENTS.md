@@ -17,6 +17,7 @@ Never present sample businesses, observations, reviews, credentials, screenshots
 - `supabase/migrations/`: forward-only schema, RLS, grants, and database functions.
 - `tests/`: unit, contract, integration, browser, accessibility, and policy checks.
 - `scripts/`: safe local build, evidence, export, and verification tools.
+- `tools/mailbox-mcp/`: local, audited Microsoft mailbox reads and reply-draft controls.
 - `docs/`: product, architecture, operations, evidence, plans, and handoff records.
 
 ## Supported stack
@@ -40,6 +41,7 @@ npm run lint
 npm run build
 npm run check
 npm run baseline
+npm run mailbox:mcp:doctor
 npm audit --omit=dev --audit-level=high
 ```
 
@@ -67,6 +69,8 @@ Document names only, never values:
 - Stripe test secret, webhook secret, expected mode, and server-only Price IDs;
 - operator allowlist/claim configuration;
 - preview signing/hash configuration;
+- Microsoft Graph tenant, application, and certificate identifiers for the local mailbox MCP;
+- optional Icemail inventory API access, kept server-side and disabled by default;
 - authorized staging URL and explicit active-testing switch;
 - optional consented analytics transport.
 
@@ -102,7 +106,7 @@ The browser is not an authorization boundary. Enforce identity, ownership, opera
 
 Required order: Research → Evidence → Human review → Private preview → Human approval → Suppression check → Queue → Send.
 
-`sending_enabled` remains `false`. Do not add a mail transport during the rebuild. Stop on opt-out, hard bounce, complaint, negative response, exhausted lawful follow-up, or no response. Passive public review only; active prospect testing requires exact written authorization.
+`sending_enabled` remains `false`. Do not add a mail transport during the rebuild. The local mailbox MCP may use Microsoft Graph `Mail.ReadWrite` for one-mailbox reads and editable drafts only; it must never request `Mail.Send`, expose credentials, deliver drafts, authorize mailboxes, or automate warm-up. Stop on opt-out, hard bounce, complaint, negative response, exhausted lawful follow-up, or no response. Passive public review only; active prospect testing requires exact written authorization.
 
 ## Definition of done
 
@@ -120,6 +124,7 @@ Completion requires direct evidence for every item in `C:\Users\viper\Downloads\
 - Current status: `docs/IMPLEMENTATION_STATUS.md`
 - Security: `docs/SECURITY.md`
 - Outreach: `docs/OUTREACH.md`
+- Mailbox MCP: `docs/agent-system/MAILBOX_MCP.md`
 - Quality: `docs/QUALITY.md`
 - Deployment: `docs/DEPLOYMENT.md`
 - Third parties and provenance: `docs/THIRD_PARTY.md`

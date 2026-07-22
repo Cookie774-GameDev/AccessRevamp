@@ -14,6 +14,7 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 - Artifact guardrail of 9,000,000 bytes per file.
 - Mailbox-aware outreach records with a 150-word target and 175-word hard maximum.
 - Root `CLAUDE.md`, safe `.claude/settings.json`, and a verified Windows installer for the complete operations folder.
+- A local Codex/Claude mailbox MCP for authorized one-mailbox reads, reply drafts, message-state updates, Icemail inventory, and durable audit logs. See [`MAILBOX_MCP.md`](./MAILBOX_MCP.md).
 
 ## Safety state
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "accessrevamp-mailbox": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "tools/mailbox-mcp/server.mjs"
+      ],
+      "env": {}
+    }
+  }
+}

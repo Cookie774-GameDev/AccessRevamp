@@ -1,0 +1,47 @@
+[mcp_servers.accessrevamp_mailbox]
+command = "node"
+args = ["tools/mailbox-mcp/server.mjs"]
+cwd = "."
+required = false
+startup_timeout_sec = 20
+tool_timeout_sec = 90
+default_tools_approval_mode = "prompt"
+enabled_tools = [
+  "mailbox_capacity",
+  "list_mailboxes",
+  "search_messages",
+  "read_message",
+  "create_reply_draft",
+  "update_reply_draft",
+  "set_message_read_state",
+  "sync_icemail_inventory",
+]
+env_vars = [
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "ACCESSREVAMP_GRAPH_TENANT_ID",
+  "ACCESSREVAMP_GRAPH_CLIENT_ID",
+  "ACCESSREVAMP_GRAPH_CERTIFICATE_PATH",
+  "ACCESSREVAMP_GRAPH_CLIENT_SECRET",
+  "ACCESSREVAMP_MAILBOX_DRAFT_WRITES_ENABLED",
+  "ACCESSREVAMP_MESSAGE_STATE_WRITES_ENABLED",
+  "ACCESSREVAMP_ICEMAIL_INVENTORY_SYNC_ENABLED",
+  "ICEMAIL_API_KEY",
+]
+
+[mcp_servers.accessrevamp_mailbox.tools.mailbox_capacity]
+approval_mode = "auto"
+[mcp_servers.accessrevamp_mailbox.tools.list_mailboxes]
+approval_mode = "auto"
+[mcp_servers.accessrevamp_mailbox.tools.search_messages]
+approval_mode = "auto"
+[mcp_servers.accessrevamp_mailbox.tools.read_message]
+approval_mode = "auto"
+[mcp_servers.accessrevamp_mailbox.tools.create_reply_draft]
+approval_mode = "prompt"
+[mcp_servers.accessrevamp_mailbox.tools.update_reply_draft]
+approval_mode = "prompt"
+[mcp_servers.accessrevamp_mailbox.tools.set_message_read_state]
+approval_mode = "prompt"
+[mcp_servers.accessrevamp_mailbox.tools.sync_icemail_inventory]
+approval_mode = "prompt"

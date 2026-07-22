@@ -1,6 +1,7 @@
 # AccessRevamp Claude Code Project Memory
 
 @docs/agent-system/README.md
+@docs/agent-system/MAILBOX_MCP.md
 @docs/agent-system/mainagent.md
 @docs/agent-system/templates/CUSTOMER_FOLDER_TEMPLATE.md
 
@@ -18,6 +19,14 @@ The paid catalog is Homepage Reveal $50, Complete Website Revamp $200, and Cinem
 - Never claim a provider action succeeded without a provider result plus matching durable state.
 - Keep every artifact below 9,000,000 bytes; split larger outputs and record SHA-256 hashes.
 - Preserve existing UI unless the task explicitly requires a UI change.
+
+## Mailbox MCP rules
+
+- Treat the 100-mailbox numbers as capacity, never blanket access.
+- Search or read exactly one explicitly authorized mailbox per content tool call.
+- Use reply-draft tools only after a user-visible approval; describe the result as a draft.
+- Never request `Mail.Send`, deliver a draft, expose credentials, authorize a mailbox, automate warm-up, or perform “Not spam” actions.
+- Keep draft and message-state switches false until the pilot mailbox passes provider-scope and audit checks.
 
 ## Agent routing
 
