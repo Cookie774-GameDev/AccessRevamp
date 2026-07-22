@@ -84,6 +84,9 @@ test('auth pages use the dark AccessRevamp identity system without phone fields'
   assert.match(authPage, /No phone number required/);
   assert.doesNotMatch(authPage, /type="tel"|name="phone"|sms/i);
   assert.match(authStyles, /background:\s*#050608/);
+  assert.match(authStyles, /\.site-shell\.auth-page:not\(\.renaissance-home\) \.site-header\s*\{[\s\S]*?background:\s*rgba\(5,6,8,\.94\)/);
+  assert.match(authStyles, /\.site-shell\.auth-page:not\(\.renaissance-home\) \.nav-actions \.button\s*\{[\s\S]*?background:\s*#bd4838/);
+  assert.doesNotMatch(authStyles, /(?:^|\n)\.auth-page \.site-header\s*\{/);
   assert.match(authStyles, /auth-panel/);
   assert.match(authStyles, /var\(--mint\)/);
   assert.match(authStyles, /var\(--signal-coral\)/);

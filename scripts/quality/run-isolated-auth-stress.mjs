@@ -35,12 +35,18 @@ function percentile(values, percent) {
   return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * percent / 100) - 1)];
 }
 
+function colorChannels(value) {
+  return (String(value).match(/\d+(?:\.\d+)?/g) || []).slice(0, 3).map(Number);
+}
+
 async function inspectAuthPage(page, expectedMode) {
   await page.waitForSelector('[data-auth-page]', { timeout: 10_000 });
   return page.evaluate((mode) => {
     const root = document.querySelector('[data-auth-page]');
     const panel = document.querySelector('.auth-panel');
     const experience = document.querySelector('.auth-experience');
+    const header = document.querySelector('.site-header');
+    const headerCta = document.querySelector('.nav-actions .button');
     const form = document.querySelector('[data-auth-form]');
     const submit = form?.querySelector('button[type="submit"]');
     const status = form?.querySelector('[data-auth-status]');
@@ -54,6 +60,8 @@ async function inspectAuthPage(page, expectedMode) {
       phoneInputs: inputs.filter((input) => input.type === 'tel' || input.name === 'phone').length,
       passwordInputs: inputs.filter((input) => input.type === 'password').length,
       backgroundImage: getComputedStyle(experience).backgroundImage,
+      headerBackground: getComputedStyle(header).backgroundColor,
+      headerCtaBackground: getComputedStyle(headerCta).backgroundColor,
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
       title: document.title,
@@ -89,6 +97,8 @@ async function runViewport(browser, name, viewport) {
       if (route === '/signup' || route === '/login') {
         const mode = route.slice(1);
         const sample = await inspectAuthPage(page, mode);
+        const headerChannels = colorChannels(sample.headerBackground);
+        const ctaChannels = colorChannels(sample.headerCtaBackground);
         assert.equal(sample.mode, mode);
         assert.equal(sample.panel, true);
         assert.equal(sample.submit, true);
@@ -97,6 +107,10 @@ async function runViewport(browser, name, viewport) {
         assert.equal(sample.phoneInputs, 0);
         assert.equal(sample.passwordInputs, mode === 'signup' ? 2 : 1);
         assert.match(sample.backgroundImage, /gradient/i);
+        assert.equal(headerChannels.length, 3, `${name} ${route} header background could not be measured`);
+        assert.ok(Math.max(...headerChannels) < 45, `${name} ${route} header is too bright: ${sample.headerBackground}`);
+        assert.equal(ctaChannels.length, 3, `${name} ${route} header CTA could not be measured`);
+        assert.ok(Math.max(...ctaChannels) < 220, `${name} ${route} header CTA is too bright: ${sample.headerCtaBackground}`);
         assert.ok(sample.scrollWidth <= sample.clientWidth + 1, `${name} ${route} horizontal overflow`);
         samples.push({ cycle, route, ...sample });
       } else {
