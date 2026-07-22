@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { requireConfirmedUser } from '../netlify/functions/_shared/auth.mjs';
+import { createAuthLoginCompleteHandler } from '../netlify/functions/auth-login-complete.mjs';
 import { createAuthLoginStartHandler } from '../netlify/functions/auth-login-start.mjs';
 
 const read = (path) => readFile(path, 'utf8');
@@ -11,6 +13,7 @@ const [
   authPage,
   authClient,
   authStyles,
+  authOtpStyles,
   authStart,
   authComplete,
   sharedAuth,
@@ -26,6 +29,7 @@ const [
   read('src/pages/auth.js'),
   read('src/services/auth.js'),
   read('src/styles/auth.css'),
+  read('src/styles/auth-otp.css'),
   read('netlify/functions/auth-login-start.mjs'),
   read('netlify/functions/auth-login-complete.mjs'),
   read('netlify/functions/_shared/auth.mjs'),
@@ -77,10 +81,11 @@ function authAdmin({ sessionId, verified }) {
 
 test('auth pages use the dark AccessRevamp identity system without phone fields', () => {
   assert.match(main, /import '\.\/styles\/auth\.css'/);
+  assert.match(main, /import '\.\/styles\/auth-otp\.css'/);
   assert.match(authPage, /auth-experience/);
   assert.match(authPage, /Access \/ verified/i);
   assert.match(authPage, /Correct password/);
-  assert.match(authPage, /Verify the inbox/);
+  assert.match(authPage, /Copy the email code/);
   assert.match(authPage, /No phone number required/);
   assert.doesNotMatch(authPage, /type="tel"|name="phone"|sms/i);
   assert.match(authStyles, /background:\s*#050608/);
@@ -93,19 +98,36 @@ test('auth pages use the dark AccessRevamp identity system without phone fields'
   assert.match(authStyles, /prefers-reduced-motion/);
 });
 
-test('signup requires confirmation and every sign-in requires password then email', () => {
+test('signup and sign-in present a polished six digit email code box', () => {
+  assert.match(authPage, /data-auth-code-step/);
+  assert.match(authPage, /data-auth-code-form/);
+  assert.match(authPage, /autocomplete="one-time-code"/);
+  assert.match(authPage, /inputmode="numeric"/);
+  assert.match(authPage, /pattern="\[0-9\]\{6\}"/);
+  assert.match(authPage, /maxlength="6"/);
+  assert.match(authPage, /Enter your 6-digit code/);
+  assert.match(authOtpStyles, /\.auth-code-field input/);
+  assert.match(authOtpStyles, /font-family:\s*"Courier New"/);
+  assert.match(authOtpStyles, /letter-spacing:\s*\.58em/);
+  assert.match(authOtpStyles, /font-variant-numeric:\s*tabular-nums/);
+});
+
+test('signup requires confirmation and every sign-in requires password then email code', () => {
   assert.match(authClient, /signUp\(/);
-  assert.match(authClient, /emailRedirectTo/);
-  assert.match(authClient, /Check your email to confirm/);
   assert.match(authClient, /result\.data\?\.session/);
   assert.match(authClient, /Email confirmation is not enforced/);
+  assert.match(authClient, /verifyOtp\(\{/);
+  assert.match(authClient, /token:\s*code/);
+  assert.match(authClient, /type:\s*'email'/);
+  assert.match(authClient, /auth\.resend\(\{ type: 'signup'/);
+  assert.match(authClient, /credentials:\s*'same-origin'/);
   assert.match(authClient, /LOGIN_START_ENDPOINT/);
   assert.match(authClient, /LOGIN_COMPLETE_ENDPOINT/);
   assert.match(authClient, /signOut\(\{ scope: 'local' \}\)/);
 
   assert.ok(
     authStart.indexOf('signInWithPassword') < authStart.indexOf('signInWithOtp'),
-    'password validation must precede the email-link request',
+    'password validation must precede the email-code request',
   );
   assert.match(authStart, /shouldCreateUser:\s*false/);
   assert.match(authStart, /accessrevamp_login_challenges/);
@@ -114,7 +136,12 @@ test('signup requires confirmation and every sign-in requires password then emai
   assert.match(authStart, /Too many sign-in attempts/);
   assert.match(authStart, /randomBytes\(32\)/);
   assert.match(authStart, /createHash\('sha256'\)/);
-  assert.doesNotMatch(authStart, /return json\([\s\S]*challengeToken/);
+  assert.match(authStart, /HttpOnly; SameSite=Strict/);
+  assert.match(authStart, /'set-cookie':\s*challengeCookie/);
+  assert.doesNotMatch(authStart, /return json\(\{[\s\S]{0,220}challengeToken/);
+  assert.match(authComplete, /accessrevamp_login_challenge/);
+  assert.match(authComplete, /cookieValue\(request, CHALLENGE_COOKIE\)/);
+  assert.match(authComplete, /clearChallengeCookie/);
   assert.match(authComplete, /requireVerifiedSession:\s*false/);
   assert.match(authComplete, /complete_accessrevamp_email_signin/);
 });
@@ -154,6 +181,65 @@ test('database rate limiting blocks password validation before credential work b
     else process.env.ALLOWED_ORIGINS = previousOrigins;
     if (previousSecret == null) delete process.env.AUTH_RATE_LIMIT_SECRET;
     else process.env.AUTH_RATE_LIMIT_SECRET = previousSecret;
+  }
+});
+
+test('email-code completion consumes the HttpOnly password challenge cookie', async () => {
+  const previousOrigins = process.env.ALLOWED_ORIGINS;
+  process.env.ALLOWED_ORIGINS = 'https://accessrevamp.test';
+  const sessionId = '44444444-4444-4444-8444-444444444444';
+  const challengeToken = 'A'.repeat(43);
+  let rpcArgs;
+  const updateQuery = {
+    update() { return this; },
+    eq() { return this; },
+    then(resolve) { return Promise.resolve({ data: [], error: null }).then(resolve); },
+  };
+  const admin = {
+    auth: {
+      async getUser() {
+        return {
+          data: {
+            user: {
+              id: '11111111-1111-4111-8111-111111111111',
+              email: 'owner@example.com',
+              email_confirmed_at: '2026-07-22T00:00:00.000Z',
+            },
+          },
+          error: null,
+        };
+      },
+    },
+    async rpc(name, args) {
+      assert.equal(name, 'complete_accessrevamp_email_signin');
+      rpcArgs = args;
+      return { data: { verified: true, verified_at: '2026-07-22T00:01:00.000Z' }, error: null };
+    },
+    from(table) {
+      assert.equal(table, 'accessrevamp_login_challenges');
+      return updateQuery;
+    },
+  };
+  const handler = createAuthLoginCompleteHandler({ getAdmin: () => admin });
+
+  try {
+    const response = await handler(new Request('https://accessrevamp.test/api/auth-login-complete', {
+      method: 'POST',
+      headers: {
+        origin: 'https://accessrevamp.test',
+        authorization: `Bearer ${unsignedJwt(sessionId)}`,
+        cookie: `accessrevamp_login_challenge=${challengeToken}`,
+        'content-type': 'application/json',
+      },
+      body: '{}',
+    }));
+    assert.equal(response.status, 200);
+    assert.equal(rpcArgs.p_session_id, sessionId);
+    assert.equal(rpcArgs.p_challenge_hash, createHash('sha256').update(challengeToken).digest('hex'));
+    assert.match(response.headers.get('set-cookie') || '', /Max-Age=0/);
+  } finally {
+    if (previousOrigins == null) delete process.env.ALLOWED_ORIGINS;
+    else process.env.ALLOWED_ORIGINS = previousOrigins;
   }
 });
 
@@ -223,15 +309,20 @@ test('database migration binds verification to auth.sessions and adds restrictiv
   assert.match(advisorFixMigration, /for all to anon, authenticated/);
 });
 
-test('official AccessRevamp email assets are guarded and management-token driven', () => {
+test('official AccessRevamp email assets use manual codes instead of verification links', () => {
   for (const template of [confirmationTemplate, magicLinkTemplate]) {
     assert.match(template, /AccessRevamp/);
     assert.match(template, /#050608/);
-    assert.match(template, /\{\{ \.ConfirmationURL \}\}/);
+    assert.match(template, /\{\{ \.Token \}\}/);
+    assert.match(template, /six-digit/i);
+    assert.doesNotMatch(template, /\{\{ \.ConfirmationURL \}\}/);
+    assert.doesNotMatch(template, /href=["'][^"']*(?:localhost|127\.0\.0\.1)/i);
     assert.doesNotMatch(template, /<script|javascript:/i);
   }
   assert.match(brandingScript, /SUPABASE_ACCESS_TOKEN/);
+  assert.match(brandingScript, /PRODUCTION_SITE_URL\s*=\s*'https:\/\/accessrevamp\.com'/);
   assert.match(brandingScript, /mailer_autoconfirm:\s*false/);
+  assert.match(brandingScript, /mailer_otp_exp:\s*EMAIL_OTP_SECONDS/);
   assert.match(brandingScript, /mailer_templates_confirmation_content/);
   assert.match(brandingScript, /mailer_templates_magic_link_content/);
   assert.match(brandingScript, /smtp_sender_name/);
