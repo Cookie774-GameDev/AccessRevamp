@@ -36,7 +36,7 @@ async function signedOption(admin, option) {
 async function loadApproval(admin, hash) {
   const { data: link, error: linkError } = await admin
     .from('project_approval_links')
-    .select('id,project_id,purpose,status,expires_at,used_at')
+    .select('id,project_id,purpose,status,expires_at,used_at,allowed_option_groups,revision_round_scope')
     .eq('token_hash', hash)
     .maybeSingle();
   if (linkError) throw linkError;
@@ -54,12 +54,27 @@ async function loadApproval(admin, hash) {
 
   let options = [];
   if (OPTION_PURPOSES.has(link.purpose)) {
-    const { data, error } = await admin
+    const allowedGroups = Array.isArray(link.allowed_option_groups)
+      ? link.allowed_option_groups.filter(Boolean)
+      : [];
+    if (!allowedGroups.length) {
+      throw new HttpError(409, 'This approval link is not configured for project options.');
+    }
+
+    let query = admin
       .from('project_design_options')
       .select('id,option_group,option_number,sequence_key,scene_number,revision_round,storage_path,external_url,prompt_summary,status')
       .eq('project_id', link.project_id)
-      .in('status', ['customer_ready', 'selected'])
-      .order('option_number', { ascending: true });
+      .in('option_group', allowedGroups)
+      .in('status', ['customer_ready', 'selected']);
+
+    if (Number.isInteger(link.revision_round_scope)) {
+      query = query.eq('revision_round', link.revision_round_scope);
+    }
+
+    const { data, error } = await query
+      .order('option_number', { ascending: true })
+      .order('scene_number', { ascending: true, nullsFirst: true });
     if (error) throw error;
     options = await Promise.all((data || []).map((option) => signedOption(admin, option)));
   }
@@ -67,6 +82,10 @@ async function loadApproval(admin, hash) {
   return {
     purpose: link.purpose,
     expiresAt: link.expires_at,
+    approvalScope: {
+      optionGroups: link.allowed_option_groups || [],
+      revisionRound: link.revision_round_scope,
+    },
     project: {
       id: project.id,
       name: project.name,
@@ -109,7 +128,9 @@ export default async function projectApproval(request) {
       if (/not found/i.test(message)) throw new HttpError(404, 'This approval link was not found.');
       if (/expired|not active/i.test(message)) throw new HttpError(410, 'This approval link is no longer active.');
       if (/already been used/i.test(message)) throw new HttpError(409, 'This approval link has already been used.');
-      if (/choose|required number|not available|invalid|too long/i.test(message)) throw new HttpError(422, message);
+      if (/choose|required number|not available|invalid|too long|outside this approval link scope|scope is not configured/i.test(message)) {
+        throw new HttpError(422, message);
+      }
       throw error;
     }
 
