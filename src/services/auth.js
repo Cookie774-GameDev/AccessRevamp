@@ -2,6 +2,9 @@ import { getSupabase } from '../lib/supabase.js';
 
 const LOGIN_START_ENDPOINT = '/api/auth-login-start';
 const LOGIN_COMPLETE_ENDPOINT = '/api/auth-login-complete';
+const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v1';
+const OTP_PATTERN = /^[0-9]{6}$/;
+const CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
   mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
@@ -9,6 +12,7 @@ const PASSWORD_RULES = Object.freeze({
 });
 
 function setStatus(status, message, tone = '') {
+  if (!status) return;
   status.textContent = message;
   if (tone) status.dataset.tone = tone;
   else delete status.dataset.tone;
@@ -20,6 +24,45 @@ function cleanAuthUrl() {
   clean.searchParams.delete('confirmed');
   clean.hash = '';
   history.replaceState({}, '', `${clean.pathname}${clean.search}`);
+}
+
+function maskEmail(email) {
+  const [local = '', domain = ''] = String(email || '').split('@');
+  if (!local || !domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${'•'.repeat(Math.max(3, local.length - visible.length))}@${domain}`;
+}
+
+function normalizeCode(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 6);
+}
+
+function savePending(flow) {
+  try {
+    sessionStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(flow));
+  } catch {
+    // The ceremony still works in memory when storage is unavailable.
+  }
+}
+
+function removePending() {
+  try { sessionStorage.removeItem(PENDING_STORAGE_KEY); } catch { /* no-op */ }
+}
+
+function restorePending(mode) {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(PENDING_STORAGE_KEY) || 'null');
+    if (!value || value.mode !== mode || Number(value.expiresAt || 0) <= Date.now()) {
+      removePending();
+      return null;
+    }
+    if (!value.email || !['signup', 'login'].includes(value.kind)) return null;
+    if (value.kind === 'login' && !CHALLENGE_PATTERN.test(String(value.challengeToken || ''))) return null;
+    return value;
+  } catch {
+    removePending();
+    return null;
+  }
 }
 
 async function readJson(response) {
@@ -46,7 +89,7 @@ async function waitForSession(supabase, timeoutMs = 9000) {
       if (session) finish(resolve, session);
     });
     subscription = listener.data.subscription;
-    timeout = setTimeout(() => finish(reject, new Error('The email link did not create a valid session.')), timeoutMs);
+    timeout = setTimeout(() => finish(reject, new Error('The legacy email link did not create a valid session.')), timeoutMs);
   });
 }
 
@@ -60,19 +103,28 @@ export function setupAuthForm(navigate) {
   const submitLabel = submit?.querySelector('span');
   const passwordInput = form.elements.password;
   const confirmPasswordInput = form.elements.confirmPassword;
-  const emailStep = page.querySelector('[data-auth-email-step]');
+  const codeStep = page.querySelector('[data-auth-code-step]');
+  const codeForm = page.querySelector('[data-auth-code-form]');
+  const codeInput = codeForm?.elements.code;
+  const codeSubmit = codeForm?.querySelector('button[type="submit"]');
+  const codeSubmitLabel = codeSubmit?.querySelector('span');
+  const codeStatus = codeForm?.querySelector('[data-auth-code-status]');
   const completingStep = page.querySelector('[data-auth-completing]');
   const emailHint = page.querySelector('[data-auth-email-hint]');
+  const codeKicker = page.querySelector('[data-auth-code-kicker]');
   const restart = page.querySelector('[data-auth-restart]');
+  const resend = page.querySelector('[data-auth-resend]');
   const mode = form.dataset.mode;
   const signup = mode === 'signup';
   const supabase = getSupabase();
   let disposed = false;
   let busy = false;
+  let codeBusy = false;
+  let pending = null;
 
   const show = (panel) => {
     form.hidden = panel !== 'form';
-    if (emailStep) emailStep.hidden = panel !== 'email';
+    if (codeStep) codeStep.hidden = panel !== 'code';
     if (completingStep) completingStep.hidden = panel !== 'completing';
   };
 
@@ -81,6 +133,15 @@ export function setupAuthForm(navigate) {
     submit.disabled = next;
     submit.toggleAttribute('aria-busy', next);
     if (label && submitLabel) submitLabel.textContent = label;
+  };
+
+  const setCodeBusy = (next, label = null) => {
+    codeBusy = next;
+    if (codeSubmit) {
+      codeSubmit.disabled = next;
+      codeSubmit.toggleAttribute('aria-busy', next);
+    }
+    if (label && codeSubmitLabel) codeSubmitLabel.textContent = label;
   };
 
   const updatePasswordRules = () => {
@@ -110,6 +171,9 @@ export function setupAuthForm(navigate) {
     });
     const result = await readJson(response);
     if (!response.ok) throw new Error(result.error || 'Secure sign-in could not be started.');
+    if (!CHALLENGE_PATTERN.test(String(result.challengeToken || ''))) {
+      throw new Error('The sign-in code ceremony could not be started.');
+    }
     return result;
   };
 
@@ -127,13 +191,26 @@ export function setupAuthForm(navigate) {
     return result;
   };
 
-  const handleEmailLink = async (challengeToken) => {
+  const beginCodeFlow = (flow) => {
+    pending = flow;
+    savePending(flow);
+    if (emailHint) emailHint.textContent = flow.emailHint || maskEmail(flow.email);
+    if (codeKicker) codeKicker.textContent = flow.kind === 'signup' ? 'Account code sent' : 'Password accepted';
+    if (resend) resend.hidden = flow.kind !== 'signup';
+    codeForm?.reset();
+    setStatus(codeStatus, 'Enter the six digits from the newest AccessRevamp email.');
+    show('code');
+    queueMicrotask(() => codeInput?.focus());
+  };
+
+  const handleLegacyEmailLink = async (challengeToken) => {
     show('completing');
     try {
       const session = await waitForSession(supabase);
       if (!session.user?.email_confirmed_at) throw new Error('Confirm your email before signing in.');
       await completeLogin(session, challengeToken);
       if (disposed) return;
+      removePending();
       cleanAuthUrl();
       navigate('/account/projects', { replace: true });
     } catch (error) {
@@ -141,12 +218,12 @@ export function setupAuthForm(navigate) {
       if (disposed) return;
       cleanAuthUrl();
       show('form');
-      setStatus(status, error.message || 'The verification link is invalid or expired. Start again.', 'error');
+      setStatus(status, error.message || 'The legacy verification link is invalid or expired. Start again.', 'error');
       passwordInput?.focus();
     }
   };
 
-  const handleSignupConfirmation = async () => {
+  const handleLegacySignupConfirmation = async () => {
     show('completing');
     try {
       const session = await waitForSession(supabase);
@@ -155,7 +232,7 @@ export function setupAuthForm(navigate) {
       if (disposed) return;
       cleanAuthUrl();
       show('form');
-      setStatus(status, 'Email confirmed. Sign in with your password to receive a fresh verification link.', 'success');
+      setStatus(status, 'Email confirmed. Sign in with your password to receive a fresh six-digit code.', 'success');
       form.elements.email?.focus();
     } catch (error) {
       if (disposed) return;
@@ -175,17 +252,16 @@ export function setupAuthForm(navigate) {
     const email = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
     setBusy(true, signup ? 'Creating protected account…' : 'Checking password…');
-    setStatus(status, signup ? 'Preparing your confirmed customer identity…' : 'Validating your password securely…');
+    setStatus(status, signup ? 'Creating the account and preparing your email code…' : 'Validating your password securely…');
 
     try {
       if (signup) {
         const fullName = String(data.get('fullName') || '').trim();
-        const redirectTo = `${location.origin}/login?confirmed=1`;
         const result = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectTo,
+            emailRedirectTo: `${location.origin}/login?confirmed=1`,
             data: { full_name: fullName },
           },
         });
@@ -196,36 +272,132 @@ export function setupAuthForm(navigate) {
           throw new Error('Email confirmation is not enforced by the connected Supabase project. Account access was blocked for safety.');
         }
 
-        form.dataset.complete = 'true';
-        [...form.elements].forEach((control) => { control.disabled = true; });
-        if (submitLabel) submitLabel.textContent = 'Confirmation email sent';
-        setStatus(status, 'Check your email to confirm your AccessRevamp account, then return to sign in.', 'success');
+        passwordInput.value = '';
+        confirmPasswordInput.value = '';
+        updatePasswordRules();
+        beginCodeFlow({
+          mode,
+          kind: 'signup',
+          email,
+          emailHint: maskEmail(email),
+          expiresAt: Date.now() + (10 * 60 * 1000),
+        });
         return;
       }
 
       await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       const result = await startLogin(email, password);
       passwordInput.value = '';
-      if (emailHint) emailHint.textContent = result.emailHint || email;
-      show('email');
+      beginCodeFlow({
+        mode,
+        kind: 'login',
+        email,
+        emailHint: result.emailHint || maskEmail(email),
+        challengeToken: result.challengeToken,
+        expiresAt: Date.now() + (Number(result.expiresIn || 600) * 1000),
+      });
     } catch (error) {
       setStatus(status, error.message || 'Authentication failed.', 'error');
     } finally {
-      if (!form.dataset.complete) {
-        setBusy(false, signup ? 'Create secure account' : 'Check password & send email');
+      setBusy(false, signup ? 'Create account & send code' : 'Check password & send code');
+    }
+  };
+
+  const onCodeInput = () => {
+    const normalized = normalizeCode(codeInput?.value);
+    if (codeInput && codeInput.value !== normalized) codeInput.value = normalized;
+    codeInput?.setCustomValidity(normalized && !OTP_PATTERN.test(normalized) ? 'Enter the complete six-digit code.' : '');
+  };
+
+  const onCodeSubmit = async (event) => {
+    event.preventDefault();
+    if (codeBusy || !pending || !supabase || !codeInput) return;
+    onCodeInput();
+    const code = normalizeCode(codeInput.value);
+    if (!OTP_PATTERN.test(code)) {
+      codeInput.setCustomValidity('Enter the complete six-digit code.');
+      codeForm.reportValidity();
+      return;
+    }
+
+    setCodeBusy(true, pending.kind === 'signup' ? 'Confirming email…' : 'Verifying code…');
+    setStatus(codeStatus, 'Checking the newest code securely…');
+
+    try {
+      const result = await supabase.auth.verifyOtp({
+        email: pending.email,
+        token: code,
+        type: 'email',
+      });
+      if (result.error) throw result.error;
+      const session = result.data?.session;
+      if (!session?.access_token || !session.user?.email_confirmed_at) {
+        throw new Error('The code did not create a confirmed session.');
       }
+
+      show('completing');
+      if (pending.kind === 'signup') {
+        await supabase.auth.signOut({ scope: 'local' });
+        removePending();
+        pending = null;
+        if (disposed) return;
+        navigate('/login?confirmed=code', { replace: true });
+        return;
+      }
+
+      await completeLogin(session, pending.challengeToken);
+      removePending();
+      pending = null;
+      if (disposed) return;
+      navigate('/account/projects', { replace: true });
+    } catch (error) {
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      if (disposed) return;
+      show('code');
+      setStatus(codeStatus, error.message || 'The code is invalid or expired. Use the newest email or start again.', 'error');
+      codeInput.focus();
+      codeInput.select();
+    } finally {
+      setCodeBusy(false, signup ? 'Confirm email address' : 'Verify code & enter workspace');
+    }
+  };
+
+  const onResend = async () => {
+    if (!pending || pending.kind !== 'signup' || codeBusy || !supabase) return;
+    setCodeBusy(true);
+    setStatus(codeStatus, 'Sending a new confirmation code…');
+    try {
+      const result = await supabase.auth.resend({ type: 'signup', email: pending.email });
+      if (result.error) throw result.error;
+      pending.expiresAt = Date.now() + (10 * 60 * 1000);
+      savePending(pending);
+      codeForm?.reset();
+      setStatus(codeStatus, 'A new code was sent. Use the newest AccessRevamp email.', 'success');
+      codeInput?.focus();
+    } catch (error) {
+      setStatus(codeStatus, error.message || 'A new code could not be sent yet. Try again shortly.', 'error');
+    } finally {
+      setCodeBusy(false);
     }
   };
 
   const onRestart = async () => {
+    removePending();
+    pending = null;
     await supabase?.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    codeForm?.reset();
     show('form');
-    setStatus(status, 'Enter the password again to request a new one-time email link.');
+    setStatus(status, signup
+      ? 'Enter the account details again to request a new confirmation code.'
+      : 'Enter the password again to request a new one-time code.');
     form.elements.email?.focus();
   };
 
   form.addEventListener('submit', onSubmit);
+  codeForm?.addEventListener('submit', onCodeSubmit);
+  codeInput?.addEventListener('input', onCodeInput);
   restart?.addEventListener('click', onRestart);
+  resend?.addEventListener('click', onResend);
   passwordInput?.addEventListener('input', updatePasswordRules);
   confirmPasswordInput?.addEventListener('input', validateSignupPassword);
   updatePasswordRules();
@@ -236,22 +408,30 @@ export function setupAuthForm(navigate) {
   } else {
     const params = new URLSearchParams(location.search);
     const verification = params.get('verification');
-    const confirmed = params.get('confirmed') === '1';
+    const confirmed = params.get('confirmed');
     if (verification && mode === 'login') {
-      handleEmailLink(verification);
-    } else if (confirmed && mode === 'login') {
-      handleSignupConfirmation();
-    } else {
-      // Visiting an auth form starts a new ceremony rather than silently reusing
-      // a prior browser session.
+      handleLegacyEmailLink(verification);
+    } else if (confirmed === '1' && mode === 'login') {
+      handleLegacySignupConfirmation();
+    } else if (confirmed === 'code' && mode === 'login') {
+      cleanAuthUrl();
       supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      setStatus(status, 'Email confirmed. Enter your password and we will send a fresh six-digit sign-in code.', 'success');
+      form.elements.email?.focus();
+    } else {
+      supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      const restored = restorePending(mode);
+      if (restored) beginCodeFlow(restored);
     }
   }
 
   return () => {
     disposed = true;
     form.removeEventListener('submit', onSubmit);
+    codeForm?.removeEventListener('submit', onCodeSubmit);
+    codeInput?.removeEventListener('input', onCodeInput);
     restart?.removeEventListener('click', onRestart);
+    resend?.removeEventListener('click', onResend);
     passwordInput?.removeEventListener('input', updatePasswordRules);
     confirmPasswordInput?.removeEventListener('input', validateSignupPassword);
   };
