@@ -5,6 +5,7 @@ import './styles/motion.css';
 import './styles/image-led.css';
 import './styles/studio-redesign.css';
 import './styles/cinematic-renaissance.css';
+import './styles/project-approval.css';
 import './styles/order-wizard-dark-contrast.css';
 import './styles/mobile.css';
 
@@ -27,6 +28,7 @@ import { legalPage } from './pages/legal.js';
 import { freeSnapshotPage } from './pages/free-snapshot.js';
 import { accountProjectsPage } from './pages/account-projects.js';
 import { projectIntakePage } from './pages/project-intake.js';
+import { projectApprovalPage } from './pages/project-approval.js';
 import { operatorPage } from './pages/operator.js';
 import { notFoundPage, resultPage } from './pages/results.js';
 import { underConstructionPage as underConstructionContent } from './pages/under-construction.js';
@@ -39,6 +41,7 @@ import { setupCheckoutResult } from './services/checkout-result.js';
 import { setupFreeSnapshot } from './services/free-snapshot.js';
 import { setupAccountProjects } from './services/account-projects.js';
 import { setupProjectIntake } from './services/project-intake.js';
+import { setupProjectApproval } from './services/project-approval.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
 
@@ -72,6 +75,7 @@ const routes = {
   '/signup': () => authPage('signup'),
   '/account/projects': accountProjectsPage,
   '/project-intake': projectIntakePage,
+  '/approve/:token': projectApprovalPage,
   '/dashboard': dashboardPage,
   '/operator': operatorPage,
   '/privacy': () => legalPage('privacy'),
@@ -161,6 +165,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
   if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));
   if (pathname === '/project-intake') cleanups.push(setupProjectIntake());
+  if (pattern === '/approve/:token') cleanups.push(setupProjectApproval(app));
   if (pathname === '/operator') cleanups.push(setupOperator());
   if (pathname === '/success') cleanups.push(setupCheckoutResult(app));
 

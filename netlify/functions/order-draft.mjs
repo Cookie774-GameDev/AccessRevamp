@@ -89,7 +89,9 @@ export default async function orderDraft(request) {
       launchDate: String(form.get('launchDate') || ''),
       referenceUrls: String(form.get('referenceUrls') || ''),
       specificRequest: String(form.get('specificRequest') || ''),
+      cinematicSceneCount: String(form.get('cinematicSceneCount') || ''),
       cinematicDirection: String(form.get('cinematicDirection') || ''),
+      portfolioConsent: form.get('portfolioConsent') === 'on' || form.get('portfolioConsent') === 'true',
       termsAccepted: form.get('termsAccepted') === 'on' || form.get('termsAccepted') === 'true',
     });
     if (!parsed.success) throw new HttpError(422, parsed.error.issues[0]?.message || 'Check the project request fields.');
@@ -151,7 +153,9 @@ export default async function orderDraft(request) {
         desired_launch_date: payload.launchDate,
         reference_urls: payload.referenceUrls,
         specific_request: payload.specificRequest,
+        cinematic_scene_count: payload.cinematicSceneCount,
         cinematic_direction: payload.cinematicDirection,
+        portfolio_consent: payload.portfolioConsent,
       },
     });
     if (draftError || !draftId) throw new HttpError(503, 'The project request could not be saved.');

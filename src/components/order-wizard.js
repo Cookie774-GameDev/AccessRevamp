@@ -46,7 +46,8 @@ export function orderWizard() {
           <label>Desired launch date<input name="launchDate" type="date"></label>
           <label class="order-fields__wide">Reference website URLs<textarea name="referenceUrls" rows="3" placeholder="One public URL per line"></textarea></label>
           <label class="order-fields__wide">Freeform specific request<textarea name="specificRequest" rows="5"></textarea></label>
-          <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5"></textarea></label>
+          <label class="order-fields__wide" data-cinematic-fields hidden>How many cinematic scenes?<select name="cinematicSceneCount" disabled><option value="">Choose three or four</option><option value="3">3 scenes — provider budget capped at 150 credits</option><option value="4">4 scenes — provider budget capped at 200 credits</option></select><small>You will review two complete visual sequences before any scene video is generated.</small></label>
+          <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5" disabled></textarea></label>
         </div>
         <label class="order-dropzone"><input type="file" name="referenceFiles" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon('upload')}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>
         <ul class="order-file-list" data-order-file-list aria-live="polite"></ul>
@@ -56,6 +57,7 @@ export function orderWizard() {
         <div class="order-wizard__heading"><span>Step 04</span><h3>Review and payment</h3></div>
         <div class="order-summary" data-order-summary></div>
         <label class="order-consent"><input type="checkbox" name="termsAccepted" required> <span>I agree to the <a href="/terms" data-nav>terms</a> and acknowledge the <a href="/privacy" data-nav>privacy notice</a>.</span></label>
+        <label class="order-consent"><input type="checkbox" name="portfolioConsent"> <span>Optional: I give AccessRevamp permission to show approved, non-sensitive project visuals in its portfolio. This is not required to buy and may be revoked for future use.</span></label>
       </div>
       <div class="order-wizard__panel" data-order-panel="4" hidden>
         <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
