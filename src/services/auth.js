@@ -4,7 +4,6 @@ const LOGIN_START_ENDPOINT = '/api/auth-login-start';
 const LOGIN_COMPLETE_ENDPOINT = '/api/auth-login-complete';
 const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v1';
 const OTP_PATTERN = /^[0-9]{6}$/;
-const CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
   mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
@@ -57,7 +56,6 @@ function restorePending(mode) {
       return null;
     }
     if (!value.email || !['signup', 'login'].includes(value.kind)) return null;
-    if (value.kind === 'login' && !CHALLENGE_PATTERN.test(String(value.challengeToken || ''))) return null;
     return value;
   } catch {
     removePending();
@@ -166,25 +164,25 @@ export function setupAuthForm(navigate) {
   const startLogin = async (email, password) => {
     const response = await fetch(LOGIN_START_ENDPOINT, {
       method: 'POST',
+      credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
     const result = await readJson(response);
     if (!response.ok) throw new Error(result.error || 'Secure sign-in could not be started.');
-    if (!CHALLENGE_PATTERN.test(String(result.challengeToken || ''))) {
-      throw new Error('The sign-in code ceremony could not be started.');
-    }
     return result;
   };
 
-  const completeLogin = async (session, challengeToken) => {
+  const completeLogin = async (session, legacyChallengeToken = '') => {
+    const body = legacyChallengeToken ? { challengeToken: legacyChallengeToken } : {};
     const response = await fetch(LOGIN_COMPLETE_ENDPOINT, {
       method: 'POST',
+      credentials: 'same-origin',
       headers: {
         authorization: `Bearer ${session.access_token}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({ challengeToken }),
+      body: JSON.stringify(body),
     });
     const result = await readJson(response);
     if (!response.ok) throw new Error(result.error || 'Email verification could not be completed.');
@@ -293,7 +291,6 @@ export function setupAuthForm(navigate) {
         kind: 'login',
         email,
         emailHint: result.emailHint || maskEmail(email),
-        challengeToken: result.challengeToken,
         expiresAt: Date.now() + (Number(result.expiresIn || 600) * 1000),
       });
     } catch (error) {
@@ -345,7 +342,7 @@ export function setupAuthForm(navigate) {
         return;
       }
 
-      await completeLogin(session, pending.challengeToken);
+      await completeLogin(session);
       removePending();
       pending = null;
       if (disposed) return;
