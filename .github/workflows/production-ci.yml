@@ -71,3 +71,19 @@ jobs:
       - name: Enforce production dependency audit
         if: steps.production_audit.outcome != 'success'
         run: exit 1
+
+  netlify-auth-preview:
+    name: Netlify authentication preview
+    if: github.event_name == 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify browser bundle and server authentication configuration
+        env:
+          DEPLOY_PREVIEW_URL: https://deploy-preview-${{ github.event.pull_request.number }}--accessrevamp.netlify.app
+        run: npm run verify:netlify-auth-preview
