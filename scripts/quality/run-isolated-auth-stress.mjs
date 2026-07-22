@@ -41,11 +41,16 @@ async function inspectAuthPage(page, expectedMode) {
     const root = document.querySelector('[data-auth-page]');
     const panel = document.querySelector('.auth-panel');
     const experience = document.querySelector('.auth-experience');
+    const form = document.querySelector('[data-auth-form]');
+    const submit = form?.querySelector('button[type="submit"]');
+    const status = form?.querySelector('[data-auth-status]');
     const inputs = [...document.querySelectorAll('[data-auth-form] input')];
     return {
       mode: root?.dataset.authMode,
       panel: Boolean(panel),
-      submit: Boolean(document.querySelector('[data-auth-form] button[type="submit"]')),
+      submit: Boolean(submit),
+      submitDisabled: submit?.disabled ?? true,
+      status: status?.textContent?.trim() || '',
       phoneInputs: inputs.filter((input) => input.type === 'tel' || input.name === 'phone').length,
       passwordInputs: inputs.filter((input) => input.type === 'password').length,
       backgroundImage: getComputedStyle(experience).backgroundImage,
@@ -87,6 +92,8 @@ async function runViewport(browser, name, viewport) {
         assert.equal(sample.mode, mode);
         assert.equal(sample.panel, true);
         assert.equal(sample.submit, true);
+        assert.equal(sample.submitDisabled, false, `${name} ${route} shipped with account access disabled`);
+        assert.doesNotMatch(sample.status, /supabase is not connected|account access is unavailable/i);
         assert.equal(sample.phoneInputs, 0);
         assert.equal(sample.passwordInputs, mode === 'signup' ? 2 : 1);
         assert.match(sample.backgroundImage, /gradient/i);

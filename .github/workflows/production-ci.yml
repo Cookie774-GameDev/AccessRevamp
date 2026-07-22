@@ -38,6 +38,8 @@ jobs:
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-output.txt
+      - name: Verify connected Supabase Auth project
+        run: npm run verify:supabase-public
       - name: Upload test output
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,3 +71,59 @@ jobs:
       - name: Enforce production dependency audit
         if: steps.production_audit.outcome != 'success'
         run: exit 1
+
+  netlify-auth-preview:
+    name: Netlify authentication preview
+    if: github.event_name == 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify the deployed browser Supabase connection
+        shell: bash
+        env:
+          NETLIFY_AUTH_TARGET: https://deploy-preview-${{ github.event.pull_request.number }}--accessrevamp.netlify.app
+          REQUIRE_SERVER_AUTH: "false"
+        run: |
+          set -o pipefail
+          npm run verify:netlify-auth-preview 2>&1 | tee netlify-auth-preview.txt
+      - name: Upload Netlify preview evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-auth-preview
+          path: netlify-auth-preview.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  netlify-auth-production:
+    name: Netlify production authentication
+    if: github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify the deployed browser and server authentication configuration
+        shell: bash
+        env:
+          NETLIFY_AUTH_TARGET: https://accessrevamp.netlify.app
+          REQUIRE_SERVER_AUTH: "true"
+        run: |
+          set -o pipefail
+          npm run verify:netlify-auth-preview 2>&1 | tee netlify-auth-production.txt
+      - name: Upload Netlify production authentication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-auth-production
+          path: netlify-auth-production.txt
+          if-no-files-found: warn
+          retention-days: 7
