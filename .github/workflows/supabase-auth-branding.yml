@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: accessrevamp-supabase-auth-branding
@@ -48,21 +49,64 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Apply official AccessRevamp code emails and production URL
+        id: apply
         if: steps.credential.outputs.configured == 'true'
         run: node scripts/supabase/apply-auth-branding.mjs
       - name: Verify hosted Auth configuration
-        if: steps.credential.outputs.configured == 'true'
+        id: verify
+        if: always() && steps.credential.outputs.configured == 'true' && steps.apply.outcome == 'success'
         run: node scripts/supabase/apply-auth-branding.mjs --verify
+      - name: Publish safe commit status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CREDENTIAL_CONFIGURED: ${{ steps.credential.outputs.configured }}
+          APPLY_OUTCOME: ${{ steps.apply.outcome }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+          STATUS_TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const configured = process.env.CREDENTIAL_CONFIGURED === 'true';
+          const applied = process.env.APPLY_OUTCOME === 'success';
+          const verified = process.env.VERIFY_OUTCOME === 'success';
+          const state = !configured ? 'pending' : (applied && verified ? 'success' : 'failure');
+          const description = !configured
+            ? 'Waiting for the protected SUPABASE_ACCESS_TOKEN secret'
+            : (applied && verified
+              ? 'Official six-digit email templates applied and verified'
+              : 'Supabase Auth branding could not be applied or verified');
+          const response = await fetch(
+            `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`,
+            {
+              method: 'POST',
+              headers: {
+                accept: 'application/vnd.github+json',
+                authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                'content-type': 'application/json',
+                'x-github-api-version': '2022-11-28',
+              },
+              body: JSON.stringify({
+                state,
+                context: 'supabase/auth-branding',
+                description,
+                target_url: process.env.STATUS_TARGET_URL,
+              }),
+            },
+          );
+          if (!response.ok) throw new Error(`Commit status API returned ${response.status}.`);
+          NODE
       - name: Write safe deployment summary
         if: always()
         shell: bash
         run: |
           {
             echo "## Supabase Auth branding"
-            if [ "${{ steps.credential.outputs.configured }}" = "true" ]; then
+            if [ "${{ steps.credential.outputs.configured }}" = "true" ] && [ "${{ steps.apply.outcome }}" = "success" ] && [ "${{ steps.verify.outcome }}" = "success" ]; then
               echo "Official six-digit AccessRevamp templates and the production Site URL were applied and verified."
-            else
+            elif [ "${{ steps.credential.outputs.configured }}" != "true" ]; then
               echo "No hosted setting was changed because the repository secret \`SUPABASE_ACCESS_TOKEN\` is missing."
+            else
+              echo "The hosted configuration attempt failed. Review the protected workflow log without exposing credentials."
             fi
             if [ -n "$SUPABASE_SMTP_HOST" ] && [ -n "$SUPABASE_SMTP_ADMIN_EMAIL" ]; then
               echo "Custom SMTP values were supplied to the guarded configuration script."
