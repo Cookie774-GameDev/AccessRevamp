@@ -15,6 +15,7 @@ const [
   authComplete,
   sharedAuth,
   migration,
+  advisorFixMigration,
   confirmationTemplate,
   magicLinkTemplate,
   brandingScript,
@@ -29,6 +30,7 @@ const [
   read('netlify/functions/auth-login-complete.mjs'),
   read('netlify/functions/_shared/auth.mjs'),
   read('supabase/migrations/20260722210000_password_email_signin.sql'),
+  read('supabase/migrations/20260722210500_password_email_signin_advisor_fixes.sql'),
   read('supabase/templates/accessrevamp-confirmation.html'),
   read('supabase/templates/accessrevamp-magic-link.html'),
   read('scripts/supabase/apply-auth-branding.mjs'),
@@ -193,7 +195,7 @@ test('database migration binds verification to auth.sessions and adds restrictiv
   assert.match(migration, /create table if not exists public\.accessrevamp_login_challenges/);
   assert.match(migration, /create table if not exists public\.accessrevamp_verified_sessions/);
   assert.match(migration, /session_id uuid primary key references auth\.sessions\(id\) on delete cascade/);
-  assert.match(migration, /accessrevamp_session_is_verified/);
+  assert.match(migration, /create or replace function (?:public|accessrevamp_private)\.accessrevamp_session_is_verified/);
   assert.match(migration, /complete_accessrevamp_email_signin/);
   assert.match(migration, /consume_accessrevamp_auth_attempt/);
   assert.match(migration, /v_count >= 25/);
@@ -212,6 +214,10 @@ test('database migration binds verification to auth.sessions and adds restrictiv
   ]) assert.match(migration, new RegExp(`${table}_verified_session`));
   assert.match(sharedAuth, /accessrevamp_verified_sessions/);
   assert.match(sharedAuth, /session_id/);
+  assert.match(advisorFixMigration, /alter function public\.accessrevamp_session_is_verified\(\) set schema accessrevamp_private/);
+  assert.match(advisorFixMigration, /accessrevamp_login_challenges_deny_browser/);
+  assert.match(advisorFixMigration, /accessrevamp_verified_sessions_deny_browser/);
+  assert.match(advisorFixMigration, /for all to anon, authenticated/);
 });
 
 test('official AccessRevamp email assets are guarded and management-token driven', () => {
