@@ -40,7 +40,8 @@ test('checkout saves one stable request and uses only a server-created Stripe UR
 test('auth and dashboard cover missing configuration and explicitly scope customer reads', async () => {
   const [auth, dashboard] = await Promise.all([read('src/services/auth.js'), read('src/services/dashboard.js')]);
   assert.match(auth, /Supabase is not connected/);
-  assert.match(auth, /Check your email to confirm/);
+  assert.match(auth, /Enter the six digits from the newest AccessRevamp email/);
+  assert.match(auth, /verifyOtp/);
   assert.equal((dashboard.match(/\.eq\('user_id', session\.user\.id\)/g) || []).length, 2);
   assert.match(dashboard, /Workspace configuration pending/);
   assert.match(dashboard, /Sign in to continue/);
