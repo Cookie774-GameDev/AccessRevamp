@@ -3,18 +3,31 @@ import { HttpError } from './http.mjs';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const BEARER_PATTERN = /^Bearer ([A-Za-z0-9._~-]{1,8192})$/i;
+const EMAIL_AUTH_METHODS = new Set(['otp', 'magiclink']);
 
-function sessionIdFromAccessToken(accessToken) {
+function accessTokenPayload(accessToken) {
   const parts = String(accessToken || '').split('.');
   if (parts.length !== 3) return null;
 
   try {
     const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-    const sessionId = String(payload?.session_id || '');
-    return UUID_PATTERN.test(sessionId) ? sessionId : null;
+    return payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : null;
   } catch {
     return null;
   }
+}
+
+function sessionIdFromPayload(payload) {
+  const sessionId = String(payload?.session_id || '');
+  return UUID_PATTERN.test(sessionId) ? sessionId : null;
+}
+
+function hasInboxAuthentication(payload) {
+  return Array.isArray(payload?.amr) && payload.amr.some((factor) => (
+    factor
+    && typeof factor === 'object'
+    && EMAIL_AUTH_METHODS.has(String(factor.method || '').toLowerCase())
+  ));
 }
 
 export function bearerAccessToken(request) {
@@ -59,7 +72,10 @@ async function verifiedSessionExists(client, user, sessionId) {
 export async function requireConfirmedUser(
   request,
   authClient,
-  { requireVerifiedSession = true } = {},
+  {
+    requireVerifiedSession = true,
+    requireInboxAuthentication = false,
+  } = {},
 ) {
   const accessToken = bearerAccessToken(request);
   if (!authClient?.auth || typeof authClient.auth.getUser !== 'function') {
@@ -79,11 +95,19 @@ export async function requireConfirmedUser(
     throw new HttpError(403, 'A confirmed email address is required.');
   }
 
+  // The token has already been validated by Supabase getUser above. Decode its
+  // claims only after validation so the session and AMR checks cannot trust a
+  // caller-forged token.
+  const payload = accessTokenPayload(accessToken);
   const id = String(user.id || '');
   const email = String(user.email || '').trim().toLowerCase();
-  const sessionId = sessionIdFromAccessToken(accessToken);
+  const sessionId = sessionIdFromPayload(payload);
   if (!UUID_PATTERN.test(id) || !email || email.length > 254 || !email.includes('@') || !sessionId) {
     throw new HttpError(401, 'Authentication required.');
+  }
+
+  if (requireInboxAuthentication && !hasInboxAuthentication(payload)) {
+    throw new HttpError(403, 'Complete email verification to continue.');
   }
 
   if (requireVerifiedSession && !(await verifiedSessionExists(authClient, { id }, sessionId))) {
