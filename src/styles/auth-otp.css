@@ -124,6 +124,19 @@
   outline: 0;
 }
 
+.auth-code-fallback {
+  max-width: 31rem;
+  margin: 1rem 0 0;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(167,243,208,.16);
+  border-radius: .8rem;
+  background: rgba(167,243,208,.045);
+  color: #98a3b3;
+  font-size: .74rem;
+  line-height: 1.55;
+}
+
+.auth-code-fallback strong { color: #dffbea; }
 .auth-code-step .auth-email-step__note { margin-bottom: 0; }
 
 @media (max-width: 680px) {
@@ -137,6 +150,11 @@
   .auth-code-actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .auth-code-fallback {
+    width: 100%;
+    padding: .85rem;
+    font-size: .72rem;
   }
 }
 
