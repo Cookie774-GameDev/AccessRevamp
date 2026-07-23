@@ -35,7 +35,7 @@ export function authPage(mode) {
 
         <div class="auth-protocol" aria-label="Sign-in protocol">
           ${protocolStep('01', signup ? 'Create the identity' : 'Correct password', signup ? 'Register the email and password that will protect the private customer workspace.' : 'Your password is checked first and is never stored in AccessRevamp project records.')}
-          ${protocolStep('02', 'Verify the email', signup ? 'AccessRevamp sends an official confirmation email to the inbox you registered.' : 'A fresh verification email is sent to the already confirmed address.')}
+          ${protocolStep('02', 'Copy the email code', signup ? 'AccessRevamp sends an official confirmation email to the inbox you registered.' : 'A fresh verification email is sent to the already confirmed address.')}
           ${protocolStep('03', 'Enter the workspace', 'Finish verification on AccessRevamp. Only the fully verified session can read customer projects, designs, and downloads.')}
         </div>
 
@@ -83,7 +83,7 @@ export function authPage(mode) {
           <section class="auth-code-step" data-auth-code-step hidden aria-live="polite">
             <div class="auth-email-step__mark">${icon('check')}</div>
             <span class="auth-kicker"><i></i> <span data-auth-code-kicker>${signup ? 'Verification email sent' : 'Password accepted'}</span></span>
-            <h2>Finish email verification.</h2>
+            <h2>Enter your 6-digit code.</h2>
             <p>We sent an AccessRevamp verification email to <strong data-auth-email-hint>your email address</strong>. Open the newest message. Enter its six-digit code below when one is shown.</p>
 
             <form class="auth-code-form" data-auth-code-form novalidate>
