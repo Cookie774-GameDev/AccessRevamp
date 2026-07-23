@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { bearerAccessToken, requireConfirmedUser } from './_shared/auth.mjs';
 import {
   assertJsonSize,
@@ -48,6 +49,7 @@ async function readChallengeToken(request) {
 }
 
 export function createAuthLoginCompleteHandler({
+  getAdmin,
   createAccessTokenClient = createSupabaseAccessTokenClient,
 } = {}) {
   return async function authLoginComplete(request) {
@@ -56,13 +58,33 @@ export function createAuthLoginCompleteHandler({
       assertSameOrigin(request);
       assertJsonSize(request);
       const challengeToken = await readChallengeToken(request);
-      const accessToken = bearerAccessToken(request);
-      const client = createAccessTokenClient(accessToken);
-      await requireConfirmedUser(request, client, { requireVerifiedSession: false });
 
-      const result = await client.rpc('complete_accessrevamp_email_signin_current', {
-        p_challenge_token: challengeToken,
-      });
+      let result;
+      if (getAdmin) {
+        const admin = getAdmin();
+        const user = await requireConfirmedUser(request, admin, { requireVerifiedSession: false });
+        const challengeHash = createHash('sha256').update(challengeToken).digest('hex');
+        result = await admin.rpc('complete_accessrevamp_email_signin', {
+          p_challenge_hash: challengeHash,
+          p_user_id: user.id,
+          p_session_id: user.sessionId,
+        });
+        if (!result.error && result.data?.verified === true) {
+          await admin
+            .from('accessrevamp_login_challenges')
+            .update({ status: 'canceled' })
+            .eq('user_id', user.id)
+            .eq('status', 'pending');
+        }
+      } else {
+        const accessToken = bearerAccessToken(request);
+        const client = createAccessTokenClient(accessToken);
+        await requireConfirmedUser(request, client, { requireVerifiedSession: false });
+        result = await client.rpc('complete_accessrevamp_email_signin_current', {
+          p_challenge_token: challengeToken,
+        });
+      }
+
       if (result.error || result.data?.verified !== true) {
         throw new HttpError(401, 'Email verification is invalid or expired.');
       }
