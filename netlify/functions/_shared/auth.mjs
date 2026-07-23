@@ -25,12 +25,16 @@ export function bearerAccessToken(request) {
 }
 
 async function verifiedSessionExists(client, user, sessionId) {
+  let callerScopedUnverified = false;
+
   if (client && typeof client.rpc === 'function') {
     const result = await client.rpc('accessrevamp_current_session_is_verified');
-    if (!result.error) return result.data === true;
+    if (!result.error && result.data === true) return true;
+    if (!result.error && result.data === false) callerScopedUnverified = true;
   }
 
   if (!client || typeof client.from !== 'function') {
+    if (callerScopedUnverified) return false;
     throw new HttpError(503, 'Sign-in verification is unavailable.');
   }
 
@@ -41,7 +45,14 @@ async function verifiedSessionExists(client, user, sessionId) {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (verification.error) throw new HttpError(503, 'Sign-in verification is unavailable.');
+  if (verification.error) {
+    // A user-scoped client is expected to be denied direct access to the
+    // server-only verification table. In that case, the authenticated RPC
+    // result remains authoritative. A service client can read the row and
+    // therefore supplies the compatibility path for server-only operations.
+    if (callerScopedUnverified) return false;
+    throw new HttpError(503, 'Sign-in verification is unavailable.');
+  }
   return Boolean(verification.data);
 }
 
