@@ -51,11 +51,27 @@ jobs:
       - name: Apply official AccessRevamp code emails and production URL
         id: apply
         if: steps.credential.outputs.configured == 'true'
-        run: node scripts/supabase/apply-auth-branding.mjs
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/supabase/apply-auth-branding.mjs 2>&1 | tee supabase-auth-branding-apply.log
       - name: Verify hosted Auth configuration
         id: verify
         if: always() && steps.credential.outputs.configured == 'true' && steps.apply.outcome == 'success'
-        run: node scripts/supabase/apply-auth-branding.mjs --verify
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/supabase/apply-auth-branding.mjs --verify 2>&1 | tee supabase-auth-branding-verify.log
+      - name: Upload safe Supabase Auth diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-auth-branding-diagnostics
+          path: |
+            supabase-auth-branding-apply.log
+            supabase-auth-branding-verify.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Publish safe commit status
         if: always()
         env:
@@ -106,7 +122,7 @@ jobs:
             elif [ "${{ steps.credential.outputs.configured }}" != "true" ]; then
               echo "No hosted setting was changed because the repository secret \`SUPABASE_ACCESS_TOKEN\` is missing."
             else
-              echo "The hosted configuration attempt failed. Review the protected workflow log without exposing credentials."
+              echo "The hosted configuration attempt failed. A secret-safe diagnostic artifact named \`supabase-auth-branding-diagnostics\` was uploaded."
             fi
             if [ -n "$SUPABASE_SMTP_HOST" ] && [ -n "$SUPABASE_SMTP_ADMIN_EMAIL" ]; then
               echo "Custom SMTP values were supplied to the guarded configuration script."
