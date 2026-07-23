@@ -55,6 +55,7 @@ async function inspectAuthPage(page, expectedMode) {
     const codeForm = document.querySelector('[data-auth-code-form]');
     const codeInput = codeForm?.querySelector('input[name="code"]');
     const codeSubmit = codeForm?.querySelector('button[type="submit"]');
+    const fallback = document.querySelector('.auth-code-fallback');
     return {
       mode: root?.dataset.authMode,
       panel: Boolean(panel),
@@ -71,6 +72,7 @@ async function inspectAuthPage(page, expectedMode) {
       codeAutocomplete: codeInput?.autocomplete || '',
       codePattern: codeInput?.pattern || '',
       codeMaxLength: codeInput?.maxLength || 0,
+      fallbackNote: fallback?.textContent?.trim() || '',
       backgroundImage: getComputedStyle(experience).backgroundImage,
       headerBackground: getComputedStyle(header).backgroundColor,
       headerCtaBackground: getComputedStyle(headerCta).backgroundColor,
@@ -98,7 +100,10 @@ async function exerciseCodePanel(page, mode) {
   const panel = await page.evaluate(() => {
     const input = document.querySelector('[data-auth-code-form] input[name="code"]');
     const step = document.querySelector('[data-auth-code-step]');
+    const fallback = document.querySelector('.auth-code-fallback');
     const style = getComputedStyle(input);
+    const stepRect = step.getBoundingClientRect();
+    const fallbackRect = fallback.getBoundingClientRect();
     return {
       visible: !step.hidden,
       inputMode: input.inputMode,
@@ -107,6 +112,8 @@ async function exerciseCodePanel(page, mode) {
       maxLength: input.maxLength,
       fontFamily: style.fontFamily,
       letterSpacing: style.letterSpacing,
+      fallbackText: fallback.textContent?.trim() || '',
+      fallbackFitsPanel: fallbackRect.width <= stepRect.width + 1,
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
     };
@@ -118,6 +125,9 @@ async function exerciseCodePanel(page, mode) {
   assert.equal(panel.maxLength, 6);
   assert.match(panel.fontFamily, /Courier/i);
   assert.notEqual(panel.letterSpacing, 'normal');
+  assert.match(panel.fallbackText, /secure button/i);
+  assert.match(panel.fallbackText, /never on localhost/i);
+  assert.equal(panel.fallbackFitsPanel, true, `${mode} fallback notice overflows the code panel`);
   assert.ok(panel.scrollWidth <= panel.clientWidth + 1, `${mode} code panel horizontal overflow`);
   return panel;
 }
@@ -166,6 +176,7 @@ async function runViewport(browser, name, viewport) {
         assert.equal(sample.codeAutocomplete, 'one-time-code');
         assert.equal(sample.codePattern, '[0-9]{6}');
         assert.equal(sample.codeMaxLength, 6);
+        assert.match(sample.fallbackNote, /secure button/i);
         assert.match(sample.backgroundImage, /gradient/i);
         assert.equal(headerChannels.length, 3, `${name} ${route} header background could not be measured`);
         assert.ok(Math.max(...headerChannels) < 45, `${name} ${route} header is too bright: ${sample.headerBackground}`);
