@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { requireConfirmedUser } from './_shared/auth.mjs';
+import { bearerAccessToken, requireConfirmedUser } from './_shared/auth.mjs';
 import {
   assertJsonSize,
   assertMethod,
@@ -9,11 +9,11 @@ import {
   json,
   readJsonBody,
 } from './_shared/http.mjs';
-import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
+import { createSupabaseAccessTokenClient } from './_shared/supabase-public.mjs';
 
 const CHALLENGE_COOKIE = 'accessrevamp_login_challenge';
 const CHALLENGE_COOKIE_PATH = '/api/auth-login-complete';
-const TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
+const TOKEN_PATTERN = /^(?:[a-f0-9]{64}|[A-Za-z0-9_-]{32,128})$/;
 
 function cookieValue(request, name) {
   const header = request.headers.get('cookie') || '';
@@ -34,7 +34,7 @@ async function readChallengeToken(request) {
   const cookieToken = cookieValue(request, CHALLENGE_COOKIE);
   if (TOKEN_PATTERN.test(cookieToken)) return cookieToken;
 
-  // Compatibility fallback for links issued before the six-digit code rollout.
+  // Compatibility fallback for verification links issued before the current rollout.
   const payload = await readJsonBody(request);
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new HttpError(422, 'Verification details are invalid.');
@@ -48,31 +48,46 @@ async function readChallengeToken(request) {
   return token;
 }
 
-export function createAuthLoginCompleteHandler({ getAdmin = getSupabaseAdmin } = {}) {
+export function createAuthLoginCompleteHandler({
+  getAdmin,
+  createAccessTokenClient = createSupabaseAccessTokenClient,
+} = {}) {
   return async function authLoginComplete(request) {
     try {
       assertMethod(request, 'POST');
       assertSameOrigin(request);
       assertJsonSize(request);
       const challengeToken = await readChallengeToken(request);
-      const admin = getAdmin();
-      const user = await requireConfirmedUser(request, admin, { requireVerifiedSession: false });
-      const challengeHash = createHash('sha256').update(challengeToken).digest('hex');
 
-      const result = await admin.rpc('complete_accessrevamp_email_signin', {
-        p_challenge_hash: challengeHash,
-        p_user_id: user.id,
-        p_session_id: user.sessionId,
-      });
+      let result;
+      if (getAdmin) {
+        const admin = getAdmin();
+        const user = await requireConfirmedUser(request, admin, { requireVerifiedSession: false });
+        const challengeHash = createHash('sha256').update(challengeToken).digest('hex');
+        result = await admin.rpc('complete_accessrevamp_email_signin', {
+          p_challenge_hash: challengeHash,
+          p_user_id: user.id,
+          p_session_id: user.sessionId,
+        });
+        if (!result.error && result.data?.verified === true) {
+          await admin
+            .from('accessrevamp_login_challenges')
+            .update({ status: 'canceled' })
+            .eq('user_id', user.id)
+            .eq('status', 'pending');
+        }
+      } else {
+        const accessToken = bearerAccessToken(request);
+        const client = createAccessTokenClient(accessToken);
+        await requireConfirmedUser(request, client, { requireVerifiedSession: false });
+        result = await client.rpc('complete_accessrevamp_email_signin_current', {
+          p_challenge_token: challengeToken,
+        });
+      }
+
       if (result.error || result.data?.verified !== true) {
         throw new HttpError(401, 'Email verification is invalid or expired.');
       }
-
-      await admin
-        .from('accessrevamp_login_challenges')
-        .update({ status: 'canceled' })
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
 
       return json({
         ok: true,

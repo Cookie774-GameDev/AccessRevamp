@@ -62,15 +62,22 @@ export function assertMethod(request, method) {
 export function assertSameOrigin(request) {
   const origin = request.headers.get('origin');
   if (!origin) throw new HttpError(403, 'A valid browser origin is required.');
+
+  let requestOrigin = '';
+  try { requestOrigin = new URL(request.url).origin; } catch { /* rejected below */ }
+
   const allowed = new Set([
     'https://accessrevamp.com',
     'https://www.accessrevamp.com',
+    'https://accessrevamp.netlify.app',
+    requestOrigin,
     process.env.URL,
     process.env.DEPLOY_PRIME_URL,
     process.env.VITE_SITE_URL,
     process.env.ACCESSREVAMP_SITE_URL,
     ...(process.env.ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()),
   ].filter(Boolean).map((value) => value.replace(/\/$/, '')));
+
   if (!allowed.has(origin.replace(/\/$/, ''))) throw new HttpError(403, 'Origin is not allowed.');
 }
 
