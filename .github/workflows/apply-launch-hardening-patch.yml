@@ -1,0 +1,64 @@
+name: Apply launch hardening patch
+
+on:
+  push:
+    branches:
+      - audit/launch-hardening-remove-sandbox-20260723
+    paths:
+      - audit/launch-hardening.patch.part03
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor == 'Cookie774-GameDev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out audit branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Reassemble and validate patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat \
+            audit/launch-hardening.patch.part00 \
+            audit/launch-hardening.patch.part01 \
+            audit/launch-hardening.patch.part02 \
+            audit/launch-hardening.patch.part03 \
+            > /tmp/accessrevamp-launch.patch
+          git apply --check --whitespace=error-all /tmp/accessrevamp-launch.patch
+          git apply --whitespace=error-all /tmp/accessrevamp-launch.patch
+
+      - name: Run focused launch checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/services/checkout.js
+          node --check netlify/functions/create-checkout.mjs
+          node --test \
+            tests/launch-surface.test.mjs \
+            tests/launch-completion.test.mjs \
+            tests/catalog.test.mjs
+
+      - name: Commit reviewable source change
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm --ignore-unmatch \
+            audit/launch-hardening.patch.part00 \
+            audit/launch-hardening.patch.part01 \
+            audit/launch-hardening.patch.part02 \
+            audit/launch-hardening.patch.part03 \
+            .github/workflows/apply-launch-hardening-patch.yml \
+            .github/workflows/audit-source-bundle.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(launch): remove public sandbox checkout'
+          git push origin HEAD:${{ github.ref_name }}
