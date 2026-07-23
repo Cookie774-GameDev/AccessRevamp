@@ -258,6 +258,7 @@
               <button class="auth-text-button" type="button" data-auth-resend${t?``:` hidden`}>Send a new code</button>
               <button class="auth-text-button" type="button" data-auth-restart>${t?`Change account details`:`Enter password again`}</button>
             </div>
+            <p class="auth-code-fallback"><strong>Email shows a secure button instead?</strong> Open that button. The fallback is restricted to AccessRevamp’s production domain and will finish verification on this website—never on localhost.</p>
             <div class="auth-email-step__note">AccessRevamp support will never ask for this code. Do not forward the email or share the code with anyone.</div>
           </section>
 
