@@ -5,7 +5,10 @@ const PROJECT_URL = 'https://vbkkimvedmklebghtkzs.supabase.co';
 const PUBLISHABLE_KEY = 'sb_publishable_WD8hNud9SZMDg6uK0N2cAA_4hnxz2ta';
 const target = String(process.env.NETLIFY_AUTH_TARGET || process.env.DEPLOY_PREVIEW_URL || '').replace(/\/$/, '');
 const requireServerAuth = process.env.REQUIRE_SERVER_AUTH === 'true';
-assert.match(target, /^https:\/\/(?:deploy-preview-\d+--)?accessrevamp\.netlify\.app$/);
+assert.match(
+  target,
+  /^https:\/\/(?:(?:deploy-preview-\d+--)?accessrevamp\.netlify\.app|(?:www\.)?accessrevamp\.com)$/,
+);
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
@@ -62,7 +65,7 @@ while (Date.now() < deadline) {
   await sleep(10_000);
 }
 
-assert.equal(homepageStatus, 200, `Netlify signup page did not become ready: HTTP ${homepageStatus}. ${lastError}`);
+assert.equal(homepageStatus, 200, `Signup page did not become ready: HTTP ${homepageStatus}. ${lastError}`);
 assert.match(html, /<div[^>]+id=["']app["']/i);
 assert.match(bundleText, new RegExp(PROJECT_URL.replaceAll('.', '\\.')));
 assert.match(bundleText, new RegExp(PUBLISHABLE_KEY));
@@ -118,7 +121,7 @@ if (requireServerAuth) {
 }
 
 console.log(JSON.stringify({
-  netlifyTarget: target,
+  authenticationTarget: target,
   signupPageReady: true,
   publicAccountConfigBundled: true,
   serverAuthenticationRequired: requireServerAuth,
