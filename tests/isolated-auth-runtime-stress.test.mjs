@@ -294,16 +294,21 @@ test('production migrations protect customer records and keep auth limits servic
     designMigration,
     retiredPublicLimiterMigration,
     correctiveLimiterMigration,
+    emailAmrMigration,
     authRuntime,
   ] = await Promise.all([
     readFile('supabase/migrations/20260723023000_public_customer_auth_runtime.sql', 'utf8'),
     readFile('supabase/migrations/20260723030000_customer_design_preview_storage.sql', 'utf8'),
     readFile('supabase/migrations/20260723033000_public_auth_rate_limiter.sql', 'utf8'),
     readFile('supabase/migrations/20260723034500_lock_auth_rate_limiter_to_service_role.sql', 'utf8'),
+    readFile('supabase/migrations/20260723044000_require_email_otp_for_verified_sessions.sql', 'utf8'),
     readFile('netlify/functions/auth-login-start.mjs', 'utf8'),
   ]);
   assert.match(runtimeMigration, /begin_accessrevamp_email_signin/);
   assert.match(runtimeMigration, /complete_accessrevamp_email_signin_current/);
+  assert.match(runtimeMigration, /auth\.jwt\(\)\s*->\s*'amr'/);
+  assert.match(runtimeMigration, /factor\s*->>\s*'method'\s+in\s*\('otp',\s*'magiclink'\)/);
+  assert.match(runtimeMigration, /Email verification is required/);
   assert.match(runtimeMigration, /accessrevamp_current_session_is_verified/);
   assert.match(runtimeMigration, /project_artifacts_select_own_published_verified/);
   assert.match(runtimeMigration, /customer_private_assets_select_verified/);
@@ -312,6 +317,9 @@ test('production migrations protect customer records and keep auth limits servic
   assert.match(retiredPublicLimiterMigration, /drop function if exists public\.consume_accessrevamp_public_auth_attempt/);
   assert.match(correctiveLimiterMigration, /revoke all on function public\.consume_accessrevamp_auth_attempt/);
   assert.match(correctiveLimiterMigration, /to service_role/);
+  assert.match(emailAmrMigration, /create or replace function public\.complete_accessrevamp_email_signin_current/);
+  assert.match(emailAmrMigration, /auth\.jwt\(\)\s*->\s*'amr'/);
+  assert.match(emailAmrMigration, /factor\s*->>\s*'method'\s+in\s*\('otp',\s*'magiclink'\)/);
   assert.doesNotMatch(authRuntime, /consume_accessrevamp_public_auth_attempt/);
   assert.doesNotMatch(
     `${retiredPublicLimiterMigration}\n${correctiveLimiterMigration}`,
