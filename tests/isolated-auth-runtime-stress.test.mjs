@@ -13,9 +13,20 @@ const USER_ID = '11111111-1111-4111-8111-111111111111';
 const SESSION_ID = '22222222-2222-4222-8222-222222222222';
 const CHALLENGE = 'a'.repeat(64);
 
-function unsignedJwt(sessionId = SESSION_ID) {
+function unsignedJwt(sessionId = SESSION_ID, method = 'otp') {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ session_id: sessionId })}.signature`;
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    session_id: sessionId,
+    amr: [{ method, timestamp: 1784780000 }],
+  })}.signature`;
+}
+
+function confirmedUser() {
+  return {
+    id: USER_ID,
+    email: 'customer@example.com',
+    email_confirmed_at: '2026-07-23T00:00:00.000Z',
+  };
 }
 
 function withOrigin(run) {
@@ -37,6 +48,19 @@ function rateLimitRequest(ip) {
   });
 }
 
+function completionRequest(accessToken = unsignedJwt()) {
+  return new Request(`${ORIGIN}/api/auth-login-complete`, {
+    method: 'POST',
+    headers: {
+      origin: ORIGIN,
+      authorization: `Bearer ${accessToken}`,
+      cookie: `accessrevamp_login_challenge=${CHALLENGE}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+  });
+}
+
 test('password-first login rate-limits locally before credential work without a privileged public RPC', async () => {
   await withOrigin(async () => {
     let publicClientCalls = 0;
@@ -50,11 +74,7 @@ test('password-first login rate-limits locally before credential work without a 
           sequence.push('password');
           return {
             data: {
-              user: {
-                id: USER_ID,
-                email: 'customer@example.com',
-                email_confirmed_at: '2026-07-23T00:00:00.000Z',
-              },
+              user: confirmedUser(),
               session: { access_token: 'password-session-access-token' },
             },
             error: null,
@@ -170,16 +190,7 @@ test('service-scoped customer checks fall back to the verified-session row', asy
     const client = {
       auth: {
         async getUser() {
-          return {
-            data: {
-              user: {
-                id: USER_ID,
-                email: 'customer@example.com',
-                email_confirmed_at: '2026-07-23T00:00:00.000Z',
-              },
-            },
-            error: null,
-          };
+          return { data: { user: confirmedUser() }, error: null };
         },
       },
       async rpc(name) {
@@ -201,23 +212,14 @@ test('service-scoped customer checks fall back to the verified-session row', asy
   });
 });
 
-test('email completion binds the current session to the password challenge without a server-only key', async () => {
+test('email completion binds an inbox-authenticated session to the password challenge', async () => {
   await withOrigin(async () => {
     let completionPayload;
     const handler = createAuthLoginCompleteHandler({
       createAccessTokenClient: () => ({
         auth: {
           async getUser() {
-            return {
-              data: {
-                user: {
-                  id: USER_ID,
-                  email: 'customer@example.com',
-                  email_confirmed_at: '2026-07-23T00:00:00.000Z',
-                },
-              },
-              error: null,
-            };
+            return { data: { user: confirmedUser() }, error: null };
           },
         },
         async rpc(name, payload) {
@@ -228,20 +230,34 @@ test('email completion binds the current session to the password challenge witho
       }),
     });
 
-    const response = await handler(new Request(`${ORIGIN}/api/auth-login-complete`, {
-      method: 'POST',
-      headers: {
-        origin: ORIGIN,
-        authorization: `Bearer ${unsignedJwt()}`,
-        cookie: `accessrevamp_login_challenge=${CHALLENGE}`,
-        'content-type': 'application/json',
-      },
-      body: '{}',
-    }));
-
+    const response = await handler(completionRequest());
     assert.equal(response.status, 200);
     assert.equal(completionPayload.p_challenge_token, CHALLENGE);
     assert.match(response.headers.get('set-cookie') || '', /Max-Age=0/);
+  });
+});
+
+test('email completion rejects password-only sessions before calling the verification RPC', async () => {
+  await withOrigin(async () => {
+    let rpcCalls = 0;
+    const handler = createAuthLoginCompleteHandler({
+      createAccessTokenClient: () => ({
+        auth: {
+          async getUser() {
+            return { data: { user: confirmedUser() }, error: null };
+          },
+        },
+        async rpc() {
+          rpcCalls += 1;
+          return { data: null, error: null };
+        },
+      }),
+    });
+
+    const response = await handler(completionRequest(unsignedJwt(SESSION_ID, 'password')));
+    assert.equal(response.status, 403);
+    assert.equal(rpcCalls, 0);
+    assert.match(await response.text(), /email verification/i);
   });
 });
 
@@ -251,16 +267,7 @@ test('service-key-free email completion remains deterministic under concurrency'
       createAccessTokenClient: () => ({
         auth: {
           async getUser() {
-            return {
-              data: {
-                user: {
-                  id: USER_ID,
-                  email: 'customer@example.com',
-                  email_confirmed_at: '2026-07-23T00:00:00.000Z',
-                },
-              },
-              error: null,
-            };
+            return { data: { user: confirmedUser() }, error: null };
           },
         },
         async rpc() {
@@ -269,20 +276,9 @@ test('service-key-free email completion remains deterministic under concurrency'
       }),
     });
 
-    const responses = await Promise.all(Array.from({ length: 100 }, () => handler(new Request(
-      `${ORIGIN}/api/auth-login-complete`,
-      {
-        method: 'POST',
-        headers: {
-          origin: ORIGIN,
-          authorization: `Bearer ${unsignedJwt()}`,
-          cookie: `accessrevamp_login_challenge=${CHALLENGE}`,
-          'content-type': 'application/json',
-        },
-        body: '{}',
-      },
-    ))));
-
+    const responses = await Promise.all(
+      Array.from({ length: 100 }, () => handler(completionRequest())),
+    );
     assert.equal(responses.length, 100);
     assert.ok(responses.every((response) => response.status === 200));
   });
@@ -304,6 +300,7 @@ test('production migrations protect customer records and keep auth limits servic
     readFile('supabase/migrations/20260723044000_require_email_otp_for_verified_sessions.sql', 'utf8'),
     readFile('netlify/functions/auth-login-start.mjs', 'utf8'),
   ]);
+
   assert.match(runtimeMigration, /begin_accessrevamp_email_signin/);
   assert.match(runtimeMigration, /complete_accessrevamp_email_signin_current/);
   assert.match(runtimeMigration, /auth\.jwt\(\)\s*->\s*'amr'/);
