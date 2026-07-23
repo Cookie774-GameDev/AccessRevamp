@@ -8,6 +8,25 @@ const requireServerAuth = process.env.REQUIRE_SERVER_AUTH === 'true';
 assert.match(target, /^https:\/\/(?:deploy-preview-\d+--)?accessrevamp\.netlify\.app$/);
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function fetchWithRetry(url, options = {}, attempts = 4) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (response.status < 500 || attempt === attempts) return response;
+      lastError = new Error(`${url} returned HTTP ${response.status}.`);
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(attempt * 1_500);
+  }
+  throw lastError || new Error(`${url} could not be reached.`);
+}
+
 const deadline = Date.now() + 8 * 60 * 1000;
 let html = '';
 let bundleText = '';
@@ -16,9 +35,8 @@ let lastError = '';
 
 while (Date.now() < deadline) {
   try {
-    const response = await fetch(`${target}/signup?auth-smoke=${Date.now()}`, {
+    const response = await fetchWithRetry(`${target}/signup?auth-smoke=${Date.now()}`, {
       headers: { 'cache-control': 'no-cache' },
-      signal: AbortSignal.timeout(15_000),
     });
     homepageStatus = response.status;
     html = await response.text();
@@ -31,7 +49,7 @@ while (Date.now() < deadline) {
     if (!scriptSources.length) throw new Error('Signup page did not reference a JavaScript bundle.');
 
     const bundles = await Promise.all(scriptSources.map(async (source) => {
-      const bundleResponse = await fetch(source, { signal: AbortSignal.timeout(30_000) });
+      const bundleResponse = await fetchWithRetry(source);
       if (!bundleResponse.ok) throw new Error(`JavaScript bundle returned HTTP ${bundleResponse.status}.`);
       return bundleResponse.text();
     }));
@@ -53,16 +71,15 @@ let customerApiConfigured = null;
 let passwordCeremonyConfigured = null;
 let signupEmailStateConfigured = null;
 if (requireServerAuth) {
-  const accountResponse = await fetch(`${target}/api/account-projects`, {
+  const accountResponse = await fetchWithRetry(`${target}/api/account-projects`, {
     headers: { origin: target },
-    signal: AbortSignal.timeout(30_000),
   });
   assert.equal(accountResponse.status, 401, `Customer API expected HTTP 401 but returned ${accountResponse.status}.`);
   const accountBody = await accountResponse.json().catch(() => ({}));
   assert.match(String(accountBody.error || ''), /authentication required/i);
   customerApiConfigured = true;
 
-  const loginResponse = await fetch(`${target}/api/auth-login-start`, {
+  const loginResponse = await fetchWithRetry(`${target}/api/auth-login-start`, {
     method: 'POST',
     headers: {
       origin: target,
@@ -72,7 +89,6 @@ if (requireServerAuth) {
       email: `netlify-auth-smoke-${randomUUID()}@example.invalid`,
       password: 'DeliberatelyInvalid!234',
     }),
-    signal: AbortSignal.timeout(30_000),
   });
   assert.ok(
     [401, 429].includes(loginResponse.status),
@@ -82,14 +98,13 @@ if (requireServerAuth) {
   assert.doesNotMatch(JSON.stringify(loginBody), /service_role|secret|publishable|server configuration/i);
   passwordCeremonyConfigured = true;
 
-  const resendResponse = await fetch(`${target}/api/auth-signup-resend`, {
+  const resendResponse = await fetchWithRetry(`${target}/api/auth-signup-resend`, {
     method: 'POST',
     headers: {
       origin: target,
       'content-type': 'application/json',
     },
     body: JSON.stringify({ email: `netlify-signup-smoke-${randomUUID()}@example.invalid` }),
-    signal: AbortSignal.timeout(30_000),
   });
   assert.ok(
     [202, 409, 429].includes(resendResponse.status),
