@@ -72,6 +72,7 @@ test('password-first login rate-limits locally before credential work without a 
       },
     };
     const handler = createAuthLoginStartHandler({
+      getAdmin: () => null,
       consumeLocalAttempt(request, email) {
         sequence.push('rate-limit');
         fallbackLimiter(request, email);
