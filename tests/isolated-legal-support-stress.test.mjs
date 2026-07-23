@@ -34,6 +34,8 @@ test('customer policy terms refund accessibility and support are complete public
   assert.match(legalPage, /Terms of service/);
   assert.match(legalPage, /Limitation of liability/);
   assert.match(legalPage, /Purchase does not automatically grant portfolio rights/);
+  assert.match(legalPage, /separate optional permission/);
+  assert.match(legalPage, /Automated spam-classification manipulation is prohibited/);
   assert.match(legalPage, /Customer support/);
   assert.match(legalPage, /Project dashboard and delivery/);
   assert.match(legalPage, /Security and abuse reports/);
