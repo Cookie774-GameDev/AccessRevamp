@@ -24,59 +24,42 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          set -o pipefail
-          node <<'NODE' 2>&1 | tee production-auth-probe.json
-          import assert from 'node:assert/strict';
-          import { randomUUID } from 'node:crypto';
+          set -u
+          : > production-auth-probe.txt
+          failed=0
+          for target in https://accessrevamp.com https://www.accessrevamp.com https://accessrevamp.netlify.app; do
+            echo "TARGET $target" | tee -a production-auth-probe.txt
 
-          const targets = [
-            'https://accessrevamp.com',
-            'https://www.accessrevamp.com',
-            'https://accessrevamp.netlify.app',
-          ];
+            account_body=$(mktemp)
+            account_status=$(curl --http1.1 -sS --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 \
+              -o "$account_body" -w '%{http_code}' \
+              -H "Origin: $target" -H 'Cache-Control: no-cache' \
+              "$target/api/account-projects" || echo 000)
+            echo "account_status=$account_status" | tee -a production-auth-probe.txt
+            head -c 500 "$account_body" | tee -a production-auth-probe.txt || true
+            echo | tee -a production-auth-probe.txt
 
-          const results = [];
-          for (const target of targets) {
-            const account = await fetch(`${target}/api/account-projects`, {
-              headers: { origin: target, 'cache-control': 'no-cache' },
-              signal: AbortSignal.timeout(20_000),
-            });
-            const accountBody = await account.text();
+            login_body=$(mktemp)
+            login_status=$(curl --http1.1 -sS --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 \
+              -o "$login_body" -w '%{http_code}' \
+              -X POST -H "Origin: $target" -H 'Content-Type: application/json' -H 'Cache-Control: no-cache' \
+              --data "{\"email\":\"auth-probe-${RANDOM}-${RANDOM}@example.invalid\",\"password\":\"DeliberatelyWrong!234\"}" \
+              "$target/api/auth-login-start" || echo 000)
+            echo "login_status=$login_status" | tee -a production-auth-probe.txt
+            head -c 500 "$login_body" | tee -a production-auth-probe.txt || true
+            echo | tee -a production-auth-probe.txt
 
-            const login = await fetch(`${target}/api/auth-login-start`, {
-              method: 'POST',
-              headers: {
-                origin: target,
-                'content-type': 'application/json',
-                'cache-control': 'no-cache',
-              },
-              body: JSON.stringify({
-                email: `auth-probe-${randomUUID()}@example.invalid`,
-                password: 'DeliberatelyWrong!234',
-              }),
-              signal: AbortSignal.timeout(20_000),
-            });
-            const loginBody = await login.text();
-
-            results.push({
-              target,
-              account: { status: account.status, body: accountBody.slice(0, 300) },
-              login: { status: login.status, body: loginBody.slice(0, 300) },
-            });
-          }
-
-          console.log(JSON.stringify(results, null, 2));
-          for (const result of results) {
-            assert.equal(result.account.status, 401, `${result.target} account endpoint returned ${result.account.status}: ${result.account.body}`);
-            assert.ok([401, 429].includes(result.login.status), `${result.target} login endpoint returned ${result.login.status}: ${result.login.body}`);
-          }
-          NODE
+            if [ "$account_status" != "401" ]; then failed=1; fi
+            if [ "$login_status" != "401" ] && [ "$login_status" != "429" ]; then failed=1; fi
+            rm -f "$account_body" "$login_body"
+          done
+          exit "$failed"
       - name: Upload probe output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: production-auth-probe
-          path: production-auth-probe.json
+          path: production-auth-probe.txt
           retention-days: 1
       - name: Publish diagnostic status
         if: always()
