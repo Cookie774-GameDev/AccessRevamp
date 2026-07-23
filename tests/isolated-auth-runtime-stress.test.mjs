@@ -3,7 +3,10 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { requireConfirmedUser } from '../netlify/functions/_shared/auth.mjs';
 import { createAuthLoginCompleteHandler } from '../netlify/functions/auth-login-complete.mjs';
-import { createAuthLoginStartHandler } from '../netlify/functions/auth-login-start.mjs';
+import {
+  createAuthLoginStartHandler,
+  createLocalAuthLimiter,
+} from '../netlify/functions/auth-login-start.mjs';
 
 const ORIGIN = 'https://accessrevamp.test';
 const USER_ID = '11111111-1111-4111-8111-111111111111';
@@ -28,20 +31,20 @@ function withOrigin(run) {
   });
 }
 
-test('password-first login rate-limits before credential work and uses authenticated RPCs', async () => {
+function rateLimitRequest(ip) {
+  return new Request(`${ORIGIN}/api/auth-login-start`, {
+    headers: { 'x-nf-client-connection-ip': ip },
+  });
+}
+
+test('password-first login rate-limits locally before credential work without a privileged public RPC', async () => {
   await withOrigin(async () => {
     let publicClientCalls = 0;
     let emailPayload;
     let challengeAccessToken;
     const sequence = [];
+    const fallbackLimiter = createLocalAuthLimiter();
     const passwordClient = {
-      async rpc(name, payload) {
-        sequence.push('rate-limit');
-        assert.equal(name, 'consume_accessrevamp_public_auth_attempt');
-        assert.match(payload.p_ip_key, /^[a-f0-9]{64}$/);
-        assert.match(payload.p_account_key, /^[a-f0-9]{64}$/);
-        return { data: null, error: null };
-      },
       auth: {
         async signInWithPassword() {
           sequence.push('password');
@@ -69,6 +72,10 @@ test('password-first login rate-limits before credential work and uses authentic
       },
     };
     const handler = createAuthLoginStartHandler({
+      consumeLocalAttempt(request, email) {
+        sequence.push('rate-limit');
+        fallbackLimiter(request, email);
+      },
       createPublicClient: () => (publicClientCalls++ === 0 ? passwordClient : emailClient),
       createAccessTokenClient: (accessToken) => {
         challengeAccessToken = accessToken;
@@ -86,7 +93,7 @@ test('password-first login rate-limits before credential work and uses authentic
       headers: {
         origin: ORIGIN,
         'content-type': 'application/json',
-        'x-forwarded-for': '203.0.113.42',
+        'x-nf-client-connection-ip': '203.0.113.42',
       },
       body: JSON.stringify({ email: 'customer@example.com', password: 'StrongPassword!234' }),
     }));
@@ -101,6 +108,53 @@ test('password-first login rate-limits before credential work and uses authentic
     assert.match(response.headers.get('set-cookie') || '', /HttpOnly; SameSite=Strict/);
     assert.doesNotMatch(JSON.stringify(body), new RegExp(CHALLENGE));
   });
+});
+
+test('local auth limiter resets expired windows and fails closed at bounded capacity', () => {
+  let currentTime = 1_000_000;
+  const limiter = createLocalAuthLimiter({
+    now: () => currentTime,
+    windowMs: 1_000,
+    capacity: 4,
+    ipMaximum: 2,
+    accountMaximum: 2,
+  });
+  const first = rateLimitRequest('203.0.113.10');
+
+  limiter(first, 'one@example.com');
+  limiter(first, 'one@example.com');
+  assert.throws(
+    () => limiter(first, 'one@example.com'),
+    (error) => error?.status === 429,
+  );
+
+  currentTime += 1_001;
+  limiter(first, 'one@example.com');
+  limiter(rateLimitRequest('203.0.113.11'), 'two@example.com');
+  assert.throws(
+    () => limiter(rateLimitRequest('203.0.113.12'), 'three@example.com'),
+    (error) => error?.status === 429,
+  );
+});
+
+test('local auth limiter remains bounded during high-cardinality abuse', () => {
+  const limiter = createLocalAuthLimiter({ capacity: 128 });
+  let accepted = 0;
+  let rejected = 0;
+
+  for (let index = 0; index < 2_000; index += 1) {
+    const ip = `198.51.${Math.floor(index / 256)}.${index % 256}`;
+    try {
+      limiter(rateLimitRequest(ip), `attacker-${index}@example.test`);
+      accepted += 1;
+    } catch (error) {
+      assert.equal(error?.status, 429);
+      rejected += 1;
+    }
+  }
+
+  assert.equal(accepted, 64);
+  assert.equal(rejected, 1_936);
 });
 
 test('service-scoped customer checks fall back to the verified-session row', async () => {
@@ -233,11 +287,19 @@ test('service-key-free email completion remains deterministic under concurrency'
   });
 });
 
-test('production migrations protect customer dashboard records, files, and auth limits', async () => {
-  const [runtimeMigration, designMigration, limiterMigration] = await Promise.all([
+test('production migrations protect customer records and keep auth limits service-only', async () => {
+  const [
+    runtimeMigration,
+    designMigration,
+    retiredPublicLimiterMigration,
+    correctiveLimiterMigration,
+    authRuntime,
+  ] = await Promise.all([
     readFile('supabase/migrations/20260723023000_public_customer_auth_runtime.sql', 'utf8'),
     readFile('supabase/migrations/20260723030000_customer_design_preview_storage.sql', 'utf8'),
     readFile('supabase/migrations/20260723033000_public_auth_rate_limiter.sql', 'utf8'),
+    readFile('supabase/migrations/20260723034500_lock_auth_rate_limiter_to_service_role.sql', 'utf8'),
+    readFile('netlify/functions/auth-login-start.mjs', 'utf8'),
   ]);
   assert.match(runtimeMigration, /begin_accessrevamp_email_signin/);
   assert.match(runtimeMigration, /complete_accessrevamp_email_signin_current/);
@@ -246,6 +308,12 @@ test('production migrations protect customer dashboard records, files, and auth 
   assert.match(runtimeMigration, /customer_private_assets_select_verified/);
   assert.match(designMigration, /project_design_options/);
   assert.match(designMigration, /customer_ready/);
-  assert.match(limiterMigration, /consume_accessrevamp_public_auth_attempt/);
-  assert.match(limiterMigration, /consume_accessrevamp_auth_attempt/);
+  assert.match(retiredPublicLimiterMigration, /drop function if exists public\.consume_accessrevamp_public_auth_attempt/);
+  assert.match(correctiveLimiterMigration, /revoke all on function public\.consume_accessrevamp_auth_attempt/);
+  assert.match(correctiveLimiterMigration, /to service_role/);
+  assert.doesNotMatch(authRuntime, /consume_accessrevamp_public_auth_attempt/);
+  assert.doesNotMatch(
+    `${retiredPublicLimiterMigration}\n${correctiveLimiterMigration}`,
+    /grant\s+execute\s+on\s+function\s+public\.consume_accessrevamp_(?:public_)?auth_attempt[\s\S]{0,120}\bto\s+(?:anon|authenticated)/i,
+  );
 });
