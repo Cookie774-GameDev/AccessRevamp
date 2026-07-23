@@ -147,6 +147,8 @@ async function authRequest(path, accessToken, options = {}) {
 const accessToken = managementAccessToken();
 const ref = projectRef();
 const siteUrl = secureSiteUrl();
+const smtp = smtpPayload();
+const customSmtpRequested = Boolean(smtp.smtp_host);
 const [confirmation, magicLink, recovery] = await Promise.all([
   readFile(new URL('supabase/templates/accessrevamp-confirmation.html', root), 'utf8'),
   readFile(new URL('supabase/templates/accessrevamp-magic-link.html', root), 'utf8'),
@@ -158,56 +160,94 @@ for (const [name, template] of [['confirmation', confirmation], ['magic link', m
   if (template.includes('{{ .ConfirmationURL }}')) throw new Error(`The ${name} template must not contain a verification link.`);
 }
 
-const payload = {
+const basePayload = {
   external_email_enabled: true,
   mailer_secure_email_change_enabled: true,
   mailer_autoconfirm: false,
   mailer_otp_exp: EMAIL_OTP_SECONDS,
   site_url: siteUrl,
   uri_allow_list: redirectAllowList(siteUrl),
+};
+
+const templatePayload = {
   mailer_subjects_confirmation: 'Your AccessRevamp confirmation code',
   mailer_templates_confirmation_content: confirmation,
   mailer_subjects_magic_link: 'Your AccessRevamp secure sign-in code',
   mailer_templates_magic_link_content: magicLink,
   mailer_subjects_recovery: 'Reset your AccessRevamp password',
   mailer_templates_recovery_content: recovery,
-  ...smtpPayload(),
 };
 
 if (process.argv.includes('--verify')) {
   const current = await authRequest(`/v1/projects/${ref}/config/auth`, accessToken);
   const currentConfirmation = String(current.mailer_templates_confirmation_content || '');
   const currentMagicLink = String(current.mailer_templates_magic_link_content || '');
-  const checks = {
+  const customSmtpConfigured = Boolean(current.smtp_host && current.smtp_admin_email);
+  const baseChecks = {
     emailProviderEnabled: current.external_email_enabled === true,
     emailConfirmationRequired: current.mailer_autoconfirm === false,
     emailOtpExpiresInTenMinutes: Number(current.mailer_otp_exp) === EMAIL_OTP_SECONDS,
     siteUrlMatches: String(current.site_url || '').replace(/\/$/, '') === siteUrl,
     productionSiteIsNotLocalhost: !/localhost|127\.0\.0\.1/i.test(String(current.site_url || '')),
+    productionRedirectsAllowed: productionOrigins(siteUrl).every((origin) => String(current.uri_allow_list || '').includes(`${origin}/login`)),
+  };
+  const templateChecks = {
     confirmationTemplateBranded: currentConfirmation.includes('AccessRevamp'),
     confirmationTemplateUsesCode: currentConfirmation.includes('{{ .Token }}'),
     confirmationTemplateHasNoVerifyLink: !currentConfirmation.includes('{{ .ConfirmationURL }}'),
     signInTemplateBranded: currentMagicLink.includes('AccessRevamp'),
     signInTemplateUsesCode: currentMagicLink.includes('{{ .Token }}'),
     signInTemplateHasNoVerifyLink: !currentMagicLink.includes('{{ .ConfirmationURL }}'),
-    customSmtpConfigured: Boolean(current.smtp_host && current.smtp_admin_email),
   };
-  console.log(JSON.stringify(checks, null, 2));
-  if (!Object.entries(checks).filter(([name]) => name !== 'customSmtpConfigured').every(([, value]) => value)) {
-    process.exitCode = 1;
-  }
+  const checks = {
+    ...baseChecks,
+    customSmtpConfigured,
+    officialCodeTemplatesActive: customSmtpConfigured && Object.values(templateChecks).every(Boolean),
+    ...(customSmtpRequested ? templateChecks : {}),
+  };
+  console.log(JSON.stringify({
+    ...checks,
+    emailDeliveryMode: checks.officialCodeTemplatesActive ? 'official-six-digit-code' : 'production-link-fallback',
+    customSmtpRequiredForCodeTemplates: !checks.officialCodeTemplatesActive,
+  }, null, 2));
+  const baseValid = Object.values(baseChecks).every(Boolean);
+  const requestedTemplatesValid = !customSmtpRequested
+    || (customSmtpConfigured && Object.values(templateChecks).every(Boolean));
+  if (!baseValid || !requestedTemplatesValid) process.exitCode = 1;
 } else {
+  // Apply the production URL and redirect allow list independently. Supabase Free
+  // projects using the built-in mailer reject template modifications, but they
+  // still allow these safety-critical Auth settings.
   await authRequest(`/v1/projects/${ref}/config/auth`, accessToken, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(basePayload),
   });
+
+  let officialCodeTemplatesActive = false;
+  if (customSmtpRequested) {
+    // Configure the custom transport before modifying templates so Free projects
+    // no longer use Supabase's restricted built-in mailer.
+    await authRequest(`/v1/projects/${ref}/config/auth`, accessToken, {
+      method: 'PATCH',
+      body: JSON.stringify(smtp),
+    });
+    await authRequest(`/v1/projects/${ref}/config/auth`, accessToken, {
+      method: 'PATCH',
+      body: JSON.stringify(templatePayload),
+    });
+    officialCodeTemplatesActive = true;
+  }
+
   console.log(JSON.stringify({
     updated: true,
     projectRef: ref,
     siteUrl,
-    emailVerificationMode: 'six-digit-code',
+    productionRedirectsConfigured: true,
     emailOtpExpiresInSeconds: EMAIL_OTP_SECONDS,
-    customSmtpConfigured: Boolean(payload.smtp_host),
+    customSmtpConfigured: customSmtpRequested,
+    officialCodeTemplatesActive,
+    emailDeliveryMode: officialCodeTemplatesActive ? 'official-six-digit-code' : 'production-link-fallback',
+    customSmtpRequiredForCodeTemplates: !officialCodeTemplatesActive,
     credentialsPrinted: false,
   }, null, 2));
 }
