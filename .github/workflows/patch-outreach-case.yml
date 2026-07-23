@@ -1,0 +1,44 @@
+name: Normalize outreach commitment case
+
+on:
+  push:
+    branches: [feat/legal-privacy-support-pages]
+    paths:
+      - .github/workflows/patch-outreach-case.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/legal-privacy-support-pages
+      - name: Normalize exact public statement
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          legal = Path('src/pages/legal.js')
+          text = legal.read_text()
+          old = 'Automated spam-classification manipulation is prohibited.'
+          new = 'automated spam-classification manipulation is prohibited.'
+          if old not in text:
+              raise SystemExit('Expected outreach statement was not found.')
+          legal.write_text(text.replace(old, new, 1))
+
+          test_file = Path('tests/isolated-legal-support-stress.test.mjs')
+          test_text = test_file.read_text()
+          if '/Automated spam-classification manipulation is prohibited/' not in test_text:
+              raise SystemExit('Expected outreach test was not found.')
+          test_file.write_text(test_text.replace('/Automated spam-classification manipulation is prohibited/', '/automated spam-classification manipulation is prohibited/', 1))
+
+          Path('.github/workflows/patch-outreach-case.yml').unlink()
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/pages/legal.js tests/isolated-legal-support-stress.test.mjs .github/workflows/patch-outreach-case.yml
+          git commit -m "Normalize outreach policy commitment"
+          git push origin HEAD:feat/legal-privacy-support-pages
