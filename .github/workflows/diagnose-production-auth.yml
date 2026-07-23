@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   probe:
@@ -19,9 +20,12 @@ jobs:
         with:
           node-version: 22
       - name: Probe custom and Netlify production origins
+        id: probe
+        continue-on-error: true
         shell: bash
         run: |
-          node <<'NODE'
+          set -o pipefail
+          node <<'NODE' 2>&1 | tee production-auth-probe.json
           import assert from 'node:assert/strict';
           import { randomUUID } from 'node:crypto';
 
@@ -66,4 +70,38 @@ jobs:
             assert.equal(result.account.status, 401, `${result.target} account endpoint returned ${result.account.status}: ${result.account.body}`);
             assert.ok([401, 429].includes(result.login.status), `${result.target} login endpoint returned ${result.login.status}: ${result.login.body}`);
           }
+          NODE
+      - name: Upload probe output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-auth-probe
+          path: production-auth-probe.json
+          retention-days: 1
+      - name: Publish diagnostic status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PROBE_OUTCOME: ${{ steps.probe.outcome }}
+          TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const passed = process.env.PROBE_OUTCOME === 'success';
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/vnd.github+json',
+              authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'content-type': 'application/json',
+              'x-github-api-version': '2022-11-28',
+            },
+            body: JSON.stringify({
+              state: passed ? 'success' : 'failure',
+              context: 'accessrevamp/production-auth-probe',
+              description: passed ? 'Production auth endpoints are configured' : 'Production auth endpoints are failing',
+              target_url: process.env.TARGET_URL,
+            }),
+          });
+          if (!response.ok) throw new Error(`Status API returned ${response.status}`);
+          if (!passed) process.exitCode = 1;
           NODE
