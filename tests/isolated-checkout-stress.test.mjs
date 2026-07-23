@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createCheckoutHandler } from '../netlify/functions/create-checkout.mjs';
+import { requireCheckoutRuntime } from '../netlify/functions/_shared/payment-runtime.mjs';
 import { installIsolatedPaymentEnv, PaymentHarness } from './helpers/isolated-payment-core.mjs';
 import { checkoutRequest, FakeStripe, readJson } from './helpers/isolated-stripe.mjs';
 
@@ -12,9 +13,27 @@ function setup(planKey = 'complete_revamp') {
   const stripe = new FakeStripe(harness);
   const { user, token } = harness.addUser();
   const draft = harness.addDraft(user, planKey);
-  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
+  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
   return { harness, stripe, user, token, draft, handler };
 }
+
+test('public Checkout handler rejects a non-live runtime before reservation or provider access', async () => {
+  const harness = new PaymentHarness();
+  const stripe = new FakeStripe(harness);
+  const { user, token } = harness.addUser();
+  const draft = harness.addDraft(user, 'complete_revamp');
+  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
+
+  const response = await handler(checkoutRequest({
+    token,
+    requestId: draft.request_id,
+    targetTier: draft.plan_key,
+  }));
+
+  assert.equal(response.status, 503);
+  assert.equal(harness.reservations.size, 0);
+  assert.equal(stripe.checkoutAttempts, 0);
+});
 
 test('250 duplicate checkout submissions collapse into one provider session', { timeout: 30_000 }, async () => {
   const fixture = setup();
@@ -36,7 +55,7 @@ test('250 duplicate checkout submissions collapse into one provider session', { 
 test('40-customer burst keeps every user, request, plan and session isolated', { timeout: 30_000 }, async () => {
   const harness = new PaymentHarness();
   const stripe = new FakeStripe(harness);
-  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
+  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
   const fixtures = Array.from({ length: 40 }, (_, index) => {
     const { user, token } = harness.addUser(`burst-${index}@example.test`);
     const plan = ['homepage_reveal', 'complete_revamp', 'cinematic_scroll'][index % 3];

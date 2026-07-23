@@ -1,4 +1,3 @@
-import { siteConfig } from '../config.js';
 import { primaryNavigation } from '../data/navigation.js';
 import { brandLink } from './brand.js';
 import { escapeHtml, icon } from './icons.js';
@@ -9,12 +8,6 @@ const navLink = ([href, label], pathname) => {
   const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
   return `<a href="${href}" data-nav${active ? ' aria-current="page"' : ''}>${escapeHtml(label)}</a>`;
 };
-
-export function sandboxBadge() {
-  return siteConfig.checkoutIsSandbox
-    ? '<span class="sandbox-badge" title="Stripe test mode is active"><i></i> Sandbox checkout</span>'
-    : '';
-}
 
 export function shell(content, { pathname = location.pathname, home = false, pageClass = '' } = {}) {
   const primary = primaryNavigation.map((item) => navLink(item, pathname)).join('');
@@ -36,7 +29,7 @@ export function shell(content, { pathname = location.pathname, home = false, pag
       <div class="container-wide footer-main">
         <div class="footer-brand">${brandLink()}<p>Verified friction, a clearer hierarchy, and a one-time path to a better website.</p></div>
         <div class="footer-links"><div><h2>Explore</h2><a href="/portfolio" data-nav>Portfolio</a><a href="/free-snapshot" data-nav>Free snapshot</a><a href="/sample-report" data-nav>Sample report</a><a href="/methodology" data-nav>Methodology</a><a href="/support" data-nav>Customer support</a></div><div><h2>Policies</h2><a href="/legal" data-nav>Policy center</a><a href="/policy" data-nav>Customer policy</a><a href="/privacy" data-nav>Privacy policy</a><a href="/terms" data-nav>Terms</a><a href="/refunds" data-nav>Refunds</a><a href="/accessibility" data-nav>Accessibility</a></div></div>
-        <div class="footer-statement"><span>Evidence first.<br/>Human reviewed.<br/>One-time scope.</span>${sandboxBadge()}<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></div>
+        <div class="footer-statement"><span>Evidence first.<br/>Human reviewed.<br/>One-time scope.</span><a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></div>
       </div>
       <div class="container-wide footer-bottom"><span>© ${new Date().getFullYear()} AccessRevamp</span><span>One-time services · Clear scope · Private customer delivery</span></div>
     </footer>

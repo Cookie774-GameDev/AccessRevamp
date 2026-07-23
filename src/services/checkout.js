@@ -1,3 +1,4 @@
+import { siteConfig } from '../config.js';
 import { getSupabase } from '../lib/supabase.js';
 
 const CHECKOUT_ENDPOINT = '/api/create-checkout';
@@ -17,7 +18,7 @@ function validatedStripeUrl(value) {
   return url.toString();
 }
 
-function setCheckoutFailure(control, message) {
+function setCheckoutMessage(control, message) {
   control.textContent = message;
   control.setAttribute('aria-label', message);
 }
@@ -37,7 +38,7 @@ export function setupCheckout() {
 
     const targetTier = control.dataset.checkout;
     if (!PAID_PLANS.has(targetTier)) {
-      setCheckoutFailure(control, 'Choose a valid plan');
+      setCheckoutMessage(control, 'Choose a valid plan');
       return;
     }
 
@@ -48,13 +49,13 @@ export function setupCheckout() {
       return;
     }
     if (!form.reportValidity()) {
-      setCheckoutFailure(control, 'Complete the project request');
+      setCheckoutMessage(control, 'Complete the project request');
       return;
     }
 
     let requestId = form.dataset.orderRequestId;
     if (!validRequestId(requestId)) {
-      setCheckoutFailure(control, 'Reload and try again');
+      setCheckoutMessage(control, 'Reload and try again');
       return;
     }
 
@@ -66,11 +67,11 @@ export function setupCheckout() {
 
     try {
       const supabase = getSupabase();
-      if (!supabase) throw new Error('Account checkout is not configured.');
+      if (!supabase) throw new Error('Customer account access is not configured.');
       const { data, error } = await supabase.auth.getSession();
       const session = data?.session;
       if (error || !session?.access_token) {
-        setCheckoutFailure(control, 'Sign in to continue');
+        setCheckoutMessage(control, 'Sign in to continue');
         return;
       }
 
@@ -100,7 +101,14 @@ export function setupCheckout() {
         }));
       }
 
-      control.textContent = 'Opening secure Stripe checkout…';
+      if (!siteConfig.liveCheckoutEnabled) {
+        setCheckoutMessage(control, 'Project request saved for review');
+        const status = form.querySelector('[data-order-status]');
+        if (status) status.textContent = 'Project request saved. No payment was started.';
+        return;
+      }
+
+      control.textContent = 'Opening secure payment…';
       const response = await fetch(CHECKOUT_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -114,12 +122,12 @@ export function setupCheckout() {
         throw new Error(response.status === 503
           ? 'Secure checkout is paused — your request is saved'
           : response.status === 409
-            ? 'The previous Checkout attempt ended — click once more to safely start a fresh attempt'
+            ? 'The previous payment attempt ended — click once more to safely start a fresh attempt'
             : 'Checkout is temporarily unavailable — your request is saved');
       }
       location.assign(validatedStripeUrl(payload.url));
     } catch (error) {
-      setCheckoutFailure(control, error?.message || 'Checkout unavailable — try again');
+      setCheckoutMessage(control, error?.message || 'Checkout unavailable — try again');
       return;
     } finally {
       if (document.contains(control)

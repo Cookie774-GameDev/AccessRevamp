@@ -1,4 +1,4 @@
-import { plans } from '../config.js';
+import { plans, siteConfig } from '../config.js';
 import { escapeHtml } from '../components/icons.js';
 
 const STORAGE_KEY = 'accessrevamp-order-draft-v1';
@@ -84,9 +84,9 @@ export function setupOrderWizard(root = document) {
     const portfolioSummary = form.elements.portfolioConsent?.checked
       ? 'Optional portfolio permission granted; future use remains revocable.'
       : 'No portfolio permission granted.';
-    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div>${cinematicSummary}<div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
+    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div>${cinematicSummary}<div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>${siteConfig.liveCheckoutEnabled ? 'Calculated during secure payment when applicable' : 'Not collected with this request'}</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
     checkout.dataset.checkout = plan.key;
-    checkout.textContent = `Continue with ${plan.name}`;
+    checkout.textContent = siteConfig.liveCheckoutEnabled ? `Continue with ${plan.name}` : `Save ${plan.name} request`;
   };
   const updatePlanFields = () => {
     const enabled = selectedPlan() === 'cinematic_scroll';
@@ -104,7 +104,7 @@ export function setupOrderWizard(root = document) {
     steps.forEach((step, stepIndex) => step.setAttribute('aria-current', stepIndex === current ? 'step' : 'false'));
     previous.hidden = current === 0;
     next.hidden = current === 4;
-    next.textContent = current === 3 ? 'Continue to payment' : 'Continue';
+    next.textContent = current === 3 ? (siteConfig.liveCheckoutEnabled ? 'Continue to payment' : 'Continue to submit') : 'Continue';
     status.textContent = `Step ${current + 1} of 5`;
     if (current === 2) renderQuestionPlan();
     if (current >= 3) renderSummary();

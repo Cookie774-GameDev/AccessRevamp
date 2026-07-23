@@ -19,7 +19,7 @@ import {
 } from './_shared/http.mjs';
 import {
   recordPaymentIncident,
-  requireCheckoutRuntime,
+  requireLiveCheckoutRuntime,
   resolveCatalogPrice,
 } from './_shared/payment-runtime.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
@@ -41,6 +41,7 @@ export function createCheckoutHandler({
     maxNetworkRetries: 2,
     appInfo: { name: 'AccessRevamp', version: '3.1.0' },
   }),
+  requireRuntime = requireLiveCheckoutRuntime,
 } = {}) {
   return async function checkoutHandler(request) {
     let admin;
@@ -64,7 +65,7 @@ export function createCheckoutHandler({
         throw new HttpError(503, 'Checkout service is unavailable.');
       }
       const user = await requireConfirmedUser(request, admin);
-      const runtime = await requireCheckoutRuntime(admin, process.env);
+      const runtime = await requireRuntime(admin, process.env);
 
       const { data: draft, error: draftError } = await admin
         .from('order_drafts')
