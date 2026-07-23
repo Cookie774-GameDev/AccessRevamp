@@ -1,6 +1,6 @@
 {
   "status": "optimized",
-  "generatedAt": "2026-07-23T00:46:54.833Z",
+  "generatedAt": "2026-07-23T01:29:52.947Z",
   "optimizationRequired": true,
   "maximumOutputBytes": null,
   "encoder": {
@@ -40,13 +40,13 @@
       "filename": "olympus-normal.mp4",
       "status": "optimized",
       "originalBytes": 5699754,
-      "optimizedBytes": 5618665
+      "optimizedBytes": 5618655
     },
     {
       "filename": "olympus-cinematic.mp4",
       "status": "optimized",
       "originalBytes": 5553071,
-      "optimizedBytes": 5438861
+      "optimizedBytes": 5438868
     }
   ]
 }
