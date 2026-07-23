@@ -79,5 +79,5 @@ export async function requireConfirmedUser(
     throw new HttpError(403, 'Complete password and email verification to continue.');
   }
 
-  return Object.freeze({ id, email, sessionId, accessToken });
+  return Object.freeze({ id, email, sessionId });
 }
