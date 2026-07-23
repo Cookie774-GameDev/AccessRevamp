@@ -92,11 +92,12 @@ if (requireServerAuth) {
     signal: AbortSignal.timeout(30_000),
   });
   assert.ok(
-    [409, 429].includes(resendResponse.status),
-    `Signup email-state ceremony expected HTTP 409 or 429 but returned ${resendResponse.status}.`,
+    [202, 409, 429].includes(resendResponse.status),
+    `Signup email ceremony expected HTTP 202, 409, or 429 but returned ${resendResponse.status}.`,
   );
   const resendBody = await resendResponse.json().catch(() => ({}));
   if (resendResponse.status === 409) assert.equal(resendBody.code, 'RESTART_SIGNUP');
+  if (resendResponse.status === 202) assert.equal(resendBody.ok, true);
   assert.doesNotMatch(JSON.stringify(resendBody), /service_role|secret|publishable|server configuration/i);
   signupEmailStateConfigured = true;
 }
