@@ -73,6 +73,7 @@ function redirectAllowList(siteUrl) {
     `${origin}/login`,
     `${origin}/signup`,
     `${origin}/account/projects`,
+    `${origin}/dashboard`,
     `${origin}/reset-password`,
     // Compatibility only for verification links issued before the OTP rollout.
     `${origin}/login?confirmed=1`,
@@ -91,20 +92,48 @@ function smtpPayload() {
   ];
   const values = Object.fromEntries(names.map((name) => [name, String(process.env[name] || '').trim()]));
   const supplied = names.filter((name) => values[name]);
-  if (!supplied.length) return {};
-  if (supplied.length !== names.length) {
+  const resendApiKey = String(process.env.RESEND_API_KEY || '').trim();
+  const resendFromEmail = String(process.env.ACCESSREVAMP_FROM_EMAIL || '').trim();
+  const resendSupplied = [resendApiKey, resendFromEmail].filter(Boolean).length;
+
+  if (supplied.length && resendSupplied) {
+    throw new Error('Choose either the five SUPABASE_SMTP_* values or the RESEND_API_KEY and ACCESSREVAMP_FROM_EMAIL pair, not both.');
+  }
+  if (supplied.length && supplied.length !== names.length) {
     throw new Error('All SUPABASE_SMTP_* credentials are required when enabling custom SMTP.');
   }
-  const port = Number(values.SUPABASE_SMTP_PORT);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('SUPABASE_SMTP_PORT is invalid.');
-  return {
-    smtp_admin_email: values.SUPABASE_SMTP_ADMIN_EMAIL,
-    smtp_host: values.SUPABASE_SMTP_HOST,
-    smtp_port: port,
-    smtp_user: values.SUPABASE_SMTP_USER,
-    smtp_pass: values.SUPABASE_SMTP_PASS,
-    smtp_sender_name: String(process.env.SUPABASE_SMTP_SENDER_NAME || 'AccessRevamp').trim(),
-  };
+  if (resendSupplied && resendSupplied !== 2) {
+    throw new Error('Both RESEND_API_KEY and ACCESSREVAMP_FROM_EMAIL are required when enabling Resend SMTP.');
+  }
+
+  if (supplied.length === names.length) {
+    const port = Number(values.SUPABASE_SMTP_PORT);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('SUPABASE_SMTP_PORT is invalid.');
+    return {
+      smtp_admin_email: values.SUPABASE_SMTP_ADMIN_EMAIL,
+      smtp_host: values.SUPABASE_SMTP_HOST,
+      smtp_port: port,
+      smtp_user: values.SUPABASE_SMTP_USER,
+      smtp_pass: values.SUPABASE_SMTP_PASS,
+      smtp_sender_name: String(process.env.SUPABASE_SMTP_SENDER_NAME || 'AccessRevamp').trim(),
+    };
+  }
+
+  if (resendSupplied === 2) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail)) {
+      throw new Error('ACCESSREVAMP_FROM_EMAIL must be a verified sender email address.');
+    }
+    return {
+      smtp_admin_email: resendFromEmail,
+      smtp_host: 'smtp.resend.com',
+      smtp_port: 465,
+      smtp_user: 'resend',
+      smtp_pass: resendApiKey,
+      smtp_sender_name: 'AccessRevamp',
+    };
+  }
+
+  return {};
 }
 
 function apiErrorMessage(data) {
@@ -149,6 +178,7 @@ const ref = projectRef();
 const siteUrl = secureSiteUrl();
 const smtp = smtpPayload();
 const customSmtpRequested = Boolean(smtp.smtp_host);
+const smtpMode = !customSmtpRequested ? 'none' : smtp.smtp_host === 'smtp.resend.com' ? 'resend' : 'custom';
 const [confirmation, magicLink, recovery] = await Promise.all([
   readFile(new URL('supabase/templates/accessrevamp-confirmation.html', root), 'utf8'),
   readFile(new URL('supabase/templates/accessrevamp-magic-link.html', root), 'utf8'),
@@ -207,6 +237,7 @@ if (process.argv.includes('--verify')) {
   };
   console.log(JSON.stringify({
     ...checks,
+    smtpMode,
     emailDeliveryMode: checks.officialCodeTemplatesActive ? 'official-six-digit-code' : 'production-link-fallback',
     customSmtpRequiredForCodeTemplates: !checks.officialCodeTemplatesActive,
   }, null, 2));
@@ -215,9 +246,9 @@ if (process.argv.includes('--verify')) {
     || (customSmtpConfigured && Object.values(templateChecks).every(Boolean));
   if (!baseValid || !requestedTemplatesValid) process.exitCode = 1;
 } else {
-  // Apply the production URL and redirect allow list independently. Supabase Free
-  // projects using the built-in mailer reject template modifications, but they
-  // still allow these safety-critical Auth settings.
+  // Apply the production URL and redirect allow list independently. Free projects
+  // using the built-in mailer reject template modifications, but they still allow
+  // these safety-critical Auth settings.
   await authRequest(`/v1/projects/${ref}/config/auth`, accessToken, {
     method: 'PATCH',
     body: JSON.stringify(basePayload),
@@ -225,8 +256,8 @@ if (process.argv.includes('--verify')) {
 
   let officialCodeTemplatesActive = false;
   if (customSmtpRequested) {
-    // Configure the custom transport before modifying templates so Free projects
-    // no longer use Supabase's restricted built-in mailer.
+    // Configure the custom transport before modifying templates so restricted
+    // built-in email delivery is replaced by the verified AccessRevamp sender.
     await authRequest(`/v1/projects/${ref}/config/auth`, accessToken, {
       method: 'PATCH',
       body: JSON.stringify(smtp),
@@ -245,6 +276,7 @@ if (process.argv.includes('--verify')) {
     productionRedirectsConfigured: true,
     emailOtpExpiresInSeconds: EMAIL_OTP_SECONDS,
     customSmtpConfigured: customSmtpRequested,
+    smtpMode,
     officialCodeTemplatesActive,
     emailDeliveryMode: officialCodeTemplatesActive ? 'official-six-digit-code' : 'production-link-fallback',
     customSmtpRequiredForCodeTemplates: !officialCodeTemplatesActive,
