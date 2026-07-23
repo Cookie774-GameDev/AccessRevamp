@@ -39,6 +39,7 @@ test('customer policy terms refund accessibility and support are complete public
   assert.match(legalPage, /Customer support/);
   assert.match(legalPage, /Project dashboard and delivery/);
   assert.match(legalPage, /Security and abuse reports/);
+  assert.match(legalPage, /Response targets are goals, not guaranteed service-level commitments/);
 });
 
 test('support email is valid visible and linked across policy pages and footer', () => {
