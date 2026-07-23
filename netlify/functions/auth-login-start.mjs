@@ -20,7 +20,6 @@ const CHALLENGE_COOKIE_PATH = '/api/auth-login-complete';
 const CHALLENGE_PATTERN = /^(?:[a-f0-9]{64}|[A-Za-z0-9_-]{32,128})$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RATE_WINDOW_MS = 60 * 60 * 1000;
-const LOCAL_RATE_LIMITS = new Map();
 const LOCAL_RATE_LIMIT_CAP = 2_000;
 
 function normalizeCredentials(payload) {
@@ -63,30 +62,75 @@ function localRateKey(scope, value) {
   return createHash('sha256').update(`accessrevamp-local-auth-v1:${scope}:${value}`).digest('hex');
 }
 
-function consumeLocalRateKey(key, maximum, now = Date.now()) {
-  const previous = LOCAL_RATE_LIMITS.get(key);
-  const record = !previous || previous.startedAt <= now - RATE_WINDOW_MS
-    ? { startedAt: now, count: 0 }
-    : previous;
-  if (record.count >= maximum) {
-    throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
-  }
-  record.count += 1;
-  LOCAL_RATE_LIMITS.set(key, record);
-
-  if (LOCAL_RATE_LIMITS.size > LOCAL_RATE_LIMIT_CAP) {
-    for (const [candidate, value] of LOCAL_RATE_LIMITS) {
-      if (value.startedAt <= now - RATE_WINDOW_MS) LOCAL_RATE_LIMITS.delete(candidate);
-      if (LOCAL_RATE_LIMITS.size <= LOCAL_RATE_LIMIT_CAP) break;
+export function createLocalAuthLimiter({
+  now = () => Date.now(),
+  windowMs = RATE_WINDOW_MS,
+  capacity = LOCAL_RATE_LIMIT_CAP,
+  ipMaximum = 25,
+  accountMaximum = 8,
+} = {}) {
+  for (const [name, value] of Object.entries({ windowMs, capacity, ipMaximum, accountMaximum })) {
+    if (!Number.isSafeInteger(value) || value < 1) {
+      throw new TypeError(`${name} must be a positive safe integer.`);
     }
   }
+
+  const records = new Map();
+
+  function activeRecord(key, currentTime) {
+    const record = records.get(key);
+    if (!record) return null;
+    if (record.startedAt <= currentTime - windowMs) {
+      records.delete(key);
+      return null;
+    }
+    return record;
+  }
+
+  function pruneExpired(currentTime) {
+    for (const [key, record] of records) {
+      if (record.startedAt <= currentTime - windowMs) records.delete(key);
+    }
+  }
+
+  return function consumeLocalAuthAttempt(request, email) {
+    const currentTime = Number(now());
+    if (!Number.isFinite(currentTime)) {
+      throw new HttpError(503, 'Sign-in protection is unavailable.');
+    }
+
+    const ip = requestIp(request);
+    const candidates = [
+      { key: localRateKey('auth-ip', ip), maximum: ipMaximum },
+      { key: localRateKey('auth-account', `${ip}:${email}`), maximum: accountMaximum },
+    ];
+    const existing = candidates.map(({ key }) => activeRecord(key, currentTime));
+    const missing = existing.filter((record) => !record).length;
+
+    if (records.size + missing > capacity) {
+      pruneExpired(currentTime);
+      if (records.size + missing > capacity) {
+        throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
+      }
+    }
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const record = existing[index];
+      if (record && record.count >= candidates[index].maximum) {
+        throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
+      }
+    }
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const { key } = candidates[index];
+      const record = existing[index] || { startedAt: currentTime, count: 0 };
+      record.count += 1;
+      records.set(key, record);
+    }
+  };
 }
 
-function consumeLocalAuthAttempt(request, email) {
-  const ip = requestIp(request);
-  consumeLocalRateKey(localRateKey('auth-ip', ip), 25);
-  consumeLocalRateKey(localRateKey('auth-account', `${ip}:${email}`), 8);
-}
+const consumeDefaultLocalAuthAttempt = createLocalAuthLimiter();
 
 async function consumeAuthAttempt(admin, request, email, env = process.env) {
   const secret = String(env.AUTH_RATE_LIMIT_SECRET || env.CONTACT_RATE_LIMIT_SECRET || '');
@@ -101,29 +145,6 @@ async function consumeAuthAttempt(admin, request, email, env = process.env) {
       throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
     }
     throw new HttpError(503, 'Sign-in protection is unavailable.');
-  }
-}
-
-async function consumePublicAuthAttempt(client, request, email, env = process.env) {
-  const secret = String(env.AUTH_RATE_LIMIT_SECRET || env.CONTACT_RATE_LIMIT_SECRET || '');
-  if (secret.length < 24) {
-    // Serverless instances are still protected before password validation when
-    // no shared secret has been provisioned. The account provider's own global
-    // throttles and the post-password database challenge limit remain active too.
-    consumeLocalAuthAttempt(request, email);
-    return;
-  }
-
-  const ip = requestIp(request);
-  const result = await client.rpc('consume_accessrevamp_public_auth_attempt', {
-    p_ip_key: requestRateKey(secret, 'auth-ip', ip),
-    p_account_key: requestRateKey(secret, 'auth-account', `${ip}:${email}`),
-  });
-  if (result.error) {
-    if (/rate limit|too many/i.test(result.error.message || '')) {
-      throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
-    }
-    throw new HttpError(503, 'Sign-in protection is temporarily unavailable.');
   }
 }
 
@@ -177,6 +198,7 @@ export function createAuthLoginStartHandler({
   getAdmin,
   createPublicClient = createSupabasePublicClient,
   createAccessTokenClient = createSupabaseAccessTokenClient,
+  consumeLocalAttempt = consumeDefaultLocalAuthAttempt,
   now = () => Date.now(),
   createToken = () => randomBytes(32).toString('base64url'),
 } = {}) {
@@ -190,14 +212,16 @@ export function createAuthLoginStartHandler({
       assertJsonSize(request);
       const credentials = normalizeCredentials(await readJsonBody(request));
 
-      passwordClient = createPublicClient();
       if (getAdmin) {
         admin = getAdmin();
+      }
+      if (admin) {
         await consumeAuthAttempt(admin, request, credentials.email);
       } else {
-        await consumePublicAuthAttempt(passwordClient, request, credentials.email);
+        consumeLocalAttempt(request, credentials.email);
       }
 
+      passwordClient = createPublicClient();
       const passwordResult = await passwordClient.auth.signInWithPassword(credentials);
       if (passwordResult.error || !passwordResult.data?.user || !passwordResult.data?.session?.access_token) {
         throw new HttpError(401, 'Email or password is incorrect.');
