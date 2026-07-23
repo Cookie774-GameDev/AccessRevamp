@@ -9,6 +9,7 @@ import {
   readJsonBody,
   requestIp,
 } from './_shared/http.mjs';
+import { getSupabaseServiceRoleClient } from './_shared/supabase-admin.mjs';
 import {
   createSupabaseAccessTokenClient,
   createSupabasePublicClient,
@@ -195,7 +196,7 @@ async function createLegacyChallenge(admin, user, email, {
 }
 
 export function createAuthLoginStartHandler({
-  getAdmin,
+  getAdmin = getSupabaseServiceRoleClient,
   createPublicClient = createSupabasePublicClient,
   createAccessTokenClient = createSupabaseAccessTokenClient,
   consumeLocalAttempt = consumeDefaultLocalAuthAttempt,
@@ -212,9 +213,7 @@ export function createAuthLoginStartHandler({
       assertJsonSize(request);
       const credentials = normalizeCredentials(await readJsonBody(request));
 
-      if (getAdmin) {
-        admin = getAdmin();
-      }
+      admin = getAdmin();
       if (admin) {
         await consumeAuthAttempt(admin, request, credentials.email);
       } else {
