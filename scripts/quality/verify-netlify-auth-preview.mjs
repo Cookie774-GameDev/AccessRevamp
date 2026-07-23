@@ -37,7 +37,7 @@ while (Date.now() < deadline) {
     }));
     bundleText = bundles.join('\n');
     if (bundleText.includes(PROJECT_URL) && bundleText.includes(PUBLISHABLE_KEY)) break;
-    throw new Error('The latest Supabase-connected browser bundle is not published yet.');
+    throw new Error('The latest account-connected browser bundle is not published yet.');
   } catch (error) {
     lastError = String(error?.message || error);
   }
@@ -51,6 +51,7 @@ assert.match(bundleText, new RegExp(PUBLISHABLE_KEY));
 
 let customerApiConfigured = null;
 let passwordCeremonyConfigured = null;
+let signupEmailStateConfigured = null;
 if (requireServerAuth) {
   const accountResponse = await fetch(`${target}/api/account-projects`, {
     headers: { origin: target },
@@ -78,16 +79,35 @@ if (requireServerAuth) {
     `Password ceremony expected HTTP 401 or 429 but returned ${loginResponse.status}.`,
   );
   const loginBody = await loginResponse.json().catch(() => ({}));
-  assert.doesNotMatch(JSON.stringify(loginBody), /service_role|secret|publishable|supabase server configuration/i);
+  assert.doesNotMatch(JSON.stringify(loginBody), /service_role|secret|publishable|server configuration/i);
   passwordCeremonyConfigured = true;
+
+  const resendResponse = await fetch(`${target}/api/auth-signup-resend`, {
+    method: 'POST',
+    headers: {
+      origin: target,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ email: `netlify-signup-smoke-${randomUUID()}@example.invalid` }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  assert.ok(
+    [409, 429].includes(resendResponse.status),
+    `Signup email-state ceremony expected HTTP 409 or 429 but returned ${resendResponse.status}.`,
+  );
+  const resendBody = await resendResponse.json().catch(() => ({}));
+  if (resendResponse.status === 409) assert.equal(resendBody.code, 'RESTART_SIGNUP');
+  assert.doesNotMatch(JSON.stringify(resendBody), /service_role|secret|publishable|server configuration/i);
+  signupEmailStateConfigured = true;
 }
 
 console.log(JSON.stringify({
   netlifyTarget: target,
   signupPageReady: true,
-  publicSupabaseConfigBundled: true,
+  publicAccountConfigBundled: true,
   serverAuthenticationRequired: requireServerAuth,
   customerApiConfigured,
   passwordCeremonyConfigured,
+  signupEmailStateConfigured,
   credentialsPrinted: false,
 }, null, 2));
