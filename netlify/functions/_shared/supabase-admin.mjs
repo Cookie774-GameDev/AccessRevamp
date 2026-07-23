@@ -7,7 +7,7 @@ let client;
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) throw new Error('Supabase server configuration is missing.');
+  if (!key) throw new Error('Secure server configuration is missing.');
   if (!client) {
     client = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
