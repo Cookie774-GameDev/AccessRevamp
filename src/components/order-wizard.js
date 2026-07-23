@@ -1,4 +1,4 @@
-import { plans } from '../config.js';
+import { plans, siteConfig } from '../config.js';
 import { escapeHtml, icon } from './icons.js';
 
 const paidPlans = ['homepage_reveal', 'complete_revamp', 'cinematic_scroll'].map((key) => plans[key]);
@@ -14,10 +14,25 @@ const planOption = (plan) => {
 };
 
 export function orderWizard() {
+  const finalStep = siteConfig.liveCheckoutEnabled
+    ? {
+        label: 'Payment',
+        reviewHeading: 'Review and payment',
+        heading: 'Continue to secure payment',
+        message: 'Your request is saved before the secure payment page opens. A verified payment event—not the browser redirect—creates the paid order and project.',
+        action: `Continue to secure payment ${icon('arrow')}`,
+      }
+    : {
+        label: 'Submit',
+        reviewHeading: 'Review and submit',
+        heading: 'Save your project request',
+        message: 'Paid checkout is not open. Sign in to save this request for review; no payment information will be requested.',
+        action: `Save project request ${icon('arrow')}`,
+      };
   return `<section class="section order-flow-section" id="start-project"><div class="container-wide">
-    <div class="chapter-head chapter-head--light"><span class="chapter-index">Build your request</span><div><h2>Tell us what the finished website needs to do.</h2><p>Review the scope, then continue to secure test checkout. Draft text stays on this device.</p></div></div>
+    <div class="chapter-head chapter-head--light"><span class="chapter-index">Build your request</span><div><h2>Tell us what the finished website needs to do.</h2><p>Review the scope, then save a private project request. Draft text stays on this device.</p></div></div>
     <form class="order-wizard" data-order-wizard novalidate>
-      <nav class="order-wizard__steps" aria-label="Project request progress">${['Contact', 'Plan', 'Brief', 'Review', 'Payment'].map((label, index) => `<button type="button" data-order-step-jump="${index}" aria-current="${index === 0 ? 'step' : 'false'}"><span>0${index + 1}</span>${label}</button>`).join('')}</nav>
+      <nav class="order-wizard__steps" aria-label="Project request progress">${['Contact', 'Plan', 'Brief', 'Review', finalStep.label].map((label, index) => `<button type="button" data-order-step-jump="${index}" aria-current="${index === 0 ? 'step' : 'false'}"><span>0${index + 1}</span>${label}</button>`).join('')}</nav>
       <div class="order-wizard__panel" data-order-panel="0">
         <div class="order-wizard__heading"><span>Step 01</span><h3>Contact and current website</h3></div>
         <div class="order-fields order-fields--two">
@@ -51,17 +66,17 @@ export function orderWizard() {
         </div>
         <label class="order-dropzone"><input type="file" name="referenceFiles" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon('upload')}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>
         <ul class="order-file-list" data-order-file-list aria-live="polite"></ul>
-        <p class="order-note">Files are saved privately before secure checkout begins.</p>
+        <p class="order-note">Files are saved privately before any payment step begins.</p>
       </div>
       <div class="order-wizard__panel" data-order-panel="3" hidden>
-        <div class="order-wizard__heading"><span>Step 04</span><h3>Review and payment</h3></div>
+        <div class="order-wizard__heading"><span>Step 04</span><h3>${finalStep.reviewHeading}</h3></div>
         <div class="order-summary" data-order-summary></div>
         <label class="order-consent"><input type="checkbox" name="termsAccepted" required> <span>I agree to the <a href="/terms" data-nav>terms</a> and acknowledge the <a href="/privacy" data-nav>privacy notice</a>.</span></label>
         <label class="order-consent"><input type="checkbox" name="portfolioConsent"> <span>Optional: I give AccessRevamp permission to show approved, non-sensitive project visuals in its portfolio. This is not required to buy and may be revoked for future use.</span></label>
       </div>
       <div class="order-wizard__panel" data-order-panel="4" hidden>
-        <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
-        <div class="order-payment"><span class="sandbox-badge">Stripe test mode</span><p>Your request is saved before Stripe opens. A verified webhook—not the browser redirect—creates the paid order and project.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
+        <div class="order-wizard__heading"><span>Step 05</span><h3>${finalStep.heading}</h3></div>
+        <div class="order-payment"><p>${finalStep.message}</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">${finalStep.action}</button><a href="/login" data-nav>Already have a project? Sign in to the private workspace.</a></div>
       </div>
       <div class="order-wizard__actions"><button type="button" class="text-arrow" data-order-previous hidden>Back</button><p class="form-status" data-order-status role="status">Step 1 of 5</p><button type="button" class="button" data-order-next>Continue ${icon('arrow')}</button></div>
     </form>

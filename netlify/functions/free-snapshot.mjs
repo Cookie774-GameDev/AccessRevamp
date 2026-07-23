@@ -1,12 +1,12 @@
 import { createHmac } from 'node:crypto';
-import { assertJsonSize, assertMethod, assertSameOrigin, handleError, json, requestIp } from './_shared/http.mjs';
+import { assertJsonSize, assertMethod, assertSameOrigin, handleError, json, readJsonBody, requestIp } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { freeSnapshotSchema } from './_shared/validation.mjs';
 
 export default async (request) => {
   try {
     assertMethod(request, 'POST'); assertSameOrigin(request); assertJsonSize(request);
-    const input = freeSnapshotSchema.parse(await request.json());
+    const input = freeSnapshotSchema.parse(await readJsonBody(request));
     const secret = process.env.CONTACT_RATE_LIMIT_SECRET;
     if (!secret || secret.length < 24) throw new Error('Snapshot intake is unavailable.');
     const rateKey = createHmac('sha256', secret).update(requestIp(request)).digest('hex');

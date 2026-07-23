@@ -309,10 +309,6 @@
   color: #edf4ef;
 }
 
-.renaissance-home .order-payment .sandbox-badge {
-  color: #b7f5cf;
-}
-
 .renaissance-home .order-wizard__actions {
   border-top-color: var(--order-line);
   background: #111214;

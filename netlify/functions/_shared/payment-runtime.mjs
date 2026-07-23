@@ -40,6 +40,14 @@ export async function requireCheckoutRuntime(admin, env = process.env) {
   });
 }
 
+export async function requireLiveCheckoutRuntime(admin, env = process.env) {
+  const runtime = await requireCheckoutRuntime(admin, env);
+  if (!runtime.expectedLivemode || !runtime.livePaymentApproved) {
+    throw new HttpError(503, 'Secure checkout is not open yet.');
+  }
+  return runtime;
+}
+
 export async function resolveCatalogPrice(admin, quote, livemode) {
   if (!quote || !ALLOWED_TRANSITIONS.has(quote.transitionKey)) {
     throw new HttpError(503, 'Payment catalog is unavailable.');

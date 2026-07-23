@@ -62,7 +62,8 @@ test('Checkout uses explicit API version, idempotency, a fail-closed database ca
   assert.match(checkoutFunction, /2026-06-24\.dahlia/);
   assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
   assert.match(checkoutFunction, /resolveCatalogPrice/);
-  assert.match(checkoutFunction, /requireCheckoutRuntime/);
+  assert.match(checkoutFunction, /requireLiveCheckoutRuntime/);
+  assert.match(checkoutFunction, /requireRuntime = requireLiveCheckoutRuntime/);
   assert.match(checkoutFunction, /\.from\('order_drafts'\)/);
   assert.match(checkoutFunction, /buildCheckoutMetadata/);
   assert.match(checkoutFunction, /STRIPE_CHECKOUT_SECRET_KEY/);

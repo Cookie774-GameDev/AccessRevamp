@@ -2,9 +2,9 @@ import { TIERS } from './config/tier-catalog.js';
 
 export const plans = TIERS;
 
-const paymentMode = import.meta.env.VITE_PAYMENT_MODE === 'live' ? 'live' : 'test';
+const liveCheckoutEnabled = import.meta.env.VITE_LIVE_CHECKOUT_ENABLED === 'true';
 
-// Supabase's project URL and publishable key are intentionally public browser
+// The account service URL and publishable key are intentionally public browser
 // configuration. Keep environment overrides for rotation and alternate builds,
 // while providing the production project as a safe fallback so a Netlify build
 // cannot silently ship with authentication disabled.
@@ -20,9 +20,8 @@ export const siteConfig = Object.freeze({
   siteUrl: (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, ''),
   contactEmail: import.meta.env.VITE_CONTACT_EMAIL || '',
   supabaseUrl: supabaseUrl.replace(/\/$/, ''),
-  supabaseKey,
-  paymentMode,
-  checkoutIsSandbox: paymentMode === 'test',
+  supabaseKey: supabaseKey,
+  liveCheckoutEnabled,
 });
 
 export const servicePromise = Object.freeze([

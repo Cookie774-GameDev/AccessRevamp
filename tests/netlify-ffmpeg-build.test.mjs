@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
@@ -96,16 +96,16 @@ test('Netlify fails before upload when a checked-in clip exceeds the configured 
 });
 
 test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sources', async () => {
-  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, pages, isolated] = await Promise.all([
+  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
     readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
     readFile('public/media/showcases/source-optimization.json', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
-    readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('.github/workflows/isolated-stress.yml', 'utf8'),
   ]);
   const sourceManifest = JSON.parse(sourceManifestText);
+  const workflows = await readdir('.github/workflows');
   assert.match(netlify, /command = "npm run build"/);
   assert.match(netlify, /NETLIFY_NEXT_PLUGIN_SKIP = "true"/);
   assert.match(netlify, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
@@ -121,7 +121,6 @@ test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sourc
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
   assert.match(production, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  for (const workflow of [pages, isolated]) {
-    assert.match(workflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  }
+  assert.match(isolated, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
+  assert.ok(!workflows.includes('deploy-pages.yml'));
 });

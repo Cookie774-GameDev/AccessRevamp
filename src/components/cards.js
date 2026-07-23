@@ -1,10 +1,9 @@
-import { sandboxBadge } from './shell.js';
 import { escapeHtml, icon } from './icons.js';
 
 export function planCard(plan, { featured = false, compact = false } = {}) {
   const action = plan.key === 'free_snapshot'
     ? `<a class="button button--full" href="/contact?interest=free_snapshot" data-nav>Request ${escapeHtml(plan.name)} ${icon('arrow')}</a>`
-    : `<button class="button button--full" type="button" data-checkout="${plan.key}">Choose ${escapeHtml(plan.name)} ${icon('arrow')}</button>`;
+    : `<button class="button button--full" type="button" data-checkout="${plan.key}">Start ${escapeHtml(plan.name)} ${icon('arrow')}</button>`;
   return `<article data-plan-tier="${escapeHtml(plan.key)}" class="plan-card plan-card--${escapeHtml(plan.key)}${featured ? ' plan-card--featured' : ''}${compact ? ' plan-card--compact' : ''}">
     <div class="plan-card__top"><span class="kicker">${escapeHtml(plan.label)}</span>${featured ? '<span class="plan-flag">Most complete</span>' : ''}</div>
     <h3>${escapeHtml(plan.name)}</h3>
@@ -12,7 +11,6 @@ export function planCard(plan, { featured = false, compact = false } = {}) {
     <div class="plan-price"><strong>${escapeHtml(plan.displayPrice)}</strong><span>one time</span></div>
     <ul>${plan.features.map((feature) => `<li>${icon('check')}<span>${escapeHtml(feature)}</span></li>`).join('')}</ul>
     ${action}
-    ${plan.key === 'free_snapshot' ? '' : sandboxBadge()}
   </article>`;
 }
 

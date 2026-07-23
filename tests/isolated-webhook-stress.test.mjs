@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createCheckoutHandler } from '../netlify/functions/create-checkout.mjs';
+import { requireCheckoutRuntime } from '../netlify/functions/_shared/payment-runtime.mjs';
 import { createWebhookHandler } from '../netlify/functions/stripe-webhook.mjs';
 import { installIsolatedPaymentEnv, PaymentHarness } from './helpers/isolated-payment-core.mjs';
 import { checkoutRequest, FakeStripe, readJson, webhookRequest } from './helpers/isolated-stripe.mjs';
@@ -13,7 +14,7 @@ async function paidFixture(plan = 'complete_revamp') {
   const stripe = new FakeStripe(harness);
   const { user, token } = harness.addUser();
   const draft = harness.addDraft(user, plan);
-  const checkout = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
+  const checkout = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
   const response = await checkout(checkoutRequest({ token, requestId: draft.request_id, targetTier: plan }));
   assert.equal(response.status, 201, JSON.stringify(await readJson(response.clone())));
   const session = [...stripe.sessions.values()][0];
