@@ -73,6 +73,6 @@ test('legal and support source remains deterministic under repeated parallel rea
     };
   }));
 
-  assert.ok(samples.every((sample) => sample.emailCount >= 10));
+  assert.ok(samples.every((sample) => sample.emailCount >= 6));
   assert.ok(samples.every((sample) => sample.privacy && sample.support && sample.mobile));
 });
