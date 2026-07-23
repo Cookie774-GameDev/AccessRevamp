@@ -90,7 +90,7 @@ test('customer hub migration keeps storage private and browser access owner-scop
   assert.match(migration, /grant select on table public\.project_updates to authenticated/);
   assert.match(migration, /'customer-project-artifacts'/);
   assert.match(migration, /52428800/);
-  assert.match(migration, /false,\n  52428800/);
+  assert.match(migration, /false,\r?\n  52428800/);
   assert.match(migration, /security definer/);
   assert.match(migration, /grant execute on function public\.operator_finalize_project_artifact/);
   assert.match(styles, /\.customer-project/);
