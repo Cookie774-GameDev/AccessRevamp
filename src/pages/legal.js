@@ -270,7 +270,7 @@ const pages = {
         paragraphs: [
           'You retain ownership of content and materials you provide. You grant AccessRevamp a non-exclusive license to host, copy, modify, display internally, and otherwise use those materials only as reasonably necessary to provide, secure, support, and document the service.',
           'After full payment, you receive the rights in final custom deliverables described in the written scope, excluding pre-existing tools, reusable methods, open-source components, third-party materials, fonts, stock assets, software, and services governed by separate licenses. Drafts, unused concepts, internal tools, and working files are not included unless the scope says otherwise.',
-          'Purchase does not automatically grant portfolio rights. AccessRevamp will not publish a customer project in a portfolio without separate permission. Permission may be limited or withdrawn for future use, but cannot require removal from copies already lawfully distributed or archived where removal is not reasonably possible.',
+          'Purchase does not automatically grant portfolio rights. Portfolio publication requires a separate optional permission. AccessRevamp will not publish a customer project in a portfolio without that permission. Permission may be limited or withdrawn for future use, but cannot require removal from copies already lawfully distributed or archived where removal is not reasonably possible.',
         ],
       },
       {
@@ -347,7 +347,7 @@ const pages = {
     ],
     sections: [
       { id: 'source', title: '1. Sources and relevance', bullets: ['Use only intentionally published business contact details and record the public source.', 'Base each message on a human-verified observation from the reviewed public page.', 'Do not infer sensitive traits or use purchased personal-contact lists.'] },
-      { id: 'message', title: '2. Message requirements', bullets: ['Identify AccessRevamp accurately and use a working reply address.', 'Keep claims accurate, specific, and proportionate to the evidence.', 'Do not use fake reply subjects, false urgency, invented relationships, unverified security claims, legal threats, or spam-filter manipulation.', 'Include a clear way to opt out and honor it.'] },
+      { id: 'message', title: '2. Message requirements', bullets: ['Identify AccessRevamp accurately and use a working reply address.', 'Keep claims accurate, specific, and proportionate to the evidence.', 'Do not use fake reply subjects, false urgency, invented relationships, unverified security claims, or legal threats. Automated spam-classification manipulation is prohibited.', 'Include a clear way to opt out and honor it.'] },
       { id: 'suppression', title: '3. Opt-outs and complaints', paragraphs: [`Opt-out and outreach complaints may be sent to <a href="${mailto}">${SUPPORT_EMAIL}</a>. Suppressed recipients remain excluded from future outreach unless they later make a clear new request.`] },
     ],
   },
