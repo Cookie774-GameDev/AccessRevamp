@@ -17,13 +17,9 @@ function normalizeEmail(payload) {
     throw new HttpError(422, 'Email details are invalid.');
   }
   const keys = Object.keys(payload);
-  if (keys.length !== 1 || keys[0] !== 'email') {
-    throw new HttpError(422, 'Email details are invalid.');
-  }
+  if (keys.length !== 1 || keys[0] !== 'email') throw new HttpError(422, 'Email details are invalid.');
   const email = String(payload.email || '').trim().toLowerCase();
-  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
-    throw new HttpError(422, 'Enter a valid email address.');
-  }
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) throw new HttpError(422, 'Enter a valid email address.');
   return email;
 }
 
@@ -34,6 +30,7 @@ function maskEmail(email) {
 }
 
 export function createAuthSignupResendHandler({
+  getAdmin,
   createPublicClient = createSupabasePublicClient,
 } = {}) {
   return async function authSignupResend(request) {
@@ -43,6 +40,18 @@ export function createAuthSignupResendHandler({
       assertSameOrigin(request);
       assertJsonSize(request);
       const email = normalizeEmail(await readJsonBody(request));
+
+      if (getAdmin) {
+        const admin = getAdmin();
+        const state = await admin.rpc('accessrevamp_auth_email_state', { p_email: email });
+        if (!state.error && state.data === 'confirmed') {
+          return json({ ok: false, code: 'ACCOUNT_EXISTS', next: '/login', emailHint: maskEmail(email) }, 409);
+        }
+        if (!state.error && state.data === 'missing') {
+          return json({ ok: false, code: 'RESTART_SIGNUP' }, 409);
+        }
+      }
+
       client = createPublicClient();
       const redirectTo = new URL('/login?confirmed=1', request.headers.get('origin')).toString();
       const result = await client.auth.resend({
