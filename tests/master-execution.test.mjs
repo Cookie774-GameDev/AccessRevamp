@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -78,18 +78,18 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(service, /reportValidity/);
 });
 
-test('production packaging verifies every video and keeps every deploy path scrub-ready', async () => {
+test('production packaging verifies every video and keeps the Netlify deploy path scrub-ready', async () => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-  const [pruneScript, optimizeScript, sourceOptimizer, sourceManifestText, ciWorkflow, pagesWorkflow, netlifyConfig] = await Promise.all([
+  const [pruneScript, optimizeScript, sourceOptimizer, sourceManifestText, ciWorkflow, netlifyConfig] = await Promise.all([
     readFile('scripts/prune-vinext-server-media.mjs', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
     readFile('public/media/showcases/source-optimization.json', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
-    readFile('.github/workflows/deploy-pages.yml', 'utf8'),
     readFile('netlify.toml', 'utf8'),
   ]);
   const sourceManifest = JSON.parse(sourceManifestText);
+  const workflows = await readdir('.github/workflows');
 
   assert.match(packageJson.scripts.build, /prune-vinext-server-media\.mjs/);
   assert.match(packageJson.scripts.build, /optimize-showcase-videos\.mjs/);
@@ -117,8 +117,8 @@ test('production packaging verifies every video and keeps every deploy path scru
   assert.ok(sourceManifest.files.every((file) => file.status === 'optimized' && file.optimizedBytes <= 9_500_000));
   assert.match(ciWorkflow, /Install FFmpeg for scrub-ready media/);
   assert.match(ciWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  assert.match(pagesWorkflow, /Install FFmpeg for scrub-ready media/);
-  assert.match(pagesWorkflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
+  assert.ok(!workflows.includes('deploy-pages.yml'));
+  assert.ok(!workflows.some((name) => /^accessrevamp-finalize-v[2-5]\.yml$/.test(name)));
   assert.match(netlifyConfig, /command = "npm run build"/);
   assert.match(netlifyConfig, /NETLIFY_NEXT_PLUGIN_SKIP = "true"/);
   assert.match(netlifyConfig, /REQUIRE_FFMPEG_OPTIMIZATION = "false"/);
