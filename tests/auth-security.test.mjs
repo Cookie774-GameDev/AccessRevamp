@@ -44,9 +44,12 @@ const [
 
 const packageJson = JSON.parse(packageText);
 
-function unsignedJwt(sessionId) {
+function unsignedJwt(sessionId, method = 'otp') {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ session_id: sessionId })}.signature`;
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    session_id: sessionId,
+    amr: [{ method, timestamp: 1784780000 }],
+  })}.signature`;
 }
 
 function authAdmin({ sessionId, verified }) {
@@ -143,7 +146,10 @@ test('signup requires confirmation and every sign-in requires password then emai
   assert.match(authComplete, /cookieValue\(request, CHALLENGE_COOKIE\)/);
   assert.match(authComplete, /clearChallengeCookie/);
   assert.match(authComplete, /requireVerifiedSession:\s*false/);
+  assert.match(authComplete, /requireInboxAuthentication:\s*true/);
   assert.match(authComplete, /complete_accessrevamp_email_signin/);
+  assert.match(sharedAuth, /EMAIL_AUTH_METHODS/);
+  assert.match(sharedAuth, /getUser\(accessToken\)/);
 });
 
 test('database rate limiting blocks password validation before credential work begins', async () => {
@@ -236,6 +242,55 @@ test('email-code completion consumes the HttpOnly password challenge cookie', as
     assert.equal(response.status, 200);
     assert.equal(rpcArgs.p_session_id, sessionId);
     assert.equal(rpcArgs.p_challenge_hash, createHash('sha256').update(challengeToken).digest('hex'));
+    assert.match(response.headers.get('set-cookie') || '', /Max-Age=0/);
+  } finally {
+    if (previousOrigins == null) delete process.env.ALLOWED_ORIGINS;
+    else process.env.ALLOWED_ORIGINS = previousOrigins;
+  }
+});
+
+test('email-code completion rejects a validated password-only session before privileged RPC work', async () => {
+  const previousOrigins = process.env.ALLOWED_ORIGINS;
+  process.env.ALLOWED_ORIGINS = 'https://accessrevamp.test';
+  const sessionId = '55555555-5555-4555-8555-555555555555';
+  let rpcCalls = 0;
+  const handler = createAuthLoginCompleteHandler({
+    getAdmin: () => ({
+      auth: {
+        async getUser() {
+          return {
+            data: {
+              user: {
+                id: '11111111-1111-4111-8111-111111111111',
+                email: 'owner@example.com',
+                email_confirmed_at: '2026-07-22T00:00:00.000Z',
+              },
+            },
+            error: null,
+          };
+        },
+      },
+      async rpc() {
+        rpcCalls += 1;
+        return { data: null, error: null };
+      },
+    }),
+  });
+
+  try {
+    const response = await handler(new Request('https://accessrevamp.test/api/auth-login-complete', {
+      method: 'POST',
+      headers: {
+        origin: 'https://accessrevamp.test',
+        authorization: `Bearer ${unsignedJwt(sessionId, 'password')}`,
+        cookie: `accessrevamp_login_challenge=${'A'.repeat(43)}`,
+        'content-type': 'application/json',
+      },
+      body: '{}',
+    }));
+    assert.equal(response.status, 403);
+    assert.equal(rpcCalls, 0);
+    assert.match(await response.text(), /email verification/i);
     assert.match(response.headers.get('set-cookie') || '', /Max-Age=0/);
   } finally {
     if (previousOrigins == null) delete process.env.ALLOWED_ORIGINS;
