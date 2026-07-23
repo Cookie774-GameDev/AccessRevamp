@@ -101,7 +101,7 @@ jobs:
           retention-days: 7
 
   netlify-auth-production:
-    name: Netlify production authentication
+    name: Public production authentication
     if: github.event_name == 'push'
     needs: validate
     runs-on: ubuntu-latest
@@ -111,19 +111,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify deployed browser and server authentication configuration
+      - name: Verify customer-facing browser and server authentication
         shell: bash
         env:
-          NETLIFY_AUTH_TARGET: https://accessrevamp.netlify.app
+          NETLIFY_AUTH_TARGET: https://accessrevamp.com
           REQUIRE_SERVER_AUTH: "true"
         run: |
           set -o pipefail
           npm run verify:netlify-auth-preview 2>&1 | tee netlify-auth-production.txt
-      - name: Upload Netlify production authentication evidence
+      - name: Upload production authentication evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: netlify-auth-production
+          name: production-authentication
           path: netlify-auth-production.txt
           if-no-files-found: warn
           retention-days: 7
