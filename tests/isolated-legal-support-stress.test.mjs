@@ -27,12 +27,13 @@ test('privacy policy contains substantive collection use sharing retention secur
 
 test('customer policy terms refund accessibility and support are complete public routes', () => {
   for (const route of ['/policy', '/privacy', '/terms', '/refunds', '/accessibility', '/legal', '/support', '/customer-support']) {
-    assert.match(routes, new RegExp(`['\"]${route.replace('/', '\\/')}['\"]`));
-    assert.match(metadata, new RegExp(`['\"]${route.replace('/', '\\/')}['\"]`));
+    assert.match(routes, new RegExp(`['"]${route.replace('/', '\/')}['"]`));
+    assert.match(metadata, new RegExp(`['"]${route.replace('/', '\/')}['"]`));
   }
   assert.match(legalPage, /Customer service policy/);
   assert.match(legalPage, /Terms of service/);
   assert.match(legalPage, /Limitation of liability/);
+  assert.match(legalPage, /Purchase does not automatically grant portfolio rights/);
   assert.match(legalPage, /Customer support/);
   assert.match(legalPage, /Project dashboard and delivery/);
   assert.match(legalPage, /Security and abuse reports/);
