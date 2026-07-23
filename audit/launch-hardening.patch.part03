@@ -1,0 +1,160 @@
+     checkout.dataset.checkout = plan.key;
+-    checkout.textContent = `Continue with ${plan.name}`;
++    checkout.textContent = siteConfig.liveCheckoutEnabled ? `Continue with ${plan.name}` : `Save ${plan.name} request`;
+   };
+   const updatePlanFields = () => {
+     const enabled = selectedPlan() === 'cinematic_scroll';
+@@ -104,7 +104,7 @@ export function setupOrderWizard(root = document) {
+     steps.forEach((step, stepIndex) => step.setAttribute('aria-current', stepIndex === current ? 'step' : 'false'));
+     previous.hidden = current === 0;
+     next.hidden = current === 4;
+-    next.textContent = current === 3 ? 'Continue to payment' : 'Continue';
++    next.textContent = current === 3 ? (siteConfig.liveCheckoutEnabled ? 'Continue to payment' : 'Continue to submit') : 'Continue';
+     status.textContent = `Step ${current + 1} of 5`;
+     if (current === 2) renderQuestionPlan();
+     if (current >= 3) renderSummary();
+diff --git a/tests/isolated-checkout-stress.test.mjs b/tests/isolated-checkout-stress.test.mjs
+index de9e5fb..2d8cda9 100644
+--- a/tests/isolated-checkout-stress.test.mjs
++++ b/tests/isolated-checkout-stress.test.mjs
+@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
+ import test from 'node:test';
+ 
+ import { createCheckoutHandler } from '../netlify/functions/create-checkout.mjs';
++import { requireCheckoutRuntime } from '../netlify/functions/_shared/payment-runtime.mjs';
+ import { installIsolatedPaymentEnv, PaymentHarness } from './helpers/isolated-payment-core.mjs';
+ import { checkoutRequest, FakeStripe, readJson } from './helpers/isolated-stripe.mjs';
+ 
+@@ -12,10 +13,28 @@ function setup(planKey = 'complete_revamp') {
+   const stripe = new FakeStripe(harness);
+   const { user, token } = harness.addUser();
+   const draft = harness.addDraft(user, planKey);
+-  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
++  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
+   return { harness, stripe, user, token, draft, handler };
+ }
+ 
++test('public Checkout handler rejects a non-live runtime before reservation or provider access', async () => {
++  const harness = new PaymentHarness();
++  const stripe = new FakeStripe(harness);
++  const { user, token } = harness.addUser();
++  const draft = harness.addDraft(user, 'complete_revamp');
++  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
++
++  const response = await handler(checkoutRequest({
++    token,
++    requestId: draft.request_id,
++    targetTier: draft.plan_key,
++  }));
++
++  assert.equal(response.status, 503);
++  assert.equal(harness.reservations.size, 0);
++  assert.equal(stripe.checkoutAttempts, 0);
++});
++
+ test('250 duplicate checkout submissions collapse into one provider session', { timeout: 30_000 }, async () => {
+   const fixture = setup();
+   const responses = await Promise.all(Array.from({ length: 250 }, () => fixture.handler(checkoutRequest({
+@@ -36,7 +55,7 @@ test('250 duplicate checkout submissions collapse into one provider session', {
+ test('40-customer burst keeps every user, request, plan and session isolated', { timeout: 30_000 }, async () => {
+   const harness = new PaymentHarness();
+   const stripe = new FakeStripe(harness);
+-  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
++  const handler = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
+   const fixtures = Array.from({ length: 40 }, (_, index) => {
+     const { user, token } = harness.addUser(`burst-${index}@example.test`);
+     const plan = ['homepage_reveal', 'complete_revamp', 'cinematic_scroll'][index % 3];
+diff --git a/tests/isolated-webhook-stress.test.mjs b/tests/isolated-webhook-stress.test.mjs
+index 8f959c8..3d8d7e8 100644
+--- a/tests/isolated-webhook-stress.test.mjs
++++ b/tests/isolated-webhook-stress.test.mjs
+@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
+ import test from 'node:test';
+ 
+ import { createCheckoutHandler } from '../netlify/functions/create-checkout.mjs';
++import { requireCheckoutRuntime } from '../netlify/functions/_shared/payment-runtime.mjs';
+ import { createWebhookHandler } from '../netlify/functions/stripe-webhook.mjs';
+ import { installIsolatedPaymentEnv, PaymentHarness } from './helpers/isolated-payment-core.mjs';
+ import { checkoutRequest, FakeStripe, readJson, webhookRequest } from './helpers/isolated-stripe.mjs';
+@@ -13,7 +14,7 @@ async function paidFixture(plan = 'complete_revamp') {
+   const stripe = new FakeStripe(harness);
+   const { user, token } = harness.addUser();
+   const draft = harness.addDraft(user, plan);
+-  const checkout = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
++  const checkout = createCheckoutHandler({ getAdmin: () => harness.admin, createStripe: () => stripe, requireRuntime: requireCheckoutRuntime });
+   const response = await checkout(checkoutRequest({ token, requestId: draft.request_id, targetTier: plan }));
+   assert.equal(response.status, 201, JSON.stringify(await readJson(response.clone())));
+   const session = [...stripe.sessions.values()][0];
+diff --git a/tests/launch-completion.test.mjs b/tests/launch-completion.test.mjs
+index 56232b3..7a680f0 100644
+--- a/tests/launch-completion.test.mjs
++++ b/tests/launch-completion.test.mjs
+@@ -62,7 +62,8 @@ test('Checkout uses explicit API version, idempotency, a fail-closed database ca
+   assert.match(checkoutFunction, /2026-06-24\.dahlia/);
+   assert.match(checkoutFunction, /idempotencyKey: `accessrevamp_checkout_/);
+   assert.match(checkoutFunction, /resolveCatalogPrice/);
+-  assert.match(checkoutFunction, /requireCheckoutRuntime/);
++  assert.match(checkoutFunction, /requireLiveCheckoutRuntime/);
++  assert.match(checkoutFunction, /requireRuntime = requireLiveCheckoutRuntime/);
+   assert.match(checkoutFunction, /\.from\('order_drafts'\)/);
+   assert.match(checkoutFunction, /buildCheckoutMetadata/);
+   assert.match(checkoutFunction, /STRIPE_CHECKOUT_SECRET_KEY/);
+diff --git a/tmp/accessrevamp-current/tests/launch-surface.test.mjs b/tests/launch-surface.test.mjs
+new file mode 100644
+index 0000000..00dd2b8
+--- /dev/null
++++ b/tests/launch-surface.test.mjs
+@@ -0,0 +1,53 @@
++import assert from 'node:assert/strict';
++import { readFile, readdir } from 'node:fs/promises';
++import { join } from 'node:path';
++import test from 'node:test';
++
++async function collectTextFiles(path) {
++  const content = [];
++  for (const entry of await readdir(path, { withFileTypes: true })) {
++    const target = join(path, entry.name);
++    if (entry.isDirectory()) content.push(...await collectTextFiles(target));
++    else if (/\.(?:js|css|html)$/.test(entry.name)) content.push(await readFile(target, 'utf8'));
++  }
++  return content;
++}
++
++const [config, checkoutClient, checkoutFunction, paymentRuntime, customerCopy] = await Promise.all([
++  readFile('src/config.js', 'utf8'),
++  readFile('src/services/checkout.js', 'utf8'),
++  readFile('netlify/functions/create-checkout.mjs', 'utf8'),
++  readFile('netlify/functions/_shared/payment-runtime.mjs', 'utf8'),
++  Promise.all([
++    collectTextFiles('src/pages'),
++    collectTextFiles('src/components'),
++    collectTextFiles('src/data'),
++  ]).then((groups) => groups.flat().join('\n')),
++]);
++
++test('customer-visible source has no sandbox checkout or backend-provider branding', () => {
++  assert.doesNotMatch(customerCopy, /sandbox checkout|stripe test mode|secure test checkout|test-mode notice/i);
++  assert.doesNotMatch(customerCopy, /\bSupabase\b/i);
++});
++
++test('browser payment access is disabled by default and saves the request without opening Checkout', () => {
++  assert.match(config, /VITE_LIVE_CHECKOUT_ENABLED === 'true'/);
++  assert.doesNotMatch(config, /VITE_PAYMENT_MODE|checkoutIsSandbox/);
++  assert.match(checkoutClient, /if \(!siteConfig\.liveCheckoutEnabled\)/);
++  assert.ok(
++    checkoutClient.indexOf("fetch(ORDER_DRAFT_ENDPOINT")
++      < checkoutClient.indexOf('if (!siteConfig.liveCheckoutEnabled)'),
++  );
++  assert.ok(
++    checkoutClient.indexOf('if (!siteConfig.liveCheckoutEnabled)')
++      < checkoutClient.indexOf('fetch(CHECKOUT_ENDPOINT'),
++  );
++  assert.match(checkoutClient, /No payment was started/);
++});
++
++test('public Checkout creation requires a separately approved live runtime', () => {
++  assert.match(paymentRuntime, /export async function requireLiveCheckoutRuntime/);
++  assert.match(paymentRuntime, /!runtime\.expectedLivemode \|\| !runtime\.livePaymentApproved/);
++  assert.match(checkoutFunction, /requireRuntime = requireLiveCheckoutRuntime/);
++  assert.match(checkoutFunction, /await requireRuntime\(admin, process\.env\)/);
++});
