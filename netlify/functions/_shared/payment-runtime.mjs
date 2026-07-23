@@ -40,7 +40,6 @@ export async function requireCheckoutRuntime(admin, env = process.env) {
   });
 }
 
-
 export async function requireLiveCheckoutRuntime(admin, env = process.env) {
   const runtime = await requireCheckoutRuntime(admin, env);
   if (!runtime.expectedLivemode || !runtime.livePaymentApproved) {
