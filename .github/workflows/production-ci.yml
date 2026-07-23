@@ -38,7 +38,7 @@ jobs:
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-output.txt
-      - name: Verify connected Supabase Auth project
+      - name: Verify connected customer account service
         run: npm run verify:supabase-public
       - name: Upload test output
         if: always()
@@ -83,11 +83,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify the deployed browser Supabase connection
+      - name: Verify deployed browser and server authentication
         shell: bash
         env:
           NETLIFY_AUTH_TARGET: https://deploy-preview-${{ github.event.pull_request.number }}--accessrevamp.netlify.app
-          REQUIRE_SERVER_AUTH: "false"
+          REQUIRE_SERVER_AUTH: "true"
         run: |
           set -o pipefail
           npm run verify:netlify-auth-preview 2>&1 | tee netlify-auth-preview.txt
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify the deployed browser and server authentication configuration
+      - name: Verify deployed browser and server authentication configuration
         shell: bash
         env:
           NETLIFY_AUTH_TARGET: https://accessrevamp.netlify.app
