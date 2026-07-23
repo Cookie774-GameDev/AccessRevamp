@@ -1,0 +1,120 @@
+name: Probe AccessRevamp built-in mail branding
+
+on:
+  push:
+    branches:
+      - diag/free-mailer-accessrevamp-branding
+    paths:
+      - .github/workflows/probe-free-mailer-branding.yml
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: vbkkimvedmklebghtkzs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Try safe AccessRevamp branding fields independently
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          node <<'NODE' 2>&1 | tee free-mailer-branding.json
+          import { readFile } from 'node:fs/promises';
+
+          const token = String(process.env.SUPABASE_ACCESS_TOKEN || '').trim();
+          if (!token) throw new Error('SUPABASE_ACCESS_TOKEN is missing.');
+          const ref = process.env.SUPABASE_PROJECT_REF;
+          const endpoint = `https://api.supabase.com/v1/projects/${ref}/config/auth`;
+          const headers = {
+            authorization: `Bearer ${token}`,
+            accept: 'application/json',
+            'content-type': 'application/json',
+          };
+
+          const safeMessage = (data) => String(data?.message || data?.error || data?.error_description || '').slice(0, 300);
+          async function patch(name, payload) {
+            const response = await fetch(endpoint, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify(payload),
+            });
+            const data = await response.json().catch(() => ({}));
+            return { name, ok: response.ok, status: response.status, message: safeMessage(data) };
+          }
+
+          const confirmation = await readFile('supabase/templates/accessrevamp-confirmation.html', 'utf8');
+          const magicLink = await readFile('supabase/templates/accessrevamp-magic-link.html', 'utf8');
+          const recovery = await readFile('supabase/templates/accessrevamp-recovery.html', 'utf8');
+
+          const attempts = [];
+          attempts.push(await patch('sender-name', { smtp_sender_name: 'AccessRevamp' }));
+          attempts.push(await patch('subjects', {
+            mailer_subjects_confirmation: 'Confirm your AccessRevamp account',
+            mailer_subjects_magic_link: 'Your AccessRevamp secure sign-in',
+            mailer_subjects_recovery: 'Reset your AccessRevamp password',
+          }));
+          attempts.push(await patch('templates', {
+            mailer_templates_confirmation_content: confirmation,
+            mailer_templates_magic_link_content: magicLink,
+            mailer_templates_recovery_content: recovery,
+          }));
+
+          const currentResponse = await fetch(endpoint, { headers });
+          const current = await currentResponse.json().catch(() => ({}));
+          const result = {
+            attempts,
+            current: {
+              senderNameAccessRevamp: String(current.smtp_sender_name || '') === 'AccessRevamp',
+              confirmationSubjectBranded: /AccessRevamp/i.test(String(current.mailer_subjects_confirmation || '')),
+              magicSubjectBranded: /AccessRevamp/i.test(String(current.mailer_subjects_magic_link || '')),
+              confirmationTemplateBranded: /AccessRevamp/i.test(String(current.mailer_templates_confirmation_content || '')),
+              confirmationTemplateUsesCode: String(current.mailer_templates_confirmation_content || '').includes('{{ .Token }}'),
+              magicTemplateBranded: /AccessRevamp/i.test(String(current.mailer_templates_magic_link_content || '')),
+              magicTemplateUsesCode: String(current.mailer_templates_magic_link_content || '').includes('{{ .Token }}'),
+              customMailHostConfigured: Boolean(current.smtp_host),
+            },
+            credentialsPrinted: false,
+          };
+          console.log(JSON.stringify(result, null, 2));
+          NODE
+      - name: Upload safe result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-mailer-accessrevamp-branding
+          path: free-mailer-branding.json
+          retention-days: 1
+      - name: Publish safe status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/vnd.github+json',
+              authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'content-type': 'application/json',
+              'x-github-api-version': '2022-11-28',
+            },
+            body: JSON.stringify({
+              state: 'success',
+              context: 'accessrevamp/free-mailer-branding-probe',
+              description: 'Safe built-in mail branding probe completed',
+              target_url: process.env.TARGET_URL,
+            }),
+          });
+          if (!response.ok) throw new Error(`Status API returned ${response.status}`);
+          NODE
