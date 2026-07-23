@@ -11,6 +11,23 @@ function required(name) {
   return value;
 }
 
+function managementAccessToken() {
+  const value = required('SUPABASE_ACCESS_TOKEN');
+  const jwtLike = value.split('.').length === 3;
+  const projectKeyLike = /^sb_(?:publishable|secret)_/i.test(value);
+  if (jwtLike || projectKeyLike) {
+    throw new Error(
+      'SUPABASE_ACCESS_TOKEN contains a Supabase project API key. '
+      + 'This workflow requires a Supabase account personal access token from Dashboard → Account → Access Tokens; '
+      + 'do not use the publishable, anon, secret, or service-role key.',
+    );
+  }
+  if (value.length < 20) {
+    throw new Error('SUPABASE_ACCESS_TOKEN is too short to be a valid Supabase account personal access token.');
+  }
+  return value;
+}
+
 function projectRef() {
   const explicit = String(process.env.SUPABASE_PROJECT_REF || '').trim();
   if (explicit) return explicit;
@@ -90,6 +107,12 @@ function smtpPayload() {
   };
 }
 
+function apiErrorMessage(data) {
+  const candidate = data?.message || data?.error_description || data?.error || data?.msg;
+  if (typeof candidate === 'string' && candidate.trim()) return candidate.trim().slice(0, 500);
+  return 'request failed';
+}
+
 async function authRequest(path, accessToken, options = {}) {
   const response = await fetch(`${API_ORIGIN}${path}`, {
     ...options,
@@ -102,12 +125,26 @@ async function authRequest(path, accessToken, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`Supabase Management API returned ${response.status}: ${data.message || data.error || 'request failed'}`);
+    const detail = apiErrorMessage(data);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        `Supabase Management API authentication failed (HTTP ${response.status}: ${detail}). `
+        + 'SUPABASE_ACCESS_TOKEN must be an account personal access token whose owner can access this project; '
+        + 'project publishable, anon, secret, and service-role keys cannot manage hosted Auth settings.',
+      );
+    }
+    if (response.status === 404) {
+      throw new Error(
+        `Supabase Management API could not access project ${projectRef()} (HTTP 404: ${detail}). `
+        + 'Confirm that the personal access token belongs to an account with access to this project.',
+      );
+    }
+    throw new Error(`Supabase Management API returned HTTP ${response.status}: ${detail}`);
   }
   return data;
 }
 
-const accessToken = required('SUPABASE_ACCESS_TOKEN');
+const accessToken = managementAccessToken();
 const ref = projectRef();
 const siteUrl = secureSiteUrl();
 const [confirmation, magicLink, recovery] = await Promise.all([
