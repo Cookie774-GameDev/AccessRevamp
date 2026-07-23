@@ -1,4 +1,3 @@
-import { createHmac } from 'node:crypto';
 import {
   assertJsonSize,
   assertMethod,
@@ -7,9 +6,7 @@ import {
   HttpError,
   json,
   readJsonBody,
-  requestIp,
 } from './_shared/http.mjs';
-import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
 import { createSupabasePublicClient } from './_shared/supabase-public.mjs';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -52,26 +49,6 @@ function maskEmail(email) {
   return `${visible}${'•'.repeat(Math.max(3, local.length - visible.length))}@${domain}`;
 }
 
-function requestRateKey(secret, scope, value) {
-  return createHmac('sha256', secret).update(`${scope}:${value}`).digest('hex');
-}
-
-async function consumeAuthAttempt(admin, request, email, env = process.env) {
-  const secret = String(env.AUTH_RATE_LIMIT_SECRET || env.CONTACT_RATE_LIMIT_SECRET || '');
-  if (secret.length < 24) throw new HttpError(503, 'Account protection is unavailable.');
-  const ip = requestIp(request);
-  const result = await admin.rpc('consume_accessrevamp_auth_attempt', {
-    p_ip_key: requestRateKey(secret, 'signup-ip', ip),
-    p_account_key: requestRateKey(secret, 'signup-account', `${ip}:${email}`),
-  });
-  if (result.error) {
-    if (/rate limit/i.test(result.error.message || '')) {
-      throw new HttpError(429, 'Too many account requests. Try again later.');
-    }
-    throw new HttpError(503, 'Account protection is unavailable.');
-  }
-}
-
 function confirmationRedirect(request) {
   const url = new URL('/login', request.headers.get('origin'));
   url.searchParams.set('confirmed', '1');
@@ -84,44 +61,47 @@ function emailFailure(error, fallback) {
   return new HttpError(503, fallback);
 }
 
+function accountExists(signup) {
+  return json({
+    ok: false,
+    code: 'ACCOUNT_EXISTS',
+    next: '/login',
+    emailHint: maskEmail(signup.email),
+  }, 409);
+}
+
 export function createAuthSignupStartHandler({
-  getAdmin = getSupabaseAdmin,
   createPublicClient = createSupabasePublicClient,
 } = {}) {
   return async function authSignupStart(request) {
-    let publicClient;
+    let client;
     try {
       assertMethod(request, 'POST');
       assertSameOrigin(request);
       assertJsonSize(request);
       const signup = normalizeSignup(await readJsonBody(request));
-      const admin = getAdmin();
-      await consumeAuthAttempt(admin, request, signup.email);
-
-      const stateResult = await admin.rpc('accessrevamp_auth_email_state', { p_email: signup.email });
-      if (stateResult.error || !['missing', 'unconfirmed', 'confirmed'].includes(stateResult.data)) {
-        throw new HttpError(503, 'Account lookup is unavailable.');
-      }
-
-      if (stateResult.data === 'confirmed') {
-        return json({
-          ok: false,
-          code: 'ACCOUNT_EXISTS',
-          next: '/login',
-          emailHint: maskEmail(signup.email),
-        }, 409);
-      }
-
-      publicClient = createPublicClient();
       const redirectTo = confirmationRedirect(request);
-      if (stateResult.data === 'unconfirmed') {
-        const resendResult = await publicClient.auth.resend({
+      client = createPublicClient();
+
+      // A correct password for an existing account should never create another
+      // identity or pretend that a confirmation email was sent.
+      const existing = await client.auth.signInWithPassword({
+        email: signup.email,
+        password: signup.password,
+      });
+      if (existing.data?.session && existing.data?.user) {
+        await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+        return accountExists(signup);
+      }
+
+      if (/email not confirmed/i.test(String(existing.error?.message || ''))) {
+        const resend = await client.auth.resend({
           type: 'signup',
           email: signup.email,
           options: { emailRedirectTo: redirectTo },
         });
-        if (resendResult.error) {
-          throw emailFailure(resendResult.error, 'The confirmation email could not be sent. Try again shortly.');
+        if (resend.error) {
+          throw emailFailure(resend.error, 'The confirmation email could not be sent. Try again shortly.');
         }
         return json({
           ok: true,
@@ -131,7 +111,7 @@ export function createAuthSignupStartHandler({
         }, 202);
       }
 
-      const result = await publicClient.auth.signUp({
+      const result = await client.auth.signUp({
         email: signup.email,
         password: signup.password,
         options: {
@@ -145,15 +125,10 @@ export function createAuthSignupStartHandler({
 
       const identities = result.data?.user?.identities;
       if (Array.isArray(identities) && identities.length === 0) {
-        return json({
-          ok: false,
-          code: 'ACCOUNT_EXISTS',
-          next: '/login',
-          emailHint: maskEmail(signup.email),
-        }, 409);
+        return accountExists(signup);
       }
       if (result.data?.session) {
-        await publicClient.auth.signOut({ scope: 'local' }).catch(() => undefined);
+        await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
         throw new HttpError(503, 'Email confirmation is not enforced by the account service. Account access was blocked for safety.');
       }
 
@@ -166,9 +141,7 @@ export function createAuthSignupStartHandler({
     } catch (error) {
       return handleError(error);
     } finally {
-      if (publicClient) {
-        await publicClient.auth.signOut({ scope: 'local' }).catch(() => undefined);
-      }
+      if (client) await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
     }
   };
 }
