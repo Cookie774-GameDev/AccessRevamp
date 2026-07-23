@@ -93,6 +93,7 @@ declare
   v_user_id uuid := auth.uid();
   v_session_id uuid;
   v_hash text;
+  v_amr jsonb := coalesce(auth.jwt() -> 'amr', '[]'::jsonb);
 begin
   if v_user_id is null then
     raise exception 'Authentication required.' using errcode = '28000';
@@ -101,6 +102,18 @@ begin
   if p_challenge_token is null
     or p_challenge_token !~ '^(?:[a-f0-9]{64}|[A-Za-z0-9_-]{32,128})$' then
     raise exception 'Verification details are invalid.' using errcode = '22023';
+  end if;
+
+  if jsonb_typeof(v_amr) <> 'array' then
+    raise exception 'Email verification is required.' using errcode = '28000';
+  end if;
+
+  if not exists (
+    select 1
+    from jsonb_array_elements(v_amr) as factor
+    where factor ->> 'method' in ('otp', 'magiclink')
+  ) then
+    raise exception 'Email verification is required.' using errcode = '28000';
   end if;
 
   begin
@@ -273,6 +286,6 @@ create policy customer_private_assets_select_verified
 comment on function public.begin_accessrevamp_email_signin() is
   'Creates a ten-minute password-bound sign-in challenge for the currently authenticated and confirmed customer.';
 comment on function public.complete_accessrevamp_email_signin_current(text) is
-  'Consumes the browser challenge from the current email-authenticated session and records the verified session.';
+  'Consumes the browser challenge only from an email-OTP or magic-link authenticated session and records the verified session.';
 
 commit;

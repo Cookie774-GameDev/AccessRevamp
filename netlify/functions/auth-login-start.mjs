@@ -9,6 +9,7 @@ import {
   readJsonBody,
   requestIp,
 } from './_shared/http.mjs';
+import { getSupabaseServiceRoleClient } from './_shared/supabase-admin.mjs';
 import {
   createSupabaseAccessTokenClient,
   createSupabasePublicClient,
@@ -19,6 +20,8 @@ const CHALLENGE_COOKIE = 'accessrevamp_login_challenge';
 const CHALLENGE_COOKIE_PATH = '/api/auth-login-complete';
 const CHALLENGE_PATTERN = /^(?:[a-f0-9]{64}|[A-Za-z0-9_-]{32,128})$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const LOCAL_RATE_LIMIT_CAP = 2_000;
 
 function normalizeCredentials(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -55,6 +58,80 @@ function challengeCookie(request, token, maximumAgeSeconds) {
 function requestRateKey(secret, scope, value) {
   return createHmac('sha256', secret).update(`${scope}:${value}`).digest('hex');
 }
+
+function localRateKey(scope, value) {
+  return createHash('sha256').update(`accessrevamp-local-auth-v1:${scope}:${value}`).digest('hex');
+}
+
+export function createLocalAuthLimiter({
+  now = () => Date.now(),
+  windowMs = RATE_WINDOW_MS,
+  capacity = LOCAL_RATE_LIMIT_CAP,
+  ipMaximum = 25,
+  accountMaximum = 8,
+} = {}) {
+  for (const [name, value] of Object.entries({ windowMs, capacity, ipMaximum, accountMaximum })) {
+    if (!Number.isSafeInteger(value) || value < 1) {
+      throw new TypeError(`${name} must be a positive safe integer.`);
+    }
+  }
+
+  const records = new Map();
+
+  function activeRecord(key, currentTime) {
+    const record = records.get(key);
+    if (!record) return null;
+    if (record.startedAt <= currentTime - windowMs) {
+      records.delete(key);
+      return null;
+    }
+    return record;
+  }
+
+  function pruneExpired(currentTime) {
+    for (const [key, record] of records) {
+      if (record.startedAt <= currentTime - windowMs) records.delete(key);
+    }
+  }
+
+  return function consumeLocalAuthAttempt(request, email) {
+    const currentTime = Number(now());
+    if (!Number.isFinite(currentTime)) {
+      throw new HttpError(503, 'Sign-in protection is unavailable.');
+    }
+
+    const ip = requestIp(request);
+    const candidates = [
+      { key: localRateKey('auth-ip', ip), maximum: ipMaximum },
+      { key: localRateKey('auth-account', `${ip}:${email}`), maximum: accountMaximum },
+    ];
+    const existing = candidates.map(({ key }) => activeRecord(key, currentTime));
+    const missing = existing.filter((record) => !record).length;
+
+    if (records.size + missing > capacity) {
+      pruneExpired(currentTime);
+      if (records.size + missing > capacity) {
+        throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
+      }
+    }
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const record = existing[index];
+      if (record && record.count >= candidates[index].maximum) {
+        throw new HttpError(429, 'Too many sign-in attempts. Try again later.');
+      }
+    }
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const { key } = candidates[index];
+      const record = existing[index] || { startedAt: currentTime, count: 0 };
+      record.count += 1;
+      records.set(key, record);
+    }
+  };
+}
+
+const consumeDefaultLocalAuthAttempt = createLocalAuthLimiter();
 
 async function consumeAuthAttempt(admin, request, email, env = process.env) {
   const secret = String(env.AUTH_RATE_LIMIT_SECRET || env.CONTACT_RATE_LIMIT_SECRET || '');
@@ -119,9 +196,10 @@ async function createLegacyChallenge(admin, user, email, {
 }
 
 export function createAuthLoginStartHandler({
-  getAdmin,
+  getAdmin = getSupabaseServiceRoleClient,
   createPublicClient = createSupabasePublicClient,
   createAccessTokenClient = createSupabaseAccessTokenClient,
+  consumeLocalAttempt = consumeDefaultLocalAuthAttempt,
   now = () => Date.now(),
   createToken = () => randomBytes(32).toString('base64url'),
 } = {}) {
@@ -135,9 +213,11 @@ export function createAuthLoginStartHandler({
       assertJsonSize(request);
       const credentials = normalizeCredentials(await readJsonBody(request));
 
-      if (getAdmin) {
-        admin = getAdmin();
+      admin = getAdmin();
+      if (admin) {
         await consumeAuthAttempt(admin, request, credentials.email);
+      } else {
+        consumeLocalAttempt(request, credentials.email);
       }
 
       passwordClient = createPublicClient();

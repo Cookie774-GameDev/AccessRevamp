@@ -62,7 +62,10 @@ export function createAuthLoginCompleteHandler({
       let result;
       if (getAdmin) {
         const admin = getAdmin();
-        const user = await requireConfirmedUser(request, admin, { requireVerifiedSession: false });
+        const user = await requireConfirmedUser(request, admin, {
+          requireVerifiedSession: false,
+          requireInboxAuthentication: true,
+        });
         const challengeHash = createHash('sha256').update(challengeToken).digest('hex');
         result = await admin.rpc('complete_accessrevamp_email_signin', {
           p_challenge_hash: challengeHash,
@@ -79,7 +82,10 @@ export function createAuthLoginCompleteHandler({
       } else {
         const accessToken = bearerAccessToken(request);
         const client = createAccessTokenClient(accessToken);
-        await requireConfirmedUser(request, client, { requireVerifiedSession: false });
+        await requireConfirmedUser(request, client, {
+          requireVerifiedSession: false,
+          requireInboxAuthentication: true,
+        });
         result = await client.rpc('complete_accessrevamp_email_signin_current', {
           p_challenge_token: challengeToken,
         });
