@@ -63,9 +63,12 @@ export function assertSameOrigin(request) {
   const origin = request.headers.get('origin');
   if (!origin) throw new HttpError(403, 'A valid browser origin is required.');
   const allowed = new Set([
+    'https://accessrevamp.com',
+    'https://www.accessrevamp.com',
     process.env.URL,
     process.env.DEPLOY_PRIME_URL,
     process.env.VITE_SITE_URL,
+    process.env.ACCESSREVAMP_SITE_URL,
     ...(process.env.ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()),
   ].filter(Boolean).map((value) => value.replace(/\/$/, '')));
   if (!allowed.has(origin.replace(/\/$/, ''))) throw new HttpError(403, 'Origin is not allowed.');

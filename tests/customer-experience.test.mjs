@@ -37,15 +37,30 @@ test('checkout saves one stable request and uses only a server-created Stripe UR
   assert.match(checkout, /removeEventListener/);
 });
 
-test('auth and dashboard cover missing configuration and explicitly scope customer reads', async () => {
-  const [auth, dashboard] = await Promise.all([read('src/services/auth.js'), read('src/services/dashboard.js')]);
-  assert.match(auth, /Supabase is not connected/);
-  assert.match(auth, /Enter the six digits from the newest AccessRevamp email/);
+test('auth and both dashboard routes use AccessRevamp-only customer wording', async () => {
+  const [auth, authPage, dashboardPage, dashboardService, accountService, operatorService] = await Promise.all([
+    read('src/services/auth.js'),
+    read('src/pages/auth.js'),
+    read('src/pages/dashboard.js'),
+    read('src/services/dashboard.js'),
+    read('src/services/account-projects.js'),
+    read('src/services/operator.js'),
+  ]);
+  assert.match(auth, /Account access is temporarily unavailable/);
+  assert.match(auth, /Open the newest AccessRevamp email/);
+  assert.match(auth, /SIGNUP_START_ENDPOINT/);
+  assert.match(auth, /ACCOUNT_EXISTS/);
   assert.match(auth, /verifyOtp/);
-  assert.equal((dashboard.match(/\.eq\('user_id', session\.user\.id\)/g) || []).length, 2);
-  assert.match(dashboard, /Workspace configuration pending/);
-  assert.match(dashboard, /Sign in to continue/);
-  assert.match(dashboard, /partial/i);
+  assert.match(dashboardPage, /accountProjectsPage/);
+  assert.match(dashboardService, /setupAccountProjects as setupDashboard/);
+  assert.match(accountService, /<video[^>]+controls[^>]+playsinline/);
+  assert.match(operatorService, /prepareEmail/);
+  assert.match(operatorService, /mailto:/);
+  assert.match(operatorService, /Email customer/);
+  assert.doesNotMatch(
+    `${auth}\n${authPage}\n${accountService}\n${operatorService}`,
+    /Supabase is not connected|connected Supabase project|Supabase public configuration|private Supabase bucket|Supabase environment values/i,
+  );
 });
 
 test('legal, account, checkout-result, and internal-boundary routes stay explicit', async () => {

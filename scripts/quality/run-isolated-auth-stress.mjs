@@ -94,7 +94,7 @@ async function exerciseCodePanel(page, mode) {
       emailHint: 'co••••••••@example.test',
       expiresAt: Date.now() + 300_000,
     }));
-  }, { storageKey: 'accessrevamp.auth.pending-code.v1', mode });
+  }, { storageKey: 'accessrevamp.auth.pending-code.v2', mode });
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.waitForSelector('[data-auth-code-step]:not([hidden])', { timeout: 10_000 });
   const panel = await page.evaluate(() => {
@@ -126,7 +126,7 @@ async function exerciseCodePanel(page, mode) {
   assert.match(panel.fontFamily, /Courier/i);
   assert.notEqual(panel.letterSpacing, 'normal');
   assert.match(panel.fallbackText, /secure button/i);
-  assert.match(panel.fallbackText, /never on localhost/i);
+  assert.match(panel.fallbackText, /AccessRevamp website/i);
   assert.equal(panel.fallbackFitsPanel, true, `${mode} fallback notice overflows the code panel`);
   assert.ok(panel.scrollWidth <= panel.clientWidth + 1, `${mode} code panel horizontal overflow`);
   return panel;
@@ -165,7 +165,7 @@ async function runViewport(browser, name, viewport) {
         assert.equal(sample.panel, true);
         assert.equal(sample.submit, true);
         assert.equal(sample.submitDisabled, false, `${name} ${route} shipped with account access disabled`);
-        assert.doesNotMatch(sample.status, /supabase is not connected|account access is unavailable/i);
+        assert.doesNotMatch(sample.status, /account access is temporarily unavailable|account access is unavailable/i);
         assert.equal(sample.phoneInputs, 0);
         assert.equal(sample.passwordInputs, mode === 'signup' ? 2 : 1);
         assert.equal(sample.codeStep, true);

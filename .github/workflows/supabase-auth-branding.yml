@@ -1,4 +1,4 @@
-name: Supabase Auth Branding
+name: AccessRevamp Auth Email
 
 on:
   workflow_dispatch:
@@ -14,25 +14,27 @@ permissions:
   statuses: write
 
 concurrency:
-  group: accessrevamp-supabase-auth-branding
+  group: accessrevamp-auth-email
   cancel-in-progress: false
 
 jobs:
   apply-hosted-auth-branding:
-    name: Configure production Auth and email codes
+    name: Configure production Auth and official email
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: vbkkimvedmklebghtkzs
       SUPABASE_AUTH_SITE_URL: https://accessrevamp.com
-      SUPABASE_AUTH_REDIRECT_URLS: https://accessrevamp.com/login,https://accessrevamp.com/signup,https://www.accessrevamp.com/login,https://www.accessrevamp.com/signup
+      SUPABASE_AUTH_REDIRECT_URLS: https://accessrevamp.com/login,https://accessrevamp.com/signup,https://accessrevamp.com/dashboard,https://www.accessrevamp.com/login,https://www.accessrevamp.com/signup,https://www.accessrevamp.com/dashboard
       SUPABASE_SMTP_ADMIN_EMAIL: ${{ secrets.SUPABASE_SMTP_ADMIN_EMAIL }}
       SUPABASE_SMTP_HOST: ${{ secrets.SUPABASE_SMTP_HOST }}
       SUPABASE_SMTP_PORT: ${{ secrets.SUPABASE_SMTP_PORT }}
       SUPABASE_SMTP_USER: ${{ secrets.SUPABASE_SMTP_USER }}
       SUPABASE_SMTP_PASS: ${{ secrets.SUPABASE_SMTP_PASS }}
       SUPABASE_SMTP_SENDER_NAME: AccessRevamp
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      ACCESSREVAMP_FROM_EMAIL: ${{ secrets.ACCESSREVAMP_FROM_EMAIL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,18 +51,43 @@ jobs:
             echo "credential_configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-          smtp_count=0
+          standard_count=0
           for value in "$SUPABASE_SMTP_ADMIN_EMAIL" "$SUPABASE_SMTP_HOST" "$SUPABASE_SMTP_PORT" "$SUPABASE_SMTP_USER" "$SUPABASE_SMTP_PASS"; do
-            if [ -n "$value" ]; then smtp_count=$((smtp_count + 1)); fi
+            if [ -n "$value" ]; then standard_count=$((standard_count + 1)); fi
           done
-          if [ "$smtp_count" -eq 0 ]; then
-            echo "smtp_configured=false" >> "$GITHUB_OUTPUT"
-          elif [ "$smtp_count" -eq 5 ]; then
-            echo "smtp_configured=true" >> "$GITHUB_OUTPUT"
-          else
+          resend_count=0
+          for value in "$RESEND_API_KEY" "$ACCESSREVAMP_FROM_EMAIL"; do
+            if [ -n "$value" ]; then resend_count=$((resend_count + 1)); fi
+          done
+
+          if [ "$standard_count" -ne 0 ] && [ "$standard_count" -ne 5 ]; then
             echo "smtp_configured=partial" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=invalid" >> "$GITHUB_OUTPUT"
             echo "::error::Custom SMTP is partially configured. Add all five SUPABASE_SMTP_* secrets or remove all of them."
             exit 1
+          fi
+          if [ "$resend_count" -ne 0 ] && [ "$resend_count" -ne 2 ]; then
+            echo "smtp_configured=partial" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=invalid" >> "$GITHUB_OUTPUT"
+            echo "::error::Resend is partially configured. Add both RESEND_API_KEY and ACCESSREVAMP_FROM_EMAIL or remove both."
+            exit 1
+          fi
+          if [ "$standard_count" -eq 5 ] && [ "$resend_count" -eq 2 ]; then
+            echo "smtp_configured=partial" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=invalid" >> "$GITHUB_OUTPUT"
+            echo "::error::Choose either the five SUPABASE_SMTP_* secrets or the two Resend secrets, not both."
+            exit 1
+          fi
+
+          if [ "$standard_count" -eq 5 ]; then
+            echo "smtp_configured=true" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=custom" >> "$GITHUB_OUTPUT"
+          elif [ "$resend_count" -eq 2 ]; then
+            echo "smtp_configured=true" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=resend" >> "$GITHUB_OUTPUT"
+          else
+            echo "smtp_configured=false" >> "$GITHUB_OUTPUT"
+            echo "smtp_mode=none" >> "$GITHUB_OUTPUT"
           fi
       - name: Apply production Auth settings and available email branding
         id: apply
@@ -76,11 +103,11 @@ jobs:
         run: |
           set -o pipefail
           node scripts/supabase/apply-auth-branding.mjs --verify 2>&1 | tee supabase-auth-branding-verify.log
-      - name: Upload safe Supabase Auth diagnostics
+      - name: Upload safe Auth diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: supabase-auth-branding-diagnostics
+          name: accessrevamp-auth-email-diagnostics
           path: |
             supabase-auth-branding-apply.log
             supabase-auth-branding-verify.log
@@ -106,12 +133,12 @@ jobs:
           const failed = !configurationValid || (credentialConfigured && (!applied || !verified));
           const state = failed ? 'failure' : (!credentialConfigured || !smtpConfigured ? 'pending' : 'success');
           const description = failed
-            ? 'Supabase Auth configuration could not be applied or verified'
+            ? 'AccessRevamp Auth email configuration could not be verified'
             : (!credentialConfigured
-              ? 'Waiting for the protected SUPABASE_ACCESS_TOKEN secret'
+              ? 'Waiting for the protected Auth management credential'
               : (!smtpConfigured
-                ? 'Production redirects fixed; custom SMTP required for code emails'
-                : 'Official six-digit email templates applied and verified'));
+                ? 'Production redirects fixed; official sender still required'
+                : 'Official AccessRevamp email templates applied and verified'));
           const response = await fetch(
             `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`,
             {
@@ -124,7 +151,7 @@ jobs:
               },
               body: JSON.stringify({
                 state,
-                context: 'supabase/auth-branding',
+                context: 'accessrevamp/auth-email',
                 description,
                 target_url: process.env.STATUS_TARGET_URL,
               }),
@@ -137,15 +164,16 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## Supabase Auth branding"
+            echo "## AccessRevamp Auth email"
             if [ "${{ steps.configuration.outputs.credential_configured }}" != "true" ]; then
-              echo "No hosted setting was changed because the repository secret \`SUPABASE_ACCESS_TOKEN\` is missing."
+              echo "No hosted setting was changed because the protected Auth management credential is missing."
             elif [ "${{ steps.apply.outcome }}" != "success" ] || [ "${{ steps.verify.outcome }}" != "success" ]; then
-              echo "The hosted configuration attempt failed. A secret-safe diagnostic artifact named \`supabase-auth-branding-diagnostics\` was uploaded."
+              echo "The hosted configuration attempt failed. A secret-safe diagnostic artifact named \`accessrevamp-auth-email-diagnostics\` was uploaded."
             elif [ "${{ steps.configuration.outputs.smtp_configured }}" = "true" ]; then
-              echo "Official six-digit AccessRevamp templates, custom SMTP, and the production Site URL were applied and verified."
+              echo "Official six-digit AccessRevamp templates, the verified sender, and the production Site URL were applied and verified."
+              echo "Sender mode: ${{ steps.configuration.outputs.smtp_mode }}."
             else
-              echo "The production Site URL, redirect allow list, confirmation requirement, and OTP lifetime were applied and verified."
-              echo "Supabase Free blocks custom template changes while its built-in mailer is active, so the current emails use the secure production-link fallback. Add all five \`SUPABASE_SMTP_*\` repository secrets to activate the official six-digit code emails."
+              echo "The production Site URL, redirect allow list, confirmation requirement, and email lifetime were applied and verified."
+              echo "Add either \`RESEND_API_KEY\` plus \`ACCESSREVAMP_FROM_EMAIL\`, or all five \`SUPABASE_SMTP_*\` secrets, to activate the official AccessRevamp sender and branded six-digit emails."
             fi
           } >> "$GITHUB_STEP_SUMMARY"

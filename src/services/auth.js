@@ -1,8 +1,11 @@
 import { getSupabase } from '../lib/supabase.js';
 
+const SIGNUP_START_ENDPOINT = '/api/auth-signup-start';
+const SIGNUP_RESEND_ENDPOINT = '/api/auth-signup-resend';
 const LOGIN_START_ENDPOINT = '/api/auth-login-start';
 const LOGIN_COMPLETE_ENDPOINT = '/api/auth-login-complete';
-const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v1';
+const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v2';
+const LOGIN_HINT_KEY = 'accessrevamp.auth.login-email.v1';
 const OTP_PATTERN = /^[0-9]{6}$/;
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
@@ -21,6 +24,7 @@ function cleanAuthUrl() {
   const clean = new URL(location.href);
   clean.searchParams.delete('verification');
   clean.searchParams.delete('confirmed');
+  clean.searchParams.delete('account');
   clean.hash = '';
   history.replaceState({}, '', `${clean.pathname}${clean.search}`);
 }
@@ -63,6 +67,20 @@ function restorePending(mode) {
   }
 }
 
+function saveLoginHint(email) {
+  try { sessionStorage.setItem(LOGIN_HINT_KEY, email); } catch { /* no-op */ }
+}
+
+function takeLoginHint() {
+  try {
+    const email = sessionStorage.getItem(LOGIN_HINT_KEY) || '';
+    sessionStorage.removeItem(LOGIN_HINT_KEY);
+    return email;
+  } catch {
+    return '';
+  }
+}
+
 async function readJson(response) {
   return response.json().catch(() => ({}));
 }
@@ -87,7 +105,7 @@ async function waitForSession(supabase, timeoutMs = 9000) {
       if (session) finish(resolve, session);
     });
     subscription = listener.data.subscription;
-    timeout = setTimeout(() => finish(reject, new Error('The legacy email link did not create a valid session.')), timeoutMs);
+    timeout = setTimeout(() => finish(reject, new Error('The verification email did not create a valid session.')), timeoutMs);
   });
 }
 
@@ -161,6 +179,61 @@ export function setupAuthForm(navigate) {
     return valid && confirmPasswordInput.value === password;
   };
 
+  const startSignup = async (fullName, email, password) => {
+    const response = await fetch(SIGNUP_START_ENDPOINT, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fullName, email, password }),
+    });
+    if (response.status === 404) return { legacyFallback: true };
+    const result = await readJson(response);
+    if (response.status === 409 && result.code === 'ACCOUNT_EXISTS') {
+      return { accountExists: true, emailHint: result.emailHint };
+    }
+    if (!response.ok) throw new Error(result.error || 'The account could not be created.');
+    return result;
+  };
+
+  const fallbackSignup = async (fullName, email, password) => {
+    const result = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${location.origin}/login?confirmed=1`,
+        data: { full_name: fullName },
+      },
+    });
+    if (result.error) throw result.error;
+    const identities = result.data?.user?.identities;
+    if (Array.isArray(identities) && identities.length === 0) {
+      return { accountExists: true, emailHint: maskEmail(email) };
+    }
+    if (result.data?.session) {
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      throw new Error('Email confirmation is not enforced by the account service. Account access was blocked for safety.');
+    }
+    return { ok: true, emailHint: maskEmail(email), expiresIn: 600 };
+  };
+
+  const resendSignup = async (email) => {
+    const response = await fetch(SIGNUP_RESEND_ENDPOINT, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (response.status === 404) {
+      const result = await supabase.auth.resend({ type: 'signup', email });
+      if (result.error) throw result.error;
+      return { ok: true, expiresIn: 600 };
+    }
+    const result = await readJson(response);
+    if (response.status === 409) return result;
+    if (!response.ok) throw new Error(result.error || 'A new email could not be sent yet.');
+    return result;
+  };
+
   const startLogin = async (email, password) => {
     const response = await fetch(LOGIN_START_ENDPOINT, {
       method: 'POST',
@@ -193,12 +266,18 @@ export function setupAuthForm(navigate) {
     pending = flow;
     savePending(flow);
     if (emailHint) emailHint.textContent = flow.emailHint || maskEmail(flow.email);
-    if (codeKicker) codeKicker.textContent = flow.kind === 'signup' ? 'Account code sent' : 'Password accepted';
+    if (codeKicker) codeKicker.textContent = flow.kind === 'signup' ? 'Verification email sent' : 'Password accepted';
     if (resend) resend.hidden = flow.kind !== 'signup';
     codeForm?.reset();
-    setStatus(codeStatus, 'Enter the six digits from the newest AccessRevamp email.');
+    setStatus(codeStatus, 'Open the newest AccessRevamp email. Enter the six-digit code if shown, or use its secure verification button.');
     show('code');
     queueMicrotask(() => codeInput?.focus());
+  };
+
+  const routeExistingAccount = (email) => {
+    removePending();
+    saveLoginHint(email);
+    navigate('/login?account=existing', { replace: true });
   };
 
   const handleLegacyEmailLink = async (challengeToken) => {
@@ -216,7 +295,7 @@ export function setupAuthForm(navigate) {
       if (disposed) return;
       cleanAuthUrl();
       show('form');
-      setStatus(status, error.message || 'The legacy verification link is invalid or expired. Start again.', 'error');
+      setStatus(status, error.message || 'The verification email is invalid or expired. Start again.', 'error');
       passwordInput?.focus();
     }
   };
@@ -230,7 +309,7 @@ export function setupAuthForm(navigate) {
       if (disposed) return;
       cleanAuthUrl();
       show('form');
-      setStatus(status, 'Email confirmed. Sign in with your password to receive a fresh six-digit code.', 'success');
+      setStatus(status, 'Email confirmed. Sign in with your password to receive a fresh verification email.', 'success');
       form.elements.email?.focus();
     } catch (error) {
       if (disposed) return;
@@ -250,24 +329,16 @@ export function setupAuthForm(navigate) {
     const email = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
     setBusy(true, signup ? 'Creating protected account…' : 'Checking password…');
-    setStatus(status, signup ? 'Creating the account and preparing your email code…' : 'Validating your password securely…');
+    setStatus(status, signup ? 'Creating the account and requesting your verification email…' : 'Validating your password securely…');
 
     try {
       if (signup) {
         const fullName = String(data.get('fullName') || '').trim();
-        const result = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${location.origin}/login?confirmed=1`,
-            data: { full_name: fullName },
-          },
-        });
-        if (result.error) throw result.error;
-
-        if (result.data?.session) {
-          await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-          throw new Error('Email confirmation is not enforced by the connected Supabase project. Account access was blocked for safety.');
+        let result = await startSignup(fullName, email, password);
+        if (result.legacyFallback) result = await fallbackSignup(fullName, email, password);
+        if (result.accountExists) {
+          routeExistingAccount(email);
+          return;
         }
 
         passwordInput.value = '';
@@ -277,8 +348,8 @@ export function setupAuthForm(navigate) {
           mode,
           kind: 'signup',
           email,
-          emailHint: maskEmail(email),
-          expiresAt: Date.now() + (10 * 60 * 1000),
+          emailHint: result.emailHint || maskEmail(email),
+          expiresAt: Date.now() + (Number(result.expiresIn || 600) * 1000),
         });
         return;
       }
@@ -296,7 +367,7 @@ export function setupAuthForm(navigate) {
     } catch (error) {
       setStatus(status, error.message || 'Authentication failed.', 'error');
     } finally {
-      setBusy(false, signup ? 'Create account & send code' : 'Check password & send code');
+      setBusy(false, signup ? 'Create account & send email' : 'Check password & send email');
     }
   };
 
@@ -362,17 +433,27 @@ export function setupAuthForm(navigate) {
   const onResend = async () => {
     if (!pending || pending.kind !== 'signup' || codeBusy || !supabase) return;
     setCodeBusy(true);
-    setStatus(codeStatus, 'Sending a new confirmation code…');
+    setStatus(codeStatus, 'Requesting a new verification email…');
     try {
-      const result = await supabase.auth.resend({ type: 'signup', email: pending.email });
-      if (result.error) throw result.error;
-      pending.expiresAt = Date.now() + (10 * 60 * 1000);
+      const result = await resendSignup(pending.email);
+      if (result.code === 'ACCOUNT_EXISTS') {
+        routeExistingAccount(pending.email);
+        return;
+      }
+      if (result.code === 'RESTART_SIGNUP') {
+        removePending();
+        pending = null;
+        show('form');
+        setStatus(status, 'This pending signup was not found. Enter the account details again.', 'error');
+        return;
+      }
+      pending.expiresAt = Date.now() + (Number(result.expiresIn || 600) * 1000);
       savePending(pending);
       codeForm?.reset();
-      setStatus(codeStatus, 'A new code was sent. Use the newest AccessRevamp email.', 'success');
+      setStatus(codeStatus, 'A new AccessRevamp email was requested. Check Inbox, Spam, and Promotions, and use only the newest message.', 'success');
       codeInput?.focus();
     } catch (error) {
-      setStatus(codeStatus, error.message || 'A new code could not be sent yet. Try again shortly.', 'error');
+      setStatus(codeStatus, error.message || 'A new email could not be sent yet. Try again shortly.', 'error');
     } finally {
       setCodeBusy(false);
     }
@@ -385,8 +466,8 @@ export function setupAuthForm(navigate) {
     codeForm?.reset();
     show('form');
     setStatus(status, signup
-      ? 'Enter the account details again to request a new confirmation code.'
-      : 'Enter the password again to request a new one-time code.');
+      ? 'Enter the account details again to request a new verification email.'
+      : 'Enter the password again to request a new verification email.');
     form.elements.email?.focus();
   };
 
@@ -400,12 +481,13 @@ export function setupAuthForm(navigate) {
   updatePasswordRules();
 
   if (!supabase) {
-    setStatus(status, 'Supabase is not connected on this deployment. Account access is unavailable.', 'error');
+    setStatus(status, 'Account access is temporarily unavailable on this deployment. Please try again later.', 'error');
     submit.disabled = true;
   } else {
     const params = new URLSearchParams(location.search);
     const verification = params.get('verification');
     const confirmed = params.get('confirmed');
+    const existingAccount = params.get('account') === 'existing';
     if (verification && mode === 'login') {
       handleLegacyEmailLink(verification);
     } else if (confirmed === '1' && mode === 'login') {
@@ -413,8 +495,15 @@ export function setupAuthForm(navigate) {
     } else if (confirmed === 'code' && mode === 'login') {
       cleanAuthUrl();
       supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-      setStatus(status, 'Email confirmed. Enter your password and we will send a fresh six-digit sign-in code.', 'success');
+      setStatus(status, 'Email confirmed. Enter your password and we will send a fresh sign-in email.', 'success');
       form.elements.email?.focus();
+    } else if (existingAccount && mode === 'login') {
+      cleanAuthUrl();
+      supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      const hintedEmail = takeLoginHint();
+      if (hintedEmail && form.elements.email) form.elements.email.value = hintedEmail;
+      setStatus(status, 'This email already has an AccessRevamp account. Enter the correct password to receive the sign-in email.', 'success');
+      passwordInput?.focus();
     } else {
       supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       const restored = restorePending(mode);

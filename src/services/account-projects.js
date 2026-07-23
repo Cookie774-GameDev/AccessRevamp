@@ -171,7 +171,7 @@ export function setupAccountProjects(navigate) {
   const load = async () => {
     const supabase = getSupabase();
     if (!supabase) {
-      show(host, 'configuration-missing', '<h2>Workspace configuration missing</h2><p>This deployment has no Supabase public configuration.</p>');
+      show(host, 'configuration-missing', '<h2>Workspace temporarily unavailable</h2><p>The secure customer service is not configured on this deployment.</p>');
       return;
     }
 

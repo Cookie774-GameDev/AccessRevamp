@@ -4,6 +4,7 @@ import { escapeHtml } from '../components/icons.js';
 
 const API_ENDPOINT = '/api/operator-overview';
 const DEFAULT_MAXIMUM_BYTES = 50 * 1024 * 1024;
+const CUSTOMER_HUB_URL = 'https://accessrevamp.com/account/projects';
 
 const label = (value = '') => String(value)
   .replace(/[_-]+/g, ' ')
@@ -28,6 +29,16 @@ const projectName = (project) => {
   const customer = project.customer?.email || project.customer?.full_name || 'unlinked customer';
   return `${project.name} — ${customer}`;
 };
+
+function deliveryEmail(project, title, artifactType) {
+  const email = String(project?.customer?.email || '').trim();
+  if (!email) return '';
+  const firstName = String(project?.customer?.full_name || '').trim().split(/\s+/)[0];
+  const item = artifactType === 'video' ? 'video' : artifactType === 'website_build' ? 'website files' : 'project file';
+  const subject = `Your AccessRevamp ${item} is ready`;
+  const body = `${firstName ? `Hi ${firstName},` : 'Hi,'}\n\nYour ${item}${title ? ` — ${title}` : ''} is ready in your private AccessRevamp dashboard.\n\nSign in here to watch or download it:\n${CUSTOMER_HUB_URL}\n\nFor security, please do not forward your private dashboard links.\n\nAccessRevamp`;
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 
 function projectOptions(projects = []) {
   return projects.map((project) => `<option value="${escapeHtml(project.id)}">${escapeHtml(projectName(project))}</option>`).join('');
@@ -54,7 +65,8 @@ function renderArtifactForm(projects, uploadLimits = {}) {
     <label>Project<select name="projectId" required>${projectOptions(projects)}</select></label>
     <div class="operator-form__split"><label>Customer title<input name="title" maxlength="160" required placeholder="Final website package" /></label><label>File category<select name="artifactType" required><option value="website_build">Website build</option><option value="design_image">Design image</option><option value="poster">Poster or creative</option><option value="video">Video</option><option value="audit_report">Audit report</option><option value="test_report">Test report</option><option value="delivery_manifest">Delivery manifest</option><option value="research_document">Research document</option><option value="security_report">Security report</option><option value="customer_message">Customer note</option><option value="design_md">Design notes</option><option value="skill_md">Implementation notes</option></select></label></div>
     <label>Description<textarea name="description" rows="4" maxlength="2000" placeholder="What this file contains and how the customer should use it."></textarea></label>
-    <label class="operator-file-input">Private file<input name="artifactFile" type="file" required accept=".zip,.pdf,.json,.txt,.md,.png,.jpg,.jpeg,.webp,.avif,.svg,.mp4,.webm,application/zip,application/pdf,image/*,video/mp4,video/webm,text/plain,text/markdown,application/json" /><small>The file goes directly to the project’s private Supabase bucket; it is not sent through the Netlify function.</small></label>
+    <label class="operator-file-input">Private file<input name="artifactFile" type="file" required accept=".zip,.pdf,.json,.txt,.md,.png,.jpg,.jpeg,.webp,.avif,.svg,.mp4,.webm,application/zip,application/pdf,image/*,video/mp4,video/webm,text/plain,text/markdown,application/json" /><small>The file uploads directly to the customer’s private project space and appears in their dashboard after verification.</small></label>
+    <label class="operator-checkbox"><input name="prepareEmail" type="checkbox" checked /><span>Prepare a customer email after upload with a secure dashboard link.</span></label>
     <label class="operator-checkbox"><input name="markDelivered" type="checkbox" /><span>Mark this as the final website delivery, set progress to 100%, and close the project.</span></label>
     <div class="operator-form__actions"><button class="button button--small" type="submit">Upload and publish</button><p class="form-status" role="status" aria-live="polite"></p></div>
   </form>`;
@@ -68,8 +80,13 @@ function renderRecentUpdates(updates = [], projects = []) {
 
 function renderRecentArtifacts(artifacts = [], projects = []) {
   if (!artifacts.length) return '<p>No customer files have been recorded.</p>';
-  const names = new Map(projects.map((project) => [project.id, project.name]));
-  return `<div class="operator-activity-list">${artifacts.slice(0, 12).map((artifact) => `<article><div><strong>${escapeHtml(artifact.metadata?.title || artifact.filename || label(artifact.artifact_type))}</strong><span>${escapeHtml(names.get(artifact.project_id) || 'Project')}</span></div><div><span class="status-pill">${escapeHtml(label(artifact.status))}</span><time>${escapeHtml(formatDate(artifact.created_at))}</time></div></article>`).join('')}</div>`;
+  const projectMap = new Map(projects.map((project) => [project.id, project]));
+  return `<div class="operator-activity-list">${artifacts.slice(0, 12).map((artifact) => {
+    const project = projectMap.get(artifact.project_id);
+    const title = artifact.metadata?.title || artifact.filename || label(artifact.artifact_type);
+    const email = deliveryEmail(project, title, artifact.artifact_type);
+    return `<article><div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(project?.name || 'Project')}</span></div><div><span class="status-pill">${escapeHtml(label(artifact.status))}</span><time>${escapeHtml(formatDate(artifact.created_at))}</time>${email ? `<a class="text-link" href="${escapeHtml(email)}">Email customer</a>` : ''}</div></article>`;
+  }).join('')}</div>`;
 }
 
 function renderProjects(projects = []) {
@@ -120,7 +137,7 @@ export function setupOperator() {
     return readResponse(response);
   };
 
-  const load = async (flash = '') => {
+  const load = async (flash = '', emailLink = '') => {
     const supabase = getSupabase();
     const sessionResult = await supabase?.auth.getSession();
     const session = sessionResult?.data?.session;
@@ -140,7 +157,10 @@ export function setupOperator() {
       currentData = data;
       if (sendingState) sendingState.textContent = data.sendingEnabled ? 'unexpectedly enabled — investigate' : 'disabled';
       host.dataset.operatorState = 'ready';
-      host.innerHTML = `${flash ? `<div class="notice notice--success"><strong>${escapeHtml(flash)}</strong></div>` : ''}${renderOverview(data)}`;
+      const flashMarkup = flash
+        ? `<div class="notice notice--success"><strong>${escapeHtml(flash)}</strong>${emailLink ? `<p><a class="button button--small" href="${escapeHtml(emailLink)}">Open customer email</a></p>` : ''}</div>`
+        : '';
+      host.innerHTML = `${flashMarkup}${renderOverview(data)}`;
     } catch (error) {
       host.dataset.operatorState = 'denied';
       host.innerHTML = `<h2>Operator workspace unavailable</h2><p>${escapeHtml(error.message || 'Access denied')}</p>`;
@@ -196,13 +216,16 @@ export function setupOperator() {
     let slot = null;
     try {
       const contentType = file.type || 'application/octet-stream';
+      const projectId = String(values.get('projectId') || '');
+      const title = String(values.get('title') || '');
+      const artifactType = String(values.get('artifactType') || '');
       slot = await api({
         action: 'create_artifact_upload',
-        projectId: values.get('projectId'),
+        projectId,
         filename: file.name,
-        title: values.get('title'),
+        title,
         description: values.get('description'),
-        artifactType: values.get('artifactType'),
+        artifactType,
         contentType,
         sizeBytes: file.size,
       });
@@ -219,9 +242,16 @@ export function setupOperator() {
         artifactId: slot.artifactId,
         markDelivered: values.get('markDelivered') === 'on',
       });
-      await load(values.get('markDelivered') === 'on'
-        ? 'The final website package is available to the customer.'
-        : 'The file is available in the customer hub.');
+      const project = currentData?.projects?.find((item) => item.id === projectId);
+      const emailLink = values.get('prepareEmail') === 'on'
+        ? deliveryEmail(project, title, artifactType)
+        : '';
+      await load(
+        values.get('markDelivered') === 'on'
+          ? 'The final website package is available to the customer.'
+          : 'The file is available in the customer hub.',
+        emailLink,
+      );
     } catch (error) {
       if (slot?.artifactId && /upload/i.test(status.textContent)) {
         await api({ action: 'cancel_artifact_upload', artifactId: slot.artifactId }).catch(() => undefined);
