@@ -52,7 +52,7 @@
 .pricing-page .plan-card { min-width: 0; padding: clamp(1.35rem, 2.1vw, 2rem); }
 .pricing-page .plan-card h3 { font-size: clamp(1.55rem, 2.1vw, 2rem); }
 .pricing-page .plan-card[data-plan-tier="cinematic_scroll"] { color: #fff; border-color: #8ef0d1; background: linear-gradient(145deg, #2947d7 0%, #15277d 43%, #07111f 100%); box-shadow: 0 24px 64px rgba(22, 43, 151, .28), 8px 8px 0 var(--mint), inset 0 0 0 1px rgba(255,255,255,.12); }
-.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] :is(h3, p, li, .plan-price span, .sandbox-badge) { color: #fff; }
+.pricing-page .plan-card[data-plan-tier="cinematic_scroll"] :is(h3, p, li, .plan-price span) { color: #fff; }
 .pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .kicker { color: var(--mint); }
 .pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .plan-price strong { color: var(--sun); }
 .pricing-page .plan-card[data-plan-tier="cinematic_scroll"] .button { border-color: var(--sun); background: var(--sun); color: var(--ink); }

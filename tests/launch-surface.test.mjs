@@ -22,6 +22,7 @@ const [config, checkoutClient, checkoutFunction, paymentRuntime, customerCopy] =
     collectTextFiles('src/pages'),
     collectTextFiles('src/components'),
     collectTextFiles('src/data'),
+    collectTextFiles('src/styles'),
   ]).then((groups) => groups.flat().join('\n')),
 ]);
 

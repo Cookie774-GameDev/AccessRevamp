@@ -28,8 +28,6 @@
 .text-arrow:hover { color: var(--ultramarine); }
 .circle-link { display: grid; width: 2.8rem; height: 2.8rem; flex: 0 0 auto; place-items: center; border: 1.5px solid var(--ink); border-radius: 50%; text-decoration: none; transition: transform .2s, background .2s, color .2s; }
 .circle-link:hover { transform: rotate(-25deg); background: var(--ink); color: #fff; }
-.sandbox-badge { display: inline-flex; align-items: center; gap: .42rem; margin-top: .75rem; color: var(--ink-soft); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.sandbox-badge i { width: .55rem; height: .55rem; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 3px var(--sun-pale); }
 .site-footer { border-top: 1px solid var(--near-black); background: var(--near-black); color: var(--white); }
 .site-footer p, .site-footer a { color: #dbe0ec; }
 .site-footer .brand-wordmark, .site-footer .brand-wordmark span { color: #fff; }
@@ -39,7 +37,6 @@
 .footer-links h2 { color: var(--sun); font-family: var(--condensed); font-size: .72rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 .footer-links a { display: block; margin: .55rem 0; text-decoration: none; }
 .footer-statement > span { display: block; color: #fff; font-family: var(--display); font-size: 1.5rem; line-height: 1.2; }
-.site-footer .sandbox-badge { color: #cfd5e1; }
 .footer-bottom { display: flex; justify-content: space-between; gap: 1rem; padding-block: 1.15rem; border-top: 1px solid rgba(255,255,255,.14); color: #aeb7c8; font-size: .78rem; }
 .work-card { min-width: 0; }
 .work-card__art { position: relative; display: block; min-height: 24rem; overflow: hidden; border: 1px solid var(--ink); border-radius: var(--radius-large); color: var(--ink); text-decoration: none; box-shadow: var(--shadow-small); }
