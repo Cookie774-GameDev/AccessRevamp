@@ -36,6 +36,12 @@ jobs:
             echo
             echo '=== deploy API ==='
             curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 'https://api.netlify.com/api/v1/sites/accessrevamp.netlify.app/deploys?per_page=5' || true
+            echo
+            echo '=== skipped production deploy detail ==='
+            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/deploys/6a62d0d5289f7400085b2abd || true
+            echo
+            echo '=== skipped production deploy log ==='
+            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/deploys/6a62d0d5289f7400085b2abd/log || true
           } | tee netlify-production-state.txt
       - name: Upload output
         if: always()
