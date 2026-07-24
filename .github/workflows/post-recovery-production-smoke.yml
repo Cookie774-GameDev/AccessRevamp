@@ -5,6 +5,7 @@ on:
     branches: [diag/post-recovery-production-smoke]
     paths:
       - .github/workflows/post-recovery-production-smoke.yml
+      - .github/diagnostics/post-recovery-trigger.txt
 
 permissions:
   contents: read
@@ -19,6 +20,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Publish pending smoke status
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/vnd.github+json',
+              authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'content-type': 'application/json',
+              'x-github-api-version': '2022-11-28',
+            },
+            body: JSON.stringify({
+              state: 'pending',
+              context: 'accessrevamp/post-recovery-production-smoke',
+              description: 'Waiting for the production recovery deployment',
+              target_url: process.env.TARGET_URL,
+            }),
+          });
+          if (!response.ok) throw new Error(`Status API returned ${response.status}`);
+          NODE
       - name: Wait for production recovery bundle and test public boundaries
         id: smoke
         continue-on-error: true
