@@ -25,6 +25,7 @@ import { processPage } from './pages/process.js';
 import { cinematicPage } from './pages/cinematic.js';
 import { contactPage } from './pages/contact.js';
 import { authPage } from './pages/auth.js';
+import { recoveryPage } from './pages/recovery.js';
 import { dashboardPage } from './pages/dashboard.js';
 import { legalPage } from './pages/legal.js';
 import { freeSnapshotPage } from './pages/free-snapshot.js';
@@ -37,6 +38,7 @@ import { underConstructionPage as underConstructionContent } from './pages/under
 import { setupCinematicExperience } from './cinematic-scroll.js';
 import { setupContactForm } from './services/contact.js';
 import { setupAuthForm } from './services/auth.js';
+import { setupRecoveryForm } from './services/recovery.js';
 import { setupDashboard } from './services/dashboard.js';
 import { setupCheckout } from './services/checkout.js';
 import { setupCheckoutResult } from './services/checkout-result.js';
@@ -47,15 +49,22 @@ import { setupProjectApproval } from './services/project-approval.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
 
-function normalizeSupabaseConfirmationReturn() {
-  if (location.pathname === '/login' || !location.hash) return;
+function normalizeAuthEmailReturn() {
+  if (!location.hash) return;
   const authFragment = new URLSearchParams(location.hash.replace(/^#/, ''));
   const type = authFragment.get('type');
-  if (!authFragment.get('access_token') || !['signup', 'email'].includes(type)) return;
-  history.replaceState({}, '', `/login?confirmed=1${location.hash}`);
+  if (!authFragment.get('access_token')) return;
+
+  if (type === 'recovery' && !['/forgot-password', '/recover-account'].includes(location.pathname)) {
+    history.replaceState({}, '', `/recover-account?recovery=link${location.hash}`);
+    return;
+  }
+  if (['signup', 'email'].includes(type) && location.pathname !== '/login') {
+    history.replaceState({}, '', `/login?confirmed=1${location.hash}`);
+  }
 }
 
-normalizeSupabaseConfirmationReturn();
+normalizeAuthEmailReturn();
 const app = document.querySelector('#app');
 
 function underConstructionPage() {
@@ -84,6 +93,8 @@ const routes = {
   '/contact': contactPage,
   '/login': () => authPage('login'),
   '/signup': () => authPage('signup'),
+  '/forgot-password': () => recoveryPage('/forgot-password'),
+  '/recover-account': () => recoveryPage('/recover-account'),
   '/account/projects': accountProjectsPage,
   '/project-intake': projectIntakePage,
   '/approve/:token': projectApprovalPage,
@@ -176,6 +187,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/free-snapshot') cleanups.push(setupFreeSnapshot());
   if (pathname === '/pricing') cleanups.push(setupPricingContext());
   if (pathname === '/login' || pathname === '/signup') cleanups.push(setupAuthForm(router.navigate));
+  if (pathname === '/forgot-password' || pathname === '/recover-account') cleanups.push(setupRecoveryForm(router.navigate));
   if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
   if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));
   if (pathname === '/project-intake') cleanups.push(setupProjectIntake());
