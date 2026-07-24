@@ -1,5 +1,6 @@
 name: Inspect Netlify production state
 
+# Recheck after direct main push 90381310b2f255e06ab4fd803fe2bd6bec304fcc.
 on:
   push:
     branches: [diag/netlify-production-state]
@@ -59,7 +60,7 @@ jobs:
             }));
 
           const commitMetadata = {};
-          for (const deploy of production.slice(0, 3)) {
+          for (const deploy of production.slice(0, 4)) {
             if (!deploy.commit_ref) continue;
             const response = await fetch(`https://api.github.com/repos/${repository}/commits/${deploy.commit_ref}`, { headers: githubHeaders });
             const commit = await response.json();
