@@ -19,11 +19,12 @@ import projectIntake from "../netlify/functions/project-intake.mjs";
 import refundAuthorization from "../netlify/functions/refund-authorization.mjs";
 import refundExecute from "../netlify/functions/refund-execute.mjs";
 import stripeWebhook from "../netlify/functions/stripe-webhook.mjs";
+import { installWorkerEnvironment } from "./environment.mjs";
 import { createMediaRangeResponse } from "./media-range.mjs";
 
 type WorkerEnvironment = {
   ASSETS: { fetch(request: Request): Promise<Response> };
-};
+} & Record<string, string | { fetch(request: Request): Promise<Response> }>;
 
 const routes = new Map<string, (request: Request) => Promise<Response>>([
   ["/api/account-project-feedback", accountProjectFeedback],
@@ -53,6 +54,7 @@ const isShowcaseVideo = (pathname: string) => pathname.startsWith("/media/showca
 
 const worker = {
   async fetch(request: Request, env: WorkerEnvironment, context: ExecutionContext) {
+    installWorkerEnvironment(env, process.env);
     const pathname = new URL(request.url).pathname;
     if (isShowcaseVideo(pathname)) {
       if (request.method === "GET" && request.headers.has("Range")) {
