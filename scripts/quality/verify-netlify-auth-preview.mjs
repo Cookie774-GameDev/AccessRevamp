@@ -65,7 +65,7 @@ while (Date.now() < deadline) {
       '/recover-account',
       'accessrevamp.auth.recovery.v1',
       'resetPasswordForEmail',
-      'Access Revamp Authorization',
+      'Recover your account securely.',
     ];
     const missing = requiredMarkers.filter((marker) => !bundleText.includes(marker));
     if (missing.length) throw new Error(`The latest account bundle is missing: ${missing.join(', ')}`);
