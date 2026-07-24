@@ -1,0 +1,71 @@
+name: Inspect Netlify production state
+
+on:
+  push:
+    branches: [diag/netlify-production-state]
+    paths:
+      - .github/workflows/netlify-production-state.yml
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Inspect public production and Netlify API
+        id: inspect
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            echo '=== production marker ==='
+            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://accessrevamp.com/accessrevamp-deploy-version.txt || true
+            echo
+            echo '=== production home headers ==='
+            curl --http1.1 -sS -I --connect-timeout 10 --max-time 30 https://accessrevamp.com/ || true
+            echo
+            echo '=== site API ==='
+            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/sites/accessrevamp.netlify.app || true
+            echo
+            echo '=== deploy API ==='
+            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 'https://api.netlify.com/api/v1/sites/accessrevamp.netlify.app/deploys?per_page=5' || true
+          } | tee netlify-production-state.txt
+      - name: Upload output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-production-state
+          path: netlify-production-state.txt
+          retention-days: 1
+      - name: Publish status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          INSPECT_OUTCOME: ${{ steps.inspect.outcome }}
+          TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/vnd.github+json',
+              authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'content-type': 'application/json',
+              'x-github-api-version': '2022-11-28',
+            },
+            body: JSON.stringify({
+              state: process.env.INSPECT_OUTCOME === 'success' ? 'success' : 'failure',
+              context: 'accessrevamp/netlify-production-state',
+              description: 'Netlify production state inspected',
+              target_url: process.env.TARGET_URL,
+            }),
+          });
+          if (!response.ok) throw new Error(`Status API returned ${response.status}`);
+          NODE
