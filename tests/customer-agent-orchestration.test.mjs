@@ -52,6 +52,16 @@ const [
   firstTouchWordLimitSql,
 ] = files;
 
+const worker6Sql = await read('supabase/migrations/20260724120000_worker6_inbound_reply_routing.sql').catch(() => '');
+
+test('Worker 6 storage is service-only, deduplicated, and draft-only', () => {
+  assert.match(worker6Sql, /gmail_message_id text not null unique/);
+  assert.match(worker6Sql, /assignment_kind text not null check/);
+  assert.match(worker6Sql, /record_accessrevamp_inbound_email/);
+  assert.match(worker6Sql, /on conflict \(gmail_message_id\) do nothing/i);
+  assert.doesNotMatch(worker6Sql, /smtp|sendMail|gmail\.users\.messages\.send/i);
+});
+
 test('cinematic orders collect three or four scenes and keep portfolio permission optional', () => {
   assert.match(wizard, /name="cinematicSceneCount"/);
   assert.match(wizard, /value="3"/);

@@ -105,8 +105,10 @@ export function createCheckoutHandler({
       const key = assertStripePaymentMode(process.env.STRIPE_CHECKOUT_SECRET_KEY, modeEnvironment);
       const stripe = createStripe(key);
       const origin = new URL(request.url).origin;
+      const integrationSuffix = payload.requestId.replaceAll('-', '').slice(0, 8);
 
       const session = await stripe.checkout.sessions.create({
+        integration_identifier: `accessrevamp_checkout_${integrationSuffix}`,
         mode: 'payment',
         line_items: [{ price: priceId, quantity: 1 }],
         customer_email: user.email,

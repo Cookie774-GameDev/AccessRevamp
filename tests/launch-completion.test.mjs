@@ -66,6 +66,7 @@ test('Checkout uses explicit API version, idempotency, a fail-closed database ca
   assert.match(checkoutFunction, /\.from\('order_drafts'\)/);
   assert.match(checkoutFunction, /buildCheckoutMetadata/);
   assert.match(checkoutFunction, /STRIPE_CHECKOUT_SECRET_KEY/);
+  assert.match(checkoutFunction, /integration_identifier:\s*`accessrevamp_checkout_\$\{/);
   assert.match(paymentRuntime, /stripe_price_catalog/);
   assert.match(paymentRuntime, /configuration_verified_at/);
   assert.doesNotMatch(checkoutFunction, /price_1T|STRIPE_QUICK_FIX/);

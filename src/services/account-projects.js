@@ -91,12 +91,41 @@ function renderBrief(project) {
   ${canSubmit ? `<a class="text-link" href="/project-intake?plan=${encodeURIComponent(project.plan_key)}&project=${encodeURIComponent(project.id)}" data-nav>Update your project brief</a>` : ''}`;
 }
 
-function renderDesigns(options = []) {
+function renderDesignCards(options = []) {
   if (!options.length) return '<p class="portal-empty">Design directions will appear here after human review.</p>';
   return `<div class="portal-design-grid">${options.map((option) => {
     const url = safeHref(option.preview_url);
     return `<article class="portal-design-card"><div class="portal-design-card__preview">${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(`${label(option.option_group)} option ${option.option_number}`)}" loading="lazy"/></a>` : '<div class="portal-file-icon">Preview pending</div>'}</div><div><span class="micro-label">${escapeHtml(label(option.option_group))}</span><h4>Option ${Number(option.option_number)}</h4><p>Revision ${Number(option.revision_round || 0)}${option.scene_number ? ` · Scene ${Number(option.scene_number)}` : ''}</p>${renderStatus(option.status)}</div></article>`;
   }).join('')}</div>`;
+}
+
+const renderChoiceOptions = (options) => `<option value="">No selection</option>${options.map((option) => `<option value="${escapeHtml(option.id)}">${escapeHtml(`${label(option.option_group)} option ${option.option_number}`)}</option>`).join('')}`;
+
+function renderDesigns(options = [], feedback = []) {
+  if (!options.length) return renderDesignCards(options);
+  const latestRound = Math.max(...options.map((option) => Number(option.revision_round || 0)));
+  const currentOptions = options.filter((option) => Number(option.revision_round || 0) === latestRound);
+  const optionGroup = currentOptions[0]?.option_group || 'homepage';
+  const requestsUsed = feedback.filter((entry) => entry.action === 'request_more').length;
+  const choices = renderChoiceOptions(currentOptions);
+  return `${renderDesignCards(options)}
+    <form class="portal-design-feedback" data-design-feedback-form data-option-group="${escapeHtml(optionGroup)}" data-revision-round="${latestRound}">
+      <div><span class="micro-label">Rank your favorites</span><h4>Choose up to three directions</h4><p>Your first choice becomes the selected direction after the project and account checks pass.</p></div>
+      <label>First choice<select name="firstChoice" required>${choices}</select></label>
+      <label>Second choice<select name="secondChoice">${choices}</select></label>
+      <label>Third choice<select name="thirdChoice">${choices}</select></label>
+      <label class="portal-feedback-notes">Notes for the design team<textarea name="notes" maxlength="3000" rows="4" placeholder="Tell us what you like, what to combine, or what to avoid."></textarea></label>
+      <div class="portal-feedback-actions"><button class="button button--small" type="submit">Save design choices</button><button class="button button--ghost button--small" type="button" data-request-more-designs ${requestsUsed >= 2 ? 'disabled' : ''}>Request five new directions</button><span class="form-status" role="status" aria-live="polite">${requestsUsed} of 2 additional rounds requested</span></div>
+    </form>`;
+}
+
+function renderSpecialRequests(project) {
+  const requests = (project.feedback || []).filter((entry) => entry.action === 'special_request');
+  return `<form class="portal-special-request" data-special-request-form>
+    <div><span class="micro-label">Special request</span><h4>Send production-specific direction</h4><p>This request is attached only to this verified customer project.</p></div>
+    <label>Request<textarea name="notes" minlength="10" maxlength="3000" rows="5" required placeholder="Describe the change, reference, content, or delivery detail you need."></textarea></label>
+    <div class="portal-feedback-actions"><button class="button button--small" type="submit">Send request</button><span class="form-status" role="status" aria-live="polite">${requests.length ? `${requests.length} request${requests.length === 1 ? '' : 's'} recorded` : ''}</span></div>
+  </form>`;
 }
 
 function renderArtifactPreview(artifact) {
@@ -138,7 +167,8 @@ function renderProject(project) {
       <details open><summary>Project updates <span>${(project.updates || []).length}</span></summary><div class="portal-section-body">${renderUpdates(project.updates)}</div></details>
       <details><summary>Production progress <span>${project.workflow?.tasks?.length || 0}</span></summary><div class="portal-section-body">${renderWorkflow(project.workflow)}</div></details>
       <details><summary>Your brief and references <span>${project.brief?.assets?.length || 0}</span></summary><div class="portal-section-body">${renderBrief(project)}</div></details>
-      <details><summary>Designs for review <span>${project.design_options?.length || 0}</span></summary><div class="portal-section-body">${renderDesigns(project.design_options)}</div></details>
+      <details><summary>Designs for review <span>${project.design_options?.length || 0}</span></summary><div class="portal-section-body">${renderDesigns(project.design_options, project.feedback)}</div></details>
+      <details><summary>Special requests <span>${(project.feedback || []).filter((entry) => entry.action === 'special_request').length}</span></summary><div class="portal-section-body">${renderSpecialRequests(project)}</div></details>
       <details open><summary>Files and website downloads <span>${project.artifacts?.length || 0}</span></summary><div class="portal-section-body">${renderArtifacts(project.artifacts)}${renderDeliveries(project.deliveries)}</div></details>
     </div>
   </article>`;
@@ -167,6 +197,31 @@ export function setupAccountProjects(navigate) {
   const logout = document.querySelector('[data-account-logout]');
   const greeting = document.querySelector('[data-account-greeting]');
   let disposed = false;
+  let activeSession = null;
+
+  const saveFeedback = async (form, payload) => {
+    const status = form.querySelector('.form-status');
+    const controls = form.querySelectorAll('button, select, textarea');
+    controls.forEach((control) => { control.disabled = true; });
+    if (status) status.textContent = 'Saving securely…';
+    try {
+      const response = await fetch('/api/account-project-feedback', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${activeSession.access_token}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ ...payload, requestId: crypto.randomUUID() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Your request could not be saved.');
+      if (status) status.textContent = 'Saved. The production team can now review it.';
+      await load();
+    } catch (error) {
+      controls.forEach((control) => { control.disabled = false; });
+      if (status) status.textContent = error.message || 'Your request could not be saved.';
+    }
+  };
 
   const load = async () => {
     const supabase = getSupabase();
@@ -184,6 +239,7 @@ export function setupAccountProjects(navigate) {
       if (greeting) greeting.textContent = 'A secure session is required.';
       return;
     }
+    activeSession = session;
     if (!session.user.email_confirmed_at) {
       show(host, 'confirmation-required', '<h2>Confirm your email</h2><p>Open the confirmation email before viewing customer records.</p>');
       return;
@@ -212,16 +268,69 @@ export function setupAccountProjects(navigate) {
     await getSupabase()?.auth.signOut();
     navigate('/');
   };
-  const onHostClick = (event) => {
-    if (event.target.closest('[data-hub-refresh]')) load();
+  const onHostClick = async (event) => {
+    if (event.target.closest('[data-hub-refresh]')) {
+      await load();
+      return;
+    }
+    const requestButton = event.target.closest('[data-request-more-designs]');
+    if (!requestButton || !activeSession) return;
+    const form = requestButton.closest('[data-design-feedback-form]');
+    const project = requestButton.closest('[data-project-id]');
+    await saveFeedback(form, {
+      action: 'request_more',
+      projectId: project.dataset.projectId,
+      optionGroup: form.dataset.optionGroup,
+      selectedOptionIds: [],
+      revisionRound: Number(form.dataset.revisionRound || 0),
+      notes: form.elements.notes.value.trim(),
+    });
+  };
+  const onHostSubmit = async (event) => {
+    const form = event.target.closest('form');
+    if (!form || !activeSession) return;
+    const project = form.closest('[data-project-id]');
+    if (form.matches('[data-design-feedback-form]')) {
+      event.preventDefault();
+      const selectedOptionIds = [
+        form.elements.firstChoice.value,
+        form.elements.secondChoice.value,
+        form.elements.thirdChoice.value,
+      ].filter(Boolean);
+      if (new Set(selectedOptionIds).size !== selectedOptionIds.length) {
+        form.querySelector('.form-status').textContent = 'Choose each design only once.';
+        return;
+      }
+      await saveFeedback(form, {
+        action: 'select_designs',
+        projectId: project.dataset.projectId,
+        optionGroup: form.dataset.optionGroup,
+        selectedOptionIds,
+        revisionRound: Number(form.dataset.revisionRound || 0),
+        notes: form.elements.notes.value.trim(),
+      });
+      return;
+    }
+    if (form.matches('[data-special-request-form]')) {
+      event.preventDefault();
+      await saveFeedback(form, {
+        action: 'special_request',
+        projectId: project.dataset.projectId,
+        selectedOptionIds: [],
+        revisionRound: 0,
+        notes: form.elements.notes.value.trim(),
+      });
+    }
   };
 
   logout?.addEventListener('click', onLogout);
   host.addEventListener('click', onHostClick);
+  host.addEventListener('submit', onHostSubmit);
   load();
   return () => {
     disposed = true;
     logout?.removeEventListener('click', onLogout);
     host.removeEventListener('click', onHostClick);
+    host.removeEventListener('submit', onHostSubmit);
   };
 }

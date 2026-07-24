@@ -2,7 +2,7 @@ import { primaryNavigation } from '../data/navigation.js';
 import { brandLink } from './brand.js';
 import { escapeHtml, icon } from './icons.js';
 
-const SUPPORT_EMAIL = 'support.accessrevamp.com@gmail.com';
+const SUPPORT_EMAIL = 'support@accessrevamp.shop';
 
 const navLink = ([href, label], pathname) => {
   const active = href === '/' ? pathname === '/' : pathname.startsWith(href);

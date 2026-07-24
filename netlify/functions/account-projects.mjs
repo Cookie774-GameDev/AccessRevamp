@@ -91,6 +91,7 @@ async function signDesignOptions(admin, options) {
     scene_number: option.scene_number,
     revision_round: option.revision_round,
     status: option.status,
+    prompt_summary: typeof option.prompt_summary === 'string' ? option.prompt_summary.slice(0, 1000) : null,
     customer_selected_at: option.customer_selected_at,
     created_at: option.created_at,
     preview_url: option.storage_path
@@ -172,13 +173,14 @@ export default async function accountProjects(request) {
       });
     }
 
-    const [intakesResult, workflowsResult, designsResult, deliveriesResult, artifactsResult, updatesResult] = await Promise.all([
+    const [intakesResult, workflowsResult, designsResult, deliveriesResult, artifactsResult, updatesResult, feedbackResult] = await Promise.all([
       admin.from('project_intakes').select('id,project_id,selected_pages,style_notes,content_notes,cinematic_notes,project_notes,reference_urls,inspiration_choices,status,created_at,updated_at').in('project_id', projectIds).order('updated_at', { ascending: false }),
       admin.from('project_workflows').select('id,project_id,status,current_stage,revision_round,started_at,completed_at,updated_at').in('project_id', projectIds).order('created_at', { ascending: false }),
-      admin.from('project_design_options').select('id,project_id,option_group,option_number,sequence_key,scene_number,revision_round,status,storage_path,external_url,customer_selected_at,created_at').in('project_id', projectIds).in('status', CUSTOMER_DESIGN_STATUSES).order('created_at', { ascending: false }),
+      admin.from('project_design_options').select('id,project_id,option_group,option_number,sequence_key,scene_number,revision_round,status,storage_path,external_url,prompt_summary,customer_selected_at,created_at').in('project_id', projectIds).in('status', CUSTOMER_DESIGN_STATUSES).order('created_at', { ascending: false }),
       admin.from('project_deliveries').select('id,project_id,version,delivery_type,status,manifest,drive_url,customer_notified_at,delivered_at,created_at').in('project_id', projectIds).in('status', CUSTOMER_DELIVERY_STATUSES).order('created_at', { ascending: false }),
       admin.from('project_artifacts').select('id,project_id,artifact_type,storage_provider,storage_path,external_url,filename,mime_type,size_bytes,status,metadata,created_at').in('project_id', projectIds).in('status', CUSTOMER_ARTIFACT_STATUSES).order('created_at', { ascending: false }),
       admin.from('project_updates').select('id,project_id,title,body,stage,progress_percent,published_at,created_at').in('project_id', projectIds).not('published_at', 'is', null).order('published_at', { ascending: false }),
+      admin.from('customer_project_feedback').select('id,project_id,action,option_group,selected_option_ids,notes,revision_round,request_more_count,status,created_at').in('project_id', projectIds).order('created_at', { ascending: false }),
     ]);
 
     const intakes = rows(intakesResult, 'briefs', partialFailures);
@@ -187,6 +189,7 @@ export default async function accountProjects(request) {
     const deliveries = rows(deliveriesResult, 'deliveries', partialFailures);
     const artifacts = rows(artifactsResult, 'files', partialFailures);
     const updates = rows(updatesResult, 'updates', partialFailures);
+    const feedback = rows(feedbackResult, 'customer requests', partialFailures);
 
     const intakeIds = intakes.map((intake) => intake.id);
     const workflowIds = workflows.map((workflow) => workflow.id);
@@ -208,6 +211,7 @@ export default async function accountProjects(request) {
     const deliveriesByProject = groupBy(deliveries, 'project_id');
     const artifactsByProject = groupBy(artifacts, 'project_id');
     const updatesByProject = groupBy(updates, 'project_id');
+    const feedbackByProject = groupBy(feedback, 'project_id');
     const intakeAssetsByIntake = groupBy(intakeAssets, 'intake_id');
     const tasksByWorkflow = groupBy(workflowTasks, 'workflow_id');
 
@@ -266,6 +270,7 @@ export default async function accountProjects(request) {
           delivered_at: delivery.delivered_at,
           created_at: delivery.created_at,
         })),
+        feedback: feedbackByProject.get(project.id) || [],
       };
     }));
 

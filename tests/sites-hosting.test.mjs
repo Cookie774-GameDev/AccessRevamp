@@ -23,7 +23,26 @@ test('Sites metadata describes the finished AccessRevamp experience', async () =
 
 test('Sites worker routes customer APIs before the browser catch-all', async () => {
   const worker = await readFile('worker/index.ts', 'utf8');
-  for (const route of ['/api/contact', '/api/free-snapshot', '/api/create-checkout', '/api/account-projects', '/api/pricing-context', '/api/stripe-webhook']) {
+  for (const route of [
+    '/api/account-projects',
+    '/api/auth-login-complete',
+    '/api/auth-login-start',
+    '/api/auth-signup-resend',
+    '/api/auth-signup-start',
+    '/api/checkout-status',
+    '/api/contact',
+    '/api/create-checkout',
+    '/api/free-snapshot',
+    '/api/operator-overview',
+    '/api/order-draft',
+    '/api/payment-health',
+    '/api/pricing-context',
+    '/api/project-approval',
+    '/api/project-intake',
+    '/api/refund-authorization',
+    '/api/refund-execute',
+    '/api/stripe-webhook',
+  ]) {
     assert.match(worker, new RegExp(route.replaceAll('/', '\\/')));
   }
   assert.match(worker, /routes\.get\(pathname\)/);

@@ -67,6 +67,16 @@
 .portal-design-card > div:last-child, .portal-file-card__body { padding: 1rem; }
 .portal-design-card h4, .portal-file-card h4 { margin: .35rem 0 .45rem; font-family: var(--display); font-size: 1.35rem; }
 .portal-design-card p, .portal-file-card p { margin: 0 0 .7rem; font-size: .82rem; }
+.portal-design-feedback, .portal-special-request { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.25rem; padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--ink); border-radius: var(--radius); background: color-mix(in srgb, var(--mint) 18%, var(--surface)); }
+.portal-special-request { grid-template-columns: minmax(12rem, .65fr) minmax(0, 1.35fr); background: color-mix(in srgb, var(--sun) 18%, var(--surface)); }
+.portal-design-feedback > div:first-child { grid-column: 1 / -1; }
+.portal-design-feedback h4, .portal-special-request h4 { margin: .35rem 0 .45rem; font-family: var(--display); font-size: 1.5rem; }
+.portal-design-feedback p, .portal-special-request p { margin: 0; color: var(--ink-soft); }
+.portal-design-feedback label, .portal-special-request label { display: grid; gap: .45rem; font-size: .78rem; font-weight: 800; }
+.portal-design-feedback select, .portal-design-feedback textarea, .portal-special-request textarea { width: 100%; padding: .8rem .9rem; border: 1px solid var(--line-dark); border-radius: var(--radius-small); background: var(--white); color: var(--ink); font: inherit; }
+.portal-feedback-notes, .portal-feedback-actions { grid-column: 1 / -1; }
+.portal-feedback-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+.portal-feedback-actions .form-status { flex: 1 1 14rem; }
 .portal-file-card__body .button { margin-top: 1rem; }
 .portal-file-icon { display: grid; min-height: 10rem; place-items: center; color: var(--mint); font-family: var(--condensed); font-size: .75rem; font-weight: 900; letter-spacing: .12em; }
 .portal-delivery-list { display: grid; gap: .65rem; margin-top: 1rem; }
@@ -110,7 +120,7 @@
 }
 
 @media (max-width: 700px) {
-  .customer-hub-summary, .portal-workflow-summary, .portal-brief-grid, .operator-form__split, .operator-form__split--three { grid-template-columns: 1fr; }
+  .customer-hub-summary, .portal-workflow-summary, .portal-brief-grid, .portal-design-feedback, .portal-special-request, .operator-form__split, .operator-form__split--three { grid-template-columns: 1fr; }
   .customer-project { box-shadow: 5px 5px 0 var(--sun); }
   .customer-project__header, .portal-timeline__head, .portal-delivery-list article { display: grid; }
   .customer-project__status { justify-content: start; }

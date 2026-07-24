@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const SUPPORT_EMAIL = 'support.accessrevamp.com@gmail.com';
+const SUPPORT_EMAIL = 'support@accessrevamp.shop';
 
 const [legalPage, routes, metadata, shell, styles] = await Promise.all([
   readFile('src/pages/legal.js', 'utf8'),
@@ -43,7 +43,7 @@ test('customer policy terms refund accessibility and support are complete public
 });
 
 test('support email is valid visible and linked across policy pages and footer', () => {
-  assert.match(SUPPORT_EMAIL, /^[^\s@]+@gmail\.com$/i);
+  assert.match(SUPPORT_EMAIL, /^[^\s@]+@accessrevamp\.shop$/i);
   assert.ok(legalPage.includes(SUPPORT_EMAIL));
   assert.ok(shell.includes(SUPPORT_EMAIL));
   assert.match(legalPage, /mailto:\$\{SUPPORT_EMAIL\}/);

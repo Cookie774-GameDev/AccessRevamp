@@ -2,7 +2,7 @@ import '../styles/legal-support.css';
 import { refundPolicy } from '../data/policies.js';
 import { shell } from '../components/shell.js';
 
-export const SUPPORT_EMAIL = 'support.accessrevamp.com@gmail.com';
+export const SUPPORT_EMAIL = 'support@accessrevamp.shop';
 export const LEGAL_LAST_UPDATED = 'July 22, 2026';
 
 const routeFor = Object.freeze({

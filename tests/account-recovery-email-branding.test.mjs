@@ -15,6 +15,7 @@ const [
   brandingScript,
   brandingWorkflow,
   pricingPage,
+  orderWizard,
   shell,
   emailLogo,
 ] = await Promise.all([
@@ -30,6 +31,7 @@ const [
   readFile('scripts/supabase/apply-auth-branding.mjs', 'utf8'),
   readFile('.github/workflows/supabase-auth-branding.yml', 'utf8'),
   readFile('src/pages/pricing.js', 'utf8'),
+  readFile('src/components/order-wizard.js', 'utf8'),
   readFile('src/components/shell.js', 'utf8'),
   readFile('public/accessrevamp-email-logo.svg', 'utf8'),
 ]);
@@ -100,7 +102,9 @@ test('hosted Auth automation supports the official sender and every OTP template
 
 test('customer pages no longer display test or sandbox checkout notices', () => {
   assert.doesNotMatch(pricingPage, /Test-mode notice|Sandbox checkout|Stripe test mode/i);
+  assert.doesNotMatch(orderWizard, /Test-mode notice|Sandbox checkout|Stripe test mode/i);
   assert.match(pricingPage, /Secure one-time checkout/);
+  assert.match(orderWizard, /Secure one-time checkout/);
   assert.match(shell, /export function sandboxBadge\(\) \{\s*return '';\s*\}/s);
   assert.doesNotMatch(shell, />\s*Sandbox checkout\s*</i);
 });

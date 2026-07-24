@@ -15,7 +15,7 @@ const planOption = (plan) => {
 
 export function orderWizard() {
   return `<section class="section order-flow-section" id="start-project"><div class="container-wide">
-    <div class="chapter-head chapter-head--light"><span class="chapter-index">Build your request</span><div><h2>Tell us what the finished website needs to do.</h2><p>Review the scope, then continue to secure test checkout. Draft text stays on this device.</p></div></div>
+    <div class="chapter-head chapter-head--light"><span class="chapter-index">Build your request</span><div><h2>Tell us what the finished website needs to do.</h2><p>Review the scope, then continue to secure one-time checkout. Draft text stays on this device.</p></div></div>
     <form class="order-wizard" data-order-wizard novalidate>
       <nav class="order-wizard__steps" aria-label="Project request progress">${['Contact', 'Plan', 'Brief', 'Review', 'Payment'].map((label, index) => `<button type="button" data-order-step-jump="${index}" aria-current="${index === 0 ? 'step' : 'false'}"><span>0${index + 1}</span>${label}</button>`).join('')}</nav>
       <div class="order-wizard__panel" data-order-panel="0">
@@ -61,7 +61,7 @@ export function orderWizard() {
       </div>
       <div class="order-wizard__panel" data-order-panel="4" hidden>
         <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
-        <div class="order-payment"><span class="sandbox-badge">Stripe test mode</span><p>Your request is saved before Stripe opens. A verified webhook—not the browser redirect—creates the paid order and project.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
+        <div class="order-payment"><p><strong>Secure one-time checkout.</strong> Your request is saved before Stripe opens. A verified webhook—not the browser redirect—creates the paid order and project.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
       </div>
       <div class="order-wizard__actions"><button type="button" class="text-arrow" data-order-previous hidden>Back</button><p class="form-status" data-order-status role="status">Step 1 of 5</p><button type="button" class="button" data-order-next>Continue ${icon('arrow')}</button></div>
     </form>
