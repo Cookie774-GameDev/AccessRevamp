@@ -1,0 +1,101 @@
+name: Guarded Netlify production deployment
+
+on:
+  push:
+    branches: [diag/netlify-production-state]
+    paths:
+      - .github/workflows/manual-netlify-production.yml
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: 1e31bb1c-2a13-4b27-83b4-cf3660d101ea
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check protected Netlify credential
+        id: credential
+        shell: bash
+        run: |
+          if [ -n "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NETLIFY_AUTH_TOKEN is not configured; no manual production deploy was attempted."
+          fi
+      - name: Install locked dependencies
+        if: steps.credential.outputs.configured == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build production site
+        if: steps.credential.outputs.configured == 'true'
+        env:
+          REQUIRE_FFMPEG_OPTIMIZATION: "false"
+          MAX_SHOWCASE_VIDEO_BYTES: "9500000"
+        run: npm run build
+      - name: Deploy production site
+        id: deploy
+        if: steps.credential.outputs.configured == 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          npx --yes netlify-cli@latest deploy \
+            --prod \
+            --dir=dist \
+            --functions=netlify/functions \
+            --site="$NETLIFY_SITE_ID" \
+            --auth="$NETLIFY_AUTH_TOKEN" \
+            --message="AccessRevamp recovery and authorization release" \
+            --json 2>&1 | tee manual-netlify-production.json
+      - name: Upload safe deployment output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-netlify-production
+          path: manual-netlify-production.json
+          if-no-files-found: ignore
+          retention-days: 1
+      - name: Publish safe status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CREDENTIAL_CONFIGURED: ${{ steps.credential.outputs.configured }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          TARGET_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const credential = process.env.CREDENTIAL_CONFIGURED === 'true';
+          const deployed = process.env.DEPLOY_OUTCOME === 'success';
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/statuses/${process.env.GITHUB_SHA}`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/vnd.github+json',
+              authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'content-type': 'application/json',
+              'x-github-api-version': '2022-11-28',
+            },
+            body: JSON.stringify({
+              state: deployed ? 'success' : credential ? 'failure' : 'pending',
+              context: 'accessrevamp/manual-netlify-production',
+              description: deployed
+                ? 'Recovery release manually published to Netlify production'
+                : credential
+                  ? 'Manual Netlify production deployment failed'
+                  : 'Waiting for protected NETLIFY_AUTH_TOKEN',
+              target_url: process.env.TARGET_URL,
+            }),
+          });
+          if (!response.ok) throw new Error(`Status API returned ${response.status}`);
+          if (credential && !deployed) process.exitCode = 1;
+          NODE
