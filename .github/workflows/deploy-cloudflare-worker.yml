@@ -1,0 +1,43 @@
+name: Deploy AccessRevamp Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessrevamp-cloudflare-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install FFmpeg for scrub-ready media
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify source
+        run: npm run lint && npm test
+      - name: Build Cloudflare Worker and assets
+        env:
+          REQUIRE_FFMPEG_OPTIMIZATION: "true"
+          MAX_SHOWCASE_VIDEO_BYTES: "9500000"
+        run: npm run build
+      - name: Deploy production Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 0aaf188d9d8184defe86953e9191d3aa
+          command: deploy --config dist/server/wrangler.json --name accessrevamp
