@@ -14,6 +14,8 @@ export const routeMetadata = Object.freeze({
   '/contact': ['Contact', 'Tell AccessRevamp what you want to improve.'],
   '/login': ['Sign in', 'Access your AccessRevamp project workspace.'],
   '/signup': ['Create an account', 'Create your AccessRevamp project workspace.'],
+  '/forgot-password': ['Recover account', 'Request a one-time AccessRevamp recovery email and choose a new password.'],
+  '/recover-account': ['Recover account', 'Verify your AccessRevamp recovery code and choose a new password.'],
   '/account/projects': ['Projects', 'View your AccessRevamp projects and orders.'],
   '/project-intake': ['Project brief', 'Choose pages, share references, and upload private visual direction for a verified Complete or Cinematic project.'],
   '/approve/:token': ['Private project approval', 'Review and confirm one AccessRevamp project direction through a private, expiring link.'],
@@ -36,6 +38,8 @@ export const routeMetadata = Object.freeze({
 const noIndexPatterns = new Set([
   '/login',
   '/signup',
+  '/forgot-password',
+  '/recover-account',
   '/account/projects',
   '/project-intake',
   '/approve/:token',
