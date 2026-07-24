@@ -1,7 +1,7 @@
 import { getSupabase } from '../lib/supabase.js';
+import { isEmailOtp, normalizeEmailOtp } from './otp.js';
 
 const RECOVERY_STORAGE_KEY = 'accessrevamp.auth.recovery.v1';
-const OTP_PATTERN = /^[0-9]{6}$/;
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
   mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
@@ -20,10 +20,6 @@ function maskEmail(email) {
   if (!local || !domain) return email;
   const visible = local.slice(0, Math.min(2, local.length));
   return `${visible}${'•'.repeat(Math.max(3, local.length - visible.length))}@${domain}`;
-}
-
-function normalizeCode(value) {
-  return String(value || '').replace(/\D/g, '').slice(0, 6);
 }
 
 function saveRecovery(value) {
@@ -151,7 +147,7 @@ export function setupRecoveryForm(navigate) {
     saveRecovery(recovery);
     if (emailHint) emailHint.textContent = recovery.emailHint;
     codeForm.reset();
-    setStatus(codeStatus, 'Open the newest AccessRevamp recovery email and enter its six-digit code.');
+    setStatus(codeStatus, 'Open the newest AccessRevamp recovery email and enter its complete verification code.');
     show('code');
     queueMicrotask(() => codeInput.focus());
   };
@@ -203,18 +199,18 @@ export function setupRecoveryForm(navigate) {
   };
 
   const onCodeInput = () => {
-    const value = normalizeCode(codeInput.value);
+    const value = normalizeEmailOtp(codeInput.value);
     if (codeInput.value !== value) codeInput.value = value;
-    codeInput.setCustomValidity(value && !OTP_PATTERN.test(value) ? 'Enter the complete six-digit code.' : '');
+    codeInput.setCustomValidity(value && !isEmailOtp(value) ? 'Enter the complete verification code.' : '');
   };
 
   const onCode = async (event) => {
     event.preventDefault();
     if (busy || !supabase || !recovery) return;
     onCodeInput();
-    const token = normalizeCode(codeInput.value);
-    if (!OTP_PATTERN.test(token)) {
-      codeInput.setCustomValidity('Enter the complete six-digit code.');
+    const token = normalizeEmailOtp(codeInput.value);
+    if (!isEmailOtp(token)) {
+      codeInput.setCustomValidity('Enter the complete verification code.');
       codeForm.reportValidity();
       return;
     }

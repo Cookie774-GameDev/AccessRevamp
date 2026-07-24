@@ -101,14 +101,14 @@ test('auth pages use the dark AccessRevamp identity system without phone fields'
   assert.match(authStyles, /prefers-reduced-motion/);
 });
 
-test('signup and sign-in present a polished six digit email code box', () => {
+test('signup and sign-in accept the complete six-to-eight digit email code', () => {
   assert.match(authPage, /data-auth-code-step/);
   assert.match(authPage, /data-auth-code-form/);
   assert.match(authPage, /autocomplete="one-time-code"/);
   assert.match(authPage, /inputmode="numeric"/);
-  assert.match(authPage, /pattern="\[0-9\]\{6\}"/);
-  assert.match(authPage, /maxlength="6"/);
-  assert.match(authPage, /Enter your 6-digit code/);
+  assert.match(authPage, /pattern="\[0-9\]\{6,8\}"/);
+  assert.match(authPage, /maxlength="8"/);
+  assert.match(authPage, /Enter your verification code/);
   assert.match(authOtpStyles, /\.auth-code-field input/);
   assert.match(authOtpStyles, /font-family:\s*"Courier New"/);
   assert.match(authOtpStyles, /letter-spacing:\s*\.58em/);
@@ -369,7 +369,7 @@ test('official AccessRevamp email assets use manual codes instead of verificatio
     assert.match(template, /AccessRevamp/);
     assert.match(template, /#050608/);
     assert.match(template, /\{\{ \.Token \}\}/);
-    assert.match(template, /six-digit/i);
+    assert.match(template, /complete code/i);
     assert.doesNotMatch(template, /\{\{ \.ConfirmationURL \}\}/);
     assert.doesNotMatch(template, /href=["'][^"']*(?:localhost|127\.0\.0\.1)/i);
     assert.doesNotMatch(template, /<script|javascript:/i);

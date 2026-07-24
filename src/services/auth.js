@@ -1,4 +1,5 @@
 import { getSupabase } from '../lib/supabase.js';
+import { isEmailOtp, normalizeEmailOtp } from './otp.js';
 
 const SIGNUP_START_ENDPOINT = '/api/auth-signup-start';
 const SIGNUP_RESEND_ENDPOINT = '/api/auth-signup-resend';
@@ -6,7 +7,6 @@ const LOGIN_START_ENDPOINT = '/api/auth-login-start';
 const LOGIN_COMPLETE_ENDPOINT = '/api/auth-login-complete';
 const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v2';
 const LOGIN_HINT_KEY = 'accessrevamp.auth.login-email.v1';
-const OTP_PATTERN = /^[0-9]{6}$/;
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
   mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
@@ -34,10 +34,6 @@ function maskEmail(email) {
   if (!local || !domain) return email;
   const visible = local.slice(0, Math.min(2, local.length));
   return `${visible}${'•'.repeat(Math.max(3, local.length - visible.length))}@${domain}`;
-}
-
-function normalizeCode(value) {
-  return String(value || '').replace(/\D/g, '').slice(0, 6);
 }
 
 function savePending(flow) {
@@ -269,7 +265,7 @@ export function setupAuthForm(navigate) {
     if (codeKicker) codeKicker.textContent = flow.kind === 'signup' ? 'Verification email sent' : 'Password accepted';
     if (resend) resend.hidden = flow.kind !== 'signup';
     codeForm?.reset();
-    setStatus(codeStatus, 'Open the newest AccessRevamp email. Enter the six-digit code if shown, or use its secure verification button.');
+    setStatus(codeStatus, 'Open the newest AccessRevamp email. Enter its complete verification code, or use the secure verification button.');
     show('code');
     queueMicrotask(() => codeInput?.focus());
   };
@@ -372,18 +368,18 @@ export function setupAuthForm(navigate) {
   };
 
   const onCodeInput = () => {
-    const normalized = normalizeCode(codeInput?.value);
+    const normalized = normalizeEmailOtp(codeInput?.value);
     if (codeInput && codeInput.value !== normalized) codeInput.value = normalized;
-    codeInput?.setCustomValidity(normalized && !OTP_PATTERN.test(normalized) ? 'Enter the complete six-digit code.' : '');
+    codeInput?.setCustomValidity(normalized && !isEmailOtp(normalized) ? 'Enter the complete verification code.' : '');
   };
 
   const onCodeSubmit = async (event) => {
     event.preventDefault();
     if (codeBusy || !pending || !supabase || !codeInput) return;
     onCodeInput();
-    const code = normalizeCode(codeInput.value);
-    if (!OTP_PATTERN.test(code)) {
-      codeInput.setCustomValidity('Enter the complete six-digit code.');
+    const code = normalizeEmailOtp(codeInput.value);
+    if (!isEmailOtp(code)) {
+      codeInput.setCustomValidity('Enter the complete verification code.');
       codeForm.reportValidity();
       return;
     }

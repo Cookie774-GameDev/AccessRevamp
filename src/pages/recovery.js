@@ -25,12 +25,12 @@ export function recoveryPage(pathname = '/forgot-password') {
         <div class="auth-story__copy">
           <span class="auth-kicker"><i></i> Recover / verified</span>
           <h1>Recover your account securely.</h1>
-          <p>Use your confirmed email, enter the newest six-digit recovery code, and choose a new password without sharing private account information.</p>
+          <p>Use your confirmed email, enter the newest recovery code, and choose a new password without sharing private account information.</p>
         </div>
 
         <div class="auth-protocol" aria-label="Account recovery protocol">
           ${protocolStep('01', 'Request the code', 'Enter the confirmed email attached to the AccessRevamp account.')}
-          ${protocolStep('02', 'Verify the inbox', 'Copy the six-digit code from the newest AccessRevamp recovery email.')}
+          ${protocolStep('02', 'Verify the inbox', 'Copy the complete code from the newest AccessRevamp recovery email.')}
           ${protocolStep('03', 'Choose a new password', 'Set a strong password, close the recovery session, and return to secure sign-in.')}
         </div>
 
@@ -61,14 +61,14 @@ export function recoveryPage(pathname = '/forgot-password') {
           <section class="auth-code-step" data-recovery-code-step hidden aria-live="polite">
             <div class="auth-email-step__mark">${icon('check')}</div>
             <span class="auth-kicker"><i></i> Recovery email sent</span>
-            <h2>Enter your 6-digit code.</h2>
+            <h2>Enter your recovery code.</h2>
             <p>Use the newest AccessRevamp recovery email sent to <strong data-recovery-email-hint>your email address</strong>.</p>
             <form class="auth-code-form" data-recovery-code-form novalidate>
               <label class="auth-code-field">
                 <span>Recovery code</span>
-                <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" aria-describedby="recovery-code-help" required />
+                <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" minlength="6" maxlength="8" placeholder="00000000" aria-describedby="recovery-code-help" required />
               </label>
-              <p class="auth-code-help" id="recovery-code-help">Six digits · one-time use · expires shortly</p>
+              <p class="auth-code-help" id="recovery-code-help">6–8 digits · one-time use · expires shortly</p>
               <button class="button auth-submit auth-code-submit" type="submit"><span>Verify recovery code</span>${icon('arrow')}</button>
               <p class="auth-status" data-recovery-code-status role="status" aria-live="polite"></p>
             </form>

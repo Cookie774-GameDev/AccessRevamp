@@ -83,8 +83,8 @@ export function authPage(mode) {
           <section class="auth-code-step" data-auth-code-step hidden aria-live="polite">
             <div class="auth-email-step__mark">${icon('check')}</div>
             <span class="auth-kicker"><i></i> <span data-auth-code-kicker>${signup ? 'Verification email sent' : 'Password accepted'}</span></span>
-            <h2>Enter your 6-digit code.</h2>
-            <p>We sent an AccessRevamp verification email to <strong data-auth-email-hint>your email address</strong>. Open the newest message. Enter its six-digit code below when one is shown.</p>
+            <h2>Enter your verification code.</h2>
+            <p>We sent an AccessRevamp verification email to <strong data-auth-email-hint>your email address</strong>. Open the newest message and enter its complete code below.</p>
 
             <form class="auth-code-form" data-auth-code-form novalidate>
               <label class="auth-code-field">
@@ -94,15 +94,15 @@ export function authPage(mode) {
                   name="code"
                   inputmode="numeric"
                   autocomplete="one-time-code"
-                  pattern="[0-9]{6}"
+                  pattern="[0-9]{6,8}"
                   minlength="6"
-                  maxlength="6"
-                  placeholder="000000"
+                  maxlength="8"
+                  placeholder="00000000"
                   aria-describedby="auth-code-help"
                   required
                 />
               </label>
-              <p class="auth-code-help" id="auth-code-help">Six digits · one-time use · expires shortly</p>
+              <p class="auth-code-help" id="auth-code-help">6–8 digits · one-time use · expires shortly</p>
               <button class="button auth-submit auth-code-submit" type="submit">
                 <span>${signup ? 'Confirm email address' : 'Verify code & enter workspace'}</span>${icon('arrow')}
               </button>

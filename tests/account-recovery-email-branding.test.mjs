@@ -48,12 +48,12 @@ test('account recovery is a public no-index route using the current auth design'
   assert.match(recoveryPage, /data-recovery-request-form/);
   assert.match(recoveryPage, /data-recovery-code-form/);
   assert.match(recoveryPage, /data-recovery-password-form/);
-  assert.match(recoveryPage, /pattern="\[0-9\]\{6\}"/);
+  assert.match(recoveryPage, /pattern="\[0-9\]\{6,8\}"/);
   assert.equal((recoveryPage.match(/type="password"/g) || []).length, 2);
   assert.doesNotMatch(recoveryPage, /type="tel"|name="phone"/);
 });
 
-test('recovery requests an email, verifies a six-digit recovery code, and changes the password', () => {
+test('recovery requests an email, verifies the complete recovery code, and changes the password', () => {
   assert.match(recoveryService, /resetPasswordForEmail/);
   assert.match(recoveryService, /verifyOtp\(\{/);
   assert.match(recoveryService, /type:\s*['"]recovery['"]/);
@@ -61,7 +61,8 @@ test('recovery requests an email, verifies a six-digit recovery code, and change
   assert.match(recoveryService, /signOut\(\{\s*scope:\s*['"]local['"]/);
   assert.match(recoveryService, /RECOVERY_STORAGE_KEY/);
   assert.match(recoveryService, /expiresAt/);
-  assert.match(recoveryService, /OTP_PATTERN\s*=\s*\/\^\[0-9\]\{6\}\$\//);
+  assert.match(recoveryService, /isEmailOtp/);
+  assert.match(recoveryService, /normalizeEmailOtp/);
 });
 
 test('auth contrast protects dark inputs from bright browser autofill', () => {
@@ -72,7 +73,7 @@ test('auth contrast protects dark inputs from bright browser autofill', () => {
   assert.match(recoveryStyles, /@media \(max-width: 680px\)/);
 });
 
-test('signup sign-in and recovery emails are official six-digit Access Revamp messages', () => {
+test('signup sign-in and recovery emails are official Access Revamp code messages', () => {
   for (const template of [confirmationTemplate, signInTemplate, recoveryTemplate]) {
     assert.match(template, /Access Revamp Authorization/);
     assert.match(template, /accessrevamp-email-logo\.svg/);
