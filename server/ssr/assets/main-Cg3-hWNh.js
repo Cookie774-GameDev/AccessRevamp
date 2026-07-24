@@ -121,6 +121,8 @@ var routeMetadata = Object.freeze({
 	"/contact": ["Contact", "Tell AccessRevamp what you want to improve."],
 	"/login": ["Sign in", "Access your AccessRevamp project workspace."],
 	"/signup": ["Create an account", "Create your AccessRevamp project workspace."],
+	"/forgot-password": ["Recover account", "Request a one-time AccessRevamp recovery email and choose a new password."],
+	"/recover-account": ["Recover account", "Verify your AccessRevamp recovery code and choose a new password."],
 	"/account/projects": ["Projects", "View your AccessRevamp projects and orders."],
 	"/project-intake": ["Project brief", "Choose pages, share references, and upload private visual direction for a verified Complete or Cinematic project."],
 	"/approve/:token": ["Private project approval", "Review and confirm one AccessRevamp project direction through a private, expiring link."],
@@ -142,6 +144,8 @@ var routeMetadata = Object.freeze({
 var noIndexPatterns = /* @__PURE__ */ new Set([
 	"/login",
 	"/signup",
+	"/forgot-password",
+	"/recover-account",
 	"/account/projects",
 	"/project-intake",
 	"/approve/:token",
@@ -177,6 +181,62 @@ function icon(name, className = "icon") {
 		external: "<path d=\"M14 5h5v5M19 5l-9 9\"/><path d=\"M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5\"/>"
 	};
 	return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name] || paths.spark}</svg>`;
+}
+//#endregion
+//#region src/data/navigation.js
+var primaryNavigation = Object.freeze([
+	["/portfolio", "Portfolio"],
+	["/free-snapshot", "Free snapshot"],
+	["/process", "Process"],
+	["/pricing", "Pricing"],
+	["/contact", "Contact"]
+]);
+//#endregion
+//#region src/components/brand.js
+function brandMonogram({ animated = false } = {}) {
+	return `<svg class="brand-monogram${animated ? " brand-monogram--animated" : ""}" viewBox="0 0 56 56" aria-hidden="true">
+    <path class="brand-monogram__tile" d="M12 2h32a10 10 0 0 1 10 10v32a10 10 0 0 1-10 10H12A10 10 0 0 1 2 44V12A10 10 0 0 1 12 2Z"/>
+    <path class="brand-monogram__stroke" d="M13 39 25.5 14 38 39M18 30h15"/>
+    <path class="brand-monogram__stroke brand-monogram__stroke--r" d="M31.5 17h5.7c5 0 7.8 2.5 7.8 6.2 0 4-3.1 6.3-8.1 6.3h-3.5L45 40"/>
+  </svg>`;
+}
+function brandLink({ animated = false, className = "" } = {}) {
+	return `<a class="brand ${className}" href="/" data-nav aria-label="AccessRevamp home">${brandMonogram({ animated })}<span class="brand-wordmark">Access<span>Revamp</span></span></a>`;
+}
+//#endregion
+//#region src/components/shell.js
+var SUPPORT_EMAIL$1 = "support.accessrevamp.com@gmail.com";
+var navLink = ([href, label], pathname) => {
+	return `<a href="${href}" data-nav${(href === "/" ? pathname === "/" : pathname.startsWith(href)) ? " aria-current=\"page\"" : ""}>${escapeHtml(label)}</a>`;
+};
+function sandboxBadge() {
+	return "";
+}
+function shell(content, { pathname = location.pathname, home = false, pageClass = "" } = {}) {
+	const primary = primaryNavigation.map((item) => navLink(item, pathname)).join("");
+	return `<div class="site-shell ${pageClass}">
+    <header class="site-header" data-header>
+      <div class="nav-wrap container-wide">
+        ${brandLink({ animated: home })}
+        <nav class="desktop-nav" aria-label="Primary">${primary}</nav>
+        <div class="nav-actions">
+          <a class="text-link nav-signin" href="/login" data-nav>Sign in</a>
+          <a class="button button--small" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon("arrow")}</a>
+          <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">${icon("menu")}</button>
+        </div>
+      </div>
+      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav>Sign in</a><a href="/pricing" data-nav>Get the $50 Homepage Reveal</a></nav></div>
+    </header>
+    <main id="main-content">${content}</main>
+    <footer class="site-footer">
+      <div class="container-wide footer-main">
+        <div class="footer-brand">${brandLink()}<p>Verified friction, a clearer hierarchy, and a one-time path to a better website.</p></div>
+        <div class="footer-links"><div><h2>Explore</h2><a href="/portfolio" data-nav>Portfolio</a><a href="/free-snapshot" data-nav>Free snapshot</a><a href="/sample-report" data-nav>Sample report</a><a href="/methodology" data-nav>Methodology</a><a href="/support" data-nav>Customer support</a></div><div><h2>Policies</h2><a href="/legal" data-nav>Policy center</a><a href="/policy" data-nav>Customer policy</a><a href="/privacy" data-nav>Privacy policy</a><a href="/terms" data-nav>Terms</a><a href="/refunds" data-nav>Refunds</a><a href="/accessibility" data-nav>Accessibility</a></div></div>
+        <div class="footer-statement"><span>Evidence first.<br/>Human reviewed.<br/>One-time scope.</span><a href="mailto:${SUPPORT_EMAIL$1}">${SUPPORT_EMAIL$1}</a></div>
+      </div>
+      <div class="container-wide footer-bottom"><span>© ${(/* @__PURE__ */ new Date()).getFullYear()} AccessRevamp</span><span>One-time services · Clear scope · Private customer delivery</span></div>
+    </footer>
+  </div>`;
 }
 //#endregion
 //#region src/config/tier-catalog.js
@@ -320,62 +380,6 @@ Object.freeze([
 	"One-time pricing only",
 	"No surprise add-on platform fee"
 ]);
-//#endregion
-//#region src/data/navigation.js
-var primaryNavigation = Object.freeze([
-	["/portfolio", "Portfolio"],
-	["/free-snapshot", "Free snapshot"],
-	["/process", "Process"],
-	["/pricing", "Pricing"],
-	["/contact", "Contact"]
-]);
-//#endregion
-//#region src/components/brand.js
-function brandMonogram({ animated = false } = {}) {
-	return `<svg class="brand-monogram${animated ? " brand-monogram--animated" : ""}" viewBox="0 0 56 56" aria-hidden="true">
-    <path class="brand-monogram__tile" d="M12 2h32a10 10 0 0 1 10 10v32a10 10 0 0 1-10 10H12A10 10 0 0 1 2 44V12A10 10 0 0 1 12 2Z"/>
-    <path class="brand-monogram__stroke" d="M13 39 25.5 14 38 39M18 30h15"/>
-    <path class="brand-monogram__stroke brand-monogram__stroke--r" d="M31.5 17h5.7c5 0 7.8 2.5 7.8 6.2 0 4-3.1 6.3-8.1 6.3h-3.5L45 40"/>
-  </svg>`;
-}
-function brandLink({ animated = false, className = "" } = {}) {
-	return `<a class="brand ${className}" href="/" data-nav aria-label="AccessRevamp home">${brandMonogram({ animated })}<span class="brand-wordmark">Access<span>Revamp</span></span></a>`;
-}
-//#endregion
-//#region src/components/shell.js
-var SUPPORT_EMAIL$1 = "support.accessrevamp.com@gmail.com";
-var navLink = ([href, label], pathname) => {
-	return `<a href="${href}" data-nav${(href === "/" ? pathname === "/" : pathname.startsWith(href)) ? " aria-current=\"page\"" : ""}>${escapeHtml(label)}</a>`;
-};
-function sandboxBadge() {
-	return siteConfig.checkoutIsSandbox ? "<span class=\"sandbox-badge\" title=\"Stripe test mode is active\"><i></i> Sandbox checkout</span>" : "";
-}
-function shell(content, { pathname = location.pathname, home = false, pageClass = "" } = {}) {
-	const primary = primaryNavigation.map((item) => navLink(item, pathname)).join("");
-	return `<div class="site-shell ${pageClass}">
-    <header class="site-header" data-header>
-      <div class="nav-wrap container-wide">
-        ${brandLink({ animated: home })}
-        <nav class="desktop-nav" aria-label="Primary">${primary}</nav>
-        <div class="nav-actions">
-          <a class="text-link nav-signin" href="/login" data-nav>Sign in</a>
-          <a class="button button--small" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon("arrow")}</a>
-          <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">${icon("menu")}</button>
-        </div>
-      </div>
-      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav>Sign in</a><a href="/pricing" data-nav>Get the $50 Homepage Reveal</a></nav></div>
-    </header>
-    <main id="main-content">${content}</main>
-    <footer class="site-footer">
-      <div class="container-wide footer-main">
-        <div class="footer-brand">${brandLink()}<p>Verified friction, a clearer hierarchy, and a one-time path to a better website.</p></div>
-        <div class="footer-links"><div><h2>Explore</h2><a href="/portfolio" data-nav>Portfolio</a><a href="/free-snapshot" data-nav>Free snapshot</a><a href="/sample-report" data-nav>Sample report</a><a href="/methodology" data-nav>Methodology</a><a href="/support" data-nav>Customer support</a></div><div><h2>Policies</h2><a href="/legal" data-nav>Policy center</a><a href="/policy" data-nav>Customer policy</a><a href="/privacy" data-nav>Privacy policy</a><a href="/terms" data-nav>Terms</a><a href="/refunds" data-nav>Refunds</a><a href="/accessibility" data-nav>Accessibility</a></div></div>
-        <div class="footer-statement"><span>Evidence first.<br/>Human reviewed.<br/>One-time scope.</span>${sandboxBadge()}<a href="mailto:${SUPPORT_EMAIL$1}">${SUPPORT_EMAIL$1}</a></div>
-      </div>
-      <div class="container-wide footer-bottom"><span>© ${(/* @__PURE__ */ new Date()).getFullYear()} AccessRevamp</span><span>One-time services · Clear scope · Private customer delivery</span></div>
-    </footer>
-  </div>`;
-}
 //#endregion
 //#region src/components/cards.js
 function planCard(plan, { featured = false, compact = false } = {}) {
@@ -1632,7 +1636,7 @@ function servicesPage() {
 //#region src/pages/pricing.js
 var faq = (question, answer) => `<details><summary>${question}<span>+</span></summary><p>${answer}</p></details>`;
 function pricingPage() {
-	return shell(`<section class="page-hero"><div class="container-wide page-hero__split"><div><span class="eyebrow">Four tiers · one-time prices</span><h1>Pick the depth. Keep the clarity.</h1></div><div class="page-hero__aside"><p class="lede">The approved list prices are exactly $0, $50, $200, and $250. Verified paid value is credited toward a higher tier; there is no recurring AccessRevamp platform fee.</p></div></div></section><section class="private-pricing-context" data-private-pricing-context hidden aria-live="polite"><div class="container-wide private-pricing-context__inner"><span class="eyebrow">Private pricing context</span><h2 data-private-customer></h2><p data-private-scope></p><p class="privacy-note" data-private-details hidden>Prepared for <a data-private-website target="_blank" rel="noopener noreferrer"></a>. Context expires <span data-private-expiry></span>; final scope still requires human confirmation.</p></div></section><section class="section"><div class="container-wide"><div class="pricing-grid">${Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === "complete_revamp" })).join("")}</div><div class="work-disclosure"><strong>${siteConfig.checkoutIsSandbox ? "Test-mode notice" : "Payment-mode notice"}</strong><span>${siteConfig.checkoutIsSandbox ? "Paid checkout is configured for Stripe test mode and cannot create a live charge." : "The environment is marked for live payment but still requires separate launch approval."} Taxes, when legally required, must be visible before payment.</span></div></div></section><section class="section"><div class="container-wide faq-layout"><div><span class="eyebrow">Scope questions</span><h2>Know what you are choosing.</h2></div><div class="faq-list">${faq("Does Homepage Reveal include implementation?", "It includes the reviewed report and one landing-page direction. The deliverable states whether it is coded, conceptual, or both.")}${faq("Does Complete Website Revamp cover any size of website?", "No. It covers up to five agreed standard content pages unless written scope says otherwise.")}${faq("How does upgrade credit work?", "An authenticated customer sees server-verified, nonrefunded credit and the exact amount due for a higher tier.")}${faq("What is bounded in the cinematic service?", "One narrative sequence, up to four story beats, one consolidated revision, and mobile plus reduced-motion fallbacks.")}${faq("Do you guarantee compliance, security, or sales?", "No. The work provides practical design and passive or authorized observations, not legal certification, penetration testing, or business-outcome guarantees.")}</div></div></section>`, {
+	return shell(`<section class="page-hero"><div class="container-wide page-hero__split"><div><span class="eyebrow">Four tiers · one-time prices</span><h1>Pick the depth. Keep the clarity.</h1></div><div class="page-hero__aside"><p class="lede">The approved list prices are exactly $0, $50, $200, and $250. Verified paid value is credited toward a higher tier; there is no recurring AccessRevamp platform fee.</p></div></div></section><section class="private-pricing-context" data-private-pricing-context hidden aria-live="polite"><div class="container-wide private-pricing-context__inner"><span class="eyebrow">Private pricing context</span><h2 data-private-customer></h2><p data-private-scope></p><p class="privacy-note" data-private-details hidden>Prepared for <a data-private-website target="_blank" rel="noopener noreferrer"></a>. Context expires <span data-private-expiry></span>; final scope still requires human confirmation.</p></div></section><section class="section"><div class="container-wide"><div class="pricing-grid">${Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === "complete_revamp" })).join("")}</div><div class="work-disclosure"><strong>Secure one-time checkout</strong><span>The exact service, price, currency, and any legally required taxes are shown before payment. A completed payment is confirmed only after the signed payment record is verified.</span></div></div></section><section class="section"><div class="container-wide faq-layout"><div><span class="eyebrow">Scope questions</span><h2>Know what you are choosing.</h2></div><div class="faq-list">${faq("Does Homepage Reveal include implementation?", "It includes the reviewed report and one landing-page direction. The deliverable states whether it is coded, conceptual, or both.")}${faq("Does Complete Website Revamp cover any size of website?", "No. It covers up to five agreed standard content pages unless written scope says otherwise.")}${faq("How does upgrade credit work?", "An authenticated customer sees server-verified, nonrefunded credit and the exact amount due for a higher tier.")}${faq("What is bounded in the cinematic service?", "One narrative sequence, up to four story beats, one consolidated revision, and mobile plus reduced-motion fallbacks.")}${faq("Do you guarantee compliance, security, or sales?", "No. The work provides practical design and passive or authorized observations, not legal certification, penetration testing, or business-outcome guarantees.")}</div></div></section>`, {
 		pathname: "/pricing",
 		pageClass: "pricing-page"
 	});
@@ -1914,7 +1918,7 @@ function contactPage() {
 }
 //#endregion
 //#region src/pages/auth.js
-var protocolStep = (number, title, copy) => `<article class="auth-protocol__step">
+var protocolStep$1 = (number, title, copy) => `<article class="auth-protocol__step">
   <span>${number}</span>
   <div><strong>${title}</strong><p>${copy}</p></div>
 </article>`;
@@ -1937,9 +1941,9 @@ function authPage(mode) {
         </div>
 
         <div class="auth-protocol" aria-label="Sign-in protocol">
-          ${protocolStep("01", signup ? "Create the identity" : "Correct password", signup ? "Register the email and password that will protect the private customer workspace." : "Your password is checked first and is never stored in AccessRevamp project records.")}
-          ${protocolStep("02", "Copy the email code", signup ? "AccessRevamp sends an official confirmation email to the inbox you registered." : "A fresh verification email is sent to the already confirmed address.")}
-          ${protocolStep("03", "Enter the workspace", "Finish verification on AccessRevamp. Only the fully verified session can read customer projects, designs, and downloads.")}
+          ${protocolStep$1("01", signup ? "Create the identity" : "Correct password", signup ? "Register the email and password that will protect the private customer workspace." : "Your password is checked first and is never stored in AccessRevamp project records.")}
+          ${protocolStep$1("02", "Copy the email code", signup ? "AccessRevamp sends an official confirmation email to the inbox you registered." : "A fresh verification email is sent to the already confirmed address.")}
+          ${protocolStep$1("03", "Enter the workspace", "Finish verification on AccessRevamp. Only the fully verified session can read customer projects, designs, and downloads.")}
         </div>
 
         <div class="auth-story__footer">
@@ -1978,7 +1982,7 @@ function authPage(mode) {
               <span data-password-rule="length">${icon("check")} 12 or more characters</span>
               <span data-password-rule="mix">${icon("check")} Uppercase, lowercase, and number</span>
               <span data-password-rule="symbol">${icon("check")} At least one symbol</span>
-            </div>` : ""}
+            </div>` : "<div class=\"auth-recovery-link\"><a href=\"/forgot-password\" data-nav>Forgot your password?</a></div>"}
 
             <button class="button auth-submit" type="submit">
               <span>${signup ? "Create account & send email" : "Check password & send email"}</span>${icon("arrow")}
@@ -2045,6 +2049,129 @@ function authPage(mode) {
     </div>
   </section>`, {
 		pathname: `/${mode}`,
+		pageClass: "auth-page"
+	});
+}
+//#endregion
+//#region src/pages/recovery.js
+var protocolStep = (number, title, copy) => `<article class="auth-protocol__step">
+  <span>${number}</span>
+  <div><strong>${title}</strong><p>${copy}</p></div>
+</article>`;
+var passwordRules = `<div class="auth-password-rules" data-recovery-password-rules aria-label="Password requirements">
+  <span data-recovery-password-rule="length">${icon("check")} 12 or more characters</span>
+  <span data-recovery-password-rule="mix">${icon("check")} Uppercase, lowercase, and number</span>
+  <span data-recovery-password-rule="symbol">${icon("check")} At least one symbol</span>
+</div>`;
+function recoveryPage(pathname = "/forgot-password") {
+	return shell(`<section class="auth-experience" data-recovery-page>
+    <div class="auth-experience__grid" aria-hidden="true"></div>
+    <div class="auth-orbit auth-orbit--one" aria-hidden="true"></div>
+    <div class="auth-orbit auth-orbit--two" aria-hidden="true"></div>
+
+    <div class="container-wide auth-layout">
+      <aside class="auth-story" aria-label="AccessRevamp account recovery">
+        ${brandLink({ className: "auth-brand" })}
+        <div class="auth-story__copy">
+          <span class="auth-kicker"><i></i> Recover / verified</span>
+          <h1>Recover your account securely.</h1>
+          <p>Use your confirmed email, enter the newest six-digit recovery code, and choose a new password without sharing private account information.</p>
+        </div>
+
+        <div class="auth-protocol" aria-label="Account recovery protocol">
+          ${protocolStep("01", "Request the code", "Enter the confirmed email attached to the AccessRevamp account.")}
+          ${protocolStep("02", "Verify the inbox", "Copy the six-digit code from the newest AccessRevamp recovery email.")}
+          ${protocolStep("03", "Choose a new password", "Set a strong password, close the recovery session, and return to secure sign-in.")}
+        </div>
+
+        <div class="auth-story__footer">
+          ${icon("shield", "auth-story__shield")}
+          <p><strong>One-time recovery.</strong> Codes expire shortly and can be used only once. AccessRevamp support will never ask for your password or recovery code.</p>
+        </div>
+      </aside>
+
+      <div class="auth-panel-wrap">
+        <div class="auth-panel">
+          <div class="auth-panel__topline"><span>Customer identity</span><span>Account recovery</span></div>
+          <header class="auth-panel__header">
+            <span class="eyebrow">Secure customer hub</span>
+            <h2>Reset password</h2>
+            <p>Start with the confirmed email used for your AccessRevamp account.</p>
+          </header>
+
+          <form class="auth-form" data-recovery-request-form novalidate>
+            <label class="auth-field">
+              <span>Email address</span>
+              <input type="email" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@business.com" required />
+            </label>
+            <button class="button auth-submit" type="submit"><span>Send recovery code</span>${icon("arrow")}</button>
+            <p class="auth-status form-status" data-recovery-request-status role="status" aria-live="polite"></p>
+          </form>
+
+          <section class="auth-code-step" data-recovery-code-step hidden aria-live="polite">
+            <div class="auth-email-step__mark">${icon("check")}</div>
+            <span class="auth-kicker"><i></i> Recovery email sent</span>
+            <h2>Enter your 6-digit code.</h2>
+            <p>Use the newest AccessRevamp recovery email sent to <strong data-recovery-email-hint>your email address</strong>.</p>
+            <form class="auth-code-form" data-recovery-code-form novalidate>
+              <label class="auth-code-field">
+                <span>Recovery code</span>
+                <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" aria-describedby="recovery-code-help" required />
+              </label>
+              <p class="auth-code-help" id="recovery-code-help">Six digits · one-time use · expires shortly</p>
+              <button class="button auth-submit auth-code-submit" type="submit"><span>Verify recovery code</span>${icon("arrow")}</button>
+              <p class="auth-status" data-recovery-code-status role="status" aria-live="polite"></p>
+            </form>
+            <div class="auth-code-actions">
+              <button class="auth-text-button" type="button" data-recovery-resend>Send a new code</button>
+              <button class="auth-text-button" type="button" data-recovery-restart>Use a different email</button>
+            </div>
+            <p class="auth-code-fallback"><strong>Email shows a secure recovery button instead?</strong> Open it. The button returns only to AccessRevamp and continues to the new-password step.</p>
+            <div class="auth-email-step__note">Never forward the recovery email or share the code. AccessRevamp support cannot see or recover your password.</div>
+          </section>
+
+          <section class="auth-password-step" data-recovery-password-step hidden aria-live="polite">
+            <div class="auth-email-step__mark">${icon("shield")}</div>
+            <span class="auth-kicker"><i></i> Inbox verified</span>
+            <h2>Choose a new password.</h2>
+            <p>This replaces the current password for your AccessRevamp account.</p>
+            <form class="auth-form auth-password-form" data-recovery-password-form novalidate>
+              <label class="auth-field">
+                <span>New password</span>
+                <input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="1024" placeholder="12+ characters" required />
+              </label>
+              <label class="auth-field">
+                <span>Confirm new password</span>
+                <input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" maxlength="1024" placeholder="Repeat your new password" required />
+              </label>
+              ${passwordRules}
+              <button class="button auth-submit" type="submit"><span>Save new password</span>${icon("arrow")}</button>
+              <p class="auth-status" data-recovery-password-status role="status" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="auth-email-step" data-recovery-completing hidden aria-live="polite">
+            <div class="auth-email-step__loader" aria-hidden="true"></div>
+            <span class="auth-kicker"><i></i> Securing account</span>
+            <h2>Updating your password.</h2>
+            <p>AccessRevamp is closing the recovery session and preparing secure sign-in.</p>
+          </section>
+
+          <div class="auth-panel__switch">
+            <p>Remember your password?</p>
+            <a href="/login" data-nav>Return to sign in ${icon("arrow")}</a>
+          </div>
+
+          <div class="auth-panel__legal">
+            <span>${icon("shield")} Email verification required</span>
+            <span>No phone number required</span>
+            <span><a href="/privacy" data-nav>Privacy</a> · <a href="/support" data-nav>Support</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`, {
+		pathname,
 		pageClass: "auth-page"
 	});
 }
@@ -23498,13 +23625,13 @@ var LOGIN_START_ENDPOINT = "/api/auth-login-start";
 var LOGIN_COMPLETE_ENDPOINT = "/api/auth-login-complete";
 var PENDING_STORAGE_KEY = "accessrevamp.auth.pending-code.v2";
 var LOGIN_HINT_KEY = "accessrevamp.auth.login-email.v1";
-var OTP_PATTERN = /^[0-9]{6}$/;
-var PASSWORD_RULES = Object.freeze({
+var OTP_PATTERN$1 = /^[0-9]{6}$/;
+var PASSWORD_RULES$1 = Object.freeze({
 	length: (value) => value.length >= 12,
 	mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
 	symbol: (value) => /[^A-Za-z0-9]/.test(value)
 });
-function setStatus(status, message, tone = "") {
+function setStatus$1(status, message, tone = "") {
 	if (!status) return;
 	status.textContent = message;
 	if (tone) status.dataset.tone = tone;
@@ -23518,13 +23645,13 @@ function cleanAuthUrl() {
 	clean.hash = "";
 	history.replaceState({}, "", `${clean.pathname}${clean.search}`);
 }
-function maskEmail(email) {
+function maskEmail$1(email) {
 	const [local = "", domain = ""] = String(email || "").split("@");
 	if (!local || !domain) return email;
 	const visible = local.slice(0, Math.min(2, local.length));
 	return `${visible}${"•".repeat(Math.max(3, local.length - visible.length))}@${domain}`;
 }
-function normalizeCode(value) {
+function normalizeCode$1(value) {
 	return String(value || "").replace(/\D/g, "").slice(0, 6);
 }
 function savePending(flow) {
@@ -23638,14 +23765,14 @@ function setupAuthForm(navigate) {
 	const updatePasswordRules = () => {
 		if (!signup || !passwordInput) return;
 		const value = passwordInput.value;
-		Object.entries(PASSWORD_RULES).forEach(([key, validate]) => {
+		Object.entries(PASSWORD_RULES$1).forEach(([key, validate]) => {
 			page.querySelector(`[data-password-rule="${key}"]`)?.classList.toggle("is-valid", validate(value));
 		});
 	};
 	const validateSignupPassword = () => {
 		if (!signup) return true;
 		const password = passwordInput.value;
-		const valid = Object.values(PASSWORD_RULES).every((validate) => validate(password));
+		const valid = Object.values(PASSWORD_RULES$1).every((validate) => validate(password));
 		passwordInput.setCustomValidity(valid ? "" : "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.");
 		confirmPasswordInput.setCustomValidity(confirmPasswordInput.value === password ? "" : "Passwords do not match.");
 		return valid && confirmPasswordInput.value === password;
@@ -23683,7 +23810,7 @@ function setupAuthForm(navigate) {
 		const identities = result.data?.user?.identities;
 		if (Array.isArray(identities) && identities.length === 0) return {
 			accountExists: true,
-			emailHint: maskEmail(email)
+			emailHint: maskEmail$1(email)
 		};
 		if (result.data?.session) {
 			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
@@ -23691,7 +23818,7 @@ function setupAuthForm(navigate) {
 		}
 		return {
 			ok: true,
-			emailHint: maskEmail(email),
+			emailHint: maskEmail$1(email),
 			expiresIn: 600
 		};
 	};
@@ -23750,11 +23877,11 @@ function setupAuthForm(navigate) {
 	const beginCodeFlow = (flow) => {
 		pending = flow;
 		savePending(flow);
-		if (emailHint) emailHint.textContent = flow.emailHint || maskEmail(flow.email);
+		if (emailHint) emailHint.textContent = flow.emailHint || maskEmail$1(flow.email);
 		if (codeKicker) codeKicker.textContent = flow.kind === "signup" ? "Verification email sent" : "Password accepted";
 		if (resend) resend.hidden = flow.kind !== "signup";
 		codeForm?.reset();
-		setStatus(codeStatus, "Open the newest AccessRevamp email. Enter the six-digit code if shown, or use its secure verification button.");
+		setStatus$1(codeStatus, "Open the newest AccessRevamp email. Enter the six-digit code if shown, or use its secure verification button.");
 		show("code");
 		queueMicrotask(() => codeInput?.focus());
 	};
@@ -23778,7 +23905,7 @@ function setupAuthForm(navigate) {
 			if (disposed) return;
 			cleanAuthUrl();
 			show("form");
-			setStatus(status, error.message || "The verification email is invalid or expired. Start again.", "error");
+			setStatus$1(status, error.message || "The verification email is invalid or expired. Start again.", "error");
 			passwordInput?.focus();
 		}
 	};
@@ -23790,13 +23917,13 @@ function setupAuthForm(navigate) {
 			if (disposed) return;
 			cleanAuthUrl();
 			show("form");
-			setStatus(status, "Email confirmed. Sign in with your password to receive a fresh verification email.", "success");
+			setStatus$1(status, "Email confirmed. Sign in with your password to receive a fresh verification email.", "success");
 			form.elements.email?.focus();
 		} catch (error) {
 			if (disposed) return;
 			cleanAuthUrl();
 			show("form");
-			setStatus(status, error.message || "Email confirmation could not be verified.", "error");
+			setStatus$1(status, error.message || "Email confirmation could not be verified.", "error");
 		}
 	};
 	const onSubmit = async (event) => {
@@ -23808,7 +23935,7 @@ function setupAuthForm(navigate) {
 		const email = String(data.get("email") || "").trim().toLowerCase();
 		const password = String(data.get("password") || "");
 		setBusy(true, signup ? "Creating protected account…" : "Checking password…");
-		setStatus(status, signup ? "Creating the account and requesting your verification email…" : "Validating your password securely…");
+		setStatus$1(status, signup ? "Creating the account and requesting your verification email…" : "Validating your password securely…");
 		try {
 			if (signup) {
 				const fullName = String(data.get("fullName") || "").trim();
@@ -23825,7 +23952,7 @@ function setupAuthForm(navigate) {
 					mode,
 					kind: "signup",
 					email,
-					emailHint: result.emailHint || maskEmail(email),
+					emailHint: result.emailHint || maskEmail$1(email),
 					expiresAt: Date.now() + Number(result.expiresIn || 600) * 1e3
 				});
 				return;
@@ -23837,32 +23964,32 @@ function setupAuthForm(navigate) {
 				mode,
 				kind: "login",
 				email,
-				emailHint: result.emailHint || maskEmail(email),
+				emailHint: result.emailHint || maskEmail$1(email),
 				expiresAt: Date.now() + Number(result.expiresIn || 600) * 1e3
 			});
 		} catch (error) {
-			setStatus(status, error.message || "Authentication failed.", "error");
+			setStatus$1(status, error.message || "Authentication failed.", "error");
 		} finally {
 			setBusy(false, signup ? "Create account & send email" : "Check password & send email");
 		}
 	};
 	const onCodeInput = () => {
-		const normalized = normalizeCode(codeInput?.value);
+		const normalized = normalizeCode$1(codeInput?.value);
 		if (codeInput && codeInput.value !== normalized) codeInput.value = normalized;
-		codeInput?.setCustomValidity(normalized && !OTP_PATTERN.test(normalized) ? "Enter the complete six-digit code." : "");
+		codeInput?.setCustomValidity(normalized && !OTP_PATTERN$1.test(normalized) ? "Enter the complete six-digit code." : "");
 	};
 	const onCodeSubmit = async (event) => {
 		event.preventDefault();
 		if (codeBusy || !pending || !supabase || !codeInput) return;
 		onCodeInput();
-		const code = normalizeCode(codeInput.value);
-		if (!OTP_PATTERN.test(code)) {
+		const code = normalizeCode$1(codeInput.value);
+		if (!OTP_PATTERN$1.test(code)) {
 			codeInput.setCustomValidity("Enter the complete six-digit code.");
 			codeForm.reportValidity();
 			return;
 		}
 		setCodeBusy(true, pending.kind === "signup" ? "Confirming email…" : "Verifying code…");
-		setStatus(codeStatus, "Checking the newest code securely…");
+		setStatus$1(codeStatus, "Checking the newest code securely…");
 		try {
 			const result = await supabase.auth.verifyOtp({
 				email: pending.email,
@@ -23890,7 +24017,7 @@ function setupAuthForm(navigate) {
 			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
 			if (disposed) return;
 			show("code");
-			setStatus(codeStatus, error.message || "The code is invalid or expired. Use the newest email or start again.", "error");
+			setStatus$1(codeStatus, error.message || "The code is invalid or expired. Use the newest email or start again.", "error");
 			codeInput.focus();
 			codeInput.select();
 		} finally {
@@ -23900,7 +24027,7 @@ function setupAuthForm(navigate) {
 	const onResend = async () => {
 		if (!pending || pending.kind !== "signup" || codeBusy || !supabase) return;
 		setCodeBusy(true);
-		setStatus(codeStatus, "Requesting a new verification email…");
+		setStatus$1(codeStatus, "Requesting a new verification email…");
 		try {
 			const result = await resendSignup(pending.email);
 			if (result.code === "ACCOUNT_EXISTS") {
@@ -23911,16 +24038,16 @@ function setupAuthForm(navigate) {
 				removePending();
 				pending = null;
 				show("form");
-				setStatus(status, "This pending signup was not found. Enter the account details again.", "error");
+				setStatus$1(status, "This pending signup was not found. Enter the account details again.", "error");
 				return;
 			}
 			pending.expiresAt = Date.now() + Number(result.expiresIn || 600) * 1e3;
 			savePending(pending);
 			codeForm?.reset();
-			setStatus(codeStatus, "A new AccessRevamp email was requested. Check Inbox, Spam, and Promotions, and use only the newest message.", "success");
+			setStatus$1(codeStatus, "A new AccessRevamp email was requested. Check Inbox, Spam, and Promotions, and use only the newest message.", "success");
 			codeInput?.focus();
 		} catch (error) {
-			setStatus(codeStatus, error.message || "A new email could not be sent yet. Try again shortly.", "error");
+			setStatus$1(codeStatus, error.message || "A new email could not be sent yet. Try again shortly.", "error");
 		} finally {
 			setCodeBusy(false);
 		}
@@ -23931,7 +24058,7 @@ function setupAuthForm(navigate) {
 		await supabase?.auth.signOut({ scope: "local" }).catch(() => void 0);
 		codeForm?.reset();
 		show("form");
-		setStatus(status, signup ? "Enter the account details again to request a new verification email." : "Enter the password again to request a new verification email.");
+		setStatus$1(status, signup ? "Enter the account details again to request a new verification email." : "Enter the password again to request a new verification email.");
 		form.elements.email?.focus();
 	};
 	form.addEventListener("submit", onSubmit);
@@ -23943,7 +24070,7 @@ function setupAuthForm(navigate) {
 	confirmPasswordInput?.addEventListener("input", validateSignupPassword);
 	updatePasswordRules();
 	if (!supabase) {
-		setStatus(status, "Account access is temporarily unavailable on this deployment. Please try again later.", "error");
+		setStatus$1(status, "Account access is temporarily unavailable on this deployment. Please try again later.", "error");
 		submit.disabled = true;
 	} else {
 		const params = new URLSearchParams(location.search);
@@ -23955,14 +24082,14 @@ function setupAuthForm(navigate) {
 		else if (confirmed === "code" && mode === "login") {
 			cleanAuthUrl();
 			supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
-			setStatus(status, "Email confirmed. Enter your password and we will send a fresh sign-in email.", "success");
+			setStatus$1(status, "Email confirmed. Enter your password and we will send a fresh sign-in email.", "success");
 			form.elements.email?.focus();
 		} else if (existingAccount && mode === "login") {
 			cleanAuthUrl();
 			supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
 			const hintedEmail = takeLoginHint();
 			if (hintedEmail && form.elements.email) form.elements.email.value = hintedEmail;
-			setStatus(status, "This email already has an AccessRevamp account. Enter the correct password to receive the sign-in email.", "success");
+			setStatus$1(status, "This email already has an AccessRevamp account. Enter the correct password to receive the sign-in email.", "success");
 			passwordInput?.focus();
 		} else {
 			supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
@@ -23979,6 +24106,314 @@ function setupAuthForm(navigate) {
 		resend?.removeEventListener("click", onResend);
 		passwordInput?.removeEventListener("input", updatePasswordRules);
 		confirmPasswordInput?.removeEventListener("input", validateSignupPassword);
+	};
+}
+//#endregion
+//#region src/services/recovery.js
+var RECOVERY_STORAGE_KEY = "accessrevamp.auth.recovery.v1";
+var OTP_PATTERN = /^[0-9]{6}$/;
+var PASSWORD_RULES = Object.freeze({
+	length: (value) => value.length >= 12,
+	mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
+	symbol: (value) => /[^A-Za-z0-9]/.test(value)
+});
+function setStatus(host, message, tone = "") {
+	if (!host) return;
+	host.textContent = message;
+	if (tone) host.dataset.tone = tone;
+	else delete host.dataset.tone;
+}
+function maskEmail(email) {
+	const [local = "", domain = ""] = String(email || "").split("@");
+	if (!local || !domain) return email;
+	const visible = local.slice(0, Math.min(2, local.length));
+	return `${visible}${"•".repeat(Math.max(3, local.length - visible.length))}@${domain}`;
+}
+function normalizeCode(value) {
+	return String(value || "").replace(/\D/g, "").slice(0, 6);
+}
+function saveRecovery(value) {
+	try {
+		sessionStorage.setItem(RECOVERY_STORAGE_KEY, JSON.stringify(value));
+	} catch {}
+}
+function clearRecovery() {
+	try {
+		sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
+	} catch {}
+}
+function readRecovery() {
+	try {
+		const value = JSON.parse(sessionStorage.getItem(RECOVERY_STORAGE_KEY) || "null");
+		if (!value?.email || Number(value.expiresAt || 0) <= Date.now()) {
+			clearRecovery();
+			return null;
+		}
+		return value;
+	} catch {
+		clearRecovery();
+		return null;
+	}
+}
+function cleanRecoveryUrl() {
+	const url = new URL(location.href);
+	url.searchParams.delete("recovery");
+	url.searchParams.delete("code");
+	url.hash = "";
+	history.replaceState({}, "", `${url.pathname}${url.search}`);
+}
+async function waitForRecoverySession(supabase, timeoutMs = 1e4) {
+	const current = await supabase.auth.getSession();
+	if (current.error) throw current.error;
+	if (current.data?.session) return current.data.session;
+	return new Promise((resolve, reject) => {
+		let settled = false;
+		let timeout;
+		const listener = supabase.auth.onAuthStateChange((event, session) => {
+			if (session && [
+				"PASSWORD_RECOVERY",
+				"SIGNED_IN",
+				"TOKEN_REFRESHED"
+			].includes(event)) {
+				if (settled) return;
+				settled = true;
+				clearTimeout(timeout);
+				listener.data.subscription.unsubscribe();
+				resolve(session);
+			}
+		});
+		timeout = setTimeout(() => {
+			if (settled) return;
+			settled = true;
+			listener.data.subscription.unsubscribe();
+			reject(/* @__PURE__ */ new Error("The recovery email did not create a valid recovery session. Request a new code."));
+		}, timeoutMs);
+	});
+}
+function setupRecoveryForm(navigate) {
+	const page = document.querySelector("[data-recovery-page]");
+	const requestForm = page?.querySelector("[data-recovery-request-form]");
+	const codeStep = page?.querySelector("[data-recovery-code-step]");
+	const codeForm = page?.querySelector("[data-recovery-code-form]");
+	const passwordStep = page?.querySelector("[data-recovery-password-step]");
+	const passwordForm = page?.querySelector("[data-recovery-password-form]");
+	const completing = page?.querySelector("[data-recovery-completing]");
+	if (!page || !requestForm || !codeForm || !passwordForm) return void 0;
+	const supabase = getSupabase();
+	const requestStatus = requestForm.querySelector("[data-recovery-request-status]");
+	const codeStatus = codeForm.querySelector("[data-recovery-code-status]");
+	const passwordStatus = passwordForm.querySelector("[data-recovery-password-status]");
+	const requestSubmit = requestForm.querySelector("button[type=\"submit\"]");
+	const codeSubmit = codeForm.querySelector("button[type=\"submit\"]");
+	const passwordSubmit = passwordForm.querySelector("button[type=\"submit\"]");
+	const requestEmail = requestForm.elements.email;
+	const codeInput = codeForm.elements.code;
+	const passwordInput = passwordForm.elements.password;
+	const confirmPasswordInput = passwordForm.elements.confirmPassword;
+	const emailHint = page.querySelector("[data-recovery-email-hint]");
+	const resend = page.querySelector("[data-recovery-resend]");
+	const restart = page.querySelector("[data-recovery-restart]");
+	let recovery = null;
+	let disposed = false;
+	let busy = false;
+	const show = (name) => {
+		requestForm.hidden = name !== "request";
+		codeStep.hidden = name !== "code";
+		passwordStep.hidden = name !== "password";
+		completing.hidden = name !== "completing";
+	};
+	const setBusy = (button, value, label = "") => {
+		busy = value;
+		if (!button) return;
+		button.disabled = value;
+		button.toggleAttribute("aria-busy", value);
+		if (label) button.querySelector("span").textContent = label;
+	};
+	const validatePassword = () => {
+		const password = passwordInput.value;
+		const valid = Object.values(PASSWORD_RULES).every((rule) => rule(password));
+		Object.entries(PASSWORD_RULES).forEach(([key, rule]) => {
+			page.querySelector(`[data-recovery-password-rule="${key}"]`)?.classList.toggle("is-valid", rule(password));
+		});
+		passwordInput.setCustomValidity(valid ? "" : "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.");
+		confirmPasswordInput.setCustomValidity(confirmPasswordInput.value === password ? "" : "Passwords do not match.");
+		return valid && confirmPasswordInput.value === password;
+	};
+	const requestCode = async (email) => {
+		const redirectTo = `${location.origin}/recover-account?recovery=link`;
+		const result = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+		if (result.error) {
+			if (Number(result.error.status || 0) === 429) throw new Error("Please wait before requesting another recovery email.");
+			throw new Error("The recovery email could not be sent. Check the address and try again shortly.");
+		}
+		recovery = {
+			email,
+			emailHint: maskEmail(email),
+			expiresAt: Date.now() + 600 * 1e3
+		};
+		saveRecovery(recovery);
+		if (emailHint) emailHint.textContent = recovery.emailHint;
+		codeForm.reset();
+		setStatus(codeStatus, "Open the newest AccessRevamp recovery email and enter its six-digit code.");
+		show("code");
+		queueMicrotask(() => codeInput.focus());
+	};
+	const openPasswordStep = () => {
+		clearRecovery();
+		recovery = null;
+		passwordForm.reset();
+		validatePassword();
+		setStatus(passwordStatus, "Choose a new password that you have not used for this account.");
+		show("password");
+		queueMicrotask(() => passwordInput.focus());
+	};
+	const handleRecoveryLink = async () => {
+		show("completing");
+		try {
+			const session = await waitForRecoverySession(supabase);
+			if (!session?.access_token || !session.user?.email_confirmed_at) throw new Error("The recovery session is invalid or expired.");
+			if (disposed) return;
+			cleanRecoveryUrl();
+			openPasswordStep();
+		} catch (error) {
+			if (disposed) return;
+			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			cleanRecoveryUrl();
+			show("request");
+			setStatus(requestStatus, error.message || "The recovery email is invalid or expired. Request a new code.", "error");
+			requestEmail.focus();
+		}
+	};
+	const onRequest = async (event) => {
+		event.preventDefault();
+		if (busy || !supabase || !requestForm.reportValidity()) return;
+		const email = String(new FormData(requestForm).get("email") || "").trim().toLowerCase();
+		setBusy(requestSubmit, true, "Sending recovery email…");
+		setStatus(requestStatus, "Requesting a protected recovery email…");
+		try {
+			await supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+			await requestCode(email);
+		} catch (error) {
+			setStatus(requestStatus, error.message || "Recovery could not be started.", "error");
+		} finally {
+			setBusy(requestSubmit, false, "Send recovery code");
+		}
+	};
+	const onCodeInput = () => {
+		const value = normalizeCode(codeInput.value);
+		if (codeInput.value !== value) codeInput.value = value;
+		codeInput.setCustomValidity(value && !OTP_PATTERN.test(value) ? "Enter the complete six-digit code." : "");
+	};
+	const onCode = async (event) => {
+		event.preventDefault();
+		if (busy || !supabase || !recovery) return;
+		onCodeInput();
+		const token = normalizeCode(codeInput.value);
+		if (!OTP_PATTERN.test(token)) {
+			codeInput.setCustomValidity("Enter the complete six-digit code.");
+			codeForm.reportValidity();
+			return;
+		}
+		setBusy(codeSubmit, true, "Verifying recovery code…");
+		setStatus(codeStatus, "Checking the newest recovery code…");
+		try {
+			const result = await supabase.auth.verifyOtp({
+				email: recovery.email,
+				token,
+				type: "recovery"
+			});
+			if (result.error) throw result.error;
+			if (!result.data?.session?.access_token) throw new Error("The recovery code did not create a secure session.");
+			if (disposed) return;
+			openPasswordStep();
+		} catch (error) {
+			setStatus(codeStatus, error.message || "The code is invalid or expired. Use the newest email.", "error");
+			codeInput.focus();
+			codeInput.select();
+		} finally {
+			setBusy(codeSubmit, false, "Verify recovery code");
+		}
+	};
+	const onPassword = async (event) => {
+		event.preventDefault();
+		if (busy || !supabase) return;
+		validatePassword();
+		if (!passwordForm.reportValidity()) return;
+		setBusy(passwordSubmit, true, "Saving new password…");
+		setStatus(passwordStatus, "Encrypting and saving the new password…");
+		show("completing");
+		try {
+			const result = await supabase.auth.updateUser({ password: passwordInput.value });
+			if (result.error) throw result.error;
+			await supabase.auth.signOut({ scope: "local" });
+			if (disposed) return;
+			clearRecovery();
+			cleanRecoveryUrl();
+			navigate("/login?recovered=1", { replace: true });
+		} catch (error) {
+			if (disposed) return;
+			show("password");
+			setStatus(passwordStatus, error.message || "The password could not be updated. Request a new recovery code.", "error");
+			passwordInput.focus();
+		} finally {
+			setBusy(passwordSubmit, false, "Save new password");
+		}
+	};
+	const onResend = async () => {
+		if (busy || !supabase || !recovery?.email) return;
+		setBusy(codeSubmit, true);
+		setStatus(codeStatus, "Requesting a new recovery code…");
+		try {
+			await requestCode(recovery.email);
+			setStatus(codeStatus, "A new AccessRevamp recovery email was requested. Use only the newest code.", "success");
+		} catch (error) {
+			setStatus(codeStatus, error.message || "A new code could not be sent yet.", "error");
+		} finally {
+			setBusy(codeSubmit, false);
+		}
+	};
+	const onRestart = async () => {
+		clearRecovery();
+		recovery = null;
+		await supabase?.auth.signOut({ scope: "local" }).catch(() => void 0);
+		codeForm.reset();
+		passwordForm.reset();
+		show("request");
+		setStatus(requestStatus, "Enter the confirmed account email to request a new recovery code.");
+		requestEmail.focus();
+	};
+	requestForm.addEventListener("submit", onRequest);
+	codeForm.addEventListener("submit", onCode);
+	passwordForm.addEventListener("submit", onPassword);
+	codeInput.addEventListener("input", onCodeInput);
+	passwordInput.addEventListener("input", validatePassword);
+	confirmPasswordInput.addEventListener("input", validatePassword);
+	resend?.addEventListener("click", onResend);
+	restart?.addEventListener("click", onRestart);
+	validatePassword();
+	if (!supabase) {
+		setStatus(requestStatus, "Account recovery is temporarily unavailable. Please try again later.", "error");
+		requestSubmit.disabled = true;
+	} else if (new URLSearchParams(location.search).get("recovery") === "link" || new URLSearchParams(location.hash.replace(/^#/, "")).get("type") === "recovery") handleRecoveryLink();
+	else {
+		supabase.auth.signOut({ scope: "local" }).catch(() => void 0);
+		recovery = readRecovery();
+		if (recovery) {
+			if (emailHint) emailHint.textContent = recovery.emailHint || maskEmail(recovery.email);
+			show("code");
+			queueMicrotask(() => codeInput.focus());
+		} else show("request");
+	}
+	return () => {
+		disposed = true;
+		requestForm.removeEventListener("submit", onRequest);
+		codeForm.removeEventListener("submit", onCode);
+		passwordForm.removeEventListener("submit", onPassword);
+		codeInput.removeEventListener("input", onCodeInput);
+		passwordInput.removeEventListener("input", validatePassword);
+		confirmPasswordInput.removeEventListener("input", validatePassword);
+		resend?.removeEventListener("click", onResend);
+		restart?.removeEventListener("click", onRestart);
 	};
 }
 //#endregion
@@ -25088,14 +25523,18 @@ function setupPricingContext(root = document) {
 }
 //#endregion
 //#region src/main.js
-function normalizeSupabaseConfirmationReturn() {
-	if (location.pathname === "/login" || !location.hash) return;
+function normalizeAuthEmailReturn() {
+	if (!location.hash) return;
 	const authFragment = new URLSearchParams(location.hash.replace(/^#/, ""));
 	const type = authFragment.get("type");
-	if (!authFragment.get("access_token") || !["signup", "email"].includes(type)) return;
-	history.replaceState({}, "", `/login?confirmed=1${location.hash}`);
+	if (!authFragment.get("access_token")) return;
+	if (type === "recovery" && !["/forgot-password", "/recover-account"].includes(location.pathname)) {
+		history.replaceState({}, "", `/recover-account?recovery=link${location.hash}`);
+		return;
+	}
+	if (["signup", "email"].includes(type) && location.pathname !== "/login") history.replaceState({}, "", `/login?confirmed=1${location.hash}`);
 }
-normalizeSupabaseConfirmationReturn();
+normalizeAuthEmailReturn();
 var app = document.querySelector("#app");
 function underConstructionPage() {
 	return shell(underConstructionPage$1());
@@ -25120,6 +25559,8 @@ var routes = {
 	"/contact": contactPage,
 	"/login": () => authPage("login"),
 	"/signup": () => authPage("signup"),
+	"/forgot-password": () => recoveryPage("/forgot-password"),
+	"/recover-account": () => recoveryPage("/recover-account"),
 	"/account/projects": accountProjectsPage,
 	"/project-intake": projectIntakePage,
 	"/approve/:token": projectApprovalPage,
@@ -25199,6 +25640,7 @@ function renderRoute({ pathname, pattern, params, view }) {
 	if (pathname === "/free-snapshot") cleanups.push(setupFreeSnapshot());
 	if (pathname === "/pricing") cleanups.push(setupPricingContext());
 	if (pathname === "/login" || pathname === "/signup") cleanups.push(setupAuthForm(router.navigate));
+	if (pathname === "/forgot-password" || pathname === "/recover-account") cleanups.push(setupRecoveryForm(router.navigate));
 	if (pathname === "/dashboard") cleanups.push(setupAccountProjects(router.navigate));
 	if (pathname === "/account/projects") cleanups.push(setupAccountProjects(router.navigate));
 	if (pathname === "/project-intake") cleanups.push(setupProjectIntake());
