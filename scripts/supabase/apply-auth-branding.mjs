@@ -124,7 +124,7 @@ function smtpPayload() {
     return {
       smtp_admin_email: values.SUPABASE_SMTP_ADMIN_EMAIL,
       smtp_host: values.SUPABASE_SMTP_HOST,
-      smtp_port: port,
+      smtp_port: String(port),
       smtp_user: values.SUPABASE_SMTP_USER,
       smtp_pass: values.SUPABASE_SMTP_PASS,
       smtp_sender_name: senderName,
@@ -138,7 +138,7 @@ function smtpPayload() {
     return {
       smtp_admin_email: resendFromEmail,
       smtp_host: 'smtp.resend.com',
-      smtp_port: 465,
+      smtp_port: '465',
       smtp_user: 'resend',
       smtp_pass: resendApiKey,
       smtp_sender_name: senderName,
@@ -155,7 +155,7 @@ function smtpPayload() {
     return {
       smtp_admin_email: gmailUser,
       smtp_host: 'smtp.gmail.com',
-      smtp_port: 465,
+      smtp_port: '465',
       smtp_user: gmailUser,
       smtp_pass: gmailAppPassword,
       smtp_sender_name: senderName,

@@ -381,6 +381,9 @@ test('official AccessRevamp email assets use manual codes instead of verificatio
   assert.match(brandingScript, /mailer_templates_confirmation_content/);
   assert.match(brandingScript, /mailer_templates_magic_link_content/);
   assert.match(brandingScript, /smtp_sender_name/);
+  assert.match(brandingScript, /smtp_port:\s*String\(port\)/);
+  assert.match(brandingScript, /smtp_port:\s*'465'/);
+  assert.doesNotMatch(brandingScript, /smtp_port:\s*465/);
   assert.match(brandingScript, /credentialsPrinted:\s*false/);
   assert.equal(packageJson.scripts['auth:branding:apply'], 'node scripts/supabase/apply-auth-branding.mjs');
   assert.equal(packageJson.scripts['auth:branding:verify'], 'node scripts/supabase/apply-auth-branding.mjs --verify');
