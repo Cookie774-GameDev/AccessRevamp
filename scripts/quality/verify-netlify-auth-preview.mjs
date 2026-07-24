@@ -34,6 +34,7 @@ const deadline = Date.now() + 8 * 60 * 1000;
 let html = '';
 let bundleText = '';
 let homepageStatus = 0;
+let recoveryStatus = 0;
 let lastError = '';
 
 while (Date.now() < deadline) {
@@ -57,8 +58,27 @@ while (Date.now() < deadline) {
       return bundleResponse.text();
     }));
     bundleText = bundles.join('\n');
-    if (bundleText.includes(PROJECT_URL) && bundleText.includes(PUBLISHABLE_KEY)) break;
-    throw new Error('The latest account-connected browser bundle is not published yet.');
+    const requiredMarkers = [
+      PROJECT_URL,
+      PUBLISHABLE_KEY,
+      '/forgot-password',
+      '/recover-account',
+      'accessrevamp.auth.recovery.v1',
+      'resetPasswordForEmail',
+      'Access Revamp Authorization',
+    ];
+    const missing = requiredMarkers.filter((marker) => !bundleText.includes(marker));
+    if (missing.length) throw new Error(`The latest account bundle is missing: ${missing.join(', ')}`);
+
+    const recoveryResponse = await fetchWithRetry(`${target}/forgot-password?auth-smoke=${Date.now()}`, {
+      headers: { 'cache-control': 'no-cache' },
+    });
+    recoveryStatus = recoveryResponse.status;
+    const recoveryHtml = await recoveryResponse.text();
+    if (!recoveryResponse.ok || !/<div[^>]+id=["']app["']/i.test(recoveryHtml)) {
+      throw new Error(`Recovery shell returned HTTP ${recoveryResponse.status}.`);
+    }
+    break;
   } catch (error) {
     lastError = String(error?.message || error);
   }
@@ -66,9 +86,13 @@ while (Date.now() < deadline) {
 }
 
 assert.equal(homepageStatus, 200, `Signup page did not become ready: HTTP ${homepageStatus}. ${lastError}`);
+assert.equal(recoveryStatus, 200, `Recovery page did not become ready: HTTP ${recoveryStatus}. ${lastError}`);
 assert.match(html, /<div[^>]+id=["']app["']/i);
 assert.match(bundleText, new RegExp(PROJECT_URL.replaceAll('.', '\\.')));
 assert.match(bundleText, new RegExp(PUBLISHABLE_KEY));
+assert.match(bundleText, /accessrevamp\.auth\.recovery\.v1/);
+assert.match(bundleText, /resetPasswordForEmail/);
+assert.doesNotMatch(bundleText, /Sandbox checkout|Test-mode notice|Stripe test mode is active/i);
 
 let customerApiConfigured = null;
 let passwordCeremonyConfigured = null;
@@ -123,7 +147,10 @@ if (requireServerAuth) {
 console.log(JSON.stringify({
   authenticationTarget: target,
   signupPageReady: true,
+  recoveryPageReady: true,
+  recoveryBundleReady: true,
   publicAccountConfigBundled: true,
+  customerFacingSandboxLabelsAbsent: true,
   serverAuthenticationRequired: requireServerAuth,
   customerApiConfigured,
   passwordCeremonyConfigured,
