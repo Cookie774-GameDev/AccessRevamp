@@ -31,7 +31,7 @@ test('eleven lenses use structured data and unique code-native visuals', async (
   assert.equal(new Set(visualKeys).size, 11);
 });
 
-test('customer browser services use same-origin Sites API routes', async () => {
+test('customer browser services use same-origin Cloudflare Worker API routes', async () => {
   const serviceFiles = ['contact.js', 'free-snapshot.js', 'checkout.js', 'account-projects.js', 'pricing-context.js'];
   const source = (await Promise.all(serviceFiles.map((file) => read(`src/services/${file}`)))).join('\n');
   assert.doesNotMatch(source, /\.netlify\/functions/);

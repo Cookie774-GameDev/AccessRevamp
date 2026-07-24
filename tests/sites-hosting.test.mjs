@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-test('Sites catch-all renders the existing AccessRevamp browser application', async () => {
+test('Cloudflare Worker catch-all renders the existing AccessRevamp browser application', async () => {
   const [page, clientShell] = await Promise.all([
     readFile('app/[[...slug]]/page.tsx', 'utf8'),
     readFile('app/accessrevamp-client.tsx', 'utf8'),
@@ -13,7 +13,7 @@ test('Sites catch-all renders the existing AccessRevamp browser application', as
   assert.match(clientShell, /import\("\.\.\/src\/main\.js"\)/);
 });
 
-test('Sites metadata describes the finished AccessRevamp experience', async () => {
+test('Cloudflare Worker metadata describes the finished AccessRevamp experience', async () => {
   const layout = await readFile('app/layout.tsx', 'utf8');
 
   assert.match(layout, /AccessRevamp/);
@@ -21,7 +21,7 @@ test('Sites metadata describes the finished AccessRevamp experience', async () =
   assert.doesNotMatch(layout, /codex-preview|site-creator-vinext-starter/);
 });
 
-test('Sites worker routes customer APIs before the browser catch-all', async () => {
+test('Cloudflare Worker routes customer APIs before the browser catch-all', async () => {
   const worker = await readFile('worker/index.ts', 'utf8');
   for (const route of [
     '/api/account-projects',
