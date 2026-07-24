@@ -38,8 +38,8 @@ test('deployment examples identify the connected public project while leaving ev
   for (const example of [envExample, netlifyExample]) {
     assert.match(example, new RegExp(`VITE_SUPABASE_URL=${PROJECT_URL.replaceAll('.', '\\.')}`));
     assert.match(example, new RegExp(`VITE_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY}`));
-    assert.match(example, /SUPABASE_SERVICE_ROLE_KEY=\n/);
-    assert.match(example, /AUTH_RATE_LIMIT_SECRET=\n/);
+    assert.match(example, /SUPABASE_SERVICE_ROLE_KEY=\r?\n/);
+    assert.match(example, /AUTH_RATE_LIMIT_SECRET=\r?\n/);
     assert.doesNotMatch(example, /SUPABASE_SERVICE_ROLE_KEY=\S+/);
   }
 });
