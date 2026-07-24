@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const importer = await readFile('scripts/import-reviewed-prospects.mjs', 'utf8');
 const approver = await readFile('scripts/approve-outreach.mjs', 'utf8');
 const exporter = await readFile('scripts/export-approved-outreach.mjs', 'utf8');
+const outreachStandard = await readFile('docs/OUTREACH_STANDARD.md', 'utf8');
 
 test('reviewed-prospect imports remain small, human-reviewable batches that create drafts only', () => {
   assert.match(importer, /lines\.length > 20/);
@@ -35,4 +36,14 @@ test('approved export follows the configured database limit but never exceeds 10
   assert.match(exporter, /Math\.min\([\s\S]*1000\)/);
   assert.match(exporter, /\.limit\(exportLimit\)/);
   assert.match(exporter, /No email was sent/);
+});
+
+test('responsible outreach standard preserves review, reply, and suppression boundaries', () => {
+  assert.match(outreachStandard, /human-approved/i);
+  assert.match(outreachStandard, /working reply path/i);
+  assert.match(outreachStandard, /valid postal address/i);
+  assert.match(outreachStandard, /one-click suppression link/i);
+  assert.match(outreachStandard, /at most one follow-up/i);
+  assert.match(outreachStandard, /stop immediately after an objection or opt-out/i);
+  assert.match(outreachStandard, /intentionally does not provide an unattended commercial send loop/i);
 });

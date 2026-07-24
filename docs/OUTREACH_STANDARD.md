@@ -17,15 +17,18 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 
 ## Required message elements
 
+- For first-touch outreach, target 150–185 words and keep the complete customer-visible message at `maximum_message_words: 200` or fewer.
+- Cite two or three current, sourced website details from different site areas, and include one restrained overall improvement opportunity.
 - Honest sender and business identity.
 - Specific reason the message is relevant.
 - The public page reviewed and the affected element or task.
 - Accurate, restrained, human-approved wording.
-- AccessRevamp website URL; no URL shortener.
-- Exact one-time price when a paid tier is mentioned: **$50**, **$200**, or **$250**, with server-verified cumulative credit explained separately when applicable.
+- AccessRevamp website URL: `https://accessrevamp.com/`; no URL shortener.
+- Concise option descriptions: Homepage Reveal ($50), a focused homepage redesign; Complete Website Revamp ($200), a cohesive refresh across the website; and Cinematic Scroll Site ($250), an immersive scroll-led experience. Explain server-verified cumulative credit separately when applicable.
 - Working reply path.
 - Valid postal address where required.
-- Clear opt-out and one-click suppression link.
+- Exact opt-out sentence: Reply “no thanks” and I won’t contact you again. Include a one-click suppression link.
+- Natural invitation for questions.
 - Disclosure that the review is AI-assisted and human-verified, not a legal certification.
 
 ## Subject and tracking rules

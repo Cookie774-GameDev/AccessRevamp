@@ -2,7 +2,7 @@
 
 ## Goal
 
-Prepare restrained, relevant, human-approved business messages based on one verified public-site observation while preserving suppression, sender identity, mailbox health, and legal requirements.
+Prepare restrained, relevant, human-approved business messages based on current, sourced public-site observations while preserving suppression, sender identity, mailbox health, and legal requirements.
 
 ## Volume math
 
@@ -16,13 +16,16 @@ With 100 inboxes at five cold plus five provider-managed warm-up messages each, 
 
 ## Message rules
 
-- Target about 150 words; never exceed 175 words.
+- First-touch outreach must target 150–185 words. The complete customer-visible message has `maximum_message_words: 200` as its hard maximum.
 - Review the recipient’s public website immediately before drafting.
-- Use one human-verified detail: product, service, phrase, promise, page, or customer task.
+- Cite two or three current, sourced website details from different site areas, such as the homepage, services, pricing, about, contact, or a conversion page. Record each source URL and retrieval time.
+- Include one restrained overall improvement opportunity; do not present it as a guaranteed result, legal finding, or security conclusion.
 - State the honest sender and AccessRevamp identity.
 - Explain why the message is relevant without fear, legal threats, or promised results.
+- Describe the available options concisely: Homepage Reveal ($50): a focused homepage redesign; Complete Website Revamp ($200): a cohesive refresh across the website; Cinematic Scroll Site ($250): an immersive, scroll-led experience.
+- Include `https://accessrevamp.com/` without a URL shortener.
 - Include a working reply path, valid postal identity where required, and a clear opt-out.
-- Preferred opt-out: “Reply no thanks or use the opt-out link and we will not contact you again.”
+- Use this exact opt-out sentence: Reply “no thanks” and I won’t contact you again.
 - End naturally: “If you have questions, feel free to ask.”
 
 ## Prohibited practices

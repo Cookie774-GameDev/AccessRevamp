@@ -24,6 +24,7 @@ const files = await Promise.all([
   read('docs/agent-system/subagentforwebsite.md'),
   read('docs/agent-system/skills/security-audit/SKILL.md'),
   read('docs/agent-system/skills/outreach/SKILL.md'),
+  read('docs/OUTREACH_STANDARD.md'),
 ]);
 
 const [
@@ -46,6 +47,7 @@ const [
   websiteAgent,
   securitySkill,
   outreachSkill,
+  outreachStandard,
 ] = files;
 
 test('cinematic orders collect three or four scenes and keep portfolio permission optional', () => {
@@ -137,4 +139,19 @@ test('legal copy does not make portfolio publication a condition of purchase', (
   assert.match(legal, /Purchase does not automatically grant portfolio rights/);
   assert.match(legal, /separate optional permission/);
   assert.match(legal, /automated spam-classification manipulation is prohibited/);
+});
+
+test('outreach documentation defines the approved first-touch offer contract', () => {
+  assert.match(outreachSkill, /150\s*(?:\u2013|-|to)\s*185 words/i);
+  assert.match(outreachSkill, /maximum_message_words\s*(?:of|:)\s*200/i);
+  assert.match(outreachSkill, /two or three current, sourced website details from different site areas/i);
+  assert.match(outreachSkill, /one restrained overall improvement opportunity/i);
+  assert.match(outreachSkill, /Homepage Reveal \(\$50\):/);
+  assert.match(outreachSkill, /Complete Website Revamp \(\$200\):/);
+  assert.match(outreachSkill, /Cinematic Scroll Site \(\$250\):/);
+  assert.match(outreachSkill, /https:\/\/accessrevamp\.com\//);
+  assert.match(outreachSkill, /If you have questions, feel free to ask\./);
+  assert.match(outreachSkill, /Reply \u201cno thanks\u201d and I won\u2019t contact you again\./);
+  assert.match(customerAgent, /Portfolio invitations are allowed only after confirming public, permissioned examples exist\./);
+  assert.match(outreachStandard, /one-click suppression link/i);
 });

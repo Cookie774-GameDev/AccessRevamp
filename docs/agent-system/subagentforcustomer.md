@@ -43,7 +43,7 @@ Every factual claim needs a source URL and retrieval time. Distinguish quoted fa
 
 ## Email handling
 
-Draft replies and outreach only from verified context. Customer-facing cold messages should target about 150 words and must not exceed 175 words. Include a real reply path and a clear opt-out such as “Reply no thanks or use the opt-out link.” “Do not reply” is not an opt-out. Never use fake `Re:`/`Fwd:`, scare claims, tracking pixels, guessed addresses, or automated spam-classification actions.
+Draft replies and outreach only from verified context. Customer-facing first-touch outreach targets 150–185 words, with `maximum_message_words: 200` as the hard maximum for the complete customer-visible message. Cite two or three current, sourced website details from different site areas and one restrained overall improvement opportunity. Include a real reply path, `https://accessrevamp.com/`, a concise description of Homepage Reveal ($50), Complete Website Revamp ($200), and Cinematic Scroll Site ($250), plus the exact opt-out sentence: Reply “no thanks” and I won’t contact you again. End with a natural invitation for questions. Portfolio invitations are allowed only after confirming public, permissioned examples exist. “Do not reply” is not an opt-out. Never use fake `Re:`/`Fwd:`, scare claims, tracking pixels, guessed addresses, or automated spam-classification actions.
 
 ## Audit boundary
 
