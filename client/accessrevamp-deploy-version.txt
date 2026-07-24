@@ -1,0 +1,3 @@
+AccessRevamp production recovery release
+Commit: 0776f13f4a3ef23525b9758f3cc03e9a287ec095
+Features: account recovery, six-digit code UI, auth contrast, official email templates, customer-facing sandbox labels removed
