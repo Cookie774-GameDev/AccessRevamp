@@ -1,0 +1,1 @@
+Verify the production recovery, authentication, logo, and customer-facing checkout labels after merge 0776f13f4a3ef23525b9758f3cc03e9a287ec095.
