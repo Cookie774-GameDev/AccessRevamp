@@ -34,6 +34,7 @@ jobs:
             .filter((deploy) => deploy.context === 'production' || deploy.branch === 'main')
             .map((deploy) => ({
               id: deploy.id,
+              build_id: deploy.build_id,
               state: deploy.state,
               skipped: deploy.skipped,
               locked: deploy.locked,
@@ -50,8 +51,18 @@ jobs:
 
           const newest = production[0];
           let newestDetail = null;
+          let buildDetail = null;
+          let buildLogStatus = null;
+          let buildLogText = null;
           if (newest?.id) {
             newestDetail = await fetch(`https://api.netlify.com/api/v1/deploys/${newest.id}`).then((response) => response.json());
+          }
+          if (newest?.build_id) {
+            const buildResponse = await fetch(`https://api.netlify.com/api/v1/builds/${newest.build_id}`);
+            buildDetail = { status: buildResponse.status, body: await buildResponse.text() };
+            const logResponse = await fetch(`https://api.netlify.com/api/v1/builds/${newest.build_id}/log`);
+            buildLogStatus = logResponse.status;
+            buildLogText = (await logResponse.text()).slice(0, 20_000);
           }
 
           console.log(JSON.stringify({
@@ -76,6 +87,9 @@ jobs:
             },
             productionDeploys: production,
             newestDetail,
+            buildDetail,
+            buildLogStatus,
+            buildLogText,
           }, null, 2));
           NODE
       - name: Upload output
