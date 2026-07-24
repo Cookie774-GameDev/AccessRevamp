@@ -25,6 +25,7 @@ const files = await Promise.all([
   read('docs/agent-system/skills/security-audit/SKILL.md'),
   read('docs/agent-system/skills/outreach/SKILL.md'),
   read('docs/OUTREACH_STANDARD.md'),
+  read('supabase/migrations/20260723090000_raise_first_touch_word_limit.sql'),
 ]);
 
 const [
@@ -48,6 +49,7 @@ const [
   securitySkill,
   outreachSkill,
   outreachStandard,
+  firstTouchWordLimitSql,
 ] = files;
 
 test('cinematic orders collect three or four scenes and keep portfolio permission optional', () => {
@@ -105,9 +107,12 @@ test('external side effects fail closed until separately enabled', () => {
   assert.match(functionsSql, /Active security authorization is missing/);
 });
 
-test('outreach stays human-reviewed, mailbox-aware, and within 175 words', () => {
+test('outreach stays human-reviewed, mailbox-aware, and within the approved 200-word ceiling', () => {
   assert.match(mailboxSql, /target_message_words integer not null default 150/);
-  assert.match(mailboxSql, /maximum_message_words integer not null default 175/);
+  assert.match(firstTouchWordLimitSql, /alter column maximum_message_words set default 200/);
+  assert.match(firstTouchWordLimitSql, /maximum_message_words between target_message_words and 200/);
+  assert.match(firstTouchWordLimitSql, /message_kind <> 'cold' or word_count <= 200/);
+  assert.match(firstTouchWordLimitSql, /least\(v_settings\.maximum_message_words, 200\)/);
   assert.match(mailboxSql, /cold_messages_per_mailbox integer not null default 5/);
   assert.match(mailboxSql, /warm_messages_per_mailbox integer not null default 5/);
   assert.match(capacitySql, /configured_mailbox_count set default 100/);
