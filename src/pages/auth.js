@@ -72,7 +72,7 @@ export function authPage(mode) {
               <span data-password-rule="length">${icon('check')} 12 or more characters</span>
               <span data-password-rule="mix">${icon('check')} Uppercase, lowercase, and number</span>
               <span data-password-rule="symbol">${icon('check')} At least one symbol</span>
-            </div>` : ''}
+            </div>` : '<div class="auth-recovery-link"><a href="/forgot-password" data-nav>Forgot your password?</a></div>'}
 
             <button class="button auth-submit" type="submit">
               <span>${signup ? 'Create account & send email' : 'Check password & send email'}</span>${icon('arrow')}

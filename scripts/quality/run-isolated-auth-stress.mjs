@@ -7,7 +7,7 @@ import { chromium } from 'playwright';
 const port = 43819;
 const baseUrl = `http://127.0.0.1:${port}`;
 const outputDir = resolve('artifacts/isolated-stress');
-const routes = ['/signup', '/login', '/account/projects'];
+const routes = ['/signup', '/login', '/forgot-password', '/recover-account', '/account/projects'];
 const viewports = [
   ['desktop', { width: 1440, height: 900 }],
   ['mobile', { width: 390, height: 844 }],
@@ -56,6 +56,9 @@ async function inspectAuthPage(page, expectedMode) {
     const codeInput = codeForm?.querySelector('input[name="code"]');
     const codeSubmit = codeForm?.querySelector('button[type="submit"]');
     const fallback = document.querySelector('.auth-code-fallback');
+    const topline = document.querySelector('.auth-panel__topline');
+    const emailInput = form?.querySelector('input[type="email"]');
+    const forgot = document.querySelector('.auth-recovery-link a');
     return {
       mode: root?.dataset.authMode,
       panel: Boolean(panel),
@@ -73,15 +76,67 @@ async function inspectAuthPage(page, expectedMode) {
       codePattern: codeInput?.pattern || '',
       codeMaxLength: codeInput?.maxLength || 0,
       fallbackNote: fallback?.textContent?.trim() || '',
+      forgotPasswordLink: forgot?.getAttribute('href') || '',
       backgroundImage: getComputedStyle(experience).backgroundImage,
       headerBackground: getComputedStyle(header).backgroundColor,
       headerCtaBackground: getComputedStyle(headerCta).backgroundColor,
+      toplineColor: getComputedStyle(topline).color,
+      inputColor: getComputedStyle(emailInput).color,
+      inputBackground: getComputedStyle(emailInput).backgroundColor,
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
       title: document.title,
       expectedMode: mode,
     };
   }, expectedMode);
+}
+
+async function inspectRecoveryPage(page) {
+  await page.waitForSelector('[data-recovery-page]', { timeout: 10_000 });
+  return page.evaluate(() => {
+    const root = document.querySelector('[data-recovery-page]');
+    const experience = document.querySelector('.auth-experience');
+    const panel = document.querySelector('.auth-panel');
+    const header = document.querySelector('.site-header');
+    const headerCta = document.querySelector('.nav-actions .button');
+    const requestForm = document.querySelector('[data-recovery-request-form]');
+    const codeStep = document.querySelector('[data-recovery-code-step]');
+    const codeForm = document.querySelector('[data-recovery-code-form]');
+    const passwordStep = document.querySelector('[data-recovery-password-step]');
+    const passwordForm = document.querySelector('[data-recovery-password-form]');
+    const codeInput = codeForm?.querySelector('input[name="code"]');
+    const emailInput = requestForm?.querySelector('input[type="email"]');
+    const passwordInputs = [...(passwordForm?.querySelectorAll('input[type="password"]') || [])];
+    const allInputs = [...document.querySelectorAll('[data-recovery-page] input')];
+    const topline = document.querySelector('.auth-panel__topline');
+    return {
+      root: Boolean(root),
+      panel: Boolean(panel),
+      requestForm: Boolean(requestForm),
+      requestVisible: requestForm ? !requestForm.hidden : false,
+      requestSubmitDisabled: requestForm?.querySelector('button[type="submit"]')?.disabled ?? true,
+      codeStep: Boolean(codeStep),
+      codeStepHidden: codeStep?.hidden ?? false,
+      codeForm: Boolean(codeForm),
+      codeInputMode: codeInput?.inputMode || '',
+      codeAutocomplete: codeInput?.autocomplete || '',
+      codePattern: codeInput?.pattern || '',
+      codeMaxLength: codeInput?.maxLength || 0,
+      passwordStep: Boolean(passwordStep),
+      passwordStepHidden: passwordStep?.hidden ?? false,
+      passwordInputs: passwordInputs.length,
+      phoneInputs: allInputs.filter((input) => input.type === 'tel' || input.name === 'phone').length,
+      backgroundImage: getComputedStyle(experience).backgroundImage,
+      headerBackground: getComputedStyle(header).backgroundColor,
+      headerCtaBackground: getComputedStyle(headerCta).backgroundColor,
+      toplineColor: getComputedStyle(topline).color,
+      inputColor: getComputedStyle(emailInput).color,
+      inputBackground: getComputedStyle(emailInput).backgroundColor,
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      title: document.title,
+    };
+  });
 }
 
 async function exerciseCodePanel(page, mode) {
@@ -132,6 +187,43 @@ async function exerciseCodePanel(page, mode) {
   return panel;
 }
 
+async function exerciseRecoveryCodePanel(page) {
+  await page.goto(`${baseUrl}/forgot-password`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.evaluate((storageKey) => {
+    sessionStorage.setItem(storageKey, JSON.stringify({
+      email: 'recovery@example.test',
+      emailHint: 're••••••@example.test',
+      expiresAt: Date.now() + 300_000,
+    }));
+  }, 'accessrevamp.auth.recovery.v1');
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.waitForSelector('[data-recovery-code-step]:not([hidden])', { timeout: 10_000 });
+  const panel = await page.evaluate(() => {
+    const step = document.querySelector('[data-recovery-code-step]');
+    const input = step.querySelector('input[name="code"]');
+    const fallback = step.querySelector('.auth-code-fallback');
+    return {
+      visible: !step.hidden,
+      inputMode: input.inputMode,
+      autocomplete: input.autocomplete,
+      pattern: input.pattern,
+      maxLength: input.maxLength,
+      fallbackText: fallback.textContent?.trim() || '',
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    };
+  });
+  assert.equal(panel.visible, true);
+  assert.equal(panel.inputMode, 'numeric');
+  assert.equal(panel.autocomplete, 'one-time-code');
+  assert.equal(panel.pattern, '[0-9]{6}');
+  assert.equal(panel.maxLength, 6);
+  assert.match(panel.fallbackText, /recovery button/i);
+  assert.match(panel.fallbackText, /AccessRevamp/i);
+  assert.ok(panel.scrollWidth <= panel.clientWidth + 1, 'recovery code panel horizontal overflow');
+  return panel;
+}
+
 async function runViewport(browser, name, viewport) {
   const context = await browser.newContext({ viewport, reducedMotion: 'no-preference' });
   await context.route('**/*', async (route) => {
@@ -161,6 +253,9 @@ async function runViewport(browser, name, viewport) {
         const sample = await inspectAuthPage(page, mode);
         const headerChannels = colorChannels(sample.headerBackground);
         const ctaChannels = colorChannels(sample.headerCtaBackground);
+        const toplineChannels = colorChannels(sample.toplineColor);
+        const inputChannels = colorChannels(sample.inputColor);
+        const inputBackground = colorChannels(sample.inputBackground);
         assert.equal(sample.mode, mode);
         assert.equal(sample.panel, true);
         assert.equal(sample.submit, true);
@@ -177,11 +272,46 @@ async function runViewport(browser, name, viewport) {
         assert.equal(sample.codePattern, '[0-9]{6}');
         assert.equal(sample.codeMaxLength, 6);
         assert.match(sample.fallbackNote, /secure button/i);
+        assert.equal(sample.forgotPasswordLink, mode === 'login' ? '/forgot-password' : '');
         assert.match(sample.backgroundImage, /gradient/i);
         assert.equal(headerChannels.length, 3, `${name} ${route} header background could not be measured`);
         assert.ok(Math.max(...headerChannels) < 45, `${name} ${route} header is too bright: ${sample.headerBackground}`);
         assert.equal(ctaChannels.length, 3, `${name} ${route} header CTA could not be measured`);
         assert.ok(Math.max(...ctaChannels) < 220, `${name} ${route} header CTA is too bright: ${sample.headerCtaBackground}`);
+        assert.ok(Math.min(...toplineChannels) > 120, `${name} ${route} topline text is too dark: ${sample.toplineColor}`);
+        assert.ok(Math.min(...inputChannels) > 180, `${name} ${route} input text is too dark: ${sample.inputColor}`);
+        assert.ok(Math.max(...inputBackground) < 45, `${name} ${route} input background is too bright: ${sample.inputBackground}`);
+        assert.ok(sample.scrollWidth <= sample.clientWidth + 1, `${name} ${route} horizontal overflow`);
+        samples.push({ cycle, route, ...sample });
+      } else if (route === '/forgot-password' || route === '/recover-account') {
+        const sample = await inspectRecoveryPage(page);
+        const headerChannels = colorChannels(sample.headerBackground);
+        const ctaChannels = colorChannels(sample.headerCtaBackground);
+        const toplineChannels = colorChannels(sample.toplineColor);
+        const inputChannels = colorChannels(sample.inputColor);
+        const inputBackground = colorChannels(sample.inputBackground);
+        assert.equal(sample.root, true);
+        assert.equal(sample.panel, true);
+        assert.equal(sample.requestForm, true);
+        assert.equal(sample.requestVisible, true);
+        assert.equal(sample.requestSubmitDisabled, false);
+        assert.equal(sample.codeStep, true);
+        assert.equal(sample.codeStepHidden, true);
+        assert.equal(sample.codeForm, true);
+        assert.equal(sample.codeInputMode, 'numeric');
+        assert.equal(sample.codeAutocomplete, 'one-time-code');
+        assert.equal(sample.codePattern, '[0-9]{6}');
+        assert.equal(sample.codeMaxLength, 6);
+        assert.equal(sample.passwordStep, true);
+        assert.equal(sample.passwordStepHidden, true);
+        assert.equal(sample.passwordInputs, 2);
+        assert.equal(sample.phoneInputs, 0);
+        assert.match(sample.backgroundImage, /gradient/i);
+        assert.ok(Math.max(...headerChannels) < 45, `${name} ${route} header is too bright`);
+        assert.ok(Math.max(...ctaChannels) < 220, `${name} ${route} header CTA is too bright`);
+        assert.ok(Math.min(...toplineChannels) > 120, `${name} ${route} topline text is too dark`);
+        assert.ok(Math.min(...inputChannels) > 180, `${name} ${route} input text is too dark`);
+        assert.ok(Math.max(...inputBackground) < 45, `${name} ${route} input background is too bright`);
         assert.ok(sample.scrollWidth <= sample.clientWidth + 1, `${name} ${route} horizontal overflow`);
         samples.push({ cycle, route, ...sample });
       } else {
@@ -198,6 +328,7 @@ async function runViewport(browser, name, viewport) {
   const codePanels = {
     signup: await exerciseCodePanel(page, 'signup'),
     login: await exerciseCodePanel(page, 'login'),
+    recovery: await exerciseRecoveryCodePanel(page),
   };
   assert.deepEqual(pageErrors, []);
   assert.deepEqual(consoleErrors, []);

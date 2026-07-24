@@ -1,0 +1,96 @@
+.auth-experience {
+  --auth-muted: #c4cad5;
+}
+
+.auth-field input,
+.auth-code-field input {
+  color-scheme: dark;
+}
+
+.auth-field input:-webkit-autofill,
+.auth-field input:-webkit-autofill:hover,
+.auth-field input:-webkit-autofill:focus,
+.auth-field input:-webkit-autofill:active,
+.auth-code-field input:-webkit-autofill,
+.auth-code-field input:-webkit-autofill:hover,
+.auth-code-field input:-webkit-autofill:focus,
+.auth-code-field input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f7f4ed !important;
+  caret-color: #a7f3d0;
+  box-shadow: 0 0 0 1000px #080b10 inset, 0 0 0 .22rem rgba(167,243,208,.08) !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.auth-panel__topline,
+.auth-panel__switch p,
+.auth-panel__legal,
+.auth-password-rules span,
+.auth-code-help,
+.auth-code-fallback,
+.auth-email-step__note,
+.auth-protocol__step p,
+.auth-story__footer p {
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+.auth-panel__topline { color: #aeb7c6; }
+.auth-protocol__step p,
+.auth-story__footer p,
+.auth-panel__switch p { color: #b1b9c7; }
+.auth-panel__legal { color: #9fa8b8; }
+.auth-panel__legal a { color: #c5ccda; }
+.auth-password-rules span { color: #a8b1c1; }
+.auth-code-help { color: #a7b0c0; }
+.auth-code-fallback { color: #b8c1cf; }
+.auth-email-step__note { color: #bdc5d2; }
+
+.auth-recovery-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -.25rem;
+}
+
+.auth-recovery-link a {
+  color: #bfeeda;
+  font-size: .76rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.auth-recovery-link a:hover,
+.auth-recovery-link a:focus-visible {
+  color: var(--electric-yellow);
+  outline: 0;
+  text-decoration: underline;
+  text-underline-offset: .28rem;
+}
+
+.auth-password-step {
+  position: relative;
+  min-height: 26rem;
+  padding: 2.25rem 0 1rem;
+}
+
+.auth-password-step h2 {
+  margin: 1rem 0 .8rem;
+  color: #fff;
+  font-size: clamp(2.65rem, 4.5vw, 4.4rem);
+}
+
+.auth-password-step > p {
+  max-width: 31rem;
+  margin: 0 0 1.65rem;
+  color: var(--auth-muted);
+}
+
+.auth-password-form { margin-top: 1.45rem; }
+
+@media (max-width: 680px) {
+  .auth-password-step { padding-top: 1.75rem; }
+  .auth-recovery-link { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-field input:-webkit-autofill,
+  .auth-code-field input:-webkit-autofill { transition: none; }
+}
