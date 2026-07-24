@@ -96,13 +96,13 @@ test('Netlify fails before upload when a checked-in clip exceeds the configured 
 });
 
 test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sources', async () => {
-  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, pages, isolated] = await Promise.all([
+  const [netlify, sourceOptimizer, sourceManifestText, optimizeScript, production, worker, isolated] = await Promise.all([
     readFile('netlify.toml', 'utf8'),
     readFile('scripts/optimize-source-showcase-videos.mjs', 'utf8'),
     readFile('public/media/showcases/source-optimization.json', 'utf8'),
     readFile('scripts/optimize-showcase-videos.mjs', 'utf8'),
     readFile('.github/workflows/production-ci.yml', 'utf8'),
-    readFile('.github/workflows/deploy-pages.yml', 'utf8'),
+    readFile('.github/workflows/deploy-cloudflare-worker.yml', 'utf8'),
     readFile('.github/workflows/isolated-stress.yml', 'utf8'),
   ]);
   const sourceManifest = JSON.parse(sourceManifestText);
@@ -121,7 +121,7 @@ test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sourc
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
   assert.match(production, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
-  for (const workflow of [pages, isolated]) {
+  for (const workflow of [worker, isolated]) {
     assert.match(workflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   }
 });
