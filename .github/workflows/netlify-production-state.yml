@@ -21,11 +21,19 @@ jobs:
       - name: Inspect public production and Netlify API
         id: inspect
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -o pipefail
           node <<'NODE' 2>&1 | tee netlify-production-state.txt
           const siteName = 'accessrevamp.netlify.app';
+          const repository = 'Cookie774-GameDev/AccessRevamp';
+          const githubHeaders = {
+            accept: 'application/vnd.github+json',
+            authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            'x-github-api-version': '2022-11-28',
+          };
           const site = await fetch(`https://api.netlify.com/api/v1/sites/${siteName}`).then((response) => response.json());
           const deploys = await fetch(`https://api.netlify.com/api/v1/sites/${siteName}/deploys?per_page=50`).then((response) => response.json());
           const markerResponse = await fetch('https://accessrevamp.com/accessrevamp-deploy-version.txt', { redirect: 'manual' });
@@ -45,9 +53,28 @@ jobs:
               published_at: deploy.published_at,
               deploy_time: deploy.deploy_time,
               title: deploy.title,
+              review_id: deploy.review_id,
               summary: deploy.summary || null,
               plugin_state: deploy.plugin_state,
             }));
+
+          const commitMetadata = {};
+          for (const deploy of production.slice(0, 3)) {
+            if (!deploy.commit_ref) continue;
+            const response = await fetch(`https://api.github.com/repos/${repository}/commits/${deploy.commit_ref}`, { headers: githubHeaders });
+            const commit = await response.json();
+            commitMetadata[deploy.commit_ref] = {
+              status: response.status,
+              author_login: commit.author?.login || null,
+              committer_login: commit.committer?.login || null,
+              git_author_name: commit.commit?.author?.name || null,
+              git_author_email: commit.commit?.author?.email || null,
+              git_committer_name: commit.commit?.committer?.name || null,
+              git_committer_email: commit.commit?.committer?.email || null,
+              verified: commit.commit?.verification?.verified ?? null,
+              verification_reason: commit.commit?.verification?.reason || null,
+            };
+          }
 
           const newest = production[0];
           let newestDetail = null;
@@ -86,6 +113,7 @@ jobs:
               text: markerText.slice(0, 300),
             },
             productionDeploys: production,
+            commitMetadata,
             newestDetail,
             buildDetail,
             buildLogStatus,
