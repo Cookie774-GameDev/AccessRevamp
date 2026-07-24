@@ -12,7 +12,7 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 - Hashed, expiring, one-use customer approval links scoped to the intended project option group and revision round.
 - Google Drive customer-folder root, customer template, runbooks, and a Payment and Workflow Ledger.
 - Artifact guardrail of 9,000,000 bytes per file.
-- Mailbox-aware outreach records with a 150-word target and 175-word hard maximum.
+- Mailbox-aware first-touch outreach records with a 150-word target and 200-word hard maximum. Reply limits are governed separately by the reply-response guide.
 - Root `CLAUDE.md`, safe `.claude/settings.json`, and a verified Windows installer for the complete operations folder.
 
 ## Safety state

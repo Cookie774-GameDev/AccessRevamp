@@ -26,7 +26,7 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - AccessRevamp website URL: `https://accessrevamp.com/`; no URL shortener.
 - Concise option descriptions: Homepage Reveal ($50), a focused homepage redesign; Complete Website Revamp ($200), a cohesive refresh across the website; and Cinematic Scroll Site ($250), an immersive scroll-led experience. Explain server-verified cumulative credit separately when applicable.
 - Working reply path.
-- Valid postal address where required.
+- Verified mailing identity, configured only after the owner provides it; do not place a mailing address in test copy.
 - Exact opt-out sentence: Reply “no thanks” and I won’t contact you again. Include a one-click suppression link.
 - Natural invitation for questions.
 - Disclosure that the review is AI-assisted and human-verified, not a legal certification.
@@ -41,6 +41,6 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 
 ## Approval and sending
 
-The backend stores drafts and approved queue items but intentionally does not provide an unattended commercial send loop. A sender may be connected only after legal review, mailbox and DNS authentication, bounce handling, complaint handling, suppression tests, a real postal identity, and a final human approval workflow.
+The backend stores drafts and approved queue items but intentionally does not provide an unattended commercial send loop. A sender may be connected only after legal review, mailbox and DNS authentication, bounce handling, complaint handling, suppression tests, a verified mailing identity, and a final human approval workflow.
 
 A reply requesting no further contact must be added to `suppression_list` immediately, even when the one-click link was not used.

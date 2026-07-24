@@ -99,7 +99,7 @@ SUPABASE_SERVICE_ROLE_KEY=... \
 node scripts/approve-outreach.mjs outreach-decisions.jsonl
 ```
 
-Before approval succeeds, `outreach_settings` must contain a real sender name, reply-capable email, postal address, and deployed AccessRevamp site URL. Approval still does not send mail.
+Before approval succeeds, `outreach_settings` must contain a real sender name, reply-capable email, verified mailing identity, and deployed AccessRevamp site URL. Approval still does not send mail. Until the owner configures that identity, no mailing address may appear in any test or draft content.
 
 ## Google Drive boundary
 

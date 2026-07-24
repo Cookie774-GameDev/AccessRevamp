@@ -20,7 +20,7 @@ Outreach may introduce a manually verified public-site observation and an option
 4. A person verifies every prospect-facing observation, evidence item, severity/confidence label, and claim.
 5. Check permanent suppression and prior opt-out before preview or draft creation.
 6. Create a private preview only from approved, rights-safe content; store only a token hash; set expiry and `noindex`.
-7. Draft plain, specific copy with real sender identity, reply path, postal address when required, preview expiry, and one-click opt-out.
+7. Draft plain, specific copy with real sender identity, a working reply path, preview expiry, and one-click opt-out. Do not emit a mailing address in test copy; commercial launch remains disabled until the owner configures a verified mailing identity.
 8. A different or explicitly accountable human approves the exact subject, body, recipient, finding, evidence, and link.
 9. Recheck suppression, daily ceiling, sender readiness, and global kill switch immediately before any future send.
 10. Record disposition, opt-out, bounce/complaint handling, and audit evidence.
@@ -51,7 +51,7 @@ The rebuild provides a clearer operator workspace for research, approval, previe
 
 ### EXTERNALLY BLOCKED
 
-Real sender identity, reply-capable mailbox, postal address, domain authentication, bounce/complaint processing, jurisdiction review, and owned operator authorization are not present in source and cannot be inferred.
+Real sender identity, reply-capable mailbox, verified mailing identity, domain authentication, bounce/complaint processing, jurisdiction review, and owned operator authorization are not present in source and cannot be inferred.
 
 ### LAUNCH-ONLY
 

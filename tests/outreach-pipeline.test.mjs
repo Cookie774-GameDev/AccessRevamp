@@ -41,7 +41,7 @@ test('approved export follows the configured database limit but never exceeds 10
 test('responsible outreach standard preserves review, reply, and suppression boundaries', () => {
   assert.match(outreachStandard, /human-approved/i);
   assert.match(outreachStandard, /working reply path/i);
-  assert.match(outreachStandard, /valid postal address/i);
+  assert.match(outreachStandard, /verified mailing identity/i);
   assert.match(outreachStandard, /one-click suppression link/i);
   assert.match(outreachStandard, /at most one follow-up/i);
   assert.match(outreachStandard, /stop immediately after an objection or opt-out/i);
