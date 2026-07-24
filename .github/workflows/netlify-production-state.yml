@@ -24,25 +24,60 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          {
-            echo '=== production marker ==='
-            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://accessrevamp.com/accessrevamp-deploy-version.txt || true
-            echo
-            echo '=== production home headers ==='
-            curl --http1.1 -sS -I --connect-timeout 10 --max-time 30 https://accessrevamp.com/ || true
-            echo
-            echo '=== site API ==='
-            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/sites/accessrevamp.netlify.app || true
-            echo
-            echo '=== deploy API ==='
-            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 'https://api.netlify.com/api/v1/sites/accessrevamp.netlify.app/deploys?per_page=5' || true
-            echo
-            echo '=== skipped production deploy detail ==='
-            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/deploys/6a62d0d5289f7400085b2abd || true
-            echo
-            echo '=== skipped production deploy log ==='
-            curl --http1.1 -sS -D - --connect-timeout 10 --max-time 30 https://api.netlify.com/api/v1/deploys/6a62d0d5289f7400085b2abd/log || true
-          } | tee netlify-production-state.txt
+          node <<'NODE' 2>&1 | tee netlify-production-state.txt
+          const siteName = 'accessrevamp.netlify.app';
+          const site = await fetch(`https://api.netlify.com/api/v1/sites/${siteName}`).then((response) => response.json());
+          const deploys = await fetch(`https://api.netlify.com/api/v1/sites/${siteName}/deploys?per_page=50`).then((response) => response.json());
+          const markerResponse = await fetch('https://accessrevamp.com/accessrevamp-deploy-version.txt', { redirect: 'manual' });
+          const markerText = await markerResponse.text();
+          const production = deploys
+            .filter((deploy) => deploy.context === 'production' || deploy.branch === 'main')
+            .map((deploy) => ({
+              id: deploy.id,
+              state: deploy.state,
+              skipped: deploy.skipped,
+              locked: deploy.locked,
+              branch: deploy.branch,
+              commit_ref: deploy.commit_ref,
+              created_at: deploy.created_at,
+              updated_at: deploy.updated_at,
+              published_at: deploy.published_at,
+              deploy_time: deploy.deploy_time,
+              title: deploy.title,
+              summary: deploy.summary || null,
+              plugin_state: deploy.plugin_state,
+            }));
+
+          const newest = production[0];
+          let newestDetail = null;
+          if (newest?.id) {
+            newestDetail = await fetch(`https://api.netlify.com/api/v1/deploys/${newest.id}`).then((response) => response.json());
+          }
+
+          console.log(JSON.stringify({
+            site: {
+              id: site.id,
+              name: site.name,
+              custom_domain: site.custom_domain,
+              deploy_id: site.deploy_id,
+              published_deploy: site.published_deploy ? {
+                id: site.published_deploy.id,
+                state: site.published_deploy.state,
+                commit_ref: site.published_deploy.commit_ref,
+                created_at: site.published_deploy.created_at,
+                published_at: site.published_deploy.published_at,
+                title: site.published_deploy.title,
+              } : null,
+            },
+            marker: {
+              status: markerResponse.status,
+              content_type: markerResponse.headers.get('content-type'),
+              text: markerText.slice(0, 300),
+            },
+            productionDeploys: production,
+            newestDetail,
+          }, null, 2));
+          NODE
       - name: Upload output
         if: always()
         uses: actions/upload-artifact@v4
