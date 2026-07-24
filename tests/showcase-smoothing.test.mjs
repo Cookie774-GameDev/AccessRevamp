@@ -30,3 +30,10 @@ test('showcase progress directly tracks scroll and retargets in-flight video see
   assert.doesNotMatch(source, /video\.play\(\)/);
   assert.doesNotMatch(source, /createObjectURL|response\.blob/);
 });
+
+test('showcase videos wait for proximity instead of eagerly loading during page startup', async () => {
+  const source = await read('src/services/showcase-comparison.js');
+  assert.doesNotMatch(source, /const idlePreload\s*=\s*\(\)\s*=>\s*prepareChapter\(chapters\[0\], 'auto'\)/);
+  assert.doesNotMatch(source, /requestIdleCallback\(idlePreload|setTimeout\(idlePreload/);
+  assert.match(source, /preloadObserver\?\.observe\(chapter\)/);
+});
