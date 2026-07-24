@@ -746,7 +746,6 @@ function setupShowcaseComparisons(root = document) {
 	let pageVisible = !document.hidden;
 	let scrollFrame = 0;
 	let activeIndex = -1;
-	let idlePreloadId = 0;
 	const supportsSmallViewportUnits = Boolean(globalThis.CSS?.supports?.("height", "1svh"));
 	const updateScrollDistance = () => {
 		const distance = innerWidth <= MOBILE_BREAKPOINT_PX ? MOBILE_SCROLL_DISTANCE_VH : DESKTOP_SCROLL_DISTANCE_VH;
@@ -1035,10 +1034,7 @@ function setupShowcaseComparisons(root = document) {
 		chapter.dataset.showcaseActive = "false";
 	});
 	updateScrollDistance();
-	prepareChapter(chapters[0], "metadata");
-	const idlePreload = () => prepareChapter(chapters[0], "auto");
-	if (globalThis.requestIdleCallback) idlePreloadId = globalThis.requestIdleCallback(idlePreload, { timeout: 1400 });
-	else idlePreloadId = setTimeout(idlePreload, 700);
+	if (!preloadObserver) prepareChapter(chapters[0], "metadata");
 	addEventListener("scroll", scheduleScrollRead, { passive: true });
 	addEventListener("resize", handleViewportChange, { passive: true });
 	addEventListener("orientationchange", handleViewportChange, { passive: true });
@@ -1052,8 +1048,6 @@ function setupShowcaseComparisons(root = document) {
 		removeEventListener("orientationchange", handleViewportChange);
 		document.removeEventListener("visibilitychange", handleVisibilityChange);
 		if (scrollFrame) cancelAnimationFrame(scrollFrame);
-		if (globalThis.cancelIdleCallback && idlePreloadId) globalThis.cancelIdleCallback(idlePreloadId);
-		else if (idlePreloadId) clearTimeout(idlePreloadId);
 		cleanups.forEach((cleanup) => cleanup());
 		trackedVideos.forEach((video) => stopVideo(video, videoStates.get(video)));
 		chapters.forEach((chapter) => {
