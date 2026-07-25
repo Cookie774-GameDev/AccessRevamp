@@ -154,27 +154,56 @@ function renderDeliveries(deliveries = []) {
   }).join('')}</div>`;
 }
 
+function projectNextAction(project) {
+  if (['complete_revamp', 'cinematic_scroll'].includes(project.plan_key) && !project.brief) {
+    return {
+      label: 'Complete your project questions',
+      href: `/project-intake?plan=${encodeURIComponent(project.plan_key)}&project=${encodeURIComponent(project.id)}`,
+    };
+  }
+  if ((project.design_options || []).some((option) => option.status === 'customer_ready')) {
+    return { label: 'Review your design options', section: 'designs' };
+  }
+  if ((project.artifacts || []).length || (project.deliveries || []).length) {
+    return { label: 'Review your latest delivery', section: 'deliveries' };
+  }
+  return { label: 'Follow production progress', section: 'progress' };
+}
+
 function renderProject(project) {
   const progress = Math.max(0, Math.min(100, Number(project.progress_percent || 0)));
   const due = project.delivery_due_at ? date(project.delivery_due_at) : 'Not scheduled';
   const latest = project.latest_update;
   const website = safeHref(project.website_url);
-  return `<article class="customer-project" data-project-id="${escapeHtml(project.id)}">
+  const nextAction = projectNextAction(project);
+  const nextActionControl = nextAction.href
+    ? `<a class="button button--small" href="${escapeHtml(nextAction.href)}" data-nav>${escapeHtml(nextAction.label)}</a>`
+    : `<button class="button button--small" type="button" data-project-section="${escapeHtml(nextAction.section)}">${escapeHtml(nextAction.label)}</button>`;
+  return `<article class="customer-project customer-workspace__canvas" data-project-id="${escapeHtml(project.id)}" tabindex="-1">
     <header class="customer-project__header"><div><span class="eyebrow">${escapeHtml(plans[project.plan_key]?.name || label(project.plan_key))}</span><h2>${escapeHtml(project.name)}</h2><p>${escapeHtml(project.scope_summary || 'Your project scope and production record will be kept here.')}</p></div><div class="customer-project__status">${renderStatus(project.status)}${renderStatus(project.delivery_status, 'status-pill--secondary')}</div></header>
+    <section class="customer-next-action"><div><span class="micro-label">Next action</span><strong>${escapeHtml(nextAction.label)}</strong><p>${latest?.body ? escapeHtml(latest.body) : 'Your workspace will always point to the next useful step.'}</p></div>${nextActionControl}</section>
     <div class="portal-progress"><div class="portal-progress__head"><strong>${progress}% complete</strong><span>${latest?.stage ? escapeHtml(label(latest.stage)) : escapeHtml(label(project.status))}</span></div><div class="portal-progress__track" role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><span style="width:${progress}%"></span></div></div>
     <div class="portal-facts"><div><span>Last updated</span><strong>${escapeHtml(date(project.updated_at))}</strong></div><div><span>Estimated delivery</span><strong>${escapeHtml(due)}</strong></div><div><span>Revision allowance</span><strong>${Number(project.revision_limit || 0)} round${Number(project.revision_limit || 0) === 1 ? '' : 's'}</strong></div>${website ? `<div><span>Current website</span><a href="${escapeHtml(website)}" target="_blank" rel="noopener">Open website</a></div>` : ''}</div>
     <div class="portal-sections">
       <details open><summary>Project updates <span>${(project.updates || []).length}</span></summary><div class="portal-section-body">${renderUpdates(project.updates)}</div></details>
-      <details><summary>Production progress <span>${project.workflow?.tasks?.length || 0}</span></summary><div class="portal-section-body">${renderWorkflow(project.workflow)}</div></details>
-      <details><summary>Your brief and references <span>${project.brief?.assets?.length || 0}</span></summary><div class="portal-section-body">${renderBrief(project)}</div></details>
-      <details><summary>Designs for review <span>${project.design_options?.length || 0}</span></summary><div class="portal-section-body">${renderDesigns(project.design_options, project.feedback)}</div></details>
+      <details data-project-panel="progress"><summary>Production progress <span>${project.workflow?.tasks?.length || 0}</span></summary><div class="portal-section-body">${renderWorkflow(project.workflow)}</div></details>
+      <details data-project-panel="questions"><summary>Project questions and references <span>${project.brief?.assets?.length || 0}</span></summary><div class="portal-section-body">${renderBrief(project)}</div></details>
+      <details data-project-panel="designs"><summary>Designs for review <span>${project.design_options?.length || 0}</span></summary><div class="portal-section-body">${renderDesigns(project.design_options, project.feedback)}</div></details>
       <details><summary>Special requests <span>${(project.feedback || []).filter((entry) => entry.action === 'special_request').length}</span></summary><div class="portal-section-body">${renderSpecialRequests(project)}</div></details>
-      <details open><summary>Files and website downloads <span>${project.artifacts?.length || 0}</span></summary><div class="portal-section-body">${renderArtifacts(project.artifacts)}${renderDeliveries(project.deliveries)}</div></details>
+      <details open data-project-panel="deliveries"><summary>Files and website downloads <span>${project.artifacts?.length || 0}</span></summary><div class="portal-section-body">${renderArtifacts(project.artifacts)}${renderDeliveries(project.deliveries)}</div></details>
     </div>
   </article>`;
 }
 
-function renderWorkspace(result) {
+function renderProjectRail(projects, selectedProjectId) {
+  return `<nav class="customer-workspace__rail" aria-label="Your projects"><div class="customer-workspace__rail-head"><span class="micro-label">Projects</span><strong>${projects.length}</strong></div>${projects.map((project) => {
+    const selected = project.id === selectedProjectId;
+    const progress = Math.max(0, Math.min(100, Number(project.progress_percent || 0)));
+    return `<button type="button" data-project-select="${escapeHtml(project.id)}"${selected ? ' aria-current="page"' : ''}><span>${escapeHtml(project.name)}</span><small>${escapeHtml(plans[project.plan_key]?.name || label(project.plan_key))}</small><i><b style="width:${progress}%"></b></i><em>${progress}%</em></button>`;
+  }).join('')}<a class="customer-workspace__new-project" href="/pricing" data-nav>Start another project</a></nav>`;
+}
+
+function renderWorkspace(result, selectedProjectId = '') {
   const projects = result.projects || [];
   const orders = result.orders || [];
   const refunds = result.refundRequests || [];
@@ -186,8 +215,9 @@ function renderWorkspace(result) {
     ? `${escapeHtml(label(result.entitlement.highest_tier_key))} · ${escapeHtml(label(result.entitlement.status))} · ${money(result.entitlement.effective_paid_cents)}`
     : 'No paid entitlement is linked yet.';
 
-  return `${partial}<div class="customer-hub-summary"><section><span class="micro-label">Current entitlement</span><strong>${entitlement}</strong></section><section><span class="micro-label">Projects</span><strong>${projects.length}</strong></section><section><span class="micro-label">Secure download links</span><strong>Refresh every ${Math.round((result.signedUrlExpiresIn || 900) / 60)} minutes</strong></section><button class="button button--ghost button--small" type="button" data-hub-refresh>Refresh workspace</button></div>
-    ${projects.length ? `<div class="customer-project-list">${projects.map(renderProject).join('')}</div>` : '<div class="empty-state"><h2>No project has been opened yet</h2><p>Use the same confirmed email used at checkout. Once a paid project is created, its progress and files will appear here automatically.</p><a class="button" href="/pricing" data-nav>Review service options</a></div>'}
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0];
+  return `${partial}<div class="customer-hub-summary"><section><span class="micro-label">Current entitlement</span><strong>${entitlement}</strong></section><section><span class="micro-label">Secure files</span><strong>Links refresh every ${Math.round((result.signedUrlExpiresIn || 900) / 60)} minutes</strong></section><button class="button button--ghost button--small" type="button" data-hub-refresh>Refresh workspace</button></div>
+    ${selectedProject ? `<div class="customer-workspace">${renderProjectRail(projects, selectedProject.id)}${renderProject(selectedProject)}</div>` : '<div class="empty-state"><h2>No project has been opened yet</h2><p>Use the same confirmed email used at checkout. A signature-verified paid order creates its project folder here automatically.</p><a class="button" href="/pricing" data-nav>Review service options</a></div>'}
     <details class="portal-account-records"><summary>Orders and account records</summary><div class="dashboard-grid"><section class="dashboard-card"><h2>Verified orders</h2>${orders.length ? `<ul>${orders.map((order) => `<li>${escapeHtml(label(order.plan_key))} — ${money(order.amount_total, order.currency)} — ${escapeHtml(label(order.status))}</li>`).join('')}</ul>` : '<p>No verified order yet.</p>'}</section><section class="dashboard-card"><h2>Refund requests</h2>${refunds.length ? `<ul>${refunds.map((refund) => `<li>${escapeHtml(refund.reason || 'Request')} — ${escapeHtml(label(refund.status))}</li>`).join('')}</ul>` : '<p>No refund request is on file.</p>'}</section></div></details>`;
 }
 
@@ -196,8 +226,19 @@ export function setupAccountProjects(navigate) {
   if (!host) return undefined;
   const logout = document.querySelector('[data-account-logout]');
   const greeting = document.querySelector('[data-account-greeting]');
+  const profileName = document.querySelector('[data-account-profile-name]');
   let disposed = false;
   let activeSession = null;
+  let workspaceResult = null;
+  let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
+
+  const renderCurrentWorkspace = () => {
+    if (!workspaceResult) return;
+    const projects = workspaceResult.projects || [];
+    const selected = projects.find((project) => project.id === selectedProjectId) || projects[0] || null;
+    selectedProjectId = selected?.id || '';
+    show(host, projects.length ? 'populated' : 'empty', renderWorkspace(workspaceResult, selectedProjectId));
+  };
 
   const saveFeedback = async (form, payload) => {
     const status = form.querySelector('.form-status');
@@ -247,6 +288,7 @@ export function setupAccountProjects(navigate) {
 
     if (logout) logout.hidden = false;
     if (greeting) greeting.textContent = `Signed in as ${session.user.email}`;
+    if (profileName) profileName.textContent = session.user.email;
     try {
       const response = await fetch('/api/account-projects', {
         headers: { authorization: `Bearer ${session.access_token}` },
@@ -258,7 +300,9 @@ export function setupAccountProjects(navigate) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Workspace unavailable');
       if (disposed) return;
-      show(host, result.projects?.length ? 'populated' : 'empty', renderWorkspace(result));
+      workspaceResult = result;
+      if (profileName) profileName.textContent = result.profile?.full_name || session.user.email;
+      renderCurrentWorkspace();
     } catch (error) {
       show(host, 'unavailable', `<h2>Workspace unavailable</h2><p>${escapeHtml(error.message || 'The workspace could not load.')}</p>`);
     }
@@ -269,6 +313,25 @@ export function setupAccountProjects(navigate) {
     navigate('/');
   };
   const onHostClick = async (event) => {
+    const projectButton = event.target.closest('[data-project-select]');
+    if (projectButton && workspaceResult) {
+      selectedProjectId = projectButton.dataset.projectSelect;
+      const url = new URL(location.href);
+      url.searchParams.set('project', selectedProjectId);
+      history.replaceState({}, '', `${url.pathname}${url.search}`);
+      renderCurrentWorkspace();
+      host.querySelector('.customer-workspace__canvas')?.focus({ preventScroll: true });
+      return;
+    }
+    const sectionButton = event.target.closest('[data-project-section]');
+    if (sectionButton) {
+      const panel = host.querySelector(`[data-project-panel="${sectionButton.dataset.projectSection}"]`);
+      if (panel) {
+        panel.open = true;
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
     if (event.target.closest('[data-hub-refresh]')) {
       await load();
       return;

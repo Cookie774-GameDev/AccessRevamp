@@ -50,7 +50,9 @@ test('showcase controller keeps both videos locked to the current scroll positio
   assert.match(source, /video\.currentTime\s*=\s*targetTime/);
   assert.match(source, /const activeChanged = nextActiveIndex !== activeIndex/);
   assert.match(source, /presentActiveChapter\(time, activeChanged\)/);
-  assert.doesNotMatch(source, /SCROLL_SMOOTHING_MS|MAX_PROGRESS_PER_SECOND|MAX_SEEK_STEP_SECONDS/);
+  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*90/);
+  assert.match(source, /1\s*-\s*Math\.exp\(-elapsed\s*\/\s*smoothingWindow\)/);
+  assert.doesNotMatch(source, /MAX_PROGRESS_PER_SECOND|MAX_SEEK_STEP_SECONDS/);
   assert.doesNotMatch(source, /video\.play\(\)/);
   assert.match(source, /data\.showcaseActive|dataset\.showcaseActive/);
   assert.match(source, /removeAttribute\('src'\)/);

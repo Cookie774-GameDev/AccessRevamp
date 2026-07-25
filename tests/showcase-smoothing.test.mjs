@@ -12,21 +12,34 @@ test('showcase scrolling keeps the approved physical scroll distance', async () 
   assert.match(source, /1svh/);
 });
 
-test('showcase progress directly tracks scroll and retargets in-flight video seeks', async () => {
+test('showcase progress eases toward fast scroll targets and coalesces in-flight video seeks', async () => {
   const source = await read('src/services/showcase-comparison.js');
   assert.match(source, /PRESENTATION_FPS\s*=\s*24/);
+  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*90/);
+  assert.match(source, /PROGRESS_SNAP_EPSILON\s*=\s*0\.001/);
   assert.match(source, /MEDIA_SYNC_EPSILON_SECONDS\s*=\s*1\s*\/\s*48/);
   assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*160/);
   assert.match(source, /targetProgress/);
   assert.match(source, /renderedProgress/);
-  assert.match(source, /state\.renderedProgress\s*=\s*state\.targetProgress/);
+  assert.match(source, /1\s*-\s*Math\.exp\(-elapsed\s*\/\s*smoothingWindow\)/);
+  assert.match(source, /requestAnimationFrame\(animatePresentation\)/);
   assert.match(source, /requestVideoFrameCallback/);
   assert.match(source, /video\.currentTime\s*=\s*targetTime/);
   assert.match(source, /state\.pendingSeek/);
   assert.match(source, /presentActiveChapter\(time, activeChanged\)/);
   assert.match(source, /showcaseActive/);
   assert.match(source, /removeAttribute\('src'\)/);
-  assert.doesNotMatch(source, /SCROLL_SMOOTHING_MS|MAX_PROGRESS_PER_SECOND|MAX_SEEK_STEP_SECONDS/);
+  const presentation = source.slice(
+    source.indexOf('const presentActiveChapter'),
+    source.indexOf('const setImmediateProgress'),
+  );
+  assert.match(presentation, /if \(settled\) state\.renderedProgress = state\.targetProgress/);
+  assert.doesNotMatch(presentation, /\n\s*state\.renderedProgress = state\.targetProgress;\n\s*const/);
+  const pendingSeek = source.slice(
+    source.indexOf('if (state.pendingSeek)'),
+    source.indexOf('state.pendingSeek = true'),
+  );
+  assert.doesNotMatch(pendingSeek, /video\.currentTime\s*=/);
   assert.doesNotMatch(source, /video\.play\(\)/);
   assert.doesNotMatch(source, /createObjectURL|response\.blob/);
 });

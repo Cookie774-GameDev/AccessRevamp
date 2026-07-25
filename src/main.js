@@ -49,6 +49,7 @@ import { setupProjectIntake } from './services/project-intake.js';
 import { setupProjectApproval } from './services/project-approval.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
+import { setupSessionNavigation } from './services/session-navigation.js';
 
 function normalizeAuthEmailReturn() {
   if (!location.hash) return;
@@ -180,7 +181,7 @@ function renderRoute({ pathname, pattern, params, view }) {
   app.innerHTML = view(params);
   updateDocumentMetadata(pathname, pattern);
 
-  const cleanups = [setupMenu()];
+  const cleanups = [setupMenu(), setupSessionNavigation(router.navigate)];
   if (pathname === '/') cleanups.push(setupHomeExperience(app));
   if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupWorkFilters());
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());

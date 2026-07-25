@@ -4,6 +4,8 @@ const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const MEDIA_READY = 1;
 const PRESENTATION_FPS = 24;
 const PRESENTATION_INTERVAL_MS = 1000 / PRESENTATION_FPS;
+const SCROLL_SMOOTHING_MS = 90;
+const PROGRESS_SNAP_EPSILON = 0.001;
 const MEDIA_SYNC_EPSILON_SECONDS = 1 / 48;
 const FRAME_SETTLE_TIMEOUT_MS = 160;
 const DESKTOP_SCROLL_DISTANCE_VH = 520;
@@ -38,6 +40,7 @@ export function setupShowcaseComparisons(root = document) {
   let destroyed = false;
   let pageVisible = !document.hidden;
   let scrollFrame = 0;
+  let presentationFrame = 0;
   let activeIndex = -1;
   const supportsSmallViewportUnits = Boolean(globalThis.CSS?.supports?.('height', '1svh'));
 
@@ -78,14 +81,7 @@ export function setupShowcaseComparisons(root = document) {
 
     if (!video.paused) video.pause();
 
-    if (state.pendingSeek) {
-      try {
-        video.currentTime = targetTime;
-      } catch {
-        // Metadata can arrive before the browser exposes a seekable range.
-      }
-      return;
-    }
+    if (state.pendingSeek) return;
 
     state.pendingSeek = true;
     const settle = () => {
@@ -214,24 +210,47 @@ export function setupShowcaseComparisons(root = document) {
       const state = chapterStates.get(activeChapter);
       if (state) {
         state.lastPresentationTime = 0;
+        state.lastAnimationTime = 0;
         renderProgress(activeChapter, state);
       }
     }
   };
 
   const presentActiveChapter = (time, force = false) => {
-    if (activeIndex < 0) return;
+    if (activeIndex < 0) return false;
     const chapter = chapters[activeIndex];
     const state = chapterStates.get(chapter);
-    if (!state || chapter.dataset.dragging === 'true') return;
+    if (!state || chapter.dataset.dragging === 'true') return false;
 
-    state.renderedProgress = state.targetProgress;
-    const terminal = state.renderedProgress <= 0 || state.renderedProgress >= 1;
-    if (!force && !terminal && state.lastPresentationTime
-      && time - state.lastPresentationTime < PRESENTATION_INTERVAL_MS) return;
+    const elapsed = state.lastAnimationTime
+      ? Math.min(64, Math.max(1, time - state.lastAnimationTime))
+      : 1000 / 60;
+    state.lastAnimationTime = time;
+    const delta = state.targetProgress - state.renderedProgress;
+    const smoothingWindow = SCROLL_SMOOTHING_MS * (1 - Math.min(0.35, Math.abs(delta) * 0.7));
+    const alpha = reducedMotion ? 1 : 1 - Math.exp(-elapsed / smoothingWindow);
+    state.renderedProgress += delta * alpha;
+    const settled = Math.abs(state.targetProgress - state.renderedProgress) <= PROGRESS_SNAP_EPSILON;
+    if (settled) state.renderedProgress = state.targetProgress;
 
-    state.lastPresentationTime = time;
-    renderProgress(chapter, state);
+    if (force || settled || !state.lastPresentationTime
+      || time - state.lastPresentationTime >= PRESENTATION_INTERVAL_MS) {
+      state.lastPresentationTime = time;
+      renderProgress(chapter, state);
+    }
+    return !settled;
+  };
+
+  const animatePresentation = (time) => {
+    presentationFrame = 0;
+    if (destroyed || !pageVisible) return;
+    if (presentActiveChapter(time)) presentationFrame = requestAnimationFrame(animatePresentation);
+  };
+
+  const schedulePresentation = () => {
+    if (!presentationFrame && !destroyed && pageVisible) {
+      presentationFrame = requestAnimationFrame(animatePresentation);
+    }
   };
 
   const setImmediateProgress = (chapter, next, source) => {
@@ -241,6 +260,7 @@ export function setupShowcaseComparisons(root = document) {
     state.targetProgress = progress;
     state.renderedProgress = progress;
     state.lastPresentationTime = 0;
+    state.lastAnimationTime = 0;
     setActiveIndex(state.index);
     renderProgress(chapter, state, source);
   };
@@ -261,7 +281,6 @@ export function setupShowcaseComparisons(root = document) {
       const targetProgress = clamp(-rect.top / travel);
       if (state) {
         state.targetProgress = targetProgress;
-        if (index !== activeIndex) state.renderedProgress = targetProgress;
       }
 
       if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
@@ -278,6 +297,7 @@ export function setupShowcaseComparisons(root = document) {
     const activeChanged = nextActiveIndex !== activeIndex;
     presentActiveChapter(time, activeChanged);
     setActiveIndex(nextActiveIndex);
+    schedulePresentation();
   };
 
   const scheduleScrollRead = () => {
@@ -372,6 +392,7 @@ export function setupShowcaseComparisons(root = document) {
       chapters.forEach((chapter) => chapter.querySelectorAll('video').forEach((video) => stopVideo(video, videoStates.get(video))));
     } else {
       scheduleScrollRead();
+      schedulePresentation();
     }
   };
 
@@ -393,6 +414,7 @@ export function setupShowcaseComparisons(root = document) {
     removeEventListener('orientationchange', handleViewportChange);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     if (scrollFrame) cancelAnimationFrame(scrollFrame);
+    if (presentationFrame) cancelAnimationFrame(presentationFrame);
     cleanups.forEach((cleanup) => cleanup());
     trackedVideos.forEach((video) => stopVideo(video, videoStates.get(video)));
     chapters.forEach((chapter) => {

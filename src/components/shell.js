@@ -23,12 +23,13 @@ export function shell(content, { pathname = location.pathname, home = false, pag
         ${brandLink({ animated: home })}
         <nav class="desktop-nav" aria-label="Primary">${primary}</nav>
         <div class="nav-actions">
-          <a class="text-link nav-signin" href="/login" data-nav>Sign in</a>
+          <a class="text-link nav-signin" href="/login" data-nav data-session-signed-out>Sign in</a>
+          <a class="nav-profile" href="/account/projects" data-nav data-session-signed-in aria-label="Open your profile" title="Your profile" hidden>${icon('user')}<span>Profile</span></a>
           <a class="button button--small" href="/pricing" data-nav>Get the $50 Homepage Reveal ${icon('arrow')}</a>
           <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">${icon('menu')}</button>
         </div>
       </div>
-      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav>Sign in</a><a href="/pricing" data-nav>Get the $50 Homepage Reveal</a></nav></div>
+      <div class="mobile-nav" id="mobile-navigation" hidden><nav aria-label="Mobile">${primary}<a href="/login" data-nav data-session-signed-out>Sign in</a><a href="/account/projects" data-nav data-session-signed-in hidden>Your profile</a><a href="/pricing" data-nav>Get the $50 Homepage Reveal</a></nav></div>
     </header>
     <main id="main-content">${content}</main>
     <footer class="site-footer">
