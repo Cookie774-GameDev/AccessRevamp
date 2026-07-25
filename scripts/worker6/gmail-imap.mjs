@@ -13,6 +13,15 @@ export function createGmailImap(config) {
     logger: false,
   });
   return {
+    async verify() {
+      const client = connect();
+      try {
+        await client.connect();
+        return true;
+      } finally {
+        await client.logout().catch(() => {});
+      }
+    },
     async listInboundMessages({ after = new Date(Date.now() - 36 * 60 * 60 * 1000), limit = 50 } = {}) {
       const client = connect();
       try {
@@ -46,13 +55,17 @@ export function createGmailImap(config) {
       }
     },
     async appendDraft(draft) {
+      const fromAddress = String(draft.fromAddress || '').trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+$/.test(fromAddress) || /[\r\n]/.test(fromAddress)) {
+        throw new Error('Draft From address is required and invalid.');
+      }
       const client = connect();
       try {
         await client.connect();
         const mailboxes = await client.list();
         const drafts = mailboxes.find((box) => box.specialUse === '\\Draft')?.path || '[Gmail]/Drafts';
         const raw = [
-          `From: ${config.imap.address}`,
+          `From: ${fromAddress}`,
           `To: ${draft.to}`,
           `Subject: ${draft.subject}`,
           ...(draft.inReplyTo ? [`In-Reply-To: ${draft.inReplyTo}`, `References: ${draft.inReplyTo}`] : []),

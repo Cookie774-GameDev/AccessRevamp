@@ -12,7 +12,7 @@ The database value of 1,000 is a hard technical ceiling, not an instruction to s
 - The number of active, authorized mailboxes multiplied by the cold-email limit per mailbox.
 - Provider, reputation, legal, complaint, and operator limits.
 
-With 100 inboxes at five cold plus five provider-managed warm-up messages each, the nominal allocation is 500 cold and 500 warm-up messages per day: 1,000 total. The cold-outreach queue may process no more than 500 per day, and only when all 100 inboxes are actually registered, active, healthy, and outbound-authorized. Warm-up remains provider-managed and is not an AI-generated cold campaign.
+With 100 inboxes, AccessRevamp may send at most five cold-or-reply messages per mailbox per America/Chicago day: 500 combined at full verified capacity. Icemail-managed warm-up is a separate provider feature and is outside this agent skill. The queue may operate only when the selected mailboxes are registered, active, healthy, and authorized.
 
 ## Message rules
 

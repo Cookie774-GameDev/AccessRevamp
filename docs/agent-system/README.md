@@ -12,14 +12,16 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 - Hashed, expiring, one-use customer approval links scoped to the intended project option group and revision round.
 - Google Drive customer-folder root, customer template, runbooks, and a Payment and Workflow Ledger.
 - Artifact guardrail of 9,000,000 bytes per file.
-- Mailbox-aware first-touch outreach records with a 150-word target and 200-word hard maximum. Reply limits are governed separately by the reply-response guide.
+- Mailbox-aware first-touch outreach records with a 150–185-word target and 200-word hard maximum. Reply limits are governed separately by the reply-response guide.
+- Five permanent inbox owners—Avery, Jordan, Kasey, Riley, and Morgan—each own exactly 20 Icemail Azure mailboxes. Assignments do not rotate.
+- This system handles at most five cold-or-reply sends per mailbox per America/Chicago day. Icemail’s own warm-up feature is outside Worker 6 and is not generated, classified, or marked “not spam” by AccessRevamp agents.
 - Root `CLAUDE.md`, safe `.claude/settings.json`, and a verified Windows installer for the complete operations folder.
 
 ## Safety state
 
 External email transport, automated mailbox warm-up, automated spam-classification actions, active security testing, external creative generation, live Stripe Checkout, and automated refunds remain disabled until their independent readiness gates pass.
 
-The corrected operating assumption is 100 inboxes with five cold and five provider-managed warm-up messages per inbox each day. That equals 500 cold messages plus 500 warm-up messages: 1,000 total messages per day. The cold-outreach queue is still capped at the lower of 500, the configured database ceiling, the number of active authorized mailboxes, and provider, reputation, legal, complaint, suppression, and operator limits. The system must not force 1,000 sends when any mailbox or safety gate is unavailable.
+AccessRevamp owns only the cold-or-reply allocation: no more than five combined sends from each mailbox per America/Chicago day, or 500 across 100 fully authorized mailboxes. Icemail separately manages warm-up; AccessRevamp agents do not generate those messages or manipulate spam classifications. The system must not force 500 sends when any mailbox, suppression, consent, reputation, legal, complaint, or operator gate is unavailable.
 
 ## Canonical plans
 

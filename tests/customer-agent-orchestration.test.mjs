@@ -135,7 +135,8 @@ test('outreach stays human-reviewed, mailbox-aware, and within the approved 200-
   assert.match(mailboxSql, /v_active_mailboxes \* greatest\(v_settings\.cold_messages_per_mailbox, 0\)/);
   assert.match(mailboxSql, /least\(greatest\(v_settings\.daily_limit, 1\), 1000, v_mailbox_operating_cap\)/);
   assert.match(outreachSkill, /100 inboxes/i);
-  assert.match(outreachSkill, /500 cold and 500 warm-up messages per day/i);
+  assert.match(outreachSkill, /at most five cold-or-reply messages per mailbox/i);
+  assert.match(outreachSkill, /Icemail-managed warm-up is a separate provider feature/i);
 });
 
 test('agent contracts require evidence, payment reconciliation, safe security scope, and visual QA', () => {
