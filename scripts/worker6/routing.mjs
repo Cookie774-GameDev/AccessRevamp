@@ -2,7 +2,17 @@ const RESTRICTED = /\b(refund|chargeback|payment|card|invoice|privacy|delete my 
 
 export function routeInboundMessage(message, matches = []) {
   if (RESTRICTED.test(`${message.subject || ''}\n${message.text || ''}`)) return { kind: 'human_review', ownerKey: null };
-  if (matches.length === 1 && matches[0]?.ownerKey) return { kind: 'inbox_owner', ownerKey: matches[0].ownerKey };
+  if (matches.length === 1 && matches[0]?.ownerKey) {
+    const match = matches[0];
+    return {
+      kind: 'inbox_owner',
+      ownerKey: match.ownerKey,
+      threadId: match.threadId,
+      mailboxId: match.mailboxId,
+      mailboxAddress: match.mailboxAddress,
+      providerMailboxId: match.providerMailboxId,
+    };
+  }
   return { kind: 'human_review', ownerKey: null };
 }
 

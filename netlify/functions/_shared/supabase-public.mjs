@@ -38,5 +38,5 @@ export function createSupabaseAccessTokenClient(accessToken, env = process.env) 
   const token = String(accessToken || '').trim();
   if (!token) throw new Error('An access token is required.');
   const { url, key } = publicConfig(env);
-  return createClient(url, key, clientOptions({ authorization: `Bearer ${token}` }));
+  return createClient(url, key, clientOptions({ Authorization: `Bearer ${token}` }));
 }
