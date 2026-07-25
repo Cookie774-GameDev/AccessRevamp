@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import {
+  extractJavaScriptBundleUrls,
+  fetchJavaScriptBundleGraph,
+} from './auth-preview-bundles.mjs';
 
 const PROJECT_URL = 'https://vbkkimvedmklebghtkzs.supabase.co';
 const PUBLISHABLE_KEY = 'sb_publishable_WD8hNud9SZMDg6uK0N2cAA_4hnxz2ta';
@@ -48,16 +52,14 @@ while (Date.now() < deadline) {
       throw new Error(`Signup shell returned HTTP ${response.status}.`);
     }
 
-    const scriptSources = [...html.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/gi)]
-      .map((match) => new URL(match[1], target).toString());
+    const scriptSources = extractJavaScriptBundleUrls(html, target);
     if (!scriptSources.length) throw new Error('Signup page did not reference a JavaScript bundle.');
 
-    const bundles = await Promise.all(scriptSources.map(async (source) => {
+    bundleText = await fetchJavaScriptBundleGraph(scriptSources, async (source) => {
       const bundleResponse = await fetchWithRetry(source);
       if (!bundleResponse.ok) throw new Error(`JavaScript bundle returned HTTP ${bundleResponse.status}.`);
       return bundleResponse.text();
-    }));
-    bundleText = bundles.join('\n');
+    });
     const requiredMarkers = [
       PROJECT_URL,
       PUBLISHABLE_KEY,
