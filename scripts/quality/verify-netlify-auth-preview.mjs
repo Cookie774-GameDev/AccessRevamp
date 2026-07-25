@@ -40,6 +40,7 @@ let bundleText = '';
 let homepageStatus = 0;
 let recoveryStatus = 0;
 let lastError = '';
+let securityHeaders = {};
 
 while (Date.now() < deadline) {
   try {
@@ -47,6 +48,14 @@ while (Date.now() < deadline) {
       headers: { 'cache-control': 'no-cache' },
     });
     homepageStatus = response.status;
+    securityHeaders = Object.fromEntries([
+      'Content-Security-Policy',
+      'Strict-Transport-Security',
+      'Referrer-Policy',
+      'X-Content-Type-Options',
+      'X-Frame-Options',
+      'Permissions-Policy',
+    ].map((name) => [name, response.headers.get(name) || '']));
     html = await response.text();
     if (!response.ok || !/<div[^>]+id=["']app["']/i.test(html)) {
       throw new Error(`Signup shell returned HTTP ${response.status}.`);
@@ -95,6 +104,13 @@ assert.match(bundleText, new RegExp(PUBLISHABLE_KEY));
 assert.match(bundleText, /accessrevamp\.auth\.recovery\.v1/);
 assert.match(bundleText, /resetPasswordForEmail/);
 assert.doesNotMatch(bundleText, /Sandbox checkout|Test-mode notice|Stripe test mode is active/i);
+assert.match(securityHeaders['Content-Security-Policy'], /default-src 'self'/);
+assert.match(securityHeaders['Content-Security-Policy'], /frame-ancestors 'none'/);
+assert.match(securityHeaders['Strict-Transport-Security'], /max-age=31536000/);
+assert.equal(securityHeaders['Referrer-Policy'], 'strict-origin-when-cross-origin');
+assert.equal(securityHeaders['X-Content-Type-Options'], 'nosniff');
+assert.equal(securityHeaders['X-Frame-Options'], 'DENY');
+assert.match(securityHeaders['Permissions-Policy'], /camera=\(\)/);
 
 let customerApiConfigured = null;
 let passwordCeremonyConfigured = null;
@@ -153,6 +169,7 @@ console.log(JSON.stringify({
   recoveryBundleReady: true,
   publicAccountConfigBundled: true,
   customerFacingSandboxLabelsAbsent: true,
+  browserSecurityHeadersPresent: true,
   serverAuthenticationRequired: requireServerAuth,
   customerApiConfigured,
   passwordCeremonyConfigured,
