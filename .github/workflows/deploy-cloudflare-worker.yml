@@ -34,6 +34,9 @@ jobs:
         env:
           REQUIRE_FFMPEG_OPTIMIZATION: "true"
           MAX_SHOWCASE_VIDEO_BYTES: "9500000"
+          VITE_PAYMENT_MODE: "live"
+          VITE_SITE_URL: "https://accessrevamp.com"
+          VITE_SUPABASE_URL: "https://vbkkimvedmklebghtkzs.supabase.co"
         run: npm run build
       - name: Deploy production Worker
         uses: cloudflare/wrangler-action@v3
