@@ -38,8 +38,8 @@
   "dependencies": {
     "@axe-core/playwright": "4.12.1",
     "@supabase/supabase-js": "2.110.7",
-    "imapflow": "1.1.1",
-    "mailparser": "3.7.4",
+    "imapflow": "1.5.0",
+    "mailparser": "3.9.14",
     "next": "16.2.11",
     "playwright": "1.61.1",
     "react": "19.2.6",
