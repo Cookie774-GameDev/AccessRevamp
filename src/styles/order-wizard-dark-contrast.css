@@ -286,7 +286,7 @@
 }
 
 .renaissance-home .order-review__details,
-.renaissance-home .order-review__included {
+.renaissance-home .order-review__folio {
   min-width: 0;
   padding: clamp(1rem, 2.5vw, 1.6rem);
 }
@@ -366,8 +366,41 @@
   font-size: .76rem;
 }
 
+.renaissance-home .order-review__folio {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  overflow: hidden;
+  border-left: 1px solid rgba(240, 209, 140, .42);
+  background:
+    linear-gradient(145deg, rgba(240, 209, 140, .1), transparent 38%),
+    #17181b;
+  box-shadow: inset 0 0 0 5px #17181b, inset 0 0 0 6px rgba(240, 209, 140, .25);
+}
+
+.renaissance-home .order-review__folio::after {
+  position: absolute;
+  top: -40%;
+  left: -18%;
+  width: 55%;
+  height: 170%;
+  background: linear-gradient(90deg, transparent, rgba(255, 244, 207, .08), transparent);
+  content: "";
+  pointer-events: none;
+  transform: rotate(14deg);
+  animation: order-folio-light 8s ease-in-out infinite;
+}
+
+@keyframes order-folio-light {
+  0%, 72%, 100% { transform: translateX(-35%) rotate(14deg); opacity: 0; }
+  82% { opacity: 1; }
+  94% { transform: translateX(260%) rotate(14deg); opacity: 0; }
+}
+
 .renaissance-home .order-review__included {
-  background: #17181b;
+  position: relative;
+  z-index: 1;
 }
 
 .renaissance-home .order-review__included .micro-label {
@@ -379,6 +412,13 @@
   color: #fff;
   font-family: var(--display);
   font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.renaissance-home .order-review__promise {
+  margin: -.35rem 0 1rem !important;
+  color: #d4cdc2 !important;
+  font-size: .78rem !important;
+  line-height: 1.55;
 }
 
 .renaissance-home .order-review__included ul {
@@ -411,6 +451,88 @@
   margin: .9rem 0 0;
   color: #bbb5ac;
   font-size: .72rem;
+}
+
+.renaissance-home .order-review__timeline {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid #3e4148;
+  border-bottom: 1px solid #3e4148;
+  list-style: none;
+}
+
+.renaissance-home .order-review__timeline li {
+  display: grid;
+  gap: .45rem;
+  padding: 0 .75rem;
+  border-right: 1px solid #3e4148;
+}
+
+.renaissance-home .order-review__timeline li:first-child { padding-left: 0; }
+.renaissance-home .order-review__timeline li:last-child { padding-right: 0; border-right: 0; }
+
+.renaissance-home .order-review__timeline li > span {
+  color: var(--order-gold-soft);
+  font-size: .62rem;
+  font-weight: 950;
+  letter-spacing: .12em;
+}
+
+.renaissance-home .order-review__timeline div {
+  display: grid;
+  gap: .2rem;
+}
+
+.renaissance-home .order-review__timeline strong {
+  color: #fff;
+  font-size: .76rem;
+  line-height: 1.2;
+}
+
+.renaissance-home .order-review__timeline small {
+  color: #aaa49b;
+  font-size: .64rem;
+  line-height: 1.4;
+}
+
+.renaissance-home .order-review__portfolio {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(240, 209, 140, .65);
+  border-radius: .65rem;
+  background: linear-gradient(135deg, #f0d18c, #c98c2b);
+  color: #17181b;
+  text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.renaissance-home .order-review__portfolio span {
+  display: grid;
+  gap: .15rem;
+  color: #17181b;
+}
+
+.renaissance-home .order-review__portfolio strong { color: #17181b; font-size: .82rem; }
+.renaissance-home .order-review__portfolio small { color: #43351f; font-size: .66rem; line-height: 1.35; }
+.renaissance-home .order-review__portfolio b { color: #17181b; font-size: 1.3rem; }
+.renaissance-home .order-review__portfolio:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, .25); }
+.renaissance-home .order-review__portfolio:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.renaissance-home .order-review__stripe-note {
+  position: relative;
+  z-index: 1;
+  margin: 0 !important;
+  color: #aaa49b !important;
+  font-size: .68rem !important;
 }
 
 .renaissance-home .order-question-plan {
@@ -488,8 +610,54 @@
   font-size: .76rem;
 }
 
+.renaissance-home .order-checkout-readiness {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  width: fit-content;
+  margin-top: .35rem;
+  color: #c9c3ba;
+  font-size: .68rem;
+  font-weight: 750;
+}
+
+.renaissance-home .order-checkout-readiness::before {
+  width: .48rem;
+  height: .48rem;
+  border-radius: 50%;
+  background: #d3a84d;
+  box-shadow: 0 0 0 3px rgba(211, 168, 77, .14);
+  content: "";
+}
+
+.renaissance-home .order-checkout-readiness[data-state="ready"] {
+  color: #b7f5cf;
+}
+
+.renaissance-home .order-checkout-readiness[data-state="ready"]::before {
+  background: #64d99b;
+  box-shadow: 0 0 0 3px rgba(100, 217, 155, .16);
+}
+
+.renaissance-home .order-checkout-readiness[data-state="unavailable"] {
+  color: #ffd2cd;
+}
+
+.renaissance-home .order-checkout-readiness[data-state="unavailable"]::before {
+  background: var(--order-coral);
+  box-shadow: 0 0 0 3px rgba(235, 91, 79, .16);
+}
+
 .renaissance-home .order-review__checkout .button {
   flex: 0 0 auto;
+}
+
+.renaissance-home .order-review__checkout .button:disabled {
+  border-color: #4c4d51;
+  background: #292b2f;
+  color: #8f8f91;
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 .renaissance-home .order-checkout-status {
@@ -594,8 +762,43 @@
     gap: .25rem;
   }
 
+  .renaissance-home .order-review__folio {
+    border-top: 1px solid rgba(240, 209, 140, .42);
+    border-left: 0;
+  }
+
+  .renaissance-home .order-review__timeline {
+    grid-template-columns: 1fr;
+    gap: .8rem;
+  }
+
+  .renaissance-home .order-review__timeline li,
+  .renaissance-home .order-review__timeline li:first-child,
+  .renaissance-home .order-review__timeline li:last-child {
+    grid-template-columns: 2rem 1fr;
+    padding: 0 0 .8rem;
+    border-right: 0;
+    border-bottom: 1px solid #3e4148;
+  }
+
+  .renaissance-home .order-review__timeline li:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
   .renaissance-home .order-review__checkout .button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .renaissance-home .order-review__folio::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .renaissance-home .order-review__portfolio {
+    transition: none;
   }
 }
 

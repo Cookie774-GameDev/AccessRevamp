@@ -12,6 +12,8 @@ test('review is the final visible step and owns the Stripe checkout action', asy
     /data-order-panel="3"[\s\S]*data-order-checkout[\s\S]*data-checkout="complete_revamp"/,
   );
   assert.match(component, /data-checkout-status/);
+  assert.match(component, /data-checkout-readiness/);
+  assert.match(component, /data-checkout-ready="checking"/);
   assert.match(component, /Secure payment powered by Stripe/);
   assert.doesNotMatch(component, /verified webhook|browser redirect/i);
 });
@@ -22,6 +24,24 @@ test('the review summary uses compact project details and included-item regions'
   assert.match(service, /order-review__included/);
   assert.match(service, /order-review__total/);
   assert.doesNotMatch(service, /Taxes \/ fees/);
+});
+
+test('the review presents a premium project folio with timeline and working portfolio proof', async () => {
+  const [service, styles] = await Promise.all([
+    readFile('src/services/order-wizard.js', 'utf8'),
+    readFile('src/styles/order-wizard-dark-contrast.css', 'utf8'),
+  ]);
+  assert.match(service, /order-review__folio/);
+  assert.match(service, /order-review__deliverables/);
+  assert.match(service, /order-review__timeline/);
+  assert.match(service, /order-review__portfolio/);
+  assert.match(service, /href="\/portfolio" target="_blank" rel="noopener noreferrer"/);
+  assert.match(service, /Explore our working websites/);
+  assert.match(service, /Payment secured/);
+  assert.match(service, /Direction confirmed/);
+  assert.match(service, /Delivered in your workspace/);
+  assert.match(styles, /order-review__folio/);
+  assert.match(styles, /prefers-reduced-motion:\s*reduce/);
 });
 
 test('optional order fields have a database migration matching the accepted form contract', async () => {

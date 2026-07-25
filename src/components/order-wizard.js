@@ -58,9 +58,9 @@ export function orderWizard() {
         <div class="order-summary order-review" data-order-summary></div>
         <label class="order-consent"><input type="checkbox" name="termsAccepted" required> <span>I agree to the <a href="/terms" data-nav>terms</a> and acknowledge the <a href="/privacy" data-nav>privacy notice</a>.</span></label>
         <label class="order-consent"><input type="checkbox" name="portfolioConsent"> <span>Optional: I give AccessRevamp permission to show approved, non-sensitive project visuals in its portfolio. This is not required to buy and may be revoked for future use.</span></label>
-        <div class="order-review__checkout">
-          <div><strong>Secure payment powered by Stripe</strong><span>Your project details are saved privately before checkout opens.</span></div>
-          <button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to secure checkout ${icon('arrow')}</button>
+        <div class="order-review__checkout" data-checkout-ready="checking">
+          <div><strong>Secure payment powered by Stripe</strong><span>Your project details are saved privately before checkout opens.</span><small class="order-checkout-readiness" data-checkout-readiness data-state="checking" role="status" aria-live="polite">Checking secure payment availability…</small></div>
+          <button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp" disabled aria-disabled="true">Continue to secure checkout ${icon('arrow')}</button>
         </div>
         <p class="order-checkout-status" data-checkout-status role="status" aria-live="polite"></p>
       </div>
