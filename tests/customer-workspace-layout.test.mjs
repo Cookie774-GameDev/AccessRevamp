@@ -33,3 +33,9 @@ test('the focused project keeps questions progress designs requests and delivery
   assert.match(client, /Special requests/);
   assert.match(client, /Files and website downloads/);
 });
+
+test('signed-out and privacy states remain readable on the dark workspace', async () => {
+  const css = await readFile('src/styles/customer-hub.css', 'utf8');
+  assert.match(css, /\.customer-hub-page \.loading-card[\s\S]*color:\s*#f7f3ea/);
+  assert.match(css, /\.customer-hub-security[\s\S]*color:\s*#e2e6ec/);
+});

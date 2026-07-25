@@ -5,7 +5,9 @@
 .customer-workspace-head__account { display: grid; min-width: min(100%, 18rem); gap: .35rem; padding: 1rem; border: 1px solid #393d45; border-radius: 1rem; background: #1b1e23; }
 .customer-workspace-head__account strong { overflow: hidden; color: #fff; text-overflow: ellipsis; }
 .customer-workspace-head__account .button { margin-top: .45rem; border-color: #6c727e; color: #fff; }
-.customer-hub-security { margin-top: 2rem; }
+.customer-hub-page .loading-card { border-color: #393d45; background: #1b1e23; color: #f7f3ea; }
+.customer-hub-security { margin-top: 2rem; border-left-color: var(--electric-yellow); background: #302b1d; color: #e2e6ec; }
+.customer-hub-security strong { color: #fff; }
 .customer-hub-summary { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(12rem, .8fr) auto; gap: 1px; margin-bottom: 1rem; overflow: hidden; border: 1px solid #393d45; border-radius: 1rem; background: #393d45; }
 .customer-hub-summary > * { min-width: 0; padding: 1rem 1.2rem; background: #1b1e23; color: #fff; }
 .customer-hub-summary section { display: grid; gap: .4rem; align-content: center; }
