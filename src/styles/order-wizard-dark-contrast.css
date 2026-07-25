@@ -3,6 +3,16 @@
  * Presentation only: checkout behavior and the five-step flow stay unchanged.
  */
 
+@property --order-plan-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes order-plan-border-orbit {
+  to { --order-plan-angle: 360deg; }
+}
+
 .renaissance-home .order-flow-section {
   --order-dark: #101114;
   --order-panel: #17181b;
@@ -140,11 +150,11 @@
 
 .renaissance-home .order-plan > span {
   height: 100%;
-  border-color: var(--order-line-strong);
-  background: var(--order-card);
+  border: 2px solid var(--order-line-strong);
+  background: var(--order-card) padding-box;
   color: var(--order-text);
   box-shadow: 0 10px 26px rgba(0, 0, 0, .2);
-  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .renaissance-home .order-plan:hover > span {
@@ -160,7 +170,45 @@
 
 .renaissance-home .order-plan input:checked + span {
   border-color: var(--order-gold-soft);
-  box-shadow: inset 0 0 0 2px var(--order-gold), 0 14px 34px rgba(0, 0, 0, .3);
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px var(--order-gold), 0 14px 34px rgba(0, 0, 0, .3);
+}
+
+.renaissance-home .order-plan:is([data-order-plan="complete_revamp"], [data-order-plan="cinematic_scroll"]) input:checked + span {
+  border-color: transparent;
+  animation: order-plan-border-orbit 2.8s linear infinite;
+}
+
+.renaissance-home .order-plan[data-order-plan="complete_revamp"] input:checked + span {
+  background:
+    linear-gradient(var(--order-card), var(--order-card)) padding-box,
+    conic-gradient(from var(--order-plan-angle), #7e470a, #f0d18c, #fff2bd, #c9821f, #7e470a) border-box;
+  box-shadow: 0 0 0 1px rgba(240, 209, 140, .22), 0 16px 38px rgba(185, 120, 32, .28);
+}
+
+.renaissance-home .order-plan[data-order-plan="cinematic_scroll"] input:checked + span {
+  background:
+    linear-gradient(var(--order-card), var(--order-card)) padding-box,
+    conic-gradient(from var(--order-plan-angle), #7f3439, #d87575, #f0d18c, #fff0c2, #bc6868, #7f3439) border-box;
+  box-shadow: 0 0 0 1px rgba(216, 117, 117, .24), 0 16px 42px rgba(185, 92, 78, .26);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .renaissance-home .order-plan[data-order-plan="complete_revamp"]:hover > span {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--order-card-hover), var(--order-card-hover)) padding-box,
+      conic-gradient(from var(--order-plan-angle), #7e470a, #f0d18c, #fff2bd, #c9821f, #7e470a) border-box;
+    animation: order-plan-border-orbit 3.8s linear infinite;
+  }
+
+  .renaissance-home .order-plan[data-order-plan="cinematic_scroll"]:hover > span {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--order-card-hover), var(--order-card-hover)) padding-box,
+      conic-gradient(from var(--order-plan-angle), #7f3439, #d87575, #f0d18c, #fff0c2, #bc6868, #7f3439) border-box;
+    animation: order-plan-border-orbit 3.4s linear infinite;
+  }
 }
 
 .renaissance-home .order-plan:has(input:focus-visible) > span {
@@ -792,6 +840,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .renaissance-home .order-plan input:checked + span,
+  .renaissance-home .order-plan:hover > span {
+    animation: none;
+  }
+
   .renaissance-home .order-review__folio::after {
     animation: none;
     opacity: 0;
@@ -819,5 +872,11 @@
 
   .renaissance-home .order-plan__perk-icon {
     color: CanvasText;
+  }
+
+  .renaissance-home .order-plan input:checked + span {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+    animation: none;
   }
 }

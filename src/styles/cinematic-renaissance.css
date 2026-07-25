@@ -5,7 +5,7 @@
 .renaissance-home .nav-wrap{width:100%;padding-inline:1rem;min-height:4.35rem}
 .renaissance-home .brand-monogram__tile{fill:var(--ar-gold)}
 .renaissance-home .button{border-color:var(--ar-charcoal);background:var(--ar-coral)}
-.renaissance-home .button:hover{background:var(--ar-charcoal);box-shadow:0 7px 0 var(--ar-gold-soft)}
+.renaissance-home .button:hover{background:var(--ar-charcoal);color:#fff;box-shadow:0 7px 0 var(--ar-gold-soft)}
 .reveal-hero{--reveal-x:50%;--reveal-y:50%;--reveal-opacity:0;--reveal-radius:260px;position:relative;isolation:isolate;width:100%;height:100vh;height:100svh;min-height:39rem;overflow:hidden;background:#ebe9e4;touch-action:pan-y}
 .reveal-hero::after{content:"";position:absolute;z-index:5;inset:auto 0 0;height:22%;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(16,17,20,.18))}
 .reveal-hero__layer{position:absolute;inset:0;display:block}

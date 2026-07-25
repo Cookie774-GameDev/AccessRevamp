@@ -14,7 +14,6 @@ export function setupHomeExperience(root = document) {
 
   let heroFrame = 0;
   let navFrame = 0;
-  let heroRect;
   let heroActive = false;
   let heroVisible = true;
   let heroObserver;
@@ -33,11 +32,9 @@ export function setupHomeExperience(root = document) {
     cleanups.push(() => target?.removeEventListener(type, handler, options));
   };
 
-  const updateHeroRect = () => { heroRect = hero?.getBoundingClientRect(); };
-
   const commitNavVisibility = () => {
     navFrame = 0;
-    const next = scrollY > 24 || heroActive || Boolean(shell?.querySelector('.site-header:focus-within'));
+    const next = true;
     if (next === navVisible) return;
     navVisible = next;
     shell?.classList.toggle('nav-is-visible', next);
@@ -62,7 +59,7 @@ export function setupHomeExperience(root = document) {
     smooth.x += deltaX * 0.12;
     smooth.y += deltaY * 0.12;
 
-    const rect = heroRect || hero.getBoundingClientRect();
+    const rect = hero.getBoundingClientRect();
     const localX = Math.max(0, Math.min(rect.width, smooth.x - rect.left));
     const localY = Math.max(0, Math.min(rect.height, smooth.y - rect.top));
     const cx = localX / Math.max(rect.width, 1) - 0.5;
@@ -95,21 +92,14 @@ export function setupHomeExperience(root = document) {
     mouse.y = event.clientY;
     heroActive = true;
     hero?.classList.add('is-revealing');
-    if (event.clientY <= 104) {
-      clearTimeout(navTimer);
-      navVisible = true;
-      shell?.classList.add('nav-is-visible');
-    }
     startHeroLoop();
   };
 
   if (hero) {
-    updateHeroRect();
     if ('IntersectionObserver' in globalThis) {
       heroObserver = new IntersectionObserver(([entry]) => {
         heroVisible = Boolean(entry?.isIntersecting);
         if (heroVisible) {
-          updateHeroRect();
           startHeroLoop();
         } else {
           stopHeroLoop();
@@ -132,7 +122,7 @@ export function setupHomeExperience(root = document) {
       navTimer = setTimeout(scheduleNavVisibility, 520);
     });
     listen(hero, 'pointerdown', (event) => {
-      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      if (event.pointerType !== 'pen') return;
       event.preventDefault();
       pointerCaptured = true;
       try { hero.setPointerCapture(event.pointerId); } catch { /* Best-effort pointer capture. */ }
@@ -159,10 +149,13 @@ export function setupHomeExperience(root = document) {
       hero.classList.add('is-revealing');
     });
     listen(globalThis, 'resize', () => {
-      updateHeroRect();
       startHeroLoop();
     }, { passive: true });
-    listen(globalThis, 'scroll', scheduleNavVisibility, { passive: true });
+    const handleHomeScroll = () => {
+      scheduleNavVisibility();
+      startHeroLoop();
+    };
+    listen(globalThis, 'scroll', handleHomeScroll, { passive: true });
     listen(document, 'visibilitychange', () => {
       pageVisible = !document.hidden;
       if (pageVisible) startHeroLoop();
