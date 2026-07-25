@@ -42,6 +42,7 @@
 }
 
 .renaissance-home .order-wizard__steps {
+  grid-template-columns: repeat(4, 1fr);
   border-bottom-color: var(--order-line);
   background: #111214;
 }
@@ -277,6 +278,141 @@
   box-shadow: 0 14px 34px rgba(0, 0, 0, .24);
 }
 
+.renaissance-home .order-review {
+  grid-template-columns: minmax(0, 1.08fr) minmax(19rem, .92fr);
+  gap: 0;
+  overflow: hidden;
+  border-radius: .9rem;
+}
+
+.renaissance-home .order-review__details,
+.renaissance-home .order-review__included {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+}
+
+.renaissance-home .order-review__details {
+  background: #f8f2e8;
+  color: #17181b;
+}
+
+.renaissance-home .order-review__plan {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #cec3b2;
+}
+
+.renaissance-home .order-review__plan > div {
+  display: grid;
+  gap: .2rem;
+}
+
+.renaissance-home .order-summary.order-review .order-review__plan span,
+.renaissance-home .order-summary.order-review .order-review__details dt {
+  color: #72695d;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.renaissance-home .order-summary.order-review .order-review__plan strong,
+.renaissance-home .order-summary.order-review .order-review__details dd,
+.renaissance-home .order-summary.order-review .order-review__details dd small {
+  color: #17181b;
+}
+
+.renaissance-home .order-review__total {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.renaissance-home .order-review__total strong {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: .9;
+}
+
+.renaissance-home .order-review__details dl {
+  margin: .6rem 0 0;
+}
+
+.renaissance-home .order-review__details dl div {
+  display: grid;
+  grid-template-columns: minmax(7rem, .35fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: .7rem 0;
+  border-bottom: 1px solid #ddd3c4;
+}
+
+.renaissance-home .order-review__details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 750;
+}
+
+.renaissance-home .order-review__details dd small {
+  display: block;
+  margin-top: .2rem;
+  font-weight: 500;
+}
+
+.renaissance-home .order-review__timing {
+  margin: .9rem 0 0;
+  color: #5f574d !important;
+  font-size: .76rem;
+}
+
+.renaissance-home .order-review__included {
+  background: #17181b;
+}
+
+.renaissance-home .order-review__included .micro-label {
+  color: var(--order-gold-soft);
+}
+
+.renaissance-home .order-review__included h4 {
+  margin: .35rem 0 1rem;
+  color: #fff;
+  font-family: var(--display);
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.renaissance-home .order-review__included ul {
+  display: grid;
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.renaissance-home .order-review__included li {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  gap: .55rem;
+  padding: .62rem .7rem;
+  border: 1px solid #3e4148;
+  border-radius: .55rem;
+  background: #22252a;
+  color: #fff;
+  font-size: .8rem;
+  line-height: 1.35;
+}
+
+.renaissance-home .order-review__included li span {
+  color: var(--order-gold-soft);
+  font-weight: 900;
+}
+
+.renaissance-home .order-review__included p {
+  margin: .9rem 0 0;
+  color: #bbb5ac;
+  font-size: .72rem;
+}
+
 .renaissance-home .order-question-plan {
   gap: clamp(1rem, 3vw, 2rem);
   padding: clamp(1rem, 2.5vw, 1.5rem);
@@ -324,6 +460,50 @@
   font-weight: 800;
   text-decoration-thickness: 1.5px;
   text-underline-offset: .18em;
+}
+
+.renaissance-home .order-review__checkout {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(240, 209, 140, .56);
+  border-radius: .8rem;
+  background: #111214;
+}
+
+.renaissance-home .order-review__checkout > div {
+  display: grid;
+  gap: .2rem;
+}
+
+.renaissance-home .order-review__checkout strong {
+  color: #fff;
+}
+
+.renaissance-home .order-review__checkout span {
+  color: var(--order-text-muted);
+  font-size: .76rem;
+}
+
+.renaissance-home .order-review__checkout .button {
+  flex: 0 0 auto;
+}
+
+.renaissance-home .order-checkout-status {
+  min-height: 1.25rem;
+  margin: .55rem 0 0;
+  color: var(--order-text-soft);
+  font-size: .78rem;
+}
+
+.renaissance-home .order-checkout-status[data-state="error"] {
+  padding: .7rem .85rem;
+  border-left: 4px solid var(--order-coral);
+  background: #2a1818;
+  color: #fff;
 }
 
 .renaissance-home .order-payment {
@@ -393,6 +573,29 @@
 
   .renaissance-home .order-plan__perk {
     font-size: .82rem;
+  }
+
+  .renaissance-home .order-review {
+    grid-template-columns: 1fr;
+  }
+
+  .renaissance-home .order-review__plan,
+  .renaissance-home .order-review__checkout {
+    display: grid;
+    align-items: start;
+  }
+
+  .renaissance-home .order-review__total {
+    text-align: left;
+  }
+
+  .renaissance-home .order-review__details dl div {
+    grid-template-columns: 1fr;
+    gap: .25rem;
+  }
+
+  .renaissance-home .order-review__checkout .button {
+    width: 100%;
   }
 }
 

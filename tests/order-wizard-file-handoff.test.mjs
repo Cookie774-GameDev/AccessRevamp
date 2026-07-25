@@ -62,3 +62,22 @@ test('Stripe is never requested when private draft persistence fails', async () 
   );
   assert.deepEqual(calls, ['/api/order-draft']);
 });
+
+test('a safe draft validation message explains what must be corrected', async () => {
+  const checkoutService = await import('../src/services/persisted-checkout.js').catch(() => ({}));
+  await assert.rejects(
+    checkoutService.persistDraftThenCreateCheckout({
+      draftBody: new FormData(),
+      targetTier: 'complete_revamp',
+      requestId: REQUEST_ID,
+      accessToken: 'confirmed-session-token',
+      fetchImpl: async () => new Response(JSON.stringify({
+        error: 'Use the confirmed account email for checkout.',
+      }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      }),
+    }),
+    /Use the confirmed account email for checkout/,
+  );
+});

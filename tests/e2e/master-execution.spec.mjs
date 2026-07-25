@@ -55,17 +55,18 @@ test('order wizard validates, persists and prepares cinematic checkout', async (
   await form.locator('[data-order-next]').click();
   await form.locator('input[value="cinematic_scroll"]').check();
   await form.locator('[data-order-next]').click();
-  await expect(form.locator('[data-cinematic-fields]')).toBeVisible();
+  await expect(form.locator('[data-cinematic-fields]').first()).toBeVisible();
   await form.locator('[name="mainGoal"]').fill('Create a clear cinematic customer journey with a strong request action.');
   await form.locator('[name="requestedPages"]').fill('Home, services, about, portfolio, and contact.');
+  await form.locator('[name="integrations"]').fill('Contact form, analytics, and customer account sign-in.');
   await form.locator('[name="styleDirection"]').fill('Premium editorial direction with controlled motion and warm contrast.');
   await form.locator('[name="contentStatus"]').selectOption({ label: 'Ready to use' });
+  await form.locator('[name="cinematicSceneCount"]').selectOption('3');
   await form.locator('[data-order-next]').click();
   await form.locator('[name="termsAccepted"]').check();
-  await form.locator('[data-order-next]').click();
   await expect(form.locator('[data-order-checkout]')).toHaveAttribute('data-checkout', 'cinematic_scroll');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.locator('[data-order-panel="4"]')).toBeVisible();
+  await expect(page.locator('[data-order-panel="3"]')).toBeVisible();
 });
 
 test('required responsive widths keep homepage media inside the viewport', async ({ page }) => {

@@ -17,7 +17,7 @@ export function orderWizard() {
   return `<section class="section order-flow-section" id="start-project"><div class="container-wide">
     <div class="chapter-head chapter-head--light"><span class="chapter-index">Build your request</span><div><h2>Tell us what the finished website needs to do.</h2><p>Review the scope, then continue to secure one-time checkout. Draft text stays on this device.</p></div></div>
     <form class="order-wizard" data-order-wizard novalidate>
-      <nav class="order-wizard__steps" aria-label="Project request progress">${['Contact', 'Plan', 'Brief', 'Review', 'Payment'].map((label, index) => `<button type="button" data-order-step-jump="${index}" aria-current="${index === 0 ? 'step' : 'false'}"><span>0${index + 1}</span>${label}</button>`).join('')}</nav>
+      <nav class="order-wizard__steps" aria-label="Project request progress">${['Contact', 'Plan', 'Brief', 'Review & pay'].map((label, index) => `<button type="button" data-order-step-jump="${index}" aria-current="${index === 0 ? 'step' : 'false'}"><span>0${index + 1}</span>${label}</button>`).join('')}</nav>
       <div class="order-wizard__panel" data-order-panel="0">
         <div class="order-wizard__heading"><span>Step 01</span><h3>Contact and current website</h3></div>
         <div class="order-fields order-fields--two">
@@ -54,16 +54,17 @@ export function orderWizard() {
         <p class="order-note">Files are saved privately before secure checkout begins.</p>
       </div>
       <div class="order-wizard__panel" data-order-panel="3" hidden>
-        <div class="order-wizard__heading"><span>Step 04</span><h3>Review and payment</h3></div>
-        <div class="order-summary" data-order-summary></div>
+        <div class="order-wizard__heading"><span>Step 04</span><h3>Review your order</h3></div>
+        <div class="order-summary order-review" data-order-summary></div>
         <label class="order-consent"><input type="checkbox" name="termsAccepted" required> <span>I agree to the <a href="/terms" data-nav>terms</a> and acknowledge the <a href="/privacy" data-nav>privacy notice</a>.</span></label>
         <label class="order-consent"><input type="checkbox" name="portfolioConsent"> <span>Optional: I give AccessRevamp permission to show approved, non-sensitive project visuals in its portfolio. This is not required to buy and may be revoked for future use.</span></label>
+        <div class="order-review__checkout">
+          <div><strong>Secure payment powered by Stripe</strong><span>Your project details are saved privately before checkout opens.</span></div>
+          <button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to secure checkout ${icon('arrow')}</button>
+        </div>
+        <p class="order-checkout-status" data-checkout-status role="status" aria-live="polite"></p>
       </div>
-      <div class="order-wizard__panel" data-order-panel="4" hidden>
-        <div class="order-wizard__heading"><span>Step 05</span><h3>Continue to secure checkout</h3></div>
-        <div class="order-payment"><p><strong>Secure one-time checkout.</strong> Your request is saved before Stripe opens. A verified webhook—not the browser redirect—creates the paid order and project.</p><button class="button button--sun" type="button" data-order-checkout data-checkout="complete_revamp">Continue to Stripe ${icon('arrow')}</button><a href="/login" data-nav>Already purchased? Sign in for the private brief.</a></div>
-      </div>
-      <div class="order-wizard__actions"><button type="button" class="text-arrow" data-order-previous hidden>Back</button><p class="form-status" data-order-status role="status">Step 1 of 5</p><button type="button" class="button" data-order-next>Continue ${icon('arrow')}</button></div>
+      <div class="order-wizard__actions"><button type="button" class="text-arrow" data-order-previous hidden>Back</button><p class="form-status" data-order-status role="status">Step 1 of 4</p><button type="button" class="button" data-order-next>Continue ${icon('arrow')}</button></div>
     </form>
   </div></section>`;
 }

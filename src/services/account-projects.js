@@ -225,10 +225,7 @@ function renderWorkspace(result, selectedProjectId = '') {
 export function setupAccountProjects(navigate) {
   const host = document.querySelector('[data-account-content]');
   if (!host) return undefined;
-  const logout = document.querySelector('[data-account-logout]');
   const greeting = document.querySelector('[data-account-greeting]');
-  const profile = document.querySelector('[data-account-profile]');
-  const profileName = document.querySelector('[data-account-profile-name]');
   let disposed = false;
   let activeSession = null;
   let workspaceResult = null;
@@ -295,10 +292,7 @@ export function setupAccountProjects(navigate) {
       return;
     }
 
-    if (logout) logout.hidden = false;
-    if (profile) profile.hidden = false;
     if (greeting) greeting.textContent = `Signed in as ${session.user.email}`;
-    if (profileName) profileName.textContent = session.user.email;
     try {
       const response = await fetch('/api/account-projects', {
         headers: { authorization: `Bearer ${session.access_token}` },
@@ -315,18 +309,37 @@ export function setupAccountProjects(navigate) {
         ...(result.profile || {}),
         email: session.user.email,
       };
-      if (profileName) profileName.textContent = result.profile?.full_name || session.user.email;
       renderCurrentWorkspace();
     } catch (error) {
       show(host, 'unavailable', `<h2>Workspace unavailable</h2><p>${escapeHtml(error.message || 'The workspace could not load.')}</p>`);
     }
   };
 
-  const onLogout = async () => {
-    await getSupabase()?.auth.signOut();
-    navigate('/');
-  };
   const onHostClick = async (event) => {
+    const signoutStart = event.target.closest('[data-settings-signout]');
+    if (signoutStart) {
+      const confirmation = host.querySelector('[data-signout-confirm]');
+      if (confirmation) {
+        confirmation.hidden = false;
+        confirmation.querySelector('[data-signout-approve]')?.focus();
+      }
+      return;
+    }
+    const signoutCancel = event.target.closest('[data-signout-cancel]');
+    if (signoutCancel) {
+      const confirmation = signoutCancel.closest('[data-signout-confirm]');
+      if (confirmation) confirmation.hidden = true;
+      host.querySelector('[data-settings-signout]')?.focus();
+      return;
+    }
+    const signoutApprove = event.target.closest('[data-signout-approve]');
+    if (signoutApprove) {
+      signoutApprove.disabled = true;
+      signoutApprove.textContent = 'Signing out…';
+      await getSupabase()?.auth.signOut();
+      navigate('/');
+      return;
+    }
     const workspaceTab = event.target.closest('[data-workspace-tab]');
     if (workspaceTab && workspaceResult) {
       activeWorkspaceTab = workspaceTab.dataset.workspaceTab;
@@ -417,13 +430,11 @@ export function setupAccountProjects(navigate) {
     }
   };
 
-  logout?.addEventListener('click', onLogout);
   host.addEventListener('click', onHostClick);
   host.addEventListener('submit', onHostSubmit);
   load();
   return () => {
     disposed = true;
-    logout?.removeEventListener('click', onLogout);
     host.removeEventListener('click', onHostClick);
     host.removeEventListener('submit', onHostSubmit);
   };
