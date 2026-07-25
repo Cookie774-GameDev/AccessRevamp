@@ -43,19 +43,50 @@ function adminForState(state) {
 
 test('confirmed signup email is routed to sign in instead of claiming an email was sent', async () => {
   await withAuthEnvironment(async () => {
+    let lookupEmail;
     let publicClientCreated = false;
     const handler = createAuthSignupStartHandler({
-      getAdmin: () => adminForState('confirmed'),
+      getAdmin: () => ({
+        async rpc(name, payload) {
+          if (name === 'consume_accessrevamp_auth_attempt') return { data: null, error: null };
+          assert.equal(name, 'accessrevamp_auth_email_state');
+          lookupEmail = payload.p_email;
+          return { data: 'confirmed', error: null };
+        },
+      }),
       createPublicClient: () => { publicClientCreated = true; return {}; },
     });
     const response = await handler(request('/api/auth-signup-start', {
-      fullName: 'Customer Name', email: EMAIL, password: PASSWORD,
+      fullName: '  Customer   Name  ', email: `  ${EMAIL.toUpperCase()}  `, password: PASSWORD,
     }));
     const body = await response.json();
     assert.equal(response.status, 409);
     assert.equal(body.code, 'ACCOUNT_EXISTS');
     assert.equal(body.next, '/login');
+    assert.equal(lookupEmail, EMAIL);
+    assert.match(body.emailHint, /^cu•+@example\.com$/);
     assert.equal(publicClientCreated, false);
+  });
+});
+
+test('signup rejects unknown fields before any account lookup or creation', async () => {
+  await withAuthEnvironment(async () => {
+    let adminCreated = false;
+    const handler = createAuthSignupStartHandler({
+      getAdmin: () => {
+        adminCreated = true;
+        return adminForState('missing');
+      },
+      createPublicClient: () => { throw new Error('should not create client'); },
+    });
+    const response = await handler(request('/api/auth-signup-start', {
+      fullName: 'Customer Name',
+      email: EMAIL,
+      password: PASSWORD,
+      role: 'admin',
+    }));
+    assert.equal(response.status, 422);
+    assert.equal(adminCreated, false);
   });
 });
 
