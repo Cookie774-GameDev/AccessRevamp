@@ -24,6 +24,24 @@ test('the review summary uses compact project details and included-item regions'
   assert.doesNotMatch(service, /Taxes \/ fees/);
 });
 
+test('the review presents a premium project folio with timeline and working portfolio proof', async () => {
+  const [service, styles] = await Promise.all([
+    readFile('src/services/order-wizard.js', 'utf8'),
+    readFile('src/styles/order-wizard-dark-contrast.css', 'utf8'),
+  ]);
+  assert.match(service, /order-review__folio/);
+  assert.match(service, /order-review__deliverables/);
+  assert.match(service, /order-review__timeline/);
+  assert.match(service, /order-review__portfolio/);
+  assert.match(service, /href="\/portfolio" target="_blank" rel="noopener noreferrer"/);
+  assert.match(service, /Explore our working websites/);
+  assert.match(service, /Payment secured/);
+  assert.match(service, /Direction confirmed/);
+  assert.match(service, /Delivered in your workspace/);
+  assert.match(styles, /order-review__folio/);
+  assert.match(styles, /prefers-reduced-motion:\s*reduce/);
+});
+
 test('optional order fields have a database migration matching the accepted form contract', async () => {
   const migration = await readFile(
     'supabase/migrations/20260725200338_relax_optional_order_draft_fields.sql',
