@@ -27,15 +27,16 @@ test('payment runtime remains fail closed until a verified catalog and configura
 });
 
 test('checkout saves a confirmed order draft before creating one idempotent Stripe session', async () => {
-  const [client, draft, checkout, component] = await Promise.all([
+  const [client, persistedClient, draft, checkout, component] = await Promise.all([
     read('src/services/checkout.js'),
+    read('src/services/persisted-checkout.js'),
     read('netlify/functions/order-draft.mjs'),
     read('netlify/functions/create-checkout.mjs'),
     read('src/components/order-wizard.js'),
   ]);
-  assert.match(client, /ORDER_DRAFT_ENDPOINT/);
-  assert.ok(client.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < client.indexOf('fetch(CHECKOUT_ENDPOINT'));
-  assert.match(client, /Your project request was not saved — no payment started/);
+  assert.match(persistedClient, /ORDER_DRAFT_ENDPOINT/);
+  assert.ok(persistedClient.indexOf('fetchImpl(ORDER_DRAFT_ENDPOINT') < persistedClient.indexOf('fetchImpl(CHECKOUT_ENDPOINT'));
+  assert.match(persistedClient, /Your project request was not saved — no payment started/);
   assert.match(draft, /save_accessrevamp_order_draft/);
   assert.match(draft, /order-draft-assets/);
   assert.match(draft, /requireConfirmedUser/);

@@ -7,6 +7,7 @@ const [
   packageText,
   main,
   checkoutClient,
+  persistedCheckoutClient,
   orderWizard,
   checkoutFunction,
   paymentRuntime,
@@ -21,6 +22,7 @@ const [
   read('package.json'),
   read('src/main.js'),
   read('src/services/checkout.js'),
+  read('src/services/persisted-checkout.js'),
   read('src/services/order-wizard.js'),
   read('netlify/functions/create-checkout.mjs'),
   read('netlify/functions/_shared/payment-runtime.mjs'),
@@ -49,13 +51,13 @@ test('runtime and security-sensitive dependencies are exact and current for the 
 
 test('pricing buttons save one stable request and use only server-created Checkout', () => {
   assert.match(main, /setupCheckout/);
-  assert.match(checkoutClient, /\/api\/order-draft/);
-  assert.match(checkoutClient, /\/api\/create-checkout/);
+  assert.match(persistedCheckoutClient, /\/api\/order-draft/);
+  assert.match(persistedCheckoutClient, /\/api\/create-checkout/);
   assert.match(orderWizard, /crypto\.randomUUID\(\)/);
   assert.match(orderWizard, /form\.dataset\.orderRequestId/);
-  assert.ok(checkoutClient.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < checkoutClient.indexOf('fetch(CHECKOUT_ENDPOINT'));
-  assert.match(checkoutClient, /checkout\.stripe\.com/);
-  assert.doesNotMatch(checkoutClient, /book\.stripe\.com|payment[_-]?link/i);
+  assert.ok(persistedCheckoutClient.indexOf('fetchImpl(ORDER_DRAFT_ENDPOINT') < persistedCheckoutClient.indexOf('fetchImpl(CHECKOUT_ENDPOINT'));
+  assert.match(persistedCheckoutClient, /checkout\.stripe\.com/);
+  assert.doesNotMatch(`${checkoutClient}\n${persistedCheckoutClient}`, /book\.stripe\.com|payment[_-]?link/i);
 });
 
 test('Checkout uses explicit API version, idempotency, a fail-closed database catalog, and exact metadata', () => {

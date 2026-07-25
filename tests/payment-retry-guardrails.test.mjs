@@ -5,16 +5,18 @@ import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(path, 'utf8');
 
 test('terminal Checkout attempts rotate to a fresh request ID without reusing Stripe idempotency', async () => {
-  const [draft, client, wizard] = await Promise.all([
+  const [draft, client, persistedClient, wizard] = await Promise.all([
     read('netlify/functions/order-draft.mjs'),
     read('src/services/checkout.js'),
+    read('src/services/persisted-checkout.js'),
     read('src/services/order-wizard.js'),
   ]);
   assert.match(draft, /REUSABLE_TERMINAL_STATES = new Set\(\['expired', 'canceled'\]\)/);
   assert.match(draft, /effectiveRequestId.*randomUUID\(\)/s);
   assert.match(draft, /This project request is already paid/);
   assert.match(draft, /requestId: effectiveRequestId/);
-  assert.match(client, /draftPayload\.requestId !== requestId/);
+  assert.match(persistedClient, /persistedRequestId = draftPayload\.requestId/);
+  assert.match(client, /checkout\.requestId !== requestId/);
   assert.match(client, /order-request-id-rotated/);
   assert.match(wizard, /onRequestIdRotated/);
   assert.match(wizard, /requestId = nextRequestId/);

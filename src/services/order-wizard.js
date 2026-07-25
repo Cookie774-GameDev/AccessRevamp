@@ -1,5 +1,6 @@
 import { plans } from '../config.js';
 import { escapeHtml } from '../components/icons.js';
+import { validationStatusForControl } from './order-wizard-validation.js';
 
 const STORAGE_KEY = 'accessrevamp-order-draft-v1';
 const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
@@ -114,9 +115,10 @@ export function setupOrderWizard(root = document) {
     const required = [...panels[current].querySelectorAll('[required]')];
     const invalid = required.find((control) => !control.checkValidity());
     if (!invalid) return true;
+    invalid.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     invalid.reportValidity();
     invalid.focus();
-    status.textContent = 'Complete the highlighted field before continuing.';
+    status.textContent = validationStatusForControl(invalid);
     return false;
   };
   const normalizeUrl = () => {

@@ -34,7 +34,7 @@ const packageJson = JSON.parse(packageText);
 test('confirmed email accounts land in the private customer hub', () => {
   assert.match(auth, /navigate\('\/account\/projects'/);
   assert.match(accountPage, /Project workspace/);
-  assert.match(accountPage, /AccessRevamp projects/i);
+  assert.match(accountPage, /<h1>Dashboard<\/h1>/i);
   assert.match(accountClient, /\/api\/account-projects/);
   assert.match(accountClient, /authorization: `Bearer \$\{session\.access_token\}`/);
   assert.match(accountClient, /Project updates/);

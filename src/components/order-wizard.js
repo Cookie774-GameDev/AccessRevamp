@@ -38,14 +38,14 @@ export function orderWizard() {
         <div class="order-wizard__heading"><span>Step 03</span><h3>Specific request and references</h3></div>
         <div class="order-fields order-fields--two">
           <div class="order-summary order-question-plan order-fields__wide" data-order-question-plan aria-label="Selected plan and perks" aria-live="polite"></div>
-          <label>Main website goal<textarea name="mainGoal" required minlength="20" rows="4"></textarea></label>
+          <label>Main website goal<textarea name="mainGoal" required minlength="2" rows="4"></textarea></label>
           <label>Requested pages and sections<textarea name="requestedPages" required rows="4" placeholder="Home, services, about, contact…"></textarea></label>
-          <label>Required features and integrations<textarea name="integrations" rows="4" placeholder="Booking, ecommerce, CMS, analytics…"></textarea></label>
-          <label>Preferred style and colors<textarea name="styleDirection" required rows="4"></textarea></label>
-          <label>Brand copy and content status<select name="contentStatus" required><option value="">Choose one</option><option>Ready to use</option><option>Needs editing</option><option>Needs writing support</option></select></label>
-          <label>Desired launch date<input name="launchDate" type="date"></label>
-          <label class="order-fields__wide">Reference website URLs<textarea name="referenceUrls" rows="3" placeholder="One public URL per line"></textarea></label>
-          <label class="order-fields__wide">Freeform specific request<textarea name="specificRequest" rows="5"></textarea></label>
+          <label>Required features and integrations<textarea name="integrations" required rows="4" placeholder="Booking, ecommerce, CMS, analytics…"></textarea></label>
+          <label>Preferred style and colors <span>optional</span><textarea name="styleDirection" rows="4"></textarea></label>
+          <label>Brand copy and content status <span>optional</span><select name="contentStatus"><option value="">Choose one</option><option>Ready to use</option><option>Needs editing</option><option>Needs writing support</option></select></label>
+          <label>Desired launch date <span>optional</span><input name="launchDate" type="date"></label>
+          <label class="order-fields__wide">Reference website URLs <span>optional</span><textarea name="referenceUrls" rows="3" placeholder="One public URL per line"></textarea></label>
+          <label class="order-fields__wide">Freeform specific request <span>optional</span><textarea name="specificRequest" rows="5"></textarea></label>
           <label class="order-fields__wide" data-cinematic-fields hidden>How many cinematic scenes?<select name="cinematicSceneCount" disabled><option value="">Choose three or four</option><option value="3">3 scenes — provider budget capped at 150 credits</option><option value="4">4 scenes — provider budget capped at 200 credits</option></select><small>You will review two complete visual sequences before any scene video is generated.</small></label>
           <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5" disabled></textarea></label>
         </div>

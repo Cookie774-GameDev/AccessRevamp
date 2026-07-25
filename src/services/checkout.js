@@ -1,21 +1,8 @@
 import { getSupabase } from '../lib/supabase.js';
+import { persistDraftThenCreateCheckout } from './persisted-checkout.js';
 
-const CHECKOUT_ENDPOINT = '/api/create-checkout';
-const ORDER_DRAFT_ENDPOINT = '/api/order-draft';
 const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
-const ALLOWED_STRIPE_HOSTS = new Set(['checkout.stripe.com']);
 const PAID_PLANS = new Set(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']);
-
-function validatedStripeUrl(value) {
-  const url = new URL(value);
-  if (url.protocol !== 'https:'
-    || !ALLOWED_STRIPE_HOSTS.has(url.hostname)
-    || url.username
-    || url.password) {
-    throw new Error('Checkout returned an unexpected destination.');
-  }
-  return url.toString();
-}
 
 function setCheckoutFailure(control, message) {
   control.textContent = message;
@@ -77,22 +64,15 @@ export function setupCheckout() {
       const draftBody = new FormData(form);
       draftBody.set('requestId', requestId);
       draftBody.set('orderPlan', targetTier);
-      const draftResponse = await fetch(ORDER_DRAFT_ENDPOINT, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${session.access_token}` },
-        body: draftBody,
+      const checkout = await persistDraftThenCreateCheckout({
+        draftBody,
+        targetTier,
+        requestId,
+        accessToken: session.access_token,
       });
-      const draftPayload = await draftResponse.json().catch(() => ({}));
-      if (!draftResponse.ok || !draftPayload.draftId || !validRequestId(draftPayload.requestId)) {
-        throw new Error(draftResponse.status === 401 || draftResponse.status === 403
-          ? 'Sign in with the confirmed project email'
-          : draftResponse.status === 409
-            ? (draftPayload.error || 'This saved request cannot start another payment')
-            : 'Your project request was not saved — no payment started');
-      }
 
-      if (draftPayload.requestId !== requestId) {
-        requestId = draftPayload.requestId;
+      if (checkout.requestId !== requestId) {
+        requestId = checkout.requestId;
         form.dataset.orderRequestId = requestId;
         form.dispatchEvent(new CustomEvent('order-request-id-rotated', {
           bubbles: false,
@@ -101,23 +81,7 @@ export function setupCheckout() {
       }
 
       control.textContent = 'Opening secure Stripe checkout…';
-      const response = await fetch(CHECKOUT_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ targetTier, requestId }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || Object.keys(payload).length !== 1 || !payload.url) {
-        throw new Error(response.status === 503
-          ? 'Secure checkout is paused — your request is saved'
-          : response.status === 409
-            ? 'The previous Checkout attempt ended — click once more to safely start a fresh attempt'
-            : 'Checkout is temporarily unavailable — your request is saved');
-      }
-      location.assign(validatedStripeUrl(payload.url));
+      location.assign(checkout.url);
     } catch (error) {
       setCheckoutFailure(control, error?.message || 'Checkout unavailable — try again');
       return;

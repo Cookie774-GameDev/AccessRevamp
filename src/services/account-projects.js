@@ -2,6 +2,7 @@ import '../styles/customer-hub.css';
 import { getSupabase } from '../lib/supabase.js';
 import { escapeHtml } from '../components/icons.js';
 import { plans } from '../config.js';
+import { renderWorkspace as renderTabbedWorkspace } from './customer-workspace-renderer.js';
 
 const money = (cents = 0, currency = 'USD') => new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -226,18 +227,26 @@ export function setupAccountProjects(navigate) {
   if (!host) return undefined;
   const logout = document.querySelector('[data-account-logout]');
   const greeting = document.querySelector('[data-account-greeting]');
+  const profile = document.querySelector('[data-account-profile]');
   const profileName = document.querySelector('[data-account-profile-name]');
   let disposed = false;
   let activeSession = null;
   let workspaceResult = null;
   let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
+  let activeWorkspaceTab = 'projects';
+  let activeProjectTab = 'updates';
 
   const renderCurrentWorkspace = () => {
     if (!workspaceResult) return;
     const projects = workspaceResult.projects || [];
     const selected = projects.find((project) => project.id === selectedProjectId) || projects[0] || null;
     selectedProjectId = selected?.id || '';
-    show(host, projects.length ? 'populated' : 'empty', renderWorkspace(workspaceResult, selectedProjectId));
+    show(host, projects.length ? 'populated' : 'empty', renderTabbedWorkspace(
+      workspaceResult,
+      selectedProjectId,
+      activeWorkspaceTab,
+      activeProjectTab,
+    ));
   };
 
   const saveFeedback = async (form, payload) => {
@@ -287,6 +296,7 @@ export function setupAccountProjects(navigate) {
     }
 
     if (logout) logout.hidden = false;
+    if (profile) profile.hidden = false;
     if (greeting) greeting.textContent = `Signed in as ${session.user.email}`;
     if (profileName) profileName.textContent = session.user.email;
     try {
@@ -301,6 +311,10 @@ export function setupAccountProjects(navigate) {
       if (!response.ok) throw new Error(result.error || 'Workspace unavailable');
       if (disposed) return;
       workspaceResult = result;
+      workspaceResult.profile = {
+        ...(result.profile || {}),
+        email: session.user.email,
+      };
       if (profileName) profileName.textContent = result.profile?.full_name || session.user.email;
       renderCurrentWorkspace();
     } catch (error) {
@@ -313,9 +327,23 @@ export function setupAccountProjects(navigate) {
     navigate('/');
   };
   const onHostClick = async (event) => {
+    const workspaceTab = event.target.closest('[data-workspace-tab]');
+    if (workspaceTab && workspaceResult) {
+      activeWorkspaceTab = workspaceTab.dataset.workspaceTab;
+      renderCurrentWorkspace();
+      return;
+    }
+    const projectTab = event.target.closest('[data-project-tab]');
+    if (projectTab && workspaceResult) {
+      activeProjectTab = projectTab.dataset.projectTab;
+      renderCurrentWorkspace();
+      return;
+    }
     const projectButton = event.target.closest('[data-project-select]');
     if (projectButton && workspaceResult) {
       selectedProjectId = projectButton.dataset.projectSelect;
+      activeWorkspaceTab = 'projects';
+      activeProjectTab = 'updates';
       const url = new URL(location.href);
       url.searchParams.set('project', selectedProjectId);
       history.replaceState({}, '', `${url.pathname}${url.search}`);
@@ -325,11 +353,14 @@ export function setupAccountProjects(navigate) {
     }
     const sectionButton = event.target.closest('[data-project-section]');
     if (sectionButton) {
-      const panel = host.querySelector(`[data-project-panel="${sectionButton.dataset.projectSection}"]`);
-      if (panel) {
-        panel.open = true;
-        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      activeWorkspaceTab = 'projects';
+      activeProjectTab = sectionButton.dataset.projectSection === 'questions'
+        ? 'brief'
+        : sectionButton.dataset.projectSection === 'deliveries'
+          ? 'files'
+          : sectionButton.dataset.projectSection;
+      renderCurrentWorkspace();
+      host.querySelector(`[data-project-panel="${activeProjectTab}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (event.target.closest('[data-hub-refresh]')) {
