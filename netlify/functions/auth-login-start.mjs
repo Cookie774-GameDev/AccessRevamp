@@ -222,6 +222,16 @@ export function createAuthLoginStartHandler({
 
       passwordClient = createPublicClient();
       const passwordResult = await passwordClient.auth.signInWithPassword(credentials);
+      if (
+        passwordResult.error?.code === 'email_not_confirmed'
+        || /email not confirmed/i.test(String(passwordResult.error?.message || ''))
+      ) {
+        throw new HttpError(
+          403,
+          'This account exists, but its email is not confirmed. Return to sign up with the same email to request a new confirmation code.',
+          { details: { code: 'EMAIL_NOT_CONFIRMED', next: '/signup' } },
+        );
+      }
       if (passwordResult.error || !passwordResult.data?.user || !passwordResult.data?.session?.access_token) {
         throw new HttpError(401, 'Email or password is incorrect.');
       }
@@ -265,7 +275,18 @@ export function createAuthLoginStartHandler({
       });
       if (emailResult.error) {
         if (Number(emailResult.error.status || 0) === 429) {
-          throw new HttpError(429, 'Please wait before requesting another verification email.');
+          const retryAfter = Math.max(
+            1,
+            Math.min(3600, Number(String(emailResult.error.message || '').match(/after\s+(\d+)\s+seconds?/i)?.[1]) || 60),
+          );
+          throw new HttpError(
+            429,
+            `A sign-in email was already requested. Try again in ${retryAfter} seconds.`,
+            {
+              headers: { 'retry-after': String(retryAfter) },
+              details: { code: 'EMAIL_COOLDOWN', retryAfter },
+            },
+          );
         }
         throw new HttpError(503, 'The verification email could not be sent. Try again shortly.');
       }

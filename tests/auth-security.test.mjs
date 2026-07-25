@@ -190,6 +190,41 @@ test('database rate limiting blocks password validation before credential work b
   }
 });
 
+test('a correct password for an unconfirmed account is not mislabeled as incorrect', async () => {
+  const previousOrigins = process.env.ALLOWED_ORIGINS;
+  process.env.ALLOWED_ORIGINS = 'https://accessrevamp.test';
+  const handler = createAuthLoginStartHandler({
+    getAdmin: () => null,
+    consumeLocalAttempt() {},
+    createPublicClient: () => ({
+      auth: {
+        async signInWithPassword() {
+          return {
+            data: { user: null, session: null },
+            error: { code: 'email_not_confirmed', message: 'Email not confirmed' },
+          };
+        },
+        async signOut() {},
+      },
+    }),
+  });
+
+  try {
+    const response = await handler(new Request('https://accessrevamp.test/api/auth-login-start', {
+      method: 'POST',
+      headers: { origin: 'https://accessrevamp.test', 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'owner@example.com', password: 'CorrectPassword!1' }),
+    }));
+    assert.equal(response.status, 403);
+    const body = await response.text();
+    assert.match(body, /not confirmed/i);
+    assert.doesNotMatch(body, /password is incorrect/i);
+  } finally {
+    if (previousOrigins == null) delete process.env.ALLOWED_ORIGINS;
+    else process.env.ALLOWED_ORIGINS = previousOrigins;
+  }
+});
+
 test('email-code completion consumes the HttpOnly password challenge cookie', async () => {
   const previousOrigins = process.env.ALLOWED_ORIGINS;
   process.env.ALLOWED_ORIGINS = 'https://accessrevamp.test';

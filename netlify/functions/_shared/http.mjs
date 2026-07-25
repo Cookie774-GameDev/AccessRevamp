@@ -82,9 +82,11 @@ export function assertSameOrigin(request) {
 }
 
 export class HttpError extends Error {
-  constructor(status, message) {
+  constructor(status, message, { headers = {}, details = {} } = {}) {
     super(message);
     this.status = status;
+    this.headers = headers;
+    this.details = details;
   }
 }
 
@@ -95,5 +97,9 @@ export function handleError(error) {
     const name = String(error?.name || 'Error').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
     console.error('AccessRevamp server request failed.', { status, name });
   }
-  return json({ error: message }, status);
+  const details = status < 500 && error?.details && typeof error.details === 'object'
+    ? error.details
+    : {};
+  const headers = error?.headers && typeof error.headers === 'object' ? error.headers : {};
+  return json({ error: message, ...details }, status, headers);
 }

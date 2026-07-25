@@ -22,6 +22,9 @@ test('production and recovery Auth URLs are applied before optional email transp
   assert.match(script, /production-link-fallback/);
   assert.match(script, /customSmtpRequiredForOfficialSender/);
   assert.match(script, /known Free-plan restrictions/i);
+  assert.match(script, /rate_limit_email_sent:\s*30/);
+  assert.match(script, /rate_limit_otp:\s*30/);
+  assert.match(script, /emailSendCapacitySupportsProduction:\s*Number\(current\.rate_limit_email_sent\)\s*>=\s*30/);
 });
 
 test('workflow supports Resend Gmail or full SMTP for Access Revamp Authorization', () => {

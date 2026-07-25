@@ -61,7 +61,20 @@ export function createAuthSignupResendHandler({
       });
       if (result.error) {
         const status = Number(result.error.status || result.error.code || 0);
-        if (status === 429) throw new HttpError(429, 'Please wait before requesting another email.');
+        if (status === 429) {
+          const retryAfter = Math.max(
+            1,
+            Math.min(3600, Number(String(result.error.message || '').match(/after\s+(\d+)\s+seconds?/i)?.[1]) || 60),
+          );
+          throw new HttpError(
+            429,
+            `A verification email was already requested. Try again in ${retryAfter} seconds.`,
+            {
+              headers: { 'retry-after': String(retryAfter) },
+              details: { code: 'EMAIL_COOLDOWN', retryAfter },
+            },
+          );
+        }
         throw new HttpError(503, 'The confirmation email could not be sent. Try again shortly.');
       }
       return json({ ok: true, emailHint: maskEmail(email), expiresIn: EMAIL_LIFETIME_SECONDS }, 202);
