@@ -1,8 +1,8 @@
 export const routeMetadata = Object.freeze({
   '/': ['Storefront revamps with a point of view', 'AccessRevamp finds storefront friction, clarifies the offer, and builds a stronger one-time direction.'],
-  '/portfolio': ['Portfolio', 'Explore original AccessRevamp concepts and the production demonstration preview.'],
-  '/portfolio/:slug': ['Original working demonstration', 'Explore a responsive, accessible AccessRevamp interaction demonstration with safe sample behavior.'],
-  '/work': ['Selected work', 'Explore original AccessRevamp homepage, campaign, and cinematic concepts.'],
+  '/portfolio': ['Working website portfolio', 'Enter five polished AccessRevamp website experiences, including two cinematic scroll films and three interactive transformations.'],
+  '/portfolio/:slug': ['Working website experience', 'Explore a responsive, accessible AccessRevamp website experience with live interaction and motion.'],
+  '/work': ['Working website portfolio', 'Enter five polished AccessRevamp website experiences with cinematic motion and interactive comparisons.'],
   '/work/:slug': ['Project story', 'Explore the thinking behind an original AccessRevamp concept.'],
   '/services': ['Services', 'Choose a free snapshot, focused reveal, complete website revamp, or cinematic scroll site.'],
   '/process': ['Process', 'See how AccessRevamp moves from public evidence to a human-reviewed direction.'],
