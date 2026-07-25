@@ -43,6 +43,7 @@ import { setupAuthForm } from './services/auth.js';
 import { setupRecoveryForm } from './services/recovery.js';
 import { setupDashboard } from './services/dashboard.js';
 import { setupCheckout } from './services/checkout.js';
+import { setupCheckoutReadiness } from './services/checkout-readiness.js';
 import { setupCheckoutResult } from './services/checkout-result.js';
 import { setupFreeSnapshot } from './services/free-snapshot.js';
 import { setupAccountProjects } from './services/account-projects.js';
@@ -185,6 +186,7 @@ function renderRoute({ pathname, pattern, params, view }) {
 
   const cleanups = [setupMenu(), setupSessionNavigation(router.navigate)];
   if (pathname === '/') cleanups.push(setupHomeExperience(app));
+  if (pathname === '/') cleanups.push(setupCheckoutReadiness(app));
   if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupShowcaseComparisons(app));
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
   if (pathname === '/contact') cleanups.push(setupContactForm());

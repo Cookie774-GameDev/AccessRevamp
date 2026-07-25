@@ -12,6 +12,8 @@ test('review is the final visible step and owns the Stripe checkout action', asy
     /data-order-panel="3"[\s\S]*data-order-checkout[\s\S]*data-checkout="complete_revamp"/,
   );
   assert.match(component, /data-checkout-status/);
+  assert.match(component, /data-checkout-readiness/);
+  assert.match(component, /data-checkout-ready="checking"/);
   assert.match(component, /Secure payment powered by Stripe/);
   assert.doesNotMatch(component, /verified webhook|browser redirect/i);
 });
