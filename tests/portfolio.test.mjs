@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [main, portfolio, home, work, styles] = await Promise.all([
+const [main, portfolio, home, work, hero, styles] = await Promise.all([
   readFile('src/main.js', 'utf8'),
   readFile('src/data/portfolio.js', 'utf8'),
   readFile('src/pages/home.js', 'utf8'),
   readFile('src/pages/work.js', 'utf8'),
+  readFile('src/components/portfolio-hero.js', 'utf8'),
   readFile('src/styles/working-portfolio.css', 'utf8'),
 ]);
 
@@ -28,9 +29,10 @@ test('the portfolio contains the two supplied scroll films and no retired concep
 });
 
 test('portfolio work remains honestly disclosed as original demonstration work', () => {
-  assert.match(work, /Original demonstrations/);
-  assert.match(work, /not client endorsements or measured outcome claims/i);
-  assert.doesNotMatch(`${home}\n${work}`, /trusted by|client results|we increased|revenue lift/i);
+  assert.match(work, /portfolioHero/);
+  assert.match(hero, /Original demonstrations/);
+  assert.match(hero, /not static mockups, client endorsements, or guaranteed outcome claims/i);
+  assert.doesNotMatch(`${home}\n${work}\n${hero}`, /trusted by|client results|we increased|revenue lift/i);
 });
 
 test('working portfolio layouts collapse safely for tablets and mobile screens', () => {
