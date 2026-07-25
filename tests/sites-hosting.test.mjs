@@ -62,6 +62,7 @@ test('Cloudflare production builds preserve required non-secret runtime bindings
 
   assert.equal(configured.name, 'accessrevamp');
   assert.deepEqual(configured.vars, CLOUDFLARE_PRODUCTION_VARS);
+  assert.equal(configured.vars.ACCESSREVAMP_LIVE_PAYMENT_APPROVED, 'true');
   assert.equal(configured.vars.STRIPE_EXPECT_LIVEMODE, 'true');
   assert.equal(configured.vars.SUPABASE_URL, 'https://vbkkimvedmklebghtkzs.supabase.co');
   assert.match(configured.vars.ALLOWED_ORIGINS, /https:\/\/accessrevamp\.com/);

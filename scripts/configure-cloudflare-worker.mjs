@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 export const CLOUDFLARE_PRODUCTION_VARS = Object.freeze({
+  ACCESSREVAMP_LIVE_PAYMENT_APPROVED: 'true',
   ACCESSREVAMP_SITE_URL: 'https://accessrevamp.com',
   ALLOWED_ORIGINS: 'https://accessrevamp.com,https://www.accessrevamp.com',
   STRIPE_EXPECT_LIVEMODE: 'true',
