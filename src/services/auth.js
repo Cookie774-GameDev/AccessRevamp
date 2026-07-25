@@ -555,31 +555,48 @@ export function setupAuthForm(navigate) {
     setStatus(status, 'Account access is temporarily unavailable on this deployment. Please try again later.', 'error');
     submit.disabled = true;
   } else {
-    const params = new URLSearchParams(location.search);
-    const verification = params.get('verification');
-    const confirmed = params.get('confirmed');
-    const existingAccount = params.get('account') === 'existing';
-    if (verification && mode === 'login') {
-      handleLegacyEmailLink(verification);
-    } else if (confirmed === '1' && mode === 'login') {
-      handleLegacySignupConfirmation();
-    } else if (confirmed === 'code' && mode === 'login') {
-      cleanAuthUrl();
-      supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-      setStatus(status, 'Email confirmed. Enter your password and we will send a fresh sign-in email.', 'success');
-      form.elements.email?.focus();
-    } else if (existingAccount && mode === 'login') {
-      cleanAuthUrl();
-      supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-      const hintedEmail = takeLoginHint();
-      if (hintedEmail && form.elements.email) form.elements.email.value = hintedEmail;
-      setStatus(status, 'This email already has an AccessRevamp account. Enter the correct password to receive the sign-in email.', 'success');
-      passwordInput?.focus();
-    } else {
-      supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    const initializeAuthView = async () => {
+      const params = new URLSearchParams(location.search);
+      const verification = params.get('verification');
+      const confirmed = params.get('confirmed');
+      const existingAccount = params.get('account') === 'existing';
+      if (verification && mode === 'login') {
+        handleLegacyEmailLink(verification);
+        return;
+      }
+      if (confirmed === '1' && mode === 'login') {
+        handleLegacySignupConfirmation();
+        return;
+      }
+
+      const sessionResult = await supabase.auth.getSession();
+      if (disposed) return;
+      const session = sessionResult.data?.session;
+      if (!sessionResult.error && session?.user?.email_confirmed_at) {
+        navigate('/account/projects', { replace: true });
+        return;
+      }
+
+      if (confirmed === 'code' && mode === 'login') {
+        cleanAuthUrl();
+        setStatus(status, 'Email confirmed. Enter your password and we will send a fresh sign-in email.', 'success');
+        form.elements.email?.focus();
+        return;
+      }
+      if (existingAccount && mode === 'login') {
+        cleanAuthUrl();
+        const hintedEmail = takeLoginHint();
+        if (hintedEmail && form.elements.email) form.elements.email.value = hintedEmail;
+        setStatus(status, 'This email already has an AccessRevamp account. Enter the correct password to receive the sign-in email.', 'success');
+        passwordInput?.focus();
+        return;
+      }
       const restored = restorePending(mode);
       if (restored) beginCodeFlow(restored);
-    }
+    };
+    initializeAuthView().catch(() => {
+      if (!disposed) setStatus(status, 'Account access is temporarily unavailable. Refresh and try again.', 'error');
+    });
   }
 
   return () => {

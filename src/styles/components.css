@@ -11,6 +11,9 @@
 .desktop-nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -.55rem; height: 2px; background: var(--signal-coral); transform: scaleX(0); transform-origin: right; transition: transform .25s ease; }
 .desktop-nav a:hover::after, .desktop-nav a[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
 .nav-actions { display: flex; align-items: center; gap: 1rem; }
+.nav-profile { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .45rem; padding: .55rem .75rem; border: 1px solid var(--line-dark); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: .78rem; font-weight: 850; text-decoration: none; }
+.nav-profile .icon { width: 1.2rem; height: 1.2rem; }
+.nav-profile:hover { border-color: var(--ink); background: var(--near-black); color: var(--white); }
 .menu-button { display: none; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .mobile-nav { border-top: 1px solid var(--line); background: var(--surface); }
 .mobile-nav nav { display: grid; padding: 1rem 1.25rem 1.5rem; }
