@@ -198,23 +198,35 @@ export function createWebhookHandler({
     maxNetworkRetries: 2,
     appInfo: { name: 'AccessRevamp', version: '3.0.0' },
   }),
+  logFailure = (stage, error) => {
+    const name = String(error?.name || 'Error').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
+    console.error('AccessRevamp webhook stage failed.', {
+      stage,
+      status: Number(error?.status) || 500,
+      name,
+    });
+  },
 } = {}) {
   return async function webhookHandler(request) {
     let supabase;
     let eventId = '';
+    let failureStage = 'request_validation';
     try {
       if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
       const signature = request.headers.get('stripe-signature');
+      failureStage = 'runtime_configuration';
       if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
         return json({ error: 'Webhook configuration is incomplete.' }, 503);
       }
       const expected = expectedLivemode(process.env);
       const key = assertStripePaymentMode(process.env.STRIPE_WEBHOOK_READ_SECRET_KEY, process.env);
+      failureStage = 'stripe_client';
       const stripe = createStripe(key);
       const rawBody = await request.text();
       if (new TextEncoder().encode(rawBody).byteLength > 1_000_000) {
         throw new HttpError(413, 'Webhook body is too large.');
       }
+      failureStage = 'signature_verification';
       const event = await stripe.webhooks.constructEventAsync(
         rawBody,
         signature,
@@ -222,7 +234,9 @@ export function createWebhookHandler({
       );
       eventId = event.id;
       assertExpectedMode(event.livemode, expected);
+      failureStage = 'supabase_client';
       supabase = getAdmin();
+      failureStage = 'payment_settings';
       const { data: settings, error: settingsError } = await supabase
         .from('payment_runtime_settings')
         .select('expected_livemode')
@@ -232,6 +246,7 @@ export function createWebhookHandler({
         throw new HttpError(503, 'Payment mode is not configured.');
       }
 
+      failureStage = 'event_processing';
       if (CHECKOUT_EVENTS.has(event.type)) {
         await handleCheckoutEvent(event, stripe, supabase, expected);
       } else if (REFUND_EVENTS.has(event.type)) {
@@ -241,11 +256,13 @@ export function createWebhookHandler({
           if (error) throw error;
         }
       }
+      failureStage = 'liveness_update';
       await supabase.from('payment_runtime_settings')
         .update({ last_successful_webhook_at: new Date().toISOString() })
         .eq('singleton', true);
       return json({ received: true });
     } catch (error) {
+      logFailure(failureStage, error);
       if (supabase) {
         await recordPaymentIncident(supabase, {
           dedupeKey: `webhook-failure:${eventId || new Date().toISOString().slice(0, 16)}`,

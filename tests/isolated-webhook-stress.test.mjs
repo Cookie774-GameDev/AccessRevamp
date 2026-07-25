@@ -93,3 +93,43 @@ test('oversized and unsigned webhooks are rejected before fulfillment', async ()
   assert.equal((await fixture.webhook(unsigned)).status, 503);
   assert.equal(fixture.harness.orders.size, 0);
 });
+
+test('webhook reports a sanitized failure stage without exposing the error message', async () => {
+  const failures = [];
+  const webhook = createWebhookHandler({
+    createStripe: () => {
+      const error = new Error('sensitive provider detail');
+      error.status = 503;
+      throw error;
+    },
+    logFailure: (stage, error) => {
+      failures.push({
+        stage,
+        name: error.name,
+        status: error.status,
+      });
+    },
+  });
+  const request = new Request('https://accessrevamp.test/api/stripe-webhook', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'stripe-signature': 't=1,v1=invalid',
+    },
+    body: JSON.stringify({
+      id: 'evt_diagnostic',
+      type: 'accessrevamp.configuration_probe',
+      livemode: false,
+      data: { object: {} },
+    }),
+  });
+
+  const response = await webhook(request);
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(failures, [{
+    stage: 'stripe_client',
+    name: 'Error',
+    status: 503,
+  }]);
+});
