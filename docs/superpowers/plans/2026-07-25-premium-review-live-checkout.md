@@ -1,5 +1,4 @@
 # Premium Review and Live Checkout Implementation Plan
-
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Present each paid plan as a premium project package, expose working portfolio proof, restore live Stripe Checkout, and make checkout readiness explicit.
@@ -233,4 +232,3 @@ After green checks, merge the PR and confirm:
 - the live review screen renders the premium package and portfolio link;
 - an authenticated Checkout action opens Stripe;
 - production CI and Cloudflare deployment both pass.
-
