@@ -53,7 +53,7 @@ export function setupOrderWizard(root = document) {
           else control.value = value;
         });
       });
-      current = Math.min(4, Math.max(0, Number(saved.current) || 0));
+      current = Math.min(3, Math.max(0, Number(saved.current) || 0));
       if (UUID_PATTERN.test(saved.requestId || '')) requestId = saved.requestId;
     } catch { localStorage.removeItem(STORAGE_KEY); }
 
@@ -85,9 +85,9 @@ export function setupOrderWizard(root = document) {
     const portfolioSummary = form.elements.portfolioConsent?.checked
       ? 'Optional portfolio permission granted; future use remains revocable.'
       : 'No portfolio permission granted.';
-    summary.innerHTML = `<dl><div><dt>Customer</dt><dd>${value('fullName')} · ${value('email')}</dd></div><div><dt>Business</dt><dd>${value('businessName')} · ${value('businessNiche')}</dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div><div><dt>Plan</dt><dd>${escapeHtml(plan.name)} · ${escapeHtml(plan.displayPrice)} once</dd></div>${cinematicSummary}<div><dt>Request</dt><dd>${value('mainGoal')}</dd></div><div><dt>Files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None'}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div><div><dt>Subtotal</dt><dd>${escapeHtml(plan.displayPrice)}</dd></div><div><dt>Taxes / fees</dt><dd>Stripe calculates any applicable amount</dd></div><div><dt>Total</dt><dd>${escapeHtml(plan.displayPrice)} before verified credit</dd></div></dl><ul>${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><p>First delivery targets 3 business days after payment and receipt of required assets. The written scope governs revisions and integrations.</p>`;
+    summary.innerHTML = `<section class="order-review__details"><div class="order-review__plan"><div><span>Selected plan</span><strong>${escapeHtml(plan.name)}</strong></div><div class="order-review__total"><span>Due at checkout</span><strong>${escapeHtml(plan.displayPrice)}</strong></div></div><dl><div><dt>Customer</dt><dd>${value('fullName')}<small>${value('email')}</small></dd></div><div><dt>Business</dt><dd>${value('businessName')}<small>${value('businessNiche')}</small></dd></div><div><dt>Website</dt><dd>${value('websiteUrl')}</dd></div>${cinematicSummary}<div><dt>Primary goal</dt><dd>${value('mainGoal')}</dd></div><div><dt>Reference files</dt><dd>${files.length ? files.map((file) => escapeHtml(file.name)).join(', ') : 'None attached'}</dd></div><div><dt>Portfolio</dt><dd>${escapeHtml(portfolioSummary)}</dd></div></dl><p class="order-review__timing">First delivery targets 3 business days after payment and receipt of required assets.</p></section><section class="order-review__included"><span class="micro-label">Everything included</span><h4>Your complete deliverable</h4><ul>${plan.features.map((feature) => `<li><span aria-hidden="true">✓</span>${escapeHtml(feature)}</li>`).join('')}</ul><p>Taxes, verified upgrade credit, and the final amount are shown by Stripe before you pay.</p></section>`;
     checkout.dataset.checkout = plan.key;
-    checkout.textContent = `Continue with ${plan.name}`;
+    checkout.textContent = `Continue to Stripe · ${plan.displayPrice}`;
   };
   const updatePlanFields = () => {
     const enabled = selectedPlan() === 'cinematic_scroll';
@@ -100,13 +100,13 @@ export function setupOrderWizard(root = document) {
     if (cinematicDirection) cinematicDirection.disabled = !enabled;
   };
   const show = (index) => {
-    current = Math.min(4, Math.max(0, index));
+    current = Math.min(3, Math.max(0, index));
     panels.forEach((panel, panelIndex) => { panel.hidden = panelIndex !== current; });
     steps.forEach((step, stepIndex) => step.setAttribute('aria-current', stepIndex === current ? 'step' : 'false'));
     previous.hidden = current === 0;
-    next.hidden = current === 4;
-    next.textContent = current === 3 ? 'Continue to payment' : 'Continue';
-    status.textContent = `Step ${current + 1} of 5`;
+    next.hidden = current === 3;
+    next.textContent = 'Continue';
+    status.textContent = `Step ${current + 1} of 4`;
     if (current === 2) renderQuestionPlan();
     if (current >= 3) renderSummary();
     save();

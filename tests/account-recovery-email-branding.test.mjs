@@ -105,7 +105,7 @@ test('customer pages no longer display test or sandbox checkout notices', () => 
   assert.doesNotMatch(pricingPage, /Test-mode notice|Sandbox checkout|Stripe test mode/i);
   assert.doesNotMatch(orderWizard, /Test-mode notice|Sandbox checkout|Stripe test mode/i);
   assert.match(pricingPage, /Secure one-time checkout/);
-  assert.match(orderWizard, /Secure one-time checkout/);
+  assert.match(orderWizard, /Secure payment powered by Stripe/);
   assert.match(shell, /export function sandboxBadge\(\) \{\s*return '';\s*\}/s);
   assert.doesNotMatch(shell, />\s*Sandbox checkout\s*</i);
 });

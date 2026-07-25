@@ -1,6 +1,6 @@
-.customer-hub-page { min-height: calc(100vh - var(--header-height)); padding: clamp(1.5rem, 4vw, 3rem) 0; background: #f6f0e4; color: #24211c; }
-.customer-workspace-head { display: flex; justify-content: space-between; gap: 2rem; align-items: end; margin-bottom: 1.5rem; }
-.customer-workspace-head h1 { max-width: 16ch; margin: .25rem 0; color: #24211c; font-size: clamp(2rem, 3vw, 2.8rem); line-height: 1; }
+.customer-hub-page { min-height: calc(100vh - var(--header-height)); padding: clamp(.85rem, 2vw, 1.5rem) 0 2rem; background: #f6f0e4; color: #24211c; }
+.customer-workspace-head { display: flex; justify-content: space-between; gap: 2rem; align-items: end; margin-bottom: .8rem; }
+.customer-workspace-head h1 { max-width: 16ch; margin: .15rem 0; color: #24211c; font-size: clamp(1.65rem, 2.5vw, 2.25rem); line-height: 1; }
 .customer-workspace-head p { margin: 0; color: #716a5f; }
 .customer-workspace-head__account { display: grid; min-width: min(100%, 18rem); gap: .35rem; padding: .9rem 1rem; border: 1px solid #d8cfbf; border-radius: .9rem; background: #fffaf1; box-shadow: 0 8px 24px rgba(77, 61, 35, .06); }
 .customer-workspace-head__account strong { overflow: hidden; color: #24211c; text-overflow: ellipsis; }
@@ -257,6 +257,11 @@
 .customer-settings dd { margin: 0; overflow-wrap: anywhere; font-weight: 750; }
 .customer-settings .button { justify-self: start; }
 .customer-settings__note { font-size: .76rem; }
+.customer-settings__actions { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
+.customer-signout-confirm { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: .6rem; padding: 1rem; border: 1px solid #d7c7ad; border-radius: .75rem; background: #f7eddd; }
+.customer-signout-confirm[hidden] { display: none; }
+.customer-signout-confirm > div { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
+.customer-signout-confirm p { margin: 0; font-size: .78rem; }
 
 @media (max-width: 700px) {
   .customer-dashboard-tabs,
@@ -275,4 +280,7 @@
   .customer-project-tabs { margin: .7rem; }
   .customer-project-panels { padding-inline: .85rem; }
   .customer-settings dl div { grid-template-columns: 1fr; gap: .25rem; }
+  .customer-signout-confirm { display: grid; align-items: start; }
+  .customer-signout-confirm > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .customer-signout-confirm .button { width: 100%; }
 }

@@ -26,11 +26,16 @@ export async function persistDraftThenCreateCheckout({
   });
   const draftPayload = await draftResponse.json().catch(() => ({}));
   if (!draftResponse.ok || !draftPayload.draftId || !validRequestId(draftPayload.requestId)) {
-    throw new Error(draftResponse.status === 401 || draftResponse.status === 403
+    const safeDraftError = draftResponse.status >= 400 && draftResponse.status < 500
+      && typeof draftPayload.error === 'string'
+      && draftPayload.error.length <= 240
+      ? draftPayload.error
+      : '';
+    throw new Error(safeDraftError || (draftResponse.status === 401 || draftResponse.status === 403
       ? 'Sign in with the confirmed project email'
       : draftResponse.status === 409
         ? (draftPayload.error || 'This saved request cannot start another payment')
-        : 'Your project request was not saved — no payment started');
+        : 'Your project request was not saved — no payment started'));
   }
 
   const persistedRequestId = draftPayload.requestId;

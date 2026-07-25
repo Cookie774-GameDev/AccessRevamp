@@ -5,8 +5,12 @@ const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
 const PAID_PLANS = new Set(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']);
 
 function setCheckoutFailure(control, message) {
-  control.textContent = message;
-  control.setAttribute('aria-label', message);
+  const form = control.closest('[data-order-wizard]');
+  const status = form?.querySelector('[data-checkout-status]');
+  if (status) {
+    status.textContent = message;
+    status.dataset.state = 'error';
+  }
 }
 
 function validRequestId(value) {
@@ -46,6 +50,11 @@ export function setupCheckout() {
     }
 
     const originalHtml = control.innerHTML;
+    const checkoutStatus = form.querySelector('[data-checkout-status]');
+    if (checkoutStatus) {
+      checkoutStatus.textContent = '';
+      delete checkoutStatus.dataset.state;
+    }
     checkoutInProgress = true;
     control.setAttribute('aria-busy', 'true');
     control.setAttribute('disabled', '');
@@ -80,19 +89,13 @@ export function setupCheckout() {
         }));
       }
 
-      control.textContent = 'Opening secure Stripe checkout…';
+      control.textContent = 'Opening Stripe checkout…';
       location.assign(checkout.url);
     } catch (error) {
       setCheckoutFailure(control, error?.message || 'Checkout unavailable — try again');
       return;
     } finally {
-      if (document.contains(control)
-        && !['Sign in to continue', 'Complete the project request', 'Reload and try again'].includes(control.textContent)
-        && !control.textContent.includes('saved')
-        && !control.textContent.includes('unavailable')
-        && !control.textContent.includes('ended')) {
-        control.innerHTML = originalHtml;
-      }
+      if (document.contains(control) && !control.textContent.includes('Opening Stripe')) control.innerHTML = originalHtml;
       control.removeAttribute('aria-busy');
       control.removeAttribute('disabled');
       checkoutInProgress = false;

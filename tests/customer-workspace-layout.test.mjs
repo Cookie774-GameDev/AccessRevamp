@@ -12,7 +12,7 @@ test('the customer hub presents one selected project inside an application works
   ]);
 
   assert.match(page, /Project workspace/);
-  assert.match(page, /data-account-profile/);
+  assert.doesNotMatch(page, /data-account-profile/);
   assert.match(client, /customer-workspace__rail/);
   assert.match(client, /data-project-select/);
   assert.match(client, /selectedProjectId/);
@@ -65,6 +65,8 @@ test('the authenticated workspace renders compact application and project tabs',
   }
   assert.match(html, /Change password with a verification code/);
   assert.match(html, /\/forgot-password\?email=customer%40example\.com/);
+  assert.match(html, /data-settings-signout/);
+  assert.match(html, /data-signout-confirm/);
 });
 
 test('signed-out and privacy states remain readable on the light workspace', async () => {

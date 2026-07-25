@@ -74,7 +74,7 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(component, /Full name/);
   assert.match(component, /Current website URL/);
   assert.match(component, /Reference files/);
-  assert.match(component, /Review and payment/);
+  assert.match(component, /Review your order/);
   assert.match(service, /localStorage/);
   assert.match(service, /data-checkout/);
   assert.match(service, /reportValidity/);

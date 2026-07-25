@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(path, 'utf8');
 
-test('the five-step order wizard keeps its black UI with explicit high-contrast text', async () => {
+test('the four-step order wizard keeps its black UI with explicit high-contrast text', async () => {
   const [main, css, layout, component, service] = await Promise.all([
     read('src/main.js'),
     read('src/styles/order-wizard-dark-contrast.css'),
@@ -22,7 +22,7 @@ test('the five-step order wizard keeps its black UI with explicit high-contrast 
   assert.match(component, /data-order-panel="1"/);
   assert.match(component, /data-order-panel="2"/);
   assert.match(component, /data-order-panel="3"/);
-  assert.match(component, /data-order-panel="4"/);
+  assert.doesNotMatch(component, /data-order-panel="4"/);
   assert.match(component, /plan\.features\.map\(\(feature\) =>/);
   assert.match(component, /class="order-plan__perks"/);
   assert.match(component, /class="order-plan__perk"/);
@@ -56,7 +56,7 @@ test('the five-step order wizard keeps its black UI with explicit high-contrast 
   assert.match(css, /\.renaissance-home \.order-fields :is\(input, textarea, select\)/);
   assert.match(css, /background:\s*#fbf5ea/);
   assert.match(css, /\.renaissance-home \.order-summary\s*\{/);
-  assert.match(css, /\.renaissance-home \.order-payment\s*\{/);
+  assert.match(css, /\.renaissance-home \.order-review\s*\{/);
   assert.match(css, /\.renaissance-home \.order-wizard__actions\s*\{/);
   assert.match(css, /@media \(max-width: 760px\)/);
   assert.match(css, /@media \(forced-colors: active\)/);
