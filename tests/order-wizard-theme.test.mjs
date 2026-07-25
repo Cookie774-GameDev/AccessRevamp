@@ -44,6 +44,9 @@ test('the five-step order wizard keeps its black UI with explicit high-contrast 
   assert.match(css, /\.renaissance-home \.order-wizard__heading h3\s*\{/);
   assert.match(css, /color:\s*#fff/);
   assert.match(css, /\.renaissance-home \.order-plan b\s*\{/);
+  assert.match(css, /\.renaissance-home \.order-plan\[data-order-plan="complete_revamp"\] b[\s\S]*color:\s*#f2bd58/);
+  assert.match(css, /\.renaissance-home \.order-wizard__heading h3[\s\S]*font-size:\s*clamp\(1\.75rem,\s*3vw,\s*3rem\)/);
+  assert.match(css, /\.renaissance-home \.order-question-plan[\s\S]*border-radius/);
   assert.match(css, /\.renaissance-home \.order-plan strong\s*\{/);
   assert.match(css, /\.renaissance-home \.order-plan small\s*\{/);
   assert.match(css, /\.renaissance-home \.order-plan__perks\s*\{/);

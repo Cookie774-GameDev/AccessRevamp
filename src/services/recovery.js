@@ -301,6 +301,8 @@ export function setupRecoveryForm(navigate) {
     requestSubmit.disabled = true;
   } else {
     const params = new URLSearchParams(location.search);
+    const requestedEmail = String(params.get('email') || '').trim().toLowerCase();
+    if (requestedEmail && requestEmail) requestEmail.value = requestedEmail;
     const linkRecovery = params.get('recovery') === 'link' || new URLSearchParams(location.hash.replace(/^#/, '')).get('type') === 'recovery';
     if (linkRecovery) {
       handleRecoveryLink();

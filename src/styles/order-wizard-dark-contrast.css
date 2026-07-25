@@ -92,6 +92,8 @@
 .renaissance-home .order-wizard__heading h3 {
   color: #fff;
   font-weight: 650;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+  line-height: 1.04;
   text-shadow: 0 1px 0 rgba(0, 0, 0, .72);
 }
 
@@ -169,6 +171,15 @@
   color: #fff;
   font-weight: 700;
   text-shadow: 0 1px 0 rgba(0, 0, 0, .75);
+}
+
+.renaissance-home .order-plan[data-order-plan="complete_revamp"] b {
+  color: #f2bd58;
+}
+
+.renaissance-home .order-plan[data-order-plan="complete_revamp"]:hover b,
+.renaissance-home .order-plan[data-order-plan="complete_revamp"] input:checked + span b {
+  color: #ffd77f;
 }
 
 .renaissance-home .order-plan strong {
@@ -264,6 +275,23 @@
   background: var(--order-card);
   color: var(--order-text);
   box-shadow: 0 14px 34px rgba(0, 0, 0, .24);
+}
+
+.renaissance-home .order-question-plan {
+  gap: clamp(1rem, 3vw, 2rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: .8rem;
+}
+
+.renaissance-home .order-question-plan > div {
+  min-width: 0;
+}
+
+.renaissance-home .order-question-plan ul {
+  display: grid;
+  gap: .45rem;
+  margin: .6rem 0 0;
+  padding-left: 1.15rem;
 }
 
 .renaissance-home .order-summary dl,

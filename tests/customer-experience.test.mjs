@@ -16,23 +16,24 @@ test('contact preserves the strict public payload and accessible request states'
 });
 
 test('checkout saves one stable request and uses only a server-created Stripe URL', async () => {
-  const [checkout, wizard] = await Promise.all([
+  const [checkout, persistedCheckout, wizard] = await Promise.all([
     read('src/services/checkout.js'),
+    read('src/services/persisted-checkout.js'),
     read('src/services/order-wizard.js'),
   ]);
-  assert.match(checkout, /\/api\/order-draft/);
-  assert.match(checkout, /\/api\/create-checkout/);
+  assert.match(persistedCheckout, /\/api\/order-draft/);
+  assert.match(persistedCheckout, /\/api\/create-checkout/);
   assert.match(wizard, /crypto\.randomUUID\(\)/);
   assert.match(wizard, /requestId/);
   assert.match(checkout, /form\.dataset\.orderRequestId/);
   assert.ok(
-    checkout.indexOf('fetch(ORDER_DRAFT_ENDPOINT') < checkout.indexOf('fetch(CHECKOUT_ENDPOINT'),
+    persistedCheckout.indexOf('fetchImpl(ORDER_DRAFT_ENDPOINT') < persistedCheckout.indexOf('fetchImpl(CHECKOUT_ENDPOINT'),
     'the project request must be saved before Checkout is created',
   );
-  assert.match(checkout, /checkout\.stripe\.com/);
-  assert.doesNotMatch(checkout, /book\.stripe\.com|payment[_-]?link/i);
+  assert.match(persistedCheckout, /checkout\.stripe\.com/);
+  assert.doesNotMatch(`${checkout}\n${persistedCheckout}`, /book\.stripe\.com|payment[_-]?link/i);
   assert.match(checkout, /aria-busy/);
-  assert.match(checkout, /Checkout unavailable|Secure checkout is paused/);
+  assert.match(`${checkout}\n${persistedCheckout}`, /Checkout unavailable|Secure checkout is paused/);
   assert.match(checkout, /setAttribute\('disabled'/);
   assert.match(checkout, /removeEventListener/);
 });

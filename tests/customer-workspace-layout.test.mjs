@@ -34,8 +34,43 @@ test('the focused project keeps questions progress designs requests and delivery
   assert.match(client, /Files and website downloads/);
 });
 
-test('signed-out and privacy states remain readable on the dark workspace', async () => {
+test('the authenticated workspace renders compact application and project tabs', async () => {
+  const workspace = await import('../src/services/customer-workspace-renderer.js').catch(() => ({}));
+  assert.equal(typeof workspace.renderWorkspace, 'function');
+  const html = workspace.renderWorkspace({
+    profile: { full_name: 'Customer Name', email: 'customer@example.com' },
+    projects: [{
+      id: 'project-1',
+      name: 'Store redesign',
+      plan_key: 'complete_revamp',
+      status: 'active',
+      delivery_status: 'pending',
+      progress_percent: 25,
+      updates: [],
+      feedback: [],
+      design_options: [],
+      artifacts: [],
+      deliveries: [],
+    }],
+    orders: [],
+    refundRequests: [],
+    signedUrlExpiresIn: 900,
+  }, 'project-1', 'projects');
+
+  for (const tab of ['overview', 'projects', 'settings']) {
+    assert.match(html, new RegExp(`data-workspace-tab="${tab}"`));
+  }
+  for (const tab of ['updates', 'progress', 'brief', 'designs', 'requests', 'files']) {
+    assert.match(html, new RegExp(`data-project-tab="${tab}"`));
+  }
+  assert.match(html, /Change password with a verification code/);
+  assert.match(html, /\/forgot-password\?email=customer%40example\.com/);
+});
+
+test('signed-out and privacy states remain readable on the light workspace', async () => {
   const css = await readFile('src/styles/customer-hub.css', 'utf8');
-  assert.match(css, /\.customer-hub-page \.loading-card[\s\S]*color:\s*#f7f3ea/);
-  assert.match(css, /\.customer-hub-security[\s\S]*color:\s*#e2e6ec/);
+  assert.match(css, /\.customer-hub-page\s*\{[\s\S]*background:\s*#f6f0e4/);
+  assert.match(css, /\.customer-dashboard-tabs/);
+  assert.match(css, /\.customer-project-tabs/);
+  assert.match(css, /@media \(max-width: 700px\)[\s\S]*overflow-x:\s*auto/);
 });
