@@ -44,3 +44,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: 0aaf188d9d8184defe86953e9191d3aa
           command: deploy --config dist/server/wrangler.json --name accessrevamp --keep-vars
+      - name: Verify deployed production authentication
+        env:
+          NETLIFY_AUTH_TARGET: "https://accessrevamp.com"
+          REQUIRE_SERVER_AUTH: "true"
+        run: npm run verify:production-auth

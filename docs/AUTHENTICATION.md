@@ -7,7 +7,7 @@ AccessRevamp uses Supabase email/password accounts, but a password-created sessi
 ### Signup
 
 1. The customer creates an account with a name, email address, and strong password.
-2. Supabase creates an unconfirmed account and sends an official AccessRevamp email containing a six-digit code.
+2. Supabase creates an unconfirmed account and sends an official AccessRevamp email containing a six-to-eight-digit code.
 3. The customer copies that code into the code box on `/signup`.
 4. `supabase.auth.verifyOtp({ email, token, type: 'email' })` confirms ownership of the inbox.
 5. The temporary confirmation session is signed out. Confirmation alone does not open customer records.
@@ -18,12 +18,14 @@ AccessRevamp uses Supabase email/password accounts, but a password-created sessi
 1. A server-only Netlify Function checks the correct password after database-backed IP and account rate limits are consumed.
 2. The password-created Supabase session is revoked and is never returned to browser JavaScript.
 3. A short-lived random challenge is stored only as a SHA-256 hash. Its original value is bound to the browser in an `HttpOnly`, `SameSite=Strict` cookie.
-4. Supabase sends a fresh official AccessRevamp email containing a six-digit code.
+4. Supabase sends a fresh official AccessRevamp email containing a six-to-eight-digit code.
 5. The customer copies the code into `/login`; Supabase verifies the code and creates a confirmed email session.
 6. The completion Function matches that session to the password challenge and records the exact session in `accessrevamp_verified_sessions`.
 7. Customer APIs and restrictive RLS policies reject any session that did not complete both the password and code steps.
 
 There is no phone or SMS authentication flow. The signup and sign-in templates contain `{{ .Token }}` and deliberately contain no `{{ .ConfirmationURL }}`, so account verification does not depend on clicking an email link or following a redirect.
+
+The browser allows only one in-flight request for the same email ceremony, and the resend action has a visible 60-second countdown. Server responses preserve Supabase's exact retry window through `Retry-After` and a bounded JSON value. Custom SMTP raises the project-wide signup/recovery capacity from the built-in two-email default to 30 emails per hour; per-address cooldowns and AccessRevamp's database-backed IP/account limits still apply.
 
 ## Required Netlify environment categories
 
@@ -85,7 +87,8 @@ The script:
 - requires signup confirmation (`mailer_autoconfirm=false`);
 - sets the hosted Auth Site URL to the production AccessRevamp domain rather than localhost;
 - limits email OTP validity to ten minutes;
-- installs polished confirmation and sign-in templates that display a six-digit code and no verification link;
+- configures 30 signup/recovery emails and 30 sign-in OTP requests per hour for the verified custom SMTP transport;
+- installs polished confirmation and sign-in templates that display a six-to-eight-digit code and no verification link;
 - installs the polished recovery template;
 - prints only a safe configuration summary and never prints the access token or SMTP password.
 
@@ -124,10 +127,10 @@ Operator workspace: `/operator`
 
 ## Verification checklist
 
-- Signup returns no session and opens the six-digit confirmation-code panel.
+- Signup returns no session and opens the six-to-eight-digit confirmation-code panel.
 - The signup code confirms the email and then returns the customer to the password sign-in screen.
 - Wrong passwords produce a generic error and no challenge row. Per-account/IP and per-IP database rate limits apply before password validation.
-- Correct passwords generate a short-lived hashed challenge, set an HttpOnly challenge cookie, and send a six-digit email code.
+- Correct passwords generate a short-lived hashed challenge, set an HttpOnly challenge cookie, and send a six-to-eight-digit email code.
 - The browser stores only non-secret pending-flow metadata; the password challenge is unavailable to JavaScript.
 - A Supabase email-code session without the matching password challenge receives HTTP 403 from customer APIs.
 - A completed challenge can be used once and then appears in `accessrevamp_verified_sessions`.

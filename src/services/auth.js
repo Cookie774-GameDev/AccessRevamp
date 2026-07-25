@@ -1,4 +1,9 @@
 import { getSupabase } from '../lib/supabase.js';
+import {
+  authRequestKey,
+  cooldownSeconds,
+  parseRetryAfterSeconds,
+} from './auth-guards.js';
 import { isEmailOtp, normalizeEmailOtp } from './otp.js';
 
 const SIGNUP_START_ENDPOINT = '/api/auth-signup-start';
@@ -7,6 +12,8 @@ const LOGIN_START_ENDPOINT = '/api/auth-login-start';
 const LOGIN_COMPLETE_ENDPOINT = '/api/auth-login-complete';
 const PENDING_STORAGE_KEY = 'accessrevamp.auth.pending-code.v2';
 const LOGIN_HINT_KEY = 'accessrevamp.auth.login-email.v1';
+const EMAIL_REQUEST_COOLDOWN_SECONDS = 60;
+const activeAuthRequests = new Set();
 const PASSWORD_RULES = Object.freeze({
   length: (value) => value.length >= 12,
   mix: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value),
@@ -81,6 +88,21 @@ async function readJson(response) {
   return response.json().catch(() => ({}));
 }
 
+class AuthApiError extends Error {
+  constructor(response, result, fallback) {
+    super(result.error || fallback);
+    this.name = 'AuthApiError';
+    this.status = response.status;
+    this.code = result.code || '';
+    this.retryAfter = response.status === 429
+      ? parseRetryAfterSeconds({
+        retryAfter: result.retryAfter || response.headers.get('retry-after'),
+        error: result.error,
+      })
+      : 0;
+  }
+}
+
 async function waitForSession(supabase, timeoutMs = 9000) {
   const current = await supabase.auth.getSession();
   if (current.error) throw current.error;
@@ -133,6 +155,7 @@ export function setupAuthForm(navigate) {
   let busy = false;
   let codeBusy = false;
   let pending = null;
+  let cooldownTimer = null;
 
   const show = (panel) => {
     form.hidden = panel !== 'form';
@@ -154,6 +177,28 @@ export function setupAuthForm(navigate) {
       codeSubmit.toggleAttribute('aria-busy', next);
     }
     if (label && codeSubmitLabel) codeSubmitLabel.textContent = label;
+  };
+
+  const stopCooldownTimer = () => {
+    if (cooldownTimer) clearInterval(cooldownTimer);
+    cooldownTimer = null;
+  };
+
+  const renderResendCooldown = () => {
+    if (!resend || !pending || pending.kind !== 'signup') return;
+    const seconds = cooldownSeconds(pending.resendAvailableAt || 0);
+    resend.disabled = codeBusy || seconds > 0;
+    resend.textContent = seconds > 0 ? `Send again in ${seconds}s` : 'Send a new email';
+    if (seconds === 0) stopCooldownTimer();
+  };
+
+  const startResendCooldown = (seconds = EMAIL_REQUEST_COOLDOWN_SECONDS) => {
+    if (!pending || pending.kind !== 'signup') return;
+    pending.resendAvailableAt = Date.now() + (Math.max(1, Number(seconds) || 60) * 1000);
+    savePending(pending);
+    stopCooldownTimer();
+    renderResendCooldown();
+    cooldownTimer = setInterval(renderResendCooldown, 1000);
   };
 
   const updatePasswordRules = () => {
@@ -187,7 +232,7 @@ export function setupAuthForm(navigate) {
     if (response.status === 409 && result.code === 'ACCOUNT_EXISTS') {
       return { accountExists: true, emailHint: result.emailHint };
     }
-    if (!response.ok) throw new Error(result.error || 'The account could not be created.');
+    if (!response.ok) throw new AuthApiError(response, result, 'The account could not be created.');
     return result;
   };
 
@@ -226,7 +271,7 @@ export function setupAuthForm(navigate) {
     }
     const result = await readJson(response);
     if (response.status === 409) return result;
-    if (!response.ok) throw new Error(result.error || 'A new email could not be sent yet.');
+    if (!response.ok) throw new AuthApiError(response, result, 'A new email could not be sent yet.');
     return result;
   };
 
@@ -238,7 +283,7 @@ export function setupAuthForm(navigate) {
       body: JSON.stringify({ email, password }),
     });
     const result = await readJson(response);
-    if (!response.ok) throw new Error(result.error || 'Secure sign-in could not be started.');
+    if (!response.ok) throw new AuthApiError(response, result, 'Secure sign-in could not be started.');
     return result;
   };
 
@@ -267,6 +312,17 @@ export function setupAuthForm(navigate) {
     codeForm?.reset();
     setStatus(codeStatus, 'Open the newest AccessRevamp email. Enter its complete verification code, or use the secure verification button.');
     show('code');
+    if (flow.kind === 'signup') {
+      if (!flow.resendAvailableAt) {
+        flow.resendAvailableAt = Date.now() + (EMAIL_REQUEST_COOLDOWN_SECONDS * 1000);
+      }
+      savePending(flow);
+      stopCooldownTimer();
+      renderResendCooldown();
+      cooldownTimer = setInterval(renderResendCooldown, 1000);
+    } else {
+      stopCooldownTimer();
+    }
     queueMicrotask(() => codeInput?.focus());
   };
 
@@ -324,6 +380,12 @@ export function setupAuthForm(navigate) {
     const data = new FormData(form);
     const email = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
+    const requestKey = authRequestKey(mode, email);
+    if (activeAuthRequests.has(requestKey)) {
+      setStatus(status, 'This request is already being processed. Please keep this page open.', 'error');
+      return;
+    }
+    activeAuthRequests.add(requestKey);
     setBusy(true, signup ? 'Creating protected account…' : 'Checking password…');
     setStatus(status, signup ? 'Creating the account and requesting your verification email…' : 'Validating your password securely…');
 
@@ -361,8 +423,12 @@ export function setupAuthForm(navigate) {
         expiresAt: Date.now() + (Number(result.expiresIn || 600) * 1000),
       });
     } catch (error) {
-      setStatus(status, error.message || 'Authentication failed.', 'error');
+      const suffix = error.status === 401
+        ? ' Check the original password for this account, or use Forgot password.'
+        : '';
+      setStatus(status, `${error.message || 'Authentication failed.'}${suffix}`, 'error');
     } finally {
+      activeAuthRequests.delete(requestKey);
       setBusy(false, signup ? 'Create account & send email' : 'Check password & send email');
     }
   };
@@ -428,7 +494,14 @@ export function setupAuthForm(navigate) {
 
   const onResend = async () => {
     if (!pending || pending.kind !== 'signup' || codeBusy || !supabase) return;
+    const remaining = cooldownSeconds(pending.resendAvailableAt || 0);
+    if (remaining > 0) {
+      setStatus(codeStatus, `A verification email was already requested. Send again in ${remaining} seconds.`);
+      renderResendCooldown();
+      return;
+    }
     setCodeBusy(true);
+    renderResendCooldown();
     setStatus(codeStatus, 'Requesting a new verification email…');
     try {
       const result = await resendSignup(pending.email);
@@ -444,14 +517,16 @@ export function setupAuthForm(navigate) {
         return;
       }
       pending.expiresAt = Date.now() + (Number(result.expiresIn || 600) * 1000);
-      savePending(pending);
+      startResendCooldown();
       codeForm?.reset();
       setStatus(codeStatus, 'A new AccessRevamp email was requested. Check Inbox, Spam, and Promotions, and use only the newest message.', 'success');
       codeInput?.focus();
     } catch (error) {
+      if (error.retryAfter) startResendCooldown(error.retryAfter);
       setStatus(codeStatus, error.message || 'A new email could not be sent yet. Try again shortly.', 'error');
     } finally {
       setCodeBusy(false);
+      renderResendCooldown();
     }
   };
 
@@ -509,6 +584,7 @@ export function setupAuthForm(navigate) {
 
   return () => {
     disposed = true;
+    stopCooldownTimer();
     form.removeEventListener('submit', onSubmit);
     codeForm?.removeEventListener('submit', onCodeSubmit);
     codeInput?.removeEventListener('input', onCodeInput);

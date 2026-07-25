@@ -118,6 +118,37 @@ test('resend refuses to claim success after the account is already confirmed', a
   });
 });
 
+test('signup email cooldown returns an exact retry window without claiming delivery', async () => {
+  await withAuthEnvironment(async () => {
+    const handler = createAuthSignupStartHandler({
+      getAdmin: () => adminForState('unconfirmed'),
+      createPublicClient: () => ({
+        auth: {
+          async resend() {
+            return {
+              data: null,
+              error: {
+                status: 429,
+                message: 'For security purposes, you can only request this after 37 seconds.',
+              },
+            };
+          },
+          async signOut() {},
+        },
+      }),
+    });
+    const response = await handler(request('/api/auth-signup-start', {
+      fullName: 'Customer Name', email: EMAIL, password: PASSWORD,
+    }));
+    const body = await response.json();
+    assert.equal(response.status, 429);
+    assert.equal(response.headers.get('retry-after'), '37');
+    assert.equal(body.code, 'EMAIL_COOLDOWN');
+    assert.equal(body.retryAfter, 37);
+    assert.match(body.error, /37 seconds/);
+  });
+});
+
 test('signup state lookup is server-only and indexed through auth users', async () => {
   const migration = await readFile('supabase/migrations/20260723010000_auth_signup_email_state.sql', 'utf8');
   assert.match(migration, /accessrevamp_auth_email_state/);

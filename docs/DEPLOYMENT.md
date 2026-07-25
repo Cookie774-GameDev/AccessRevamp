@@ -40,6 +40,12 @@ Stripe rollback disables the new server mapping/checkout path and expires open r
 
 Rollback triggers include cross-user access, wrong amount/credit, payment reconciliation drift, unavailable primary journeys, critical security/header regression, data loss/corruption, inaccessible checkout/account flows, or monitoring blind spots. The release owner records decision time, scope, action, validation, and follow-up.
 
+## Session-safe Cloudflare releases
+
+Website releases use the GitHub production gate followed by one immutable Cloudflare Worker version. Existing Supabase sessions remain valid because ordinary releases do not rotate JWT signing keys, change the Auth audience, delete `auth.sessions`, or clear browser storage. Database changes use expand-then-contract compatibility: deploy additive schema first, deploy code that accepts both shapes, backfill and verify, and remove old fields only in a later reviewed release.
+
+Before pushing `main`, run `npm run check`, `npm run security:local`, `npm audit --omit=dev --audit-level=high`, and `npm run auth:branding:verify`. After deployment, smoke-test public HTML, `/signup`, `/login`, the unauthenticated customer API boundary, and one authenticated customer workspace without changing credentials. Roll back by selecting the prior Cloudflare version; never “roll back” by rotating Auth keys or deleting customer sessions.
+
 ## Delivery states
 
 ### IMPLEMENTED

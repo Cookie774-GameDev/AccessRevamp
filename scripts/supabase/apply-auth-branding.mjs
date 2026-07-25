@@ -240,6 +240,8 @@ const basePayload = {
   mailer_secure_email_change_enabled: true,
   mailer_autoconfirm: false,
   mailer_otp_exp: EMAIL_OTP_SECONDS,
+  rate_limit_email_sent: 30,
+  rate_limit_otp: 30,
   site_url: siteUrl,
   uri_allow_list: redirectAllowList(siteUrl),
 };
@@ -265,6 +267,8 @@ if (process.argv.includes('--verify')) {
     emailProviderEnabled: current.external_email_enabled === true,
     emailConfirmationRequired: current.mailer_autoconfirm === false,
     emailOtpExpiresInTenMinutes: Number(current.mailer_otp_exp) === EMAIL_OTP_SECONDS,
+    emailSendCapacitySupportsProduction: Number(current.rate_limit_email_sent) >= 30,
+    otpSendCapacitySupportsProduction: Number(current.rate_limit_otp) >= 30,
     siteUrlMatches: String(current.site_url || '').replace(/\/$/, '') === siteUrl,
     productionSiteIsNotLocalhost: !/localhost|127\.0\.0\.1/i.test(String(current.site_url || '')),
     productionRedirectsAllowed: productionOrigins(siteUrl).every((origin) => (

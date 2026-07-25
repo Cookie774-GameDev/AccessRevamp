@@ -55,7 +55,20 @@ function confirmationRedirect(request) {
 
 function emailFailure(error, fallback) {
   const status = Number(error?.status || error?.code || 0);
-  if (status === 429) return new HttpError(429, 'Please wait before requesting another email.');
+  if (status === 429) {
+    const retryAfter = Math.max(
+      1,
+      Math.min(3600, Number(String(error?.message || '').match(/after\s+(\d+)\s+seconds?/i)?.[1]) || 60),
+    );
+    return new HttpError(
+      429,
+      `A verification email was already requested. Try again in ${retryAfter} seconds.`,
+      {
+        headers: { 'retry-after': String(retryAfter) },
+        details: { code: 'EMAIL_COOLDOWN', retryAfter },
+      },
+    );
+  }
   return new HttpError(503, fallback);
 }
 
