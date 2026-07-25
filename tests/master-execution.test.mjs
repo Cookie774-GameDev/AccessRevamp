@@ -5,13 +5,15 @@ import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('homepage includes the supplied example gallery and all paired media', async () => {
-  const [home, media] = await Promise.all([
+  const [home, media, showcaseMarkup] = await Promise.all([
     read('src/pages/home.js'),
     read('src/data/showcase-media.js'),
+    read('src/components/showcase-chapter.js'),
   ]);
   assert.match(home, />Example Websites</);
   assert.match(home, /Normal Websites vs\. Cinematic Scroll Experiences/);
-  assert.match(home, /data-showcase-chapter/);
+  assert.match(home, /showcasePairs\.map\(showcaseChapter\)/);
+  assert.match(showcaseMarkup, /data-showcase-chapter/);
   assert.match(home, /data-customer-count/);
   assert.match(media, /local-brew-house\.webp/);
   assert.match(media, /blueline-plumbing\.webp/);

@@ -5,6 +5,7 @@ import { shell } from '../components/shell.js';
 import { picture, visualAssets } from '../data/visual-assets.js';
 import { exampleWebsites, showcasePairs } from '../data/showcase-media.js';
 import { orderWizard } from '../components/order-wizard.js';
+import { showcaseChapter } from '../components/showcase-chapter.js';
 
 // Interaction references remain credited in their data module; external studies are not by AccessRevamp.
 
@@ -37,10 +38,6 @@ const transformationPanel = ([from, to, problem, change, before, after], index) 
 const faq = (question, answer) => `<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`;
 
 const exampleWebsite = (example) => `<figure class="example-website" data-reveal><img src="${example.src}" alt="${example.alt}" width="${example.width}" height="${example.height}" loading="lazy" decoding="async" draggable="false"></figure>`;
-
-const showcasePanel = (kind, src, poster, name) => `<figure class="showcase-panel"><figcaption>${kind === 'normal' ? 'Normal Website' : 'Cinematic Scroll Website'}</figcaption><div class="showcase-panel__media"><video data-src="${src}" poster="${poster}" muted playsinline preload="none" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen" draggable="false" aria-label="${name} ${kind === 'normal' ? 'normal website' : 'cinematic scroll website'} demonstration"></video><span class="showcase-panel__fallback">Media unavailable. The poster frame preserves the visual comparison.</span></div></figure>`;
-
-const showcaseChapter = (pair, index) => `<article class="showcase-chapter" data-showcase-chapter data-progress="0"><div class="showcase-chapter__sticky" data-showcase-stage tabindex="0" aria-label="Scroll or drag to compare ${pair.name}"><div class="showcase-chapter__head"><span>0${index + 1}</span><h3>${pair.name}</h3><p>Original working demo — not a client engagement.</p></div><div class="showcase-pair">${showcasePanel('normal', pair.normal, pair.normalPoster, pair.name)}${showcasePanel('cinematic', pair.cinematic, pair.cinematicPoster, pair.name)}</div><div class="showcase-controls"><span>Scroll or drag to explore</span><label><span class="visually-hidden">${pair.name} comparison progress</span><input type="range" min="0" max="100" value="0" step="1" data-showcase-range><output data-showcase-output>0%</output></label></div></div></article>`;
 
 export function homePage() {
   const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');

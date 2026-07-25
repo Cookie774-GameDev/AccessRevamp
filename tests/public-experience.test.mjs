@@ -37,12 +37,20 @@ test('the homepage keeps the requested production story without the three remove
   }
 });
 
-test('the portfolio contains seven clearly disclosed original fictional concepts', async () => {
-  const portfolio = await read('src/data/portfolio.js');
-  for (const title of ['Northline Goods', 'Morrow Studio', 'Fable & Finch', 'Sip / Savor', 'Move Well', 'Form / Function', 'Aether One']) {
-    assert.match(portfolio, new RegExp(title.replace(/[&/]/g, '\\$&')));
+test('the portfolio contains the supplied films and the three homepage website comparisons', async () => {
+  const [portfolio, work, media] = await Promise.all([
+    read('src/data/portfolio.js'),
+    read('src/pages/work.js'),
+    read('src/data/showcase-media.js'),
+  ]);
+  for (const title of ['Japan Through Time', 'The Moonfold Ronin']) {
+    assert.match(portfolio, new RegExp(escapeRegExp(title)));
   }
-  assert.equal((portfolio.match(/fictionalConcept:\s*true/g) || []).length, 7);
+  for (const title of ['Verdant Edge Lawn Care', 'Northframe Studio', 'Olympus Academy']) {
+    assert.match(media, new RegExp(escapeRegExp(title)));
+  }
+  assert.match(work, /showcasePairs\.map\(showcaseChapter\)/);
+  assert.doesNotMatch(portfolio, /fictionalConcept/);
 });
 
 test('public routes are explicit and cinematic behavior has lifecycle cleanup', async () => {

@@ -1,27 +1,49 @@
-import { findPortfolioItem, portfolioItems } from '../data/portfolio.js';
-import { workCard } from '../components/cards.js';
-import { escapeHtml, icon } from '../components/icons.js';
+import { icon } from '../components/icons.js';
+import { showcaseChapter } from '../components/showcase-chapter.js';
 import { shell } from '../components/shell.js';
+import { portfolioItems } from '../data/portfolio.js';
+import { showcasePairs } from '../data/showcase-media.js';
+
+const filmCard = (item) => `<article class="portfolio-film-card portfolio-film-card--${item.slug}">
+  <a class="portfolio-film-card__media" href="${item.href}" aria-label="Open ${item.title} scroll experience">
+    <img src="${item.poster}" alt="${item.title} opening scene" width="1920" height="1080" loading="eager" decoding="async">
+    <span class="portfolio-film-card__veil" aria-hidden="true"></span>
+    <span class="portfolio-film-card__index">${item.index}</span>
+    <span class="portfolio-film-card__open">Open scroll experience ${icon('arrow')}</span>
+  </a>
+  <header class="portfolio-film-card__header">
+    <div><span class="eyebrow">${item.eyebrow}</span><h2>${item.title}</h2></div>
+    <p>${item.summary}</p>
+  </header>
+  <ul aria-label="${item.title} features">${item.meta.map((entry) => `<li>${entry}</li>`).join('')}</ul>
+</article>`;
 
 export function workPage() {
-  return shell(`<section class="page-hero portfolio-hero"><div class="container-wide page-hero__split"><div><span class="eyebrow">Original concept portfolio</span><h1>Work with its own point of view.</h1></div><div class="page-hero__aside"><p class="lede">Original concepts created to show range without pretending to be commissioned work.</p><div class="work-disclosure work-disclosure--hero"><strong>Fictional by design</strong><span>These demonstrations are not client endorsements or claims of measured business outcomes.</span></div></div></div></section><section class="section portfolio-concepts"><div class="container-wide"><div class="section-head"><div><span class="eyebrow">Original concepts</span><h2>Different problems deserve different visual systems.</h2></div></div><div class="filter-row" aria-label="Portfolio categories"><button class="filter-chip" type="button" data-filter="all" aria-pressed="true">All concepts</button><button class="filter-chip" type="button" data-filter="homepage" aria-pressed="false">Homepages</button><button class="filter-chip" type="button" data-filter="campaign" aria-pressed="false">Campaigns</button><button class="filter-chip" type="button" data-filter="cinematic" aria-pressed="false">Cinematic</button></div><div class="work-grid" data-work-grid>${portfolioItems.map((item) => `<div data-work-kind="${item.kind}">${workCard(item)}</div>`).join('')}</div><div class="work-disclosure"><strong>Fictional by design</strong><span>These are original portfolio demonstrations, not client endorsements, unsolicited prospect redesigns, or claims of measured business outcomes.</span></div></div></section>`, { pathname: '/portfolio' });
+  return shell(`
+    <section class="working-portfolio-hero">
+      <div class="container-wide working-portfolio-hero__grid">
+        <div><span class="eyebrow">Working experience portfolio</span><h1>Websites you can actually enter.</h1></div>
+        <div><p class="lede">Five original demonstrations built to move with the visitor—not static mockups and not unrelated filler.</p><div class="work-disclosure"><strong>Original demonstrations</strong><span>These are AccessRevamp-built portfolio experiences, not client endorsements or measured outcome claims.</span></div></div>
+      </div>
+    </section>
+    <section class="section working-portfolio-films" aria-labelledby="scroll-films-title">
+      <div class="container-wide">
+        <div class="chapter-head"><span class="chapter-index">Full-screen stories</span><div><h2 id="scroll-films-title">Cinematic scroll films</h2><p>Open either experience, then scroll down to advance or back up to reverse the film.</p></div></div>
+        <div class="portfolio-film-grid">${portfolioItems.map(filmCard).join('')}</div>
+      </div>
+    </section>
+    <section class="showcase-section working-portfolio-comparisons" aria-labelledby="portfolio-comparisons-title">
+      <div class="container-wide showcase-intro"><span class="eyebrow">Interactive website comparisons</span><h2 id="portfolio-comparisons-title">Three brands. Two production depths each.</h2><p>Each website pair is live below. Scroll, drag, or use the range control to compare the standard and cinematic directions.</p></div>
+      ${showcasePairs.map(showcaseChapter).join('')}
+    </section>
+    <section class="working-portfolio-footer"><div class="container-wide"><span class="eyebrow">Build your own direction</span><h2>Start with one real goal.</h2><a class="button button--sun" href="/pricing" data-nav>View AccessRevamp plans ${icon('arrow')}</a></div></section>
+  `, { pathname: '/portfolio', pageClass: 'working-portfolio-page' });
 }
 
 export function setupWorkFilters() {
-  const buttons = [...document.querySelectorAll('[data-filter]')];
-  const items = [...document.querySelectorAll('[data-work-kind]')];
-  if (!buttons.length) return undefined;
-  const onClick = (event) => {
-    const selected = event.currentTarget.dataset.filter;
-    buttons.forEach((button) => button.setAttribute('aria-pressed', String(button === event.currentTarget)));
-    items.forEach((item) => { item.hidden = selected !== 'all' && item.dataset.workKind !== selected; });
-  };
-  buttons.forEach((button) => button.addEventListener('click', onClick));
-  return () => buttons.forEach((button) => button.removeEventListener('click', onClick));
+  return undefined;
 }
 
-export function workDetailPage({ slug }) {
-  const item = findPortfolioItem(slug);
-  if (!item) return null;
-  return shell(`<section class="page-hero"><div class="container-wide"><a class="text-arrow" href="/work" data-nav>← All work</a><span class="eyebrow">${escapeHtml(item.category)}</span><h1>${escapeHtml(item.title)}</h1><p class="lede">${escapeHtml(item.summary)}</p></div></section><section class="project-hero"><div class="container-wide"><div class="work-card__art project-hero__art art-${item.slug}"><span class="art-word">${escapeHtml(item.artWord)}</span><span class="art-index">${escapeHtml(item.index)}</span></div><div class="project-intro"><dl class="project-facts"><div><dt>Type</dt><dd>${escapeHtml(item.deliverable)}</dd></div><div><dt>Palette</dt><dd>${escapeHtml(item.palette)}</dd></div><div><dt>Status</dt><dd>Original fictional concept</dd></div></dl><div class="project-copy"><span class="eyebrow">The design decision</span><h2>A concept shaped around the problem—not a preset style.</h2><h3>Challenge</h3><p>${escapeHtml(item.challenge)}</p><h3>Direction</h3><p>${escapeHtml(item.direction)}</p>${item.slug === 'aether-one' ? `<a class="button" href="/cinematic-scroll" data-nav>Open the scroll experience ${icon('arrow')}</a>` : `<a class="button" href="/pricing" data-nav>Build your direction ${icon('arrow')}</a>`}</div></div></div></section>`, { pathname: `/work/${slug}` });
+export function workDetailPage() {
+  return null;
 }

@@ -9,6 +9,7 @@ import './styles/image-led.css';
 import './styles/studio-redesign.css';
 import './styles/cinematic-renaissance.css';
 import './styles/project-approval.css';
+import './styles/working-portfolio.css';
 import './styles/order-wizard-dark-contrast.css';
 import './styles/mobile.css';
 
@@ -18,7 +19,7 @@ import { icon } from './components/icons.js';
 import { shell } from './components/shell.js';
 import { homePage } from './pages/home.js';
 import { setupHomeExperience } from './pages/home-interactions.js';
-import { workDetailPage, workPage, setupWorkFilters } from './pages/work.js';
+import { workDetailPage, workPage } from './pages/work.js';
 import { servicesPage } from './pages/services.js';
 import { pricingPage } from './pages/pricing.js';
 import { sampleReportPage } from './pages/sample-report.js';
@@ -50,6 +51,7 @@ import { setupProjectApproval } from './services/project-approval.js';
 import { setupOperator } from './services/operator.js';
 import { setupPricingContext } from './services/pricing-context.js';
 import { setupSessionNavigation } from './services/session-navigation.js';
+import { setupShowcaseComparisons } from './services/showcase-comparison.js';
 
 function normalizeAuthEmailReturn() {
   if (!location.hash) return;
@@ -183,7 +185,7 @@ function renderRoute({ pathname, pattern, params, view }) {
 
   const cleanups = [setupMenu(), setupSessionNavigation(router.navigate)];
   if (pathname === '/') cleanups.push(setupHomeExperience(app));
-  if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupWorkFilters());
+  if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupShowcaseComparisons(app));
   if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
   if (pathname === '/contact') cleanups.push(setupContactForm());
   if (pathname === '/free-snapshot') cleanups.push(setupFreeSnapshot());

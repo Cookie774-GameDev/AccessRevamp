@@ -31,8 +31,18 @@ test('touch lens accordion switches and closes on outside tap', async ({ browser
   await context.close();
 });
 
-test('Greenline remains within the 320 pixel viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 720 });
-  await page.goto('/portfolio/greenline-lawn-and-grounds', { waitUntil: 'networkidle' });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-});
+for (const [name, route, chapters] of [
+  ['Japan Through Time', '/portfolio/japan-through-time/index.html', 5],
+  ['The Moonfold Ronin', '/portfolio/moonfold-ronin/index.html', 20],
+]) {
+  test(`${name} scroll film works within the 320 pixel viewport`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.goto(route, { waitUntil: 'networkidle' });
+    await expect(page.locator('.accessrevamp-return')).toHaveAttribute('href', '/portfolio');
+    await expect(page.locator('.chapter')).toHaveCount(chapters);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+    const firstScene = await page.locator('#stage').getAttribute('data-scene');
+    await page.evaluate(() => window.scrollTo({ top: 2600, behavior: 'instant' }));
+    await expect.poll(() => page.locator('#stage').getAttribute('data-scene')).not.toBe(firstScene);
+  });
+}
