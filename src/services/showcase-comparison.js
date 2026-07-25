@@ -2,14 +2,14 @@ import '../styles/performance.css';
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const MEDIA_READY = 1;
-const PRESENTATION_FPS = 24;
+const PRESENTATION_FPS = 18;
 const PRESENTATION_INTERVAL_MS = 1000 / PRESENTATION_FPS;
-const SCROLL_SMOOTHING_MS = 90;
+const SCROLL_SMOOTHING_MS = 52;
 const PROGRESS_SNAP_EPSILON = 0.001;
 const MEDIA_SYNC_EPSILON_SECONDS = 1 / 48;
-const FRAME_SETTLE_TIMEOUT_MS = 160;
-const DESKTOP_SCROLL_DISTANCE_VH = 520;
-const MOBILE_SCROLL_DISTANCE_VH = 560;
+const FRAME_SETTLE_TIMEOUT_MS = 80;
+const DESKTOP_SCROLL_DISTANCE_VH = 360;
+const MOBILE_SCROLL_DISTANCE_VH = 400;
 const MOBILE_BREAKPOINT_PX = 700;
 const PRELOAD_RADIUS = 1;
 const PRELOAD_ROOT_MARGIN = '220% 0px';
@@ -265,6 +265,19 @@ export function setupShowcaseComparisons(root = document) {
     renderProgress(chapter, state, source);
   };
 
+  const commitPreviousBoundary = () => {
+    if (activeIndex < 0) return;
+    const chapter = chapters[activeIndex];
+    const state = chapterStates.get(chapter);
+    if (!state) return;
+    const atBoundary = state.targetProgress <= PROGRESS_SNAP_EPSILON
+      || state.targetProgress >= 1 - PROGRESS_SNAP_EPSILON;
+    if (!atBoundary) return;
+    state.renderedProgress = state.targetProgress;
+    state.lastPresentationTime = 0;
+    renderProgress(chapter, state);
+  };
+
   const readScrollTargets = (time = performance.now()) => {
     scrollFrame = 0;
     if (destroyed) return;
@@ -296,6 +309,7 @@ export function setupShowcaseComparisons(root = document) {
     // commits its exact 0% or 100% frame instead of abandoning an in-flight seek.
     const activeChanged = nextActiveIndex !== activeIndex;
     presentActiveChapter(time, activeChanged);
+    if (activeChanged) commitPreviousBoundary();
     setActiveIndex(nextActiveIndex);
     schedulePresentation();
   };

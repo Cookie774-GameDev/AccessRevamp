@@ -6,13 +6,15 @@ test('homepage presents four uncropped examples and three paired scrub chapters'
   await expect(page.getByRole('heading', { name: 'Example Websites' })).toBeVisible();
   await expect(page.locator('.example-website img')).toHaveCount(4);
   await expect(page.locator('[data-showcase-chapter]')).toHaveCount(3);
-  await expect(page.getByText('Normal Website', { exact: true })).toHaveCount(3);
-  await expect(page.getByText('Cinematic Scroll Website', { exact: true })).toHaveCount(3);
+  await expect(page.getByText('Normal website', { exact: true })).toHaveCount(3);
+  await expect(page.getByText('Cinematic scroll website', { exact: true })).toHaveCount(3);
   const fit = await page.locator('.example-website img').evaluateAll((images) => images.map((image) => getComputedStyle(image).objectFit));
   expect(fit).toEqual(['contain', 'contain', 'contain', 'contain']);
 
   const chapter = page.locator('[data-showcase-chapter]').first();
-  expect(await chapter.evaluate((element) => element.offsetHeight / innerHeight)).toBeGreaterThan(5);
+  const scrollDistance = await chapter.evaluate((element) => element.offsetHeight / innerHeight);
+  expect(scrollDistance).toBeGreaterThan(3.4);
+  expect(scrollDistance).toBeLessThan(3.8);
   await chapter.locator('video').evaluateAll((videos) => videos.forEach((video) => {
     Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
     Object.defineProperty(video, 'duration', { configurable: true, value: 8 });
@@ -30,6 +32,57 @@ test('homepage presents four uncropped examples and three paired scrub chapters'
   const mediaState = await chapter.locator('video').evaluateAll((videos) => videos.map((video) => ({ paused: video.paused, currentTime: video.currentTime })));
   expect(mediaState.every(({ paused }) => paused)).toBe(true);
   expect(Math.abs(mediaState[0].currentTime - mediaState[1].currentTime)).toBeLessThan(.01);
+
+  await page.evaluate(() => {
+    const chapterElement = document.querySelector('[data-showcase-chapter]');
+    const documentTop = chapterElement.getBoundingClientRect().top + scrollY;
+    const travel = chapterElement.offsetHeight - innerHeight;
+    scrollTo(0, documentTop + (travel * .88));
+  });
+  await expect.poll(async () => Number(await chapter.getAttribute('data-progress'))).toBeGreaterThan(.7);
+  await page.evaluate(() => {
+    const chapterElement = document.querySelector('[data-showcase-chapter]');
+    const documentTop = chapterElement.getBoundingClientRect().top + scrollY;
+    const travel = chapterElement.offsetHeight - innerHeight;
+    scrollTo(0, documentTop + (travel * .12));
+  });
+  await expect.poll(async () => Number(await chapter.getAttribute('data-progress')), { timeout: 2_000 }).toBeLessThan(.25);
+});
+
+test('hero navigation stays stable and premium plan treatments remain readable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route('**/*.mp4', (route) => route.abort('blockedbyclient'));
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+  const hero = page.locator('[data-reveal-hero]');
+  await hero.hover({ position: { x: 720, y: 450 } });
+  await expect(hero).toHaveClass(/is-revealing/);
+  await page.mouse.move(720, 120);
+  await expect(page.locator('.site-header')).toBeVisible();
+  await expect(hero).toHaveClass(/is-revealing/);
+
+  const form = page.locator('[data-order-wizard]');
+  await form.locator('[name="fullName"]').fill('Interaction Test');
+  await form.locator('[name="businessName"]').fill('AccessRevamp');
+  await form.locator('[name="websiteUrl"]').fill('example.com');
+  await form.locator('[name="email"]').fill('test@example.com');
+  await form.locator('[name="businessNiche"]').fill('Web services');
+  await form.locator('[data-order-next]').click();
+
+  const complete = form.locator('[data-order-plan="complete_revamp"]');
+  const cinematic = form.locator('[data-order-plan="cinematic_scroll"]');
+  await complete.locator('input').check();
+  expect(await complete.locator('> span').evaluate((element) => ({
+    animation: getComputedStyle(element).animationName,
+    background: getComputedStyle(element).backgroundImage,
+  }))).toMatchObject({ animation: 'order-plan-border-orbit' });
+  await cinematic.locator('input').check();
+  const cinematicStyle = await cinematic.locator('> span').evaluate((element) => ({
+    animation: getComputedStyle(element).animationName,
+    background: getComputedStyle(element).backgroundImage,
+  }));
+  expect(cinematicStyle.animation).toBe('order-plan-border-orbit');
+  expect(cinematicStyle.background).toContain('216, 117, 117');
 });
 
 test('mobile comparison stacks complete panels without horizontal overflow', async ({ page }) => {

@@ -4,21 +4,21 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(path, 'utf8');
 
-test('showcase scrolling keeps the approved physical scroll distance', async () => {
+test('showcase scrolling uses a responsive physical scroll distance', async () => {
   const source = await read('src/services/showcase-comparison.js');
-  assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*520/);
-  assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*560/);
+  assert.match(source, /DESKTOP_SCROLL_DISTANCE_VH\s*=\s*360/);
+  assert.match(source, /MOBILE_SCROLL_DISTANCE_VH\s*=\s*400/);
   assert.match(source, /chapter\.style\.height/);
   assert.match(source, /1svh/);
 });
 
 test('showcase progress eases toward fast scroll targets and coalesces in-flight video seeks', async () => {
   const source = await read('src/services/showcase-comparison.js');
-  assert.match(source, /PRESENTATION_FPS\s*=\s*24/);
-  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*90/);
+  assert.match(source, /PRESENTATION_FPS\s*=\s*18/);
+  assert.match(source, /SCROLL_SMOOTHING_MS\s*=\s*52/);
   assert.match(source, /PROGRESS_SNAP_EPSILON\s*=\s*0\.001/);
   assert.match(source, /MEDIA_SYNC_EPSILON_SECONDS\s*=\s*1\s*\/\s*48/);
-  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*160/);
+  assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*80/);
   assert.match(source, /targetProgress/);
   assert.match(source, /renderedProgress/);
   assert.match(source, /1\s*-\s*Math\.exp\(-elapsed\s*\/\s*smoothingWindow\)/);
@@ -27,6 +27,7 @@ test('showcase progress eases toward fast scroll targets and coalesces in-flight
   assert.match(source, /video\.currentTime\s*=\s*targetTime/);
   assert.match(source, /state\.pendingSeek/);
   assert.match(source, /presentActiveChapter\(time, activeChanged\)/);
+  assert.match(source, /commitPreviousBoundary/);
   assert.match(source, /showcaseActive/);
   assert.match(source, /removeAttribute\('src'\)/);
   const presentation = source.slice(
