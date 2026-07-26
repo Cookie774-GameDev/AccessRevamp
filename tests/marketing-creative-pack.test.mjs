@@ -15,7 +15,7 @@ test('Complete Website Revamp is the canonical $200 one-time implementation tier
   assert.match(catalog, /complete_revamp[\s\S]*listPriceCents:\s*20000\b/);
   assert.match(catalog, /complete_revamp[\s\S]*cadence:\s*'one-time'/);
   assert.match(catalog, /Up to five agreed standard pages/);
-  assert.match(cards, /plan\.features\.map/);
+  assert.match(cards, /planValueGroups\(plan\)/);
 });
 
 test('creative production is bounded and inexpensive by design', () => {

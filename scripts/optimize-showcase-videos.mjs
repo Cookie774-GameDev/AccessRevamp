@@ -27,7 +27,7 @@ const manifest = {
   maximumOutputBytes: maximumOutputBytes || null,
   encoder: {
     codec: 'h264',
-    maximumWidth: 1024,
+    maximumWidth: 720,
     framesPerSecond: 24,
     keyframeInterval: 2,
     bFrames: 0,
@@ -95,7 +95,7 @@ for (const filename of showcaseFiles) {
     '-i', input,
     '-map_metadata', '-1',
     '-an',
-    '-vf', "scale=w='min(1024,iw)':h=-2:flags=lanczos,fps=24",
+    '-vf', "scale=w='min(720,iw)':h=-2:flags=lanczos,fps=24",
     '-c:v', 'libx264',
     '-preset', 'fast',
     '-tune', 'fastdecode',

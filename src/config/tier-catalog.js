@@ -12,6 +12,7 @@
  * @property {'USD'} currency
  * @property {'one-time'} cadence
  * @property {readonly string[]} features
+ * @property {readonly {label: string, detail: string}[]} valueGroups
  */
 
 /**
@@ -28,6 +29,7 @@
 const tier = (definition) => Object.freeze({
   ...definition,
   features: Object.freeze([...definition.features]),
+  valueGroups: Object.freeze((definition.valueGroups || []).map((group) => Object.freeze({ ...group }))),
 });
 
 export const TIER_KEYS = Object.freeze([
@@ -50,6 +52,10 @@ export const TIERS = Object.freeze({
     currency: 'USD',
     cadence: 'one-time',
     features: ['One human-reviewed observation', 'Evidence and confidence context', 'One practical opportunity', 'No checkout required'],
+    valueGroups: [
+      { label: 'Observation', detail: 'One human-reviewed public finding with evidence and confidence context.' },
+      { label: 'Next step', detail: 'One practical opportunity you can act on without checkout.' },
+    ],
   }),
   homepage_reveal: tier({
     key: 'homepage_reveal',
@@ -62,6 +68,12 @@ export const TIERS = Object.freeze({
     currency: 'USD',
     cadence: 'one-time',
     features: ['Human-reviewed findings report', 'One landing-page direction', 'Desktop and mobile PNG exports', 'One subtle AI-assisted motion poster ad', '30-day growth plan', 'Upgrade to the $200 plan later for only $150'],
+    valueGroups: [
+      { label: 'Clarity', detail: 'Human-reviewed findings and one focused homepage direction.' },
+      { label: 'Presentation', detail: 'Desktop and mobile exports that make the direction easy to review.' },
+      { label: 'Launch support', detail: 'One motion poster and a practical 30-day growth plan.' },
+      { label: 'Protected value', detail: 'Your verified $50 is credited toward either larger plan.' },
+    ],
   }),
   complete_revamp: tier({
     key: 'complete_revamp',
@@ -74,6 +86,13 @@ export const TIERS = Object.freeze({
     currency: 'USD',
     cadence: 'one-time',
     features: ['Every applicable $50 Homepage Reveal deliverable', 'Up to five agreed standard pages', 'Responsive accessibility and performance work', 'Five Canva-built AI-assisted motion poster ads', 'Ten still poster variations', 'Three business card variations', 'Two brochure variations', 'Before/after evidence and one retest summary', 'Upgrade to the $250 Cinematic plan later for only $50'],
+    valueGroups: [
+      { label: 'Strategy', detail: 'Applicable Homepage Reveal findings and the agreed direction.' },
+      { label: 'Website', detail: 'Up to five responsive pages with accessibility and performance work.' },
+      { label: 'Campaign suite', detail: 'Five motion posters, ten stills, three business-card variations, and two brochure variations.' },
+      { label: 'Quality proof', detail: 'Before-and-after evidence and one retest summary.' },
+      { label: 'Protected value', detail: 'Upgrade to Cinematic later for the remaining $50.' },
+    ],
   }),
   cinematic_scroll: tier({
     key: 'cinematic_scroll',
@@ -86,6 +105,13 @@ export const TIERS = Object.freeze({
     currency: 'USD',
     cadence: 'one-time',
     features: ['Everything in Complete Website Revamp', 'One motion-led narrative sequence', 'Up to four story beats', 'Mobile and reduced-motion fallbacks', 'Upgrade from the $200 plan for $50'],
+    valueGroups: [
+      { label: 'Everything in Complete', detail: 'The responsive website, strategy, creative suite, and quality proof.' },
+      { label: 'Cinematic direction', detail: 'One coordinated three- or four-scene visual story selected with you.' },
+      { label: 'Scroll production', detail: 'A motion-led narrative integrated into the website.' },
+      { label: 'Inclusive delivery', detail: 'Mobile, static, failed-media, and reduced-motion fallbacks.' },
+      { label: 'Private collaboration', detail: 'Concept rankings, instructions, progress, and delivery stay together.' },
+    ],
     deliveryBusinessDays: 3,
     motionSequenceCount: 1,
     maximumStoryBeats: 4,

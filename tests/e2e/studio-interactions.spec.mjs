@@ -1,33 +1,26 @@
 import { test, expect } from 'playwright/test';
 
-test('rapid lens movement keeps the intended tile active and Escape closes it', async ({ page }) => {
-  test.setTimeout(60_000);
+test('desktop customer journey presents all three connected project stages', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/', { waitUntil: 'networkidle' });
-  const lenses = page.locator('[data-lens]');
-  await expect(lenses).toHaveCount(11);
-  for (let index = 0; index < 11; index += 1) {
-    await lenses.nth(index).dispatchEvent('pointerenter', { pointerType: 'mouse' });
-    await page.waitForTimeout(150);
-    await expect(lenses.nth(index)).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(1);
-  }
-  await page.keyboard.press('Escape');
-  await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(0);
+  const stages = page.locator('.customer-journey article');
+  await expect(stages).toHaveCount(3);
+  await expect(stages.nth(0)).toContainText('Tell us what you need');
+  await expect(stages.nth(1)).toContainText('Choose your plan and designs');
+  await expect(stages.nth(2)).toContainText('Receive, review, and launch');
+  const positions = await stages.evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().top)));
+  expect(new Set(positions).size).toBe(1);
 });
 
-test('touch lens accordion switches and closes on outside tap', async ({ browser }) => {
+test('mobile customer journey stacks without horizontal overflow', async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
   await page.goto('/', { waitUntil: 'networkidle' });
-  const lenses = page.locator('[data-lens]');
-  await lenses.nth(0).tap();
-  await expect(lenses.nth(0)).toHaveAttribute('aria-expanded', 'true');
-  await lenses.nth(1).tap();
-  await expect(lenses.nth(0)).toHaveAttribute('aria-expanded', 'false');
-  await expect(lenses.nth(1)).toHaveAttribute('aria-expanded', 'true');
-  await page.locator('h2').first().tap();
-  await expect(page.locator('[data-lens][aria-expanded="true"]')).toHaveCount(0);
+  const stages = page.locator('.customer-journey article');
+  await expect(stages).toHaveCount(3);
+  const positions = await stages.evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().top)));
+  expect(new Set(positions).size).toBe(3);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   await context.close();
 });
 

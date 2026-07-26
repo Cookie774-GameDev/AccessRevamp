@@ -10,12 +10,18 @@ import { showcaseChapter } from '../components/showcase-chapter.js';
 // Interaction references remain credited in their data module; external studies are not by AccessRevamp.
 
 const processSteps = [
-  ['01', 'Observe', 'Read the ordinary public experience and record possible friction.'],
-  ['02', 'Verify', 'Separate what is visible from inference, preference, and unsupported claims.'],
-  ['03', 'Prioritize', 'Agree on the visitor task and the change that matters first.'],
-  ['04', 'Design', 'Build a clear direction around the approved content and business goal.'],
-  ['05', 'Implement', 'Produce only the pages and creative work in the written scope.'],
-  ['06', 'Retest', 'Check the rebuilt experience and document what still needs attention.'],
+  ['01', 'Review your current site', 'We look through the public website and note where visitors may get confused.'],
+  ['02', 'Agree on the goal', 'We confirm what the website should help customers understand or do.'],
+  ['03', 'Choose the right plan', 'You select the strategy, design, creative work, and implementation you need.'],
+  ['04', 'Pick your direction', 'You review the concepts, rank your favorites, and share special instructions.'],
+  ['05', 'Build and test', 'We create the agreed pages, check mobile and desktop, and correct visible problems.'],
+  ['06', 'Receive and launch', 'Your approved website and launch materials arrive in your private workspace, ready to publish.'],
+];
+
+const customerJourney = [
+  ['01', 'Tell us what you need', 'Share your current website, business goal, preferred direction, and useful references.', 'A clear written brief tied to the right business goal.'],
+  ['02', 'Choose your plan and designs', 'Select the service, complete secure checkout, then rank your visual directions in the private workspace.', 'A protected project, concepts to compare, and one agreed direction.'],
+  ['03', 'Receive, review, and launch', 'Follow progress, review the finished work, and receive the website and launch materials together.', 'A tested desktop-and-mobile delivery ready to publish.'],
 ];
 
 const outcomes = [
@@ -42,6 +48,7 @@ const exampleWebsite = (example) => `<figure class="example-website" data-reveal
 export function homePage() {
   const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');
   const process = processSteps.map(([number, title, copy]) => `<li><span>${number}</span><strong>${title}</strong><p>${copy}</p></li>`).join('');
+  const journey = customerJourney.map(([number, title, copy, receive]) => `<article><span>${number}</span><div><h3>${title}</h3><p>${copy}</p><small><b>You receive</b>${receive}</small></div></article>`).join('');
 
   return shell(`
     <section class="reveal-hero" data-reveal-hero aria-label="AccessRevamp transforms an unfinished storefront into a refined growth system">
@@ -65,14 +72,14 @@ export function homePage() {
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
       <div><span class="eyebrow">A guided customer journey</span><h2>Your website should feel like a clear conversation—not a maze.</h2></div>
       <p class="promise-lede">AccessRevamp rebuilds the message, page order, mobile experience, and launch material together so every screen answers the next question and leads to one useful action.</p>
-      <div class="promise-outcomes"><article><b>01</b><h3>Explain</h3><p>Show what you offer, who it is for, and why it matters.</p></article><article><b>02</b><h3>Guide</h3><p>Arrange proof, pages, and calls to action in the order visitors need them.</p></article><article><b>03</b><h3>Launch</h3><p>Deliver the finished site with approved creative material ready to promote.</p></article></div>
+      <div class="customer-journey" aria-label="How an AccessRevamp project works">${journey}</div>
     </div></section>
 
     <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid">${exampleWebsites.map(exampleWebsite).join('')}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>
 
     <section class="showcase-section" aria-labelledby="showcase-title"><div class="container-wide showcase-intro"><span class="eyebrow">Two production depths</span><h2 id="showcase-title">Normal Websites vs. Cinematic Scroll Experiences</h2><p>Scroll down to advance and up to reverse. Each pair shares one progress value.</p></div>${showcasePairs.map(showcaseChapter).join('')}</section>
 
-    <section class="section process-map-section"><div class="container-wide process-story"><div class="process-story__intro"><span class="eyebrow">A visible method</span><h2>From observation to an agreed build.</h2><p>Each stage earns the next. Recommendations remain separate from claims, and implementation stays inside the purchased scope.</p><a class="text-arrow" href="/process" data-nav>Read the complete process ${icon('arrow')}</a></div><div class="process-story__rail"><ol class="process-map">${process}</ol></div></div></section>
+    <section class="section process-map-section"><div class="container-wide process-story"><div class="process-story__intro"><span class="eyebrow">A visible method</span><h2>From your current site to a finished launch.</h2><p>You can see what happens next at every stage, from the first review through private delivery.</p><a class="text-arrow" href="/process" data-nav>Read the complete process ${icon('arrow')}</a></div><div class="process-story__rail"><ol class="process-map">${process}</ol></div></div></section>
 
     <section class="section transformation-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Transformation studies</span><div><h2>Potential becomes visible when the hierarchy changes.</h2><p>These are original illustrative interfaces. The design reasoning is real; the business outcome still depends on the customer’s offer, traffic, market, and operations.</p></div></div><div class="transformation-grid">${outcomes.map(transformationPanel).join('')}</div></div></section>
 

@@ -19,6 +19,10 @@ test('showcase progress eases toward fast scroll targets and coalesces in-flight
   assert.match(source, /PROGRESS_SNAP_EPSILON\s*=\s*0\.001/);
   assert.match(source, /MEDIA_SYNC_EPSILON_SECONDS\s*=\s*1\s*\/\s*48/);
   assert.match(source, /FRAME_SETTLE_TIMEOUT_MS\s*=\s*80/);
+  assert.match(source, /FAST_SEEK_MINIMUM_JUMP_SECONDS/);
+  assert.match(source, /typeof video\.fastSeek === 'function'/);
+  assert.match(source, /video\.fastSeek\(targetTime\)/);
+  assert.match(source, /state\.settleExactly/);
   assert.match(source, /targetProgress/);
   assert.match(source, /renderedProgress/);
   assert.match(source, /1\s*-\s*Math\.exp\(-elapsed\s*\/\s*smoothingWindow\)/);

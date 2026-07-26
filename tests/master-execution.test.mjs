@@ -105,7 +105,7 @@ test('production packaging verifies every video and keeps every deploy path scru
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
   assert.match(optimizeScript, /showcase-optimization\.json/);
-  assert.match(optimizeScript, /maximumWidth:\s*1024/);
+  assert.match(optimizeScript, /maximumWidth:\s*720/);
   assert.match(optimizeScript, /fps=24/);
   assert.match(optimizeScript, /'-g', '2'/);
   assert.match(optimizeScript, /'-keyint_min', '2'/);

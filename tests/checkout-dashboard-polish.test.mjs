@@ -78,3 +78,33 @@ test('Complete Website Revamp title styling is shared by homepage and pricing ca
     /\.plan-card\[data-plan-tier="complete_revamp"\]\s+h3[\s\S]*color:\s*#[a-f0-9]{6}/i,
   );
 });
+
+test('paid plans present grouped customer outcomes instead of one undifferentiated list', async () => {
+  const [catalog, cards, wizard, service] = await Promise.all([
+    readFile('src/config/tier-catalog.js', 'utf8'),
+    readFile('src/components/cards.js', 'utf8'),
+    readFile('src/components/order-wizard.js', 'utf8'),
+    readFile('src/services/order-wizard.js', 'utf8'),
+  ]);
+
+  for (const label of [
+    'Clarity',
+    'Presentation',
+    'Launch support',
+    'Protected value',
+    'Strategy',
+    'Website',
+    'Campaign suite',
+    'Quality proof',
+    'Everything in Complete',
+    'Cinematic direction',
+    'Scroll production',
+    'Inclusive delivery',
+    'Private collaboration',
+  ]) assert.match(catalog, new RegExp(label));
+
+  assert.match(catalog, /valueGroups:\s*Object\.freeze/);
+  assert.match(cards, /plan-value-groups/);
+  assert.match(wizard, /order-plan__value-groups/);
+  assert.match(service, /order-review__value-groups/);
+});

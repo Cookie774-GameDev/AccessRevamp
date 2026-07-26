@@ -511,16 +511,28 @@
     font-size: clamp(2.7rem, 13vw, 4rem);
   }
 
-  .promise-outcomes {
+  .customer-journey {
+    grid-template-columns: 1fr;
+    gap: .8rem;
     margin-top: 1rem;
   }
 
-  .promise-outcomes article {
-    padding: 1.25rem 0;
+  .customer-journey::before {
+    top: 1.8rem;
+    bottom: 1.8rem;
+    left: 2.3rem;
+    width: 1px;
+    height: auto;
+    background: linear-gradient(180deg, transparent, var(--ar-gold), transparent);
   }
 
-  .promise-outcomes h3 {
-    margin-top: 1rem;
+  .customer-journey article {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 1.1rem;
+  }
+
+  .customer-journey h3 {
+    margin-top: .15rem;
   }
 
   .example-website {

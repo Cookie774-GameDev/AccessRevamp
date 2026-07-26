@@ -23,15 +23,12 @@ test('the four-step order wizard keeps its black UI with explicit high-contrast 
   assert.match(component, /data-order-panel="2"/);
   assert.match(component, /data-order-panel="3"/);
   assert.doesNotMatch(component, /data-order-panel="4"/);
-  assert.match(component, /plan\.features\.map\(\(feature\) =>/);
-  assert.match(component, /class="order-plan__perks"/);
-  assert.match(component, /class="order-plan__perk"/);
-  assert.match(component, /icon\('check', 'order-plan__perk-icon'\)/);
+  assert.match(component, /planValueGroups\(plan, 'order-plan__value-groups'\)/);
   assert.match(component, /class="order-summary order-question-plan order-fields__wide"/);
   assert.match(component, /data-order-question-plan/);
   assert.match(service, /const questionPlan = form\.querySelector\('\[data-order-question-plan\]'\)/);
   assert.match(service, /const renderQuestionPlan = \(\) =>/);
-  assert.match(service, /questionPlan\.innerHTML = .*Every included perk/);
+  assert.match(service, /questionPlan\.innerHTML = .*What this project includes/);
   assert.match(service, /if \(current === 2\) renderQuestionPlan\(\)/);
 
   assert.match(css, /--order-dark:\s*#101114/);
@@ -49,9 +46,8 @@ test('the four-step order wizard keeps its black UI with explicit high-contrast 
   assert.match(css, /\.renaissance-home \.order-question-plan[\s\S]*border-radius/);
   assert.match(css, /\.renaissance-home \.order-plan strong\s*\{/);
   assert.match(css, /\.renaissance-home \.order-plan small\s*\{/);
-  assert.match(css, /\.renaissance-home \.order-plan__perks\s*\{/);
-  assert.match(css, /\.renaissance-home \.order-plan__perk\s*\{/);
-  assert.match(css, /\.renaissance-home \.order-plan__perk-icon\s*\{/);
+  assert.match(css, /\.renaissance-home \.order-plan__value-groups/);
+  assert.match(css, /\.renaissance-home \.order-review__value-groups/);
   assert.match(css, /\.renaissance-home \.order-plan input:checked \+ span/);
   assert.match(css, /\.renaissance-home \.order-fields :is\(input, textarea, select\)/);
   assert.match(css, /background:\s*#fbf5ea/);
