@@ -1,15 +1,15 @@
 import { plans } from '../config.js';
+import { cinematicSceneSelector } from './cinematic-scene-selector.js';
 import { escapeHtml, icon } from './icons.js';
+import { planValueGroups } from './plan-value-groups.js';
 
 const paidPlans = ['homepage_reveal', 'complete_revamp', 'cinematic_scroll'].map((key) => plans[key]);
-
-const planPerks = (plan) => plan.features.map((feature) => `<span class="order-plan__perk" role="listitem">${icon('check', 'order-plan__perk-icon')}<span>${escapeHtml(feature)}</span></span>`).join('');
 
 const planOption = (plan) => {
   const id = `order-plan-${plan.key}`;
   return `<label class="order-plan" data-order-plan="${plan.key}">
   <input type="radio" name="orderPlan" value="${plan.key}" ${plan.key === 'complete_revamp' ? 'checked' : ''} aria-labelledby="${id}-name ${id}-price" aria-describedby="${id}-summary ${id}-perks">
-  <span><b id="${id}-name">${escapeHtml(plan.name)}</b><strong id="${id}-price">${escapeHtml(plan.displayPrice)}</strong><small id="${id}-summary">${escapeHtml(plan.summary)}</small><span class="order-plan__perks" id="${id}-perks" role="list" aria-label="${escapeHtml(plan.name)} perks">${planPerks(plan)}</span></span>
+  <span><b id="${id}-name">${escapeHtml(plan.name)}</b><strong id="${id}-price">${escapeHtml(plan.displayPrice)}</strong><small id="${id}-summary">${escapeHtml(plan.summary)}</small><span id="${id}-perks">${planValueGroups(plan, 'order-plan__value-groups')}</span></span>
 </label>`;
 };
 
@@ -46,7 +46,7 @@ export function orderWizard() {
           <label>Desired launch date <span>optional</span><input name="launchDate" type="date"></label>
           <label class="order-fields__wide">Reference website URLs <span>optional</span><textarea name="referenceUrls" rows="3" placeholder="One public URL per line"></textarea></label>
           <label class="order-fields__wide">Freeform specific request <span>optional</span><textarea name="specificRequest" rows="5"></textarea></label>
-          <label class="order-fields__wide" data-cinematic-fields hidden>How many cinematic scenes?<select name="cinematicSceneCount" disabled><option value="">Choose three or four</option><option value="3">3 scenes — provider budget capped at 150 credits</option><option value="4">4 scenes — provider budget capped at 200 credits</option></select><small>You will review two complete visual sequences before any scene video is generated.</small></label>
+          ${cinematicSceneSelector()}
           <label class="order-fields__wide" data-cinematic-fields hidden>Cinematic storyboard, scene order, scroll moments, motion direction, source assets, and reduced-motion preference<textarea name="cinematicDirection" rows="5" disabled></textarea></label>
         </div>
         <label class="order-dropzone"><input type="file" name="referenceFiles" data-order-file-input multiple accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx,.txt,.zip"><span>${icon('upload')}</span><strong>Reference files</strong><small>Up to eight supported files, 8MB each.</small></label>

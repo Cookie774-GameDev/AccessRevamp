@@ -270,6 +270,48 @@
   color: var(--order-gold-soft);
 }
 
+.renaissance-home .order-plan__value-groups,
+.renaissance-home .order-review__value-groups {
+  display: grid;
+  align-content: start;
+  gap: .55rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--order-line);
+}
+
+.renaissance-home .order-plan__value-groups > div,
+.renaissance-home .order-review__value-groups > div {
+  display: grid;
+  gap: .2rem;
+  padding: .68rem .72rem;
+  border: 1px solid #3e4148;
+  border-radius: .55rem;
+  background: #22252a;
+}
+
+.renaissance-home .order-plan__value-groups strong,
+.renaissance-home .order-review__value-groups strong {
+  color: var(--order-gold-soft);
+  font-size: .66rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.renaissance-home .order-plan__value-groups span,
+.renaissance-home .order-review__value-groups span {
+  color: #f3eee5;
+  font-size: .76rem;
+  line-height: 1.45;
+}
+
+.renaissance-home .order-question-plan .order-review__value-groups {
+  margin-top: .6rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .renaissance-home .order-note {
   border-left-color: var(--order-gold-soft);
   background: rgba(185, 120, 32, .17);

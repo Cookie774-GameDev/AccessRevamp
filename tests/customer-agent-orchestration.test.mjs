@@ -6,6 +6,7 @@ const read = (path) => readFile(path, 'utf8');
 
 const files = await Promise.all([
   read('src/components/order-wizard.js'),
+  read('src/components/cinematic-scene-selector.js'),
   read('src/services/order-wizard.js'),
   read('netlify/functions/_shared/validation.mjs'),
   read('netlify/functions/order-draft.mjs'),
@@ -30,6 +31,7 @@ const files = await Promise.all([
 
 const [
   wizard,
+  cinematicSceneSelector,
   wizardService,
   validation,
   orderDraft,
@@ -63,9 +65,10 @@ test('Worker 6 storage is service-only, deduplicated, and draft-only', () => {
 });
 
 test('cinematic orders collect three or four scenes and keep portfolio permission optional', () => {
-  assert.match(wizard, /name="cinematicSceneCount"/);
-  assert.match(wizard, /value="3"/);
-  assert.match(wizard, /value="4"/);
+  assert.match(wizard, /cinematicSceneSelector/);
+  assert.match(cinematicSceneSelector, /name="cinematicSceneCount"/);
+  assert.match(cinematicSceneSelector, /value="3"/);
+  assert.match(cinematicSceneSelector, /value="4"/);
   assert.match(wizard, /name="portfolioConsent"/);
   assert.doesNotMatch(wizard, /name="portfolioConsent"[^>]*required/);
   assert.match(wizard, /not required to buy/i);

@@ -8,6 +8,7 @@ const SCROLL_SMOOTHING_MS = 52;
 const PROGRESS_SNAP_EPSILON = 0.001;
 const MEDIA_SYNC_EPSILON_SECONDS = 1 / 48;
 const FRAME_SETTLE_TIMEOUT_MS = 80;
+const FAST_SEEK_MINIMUM_JUMP_SECONDS = 0.35;
 const DESKTOP_SCROLL_DISTANCE_VH = 360;
 const MOBILE_SCROLL_DISTANCE_VH = 400;
 const MOBILE_BREAKPOINT_PX = 700;
@@ -66,7 +67,10 @@ export function setupShowcaseComparisons(root = document) {
   const stopVideo = (video, state) => {
     if (!video.paused) video.pause();
     clearSeekWait(video, state);
-    if (state) state.pendingSeek = false;
+    if (state) {
+      state.pendingSeek = false;
+      state.settleExactly = false;
+    }
   };
 
   const seekVideoToLatest = (video, state) => {
@@ -97,7 +101,16 @@ export function setupShowcaseComparisons(root = document) {
     state.settleTimer = setTimeout(settle, FRAME_SETTLE_TIMEOUT_MS);
 
     try {
-      video.currentTime = targetTime;
+      const useFastSeek = !state.settleExactly
+        && Math.abs(video.currentTime - targetTime) >= FAST_SEEK_MINIMUM_JUMP_SECONDS
+        && typeof video.fastSeek === 'function';
+      if (useFastSeek) {
+        state.settleExactly = true;
+        video.fastSeek(targetTime);
+      } else {
+        state.settleExactly = false;
+        video.currentTime = targetTime;
+      }
       if (video.requestVideoFrameCallback) {
         state.frameCallbackId = video.requestVideoFrameCallback(settle);
       }
@@ -120,6 +133,7 @@ export function setupShowcaseComparisons(root = document) {
         settleTimer: 0,
         seekedListener: null,
         pendingSeek: false,
+        settleExactly: false,
       };
       videoStates.set(video, state);
       trackedVideos.add(video);

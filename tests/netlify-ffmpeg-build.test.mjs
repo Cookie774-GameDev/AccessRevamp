@@ -120,6 +120,8 @@ test('Netlify skips automatic Next.js adaptation and deploys pre-optimized sourc
   assert.ok(sourceManifest.files.every((file) => file.status === 'optimized' && file.optimizedBytes <= 9_500_000));
   assert.match(optimizeScript, /MAX_SHOWCASE_VIDEO_BYTES/);
   assert.match(optimizeScript, /oversized-media/);
+  assert.match(optimizeScript, /maximumWidth:\s*720/);
+  assert.match(optimizeScript, /min\(720,iw\)/);
   assert.match(production, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);
   for (const workflow of [worker, isolated]) {
     assert.match(workflow, /REQUIRE_FFMPEG_OPTIMIZATION: "true"/);

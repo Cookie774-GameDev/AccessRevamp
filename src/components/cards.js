@@ -1,5 +1,6 @@
 import { sandboxBadge } from './shell.js';
 import { escapeHtml, icon } from './icons.js';
+import { planValueGroups } from './plan-value-groups.js';
 
 export function planCard(plan, { featured = false, compact = false } = {}) {
   const action = plan.key === 'free_snapshot'
@@ -10,7 +11,7 @@ export function planCard(plan, { featured = false, compact = false } = {}) {
     <h3>${escapeHtml(plan.name)}</h3>
     <p>${escapeHtml(plan.summary)}</p>
     <div class="plan-price"><strong>${escapeHtml(plan.displayPrice)}</strong><span>one time</span></div>
-    <ul>${plan.features.map((feature) => `<li>${icon('check')}<span>${escapeHtml(feature)}</span></li>`).join('')}</ul>
+    ${planValueGroups(plan)}
     ${action}
     ${plan.key === 'free_snapshot' ? '' : sandboxBadge()}
   </article>`;

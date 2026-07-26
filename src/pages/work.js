@@ -1,4 +1,5 @@
 import { icon } from '../components/icons.js';
+import { portfolioHero } from '../components/portfolio-hero.js';
 import { showcaseChapter } from '../components/showcase-chapter.js';
 import { shell } from '../components/shell.js';
 import { portfolioItems } from '../data/portfolio.js';
@@ -20,12 +21,7 @@ const filmCard = (item) => `<article class="portfolio-film-card portfolio-film-c
 
 export function workPage() {
   return shell(`
-    <section class="working-portfolio-hero">
-      <div class="container-wide working-portfolio-hero__grid">
-        <div><span class="eyebrow">Working experience portfolio</span><h1>Websites you can actually enter.</h1></div>
-        <div><p class="lede">Five original demonstrations built to move with the visitor—not static mockups and not unrelated filler.</p><div class="work-disclosure"><strong>Original demonstrations</strong><span>These are AccessRevamp-built portfolio experiences, not client endorsements or measured outcome claims.</span></div></div>
-      </div>
-    </section>
+    ${portfolioHero()}
     <section class="section working-portfolio-films" aria-labelledby="scroll-films-title">
       <div class="container-wide">
         <div class="chapter-head"><span class="chapter-index">Full-screen stories</span><div><h2 id="scroll-films-title">Cinematic scroll films</h2><p>Open either experience, then scroll down to advance or back up to reverse the film.</p></div></div>

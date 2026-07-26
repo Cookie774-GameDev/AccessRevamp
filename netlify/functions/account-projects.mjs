@@ -148,7 +148,7 @@ export default async function accountProjects(request) {
     const [profileResult, ordersResult, projectsResult, entitlementsResult, refundsResult] = await Promise.all([
       admin.from('profiles').select('full_name,email').eq('id', user.id).maybeSingle(),
       admin.from('orders').select('id,plan_key,amount_total,currency,status,created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
-      admin.from('customer_projects').select('id,name,website_url,plan_key,status,scope_summary,delivery_status,delivery_due_at,delivered_at,creative_pack_status,creative_pack_due_at,creative_pack_delivered_at,revision_limit,created_at,updated_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+      admin.from('customer_projects').select('id,order_id,name,website_url,plan_key,status,scope_summary,delivery_status,delivery_due_at,delivered_at,creative_pack_status,creative_pack_due_at,creative_pack_delivered_at,revision_limit,created_at,updated_at').eq('user_id', user.id).order('created_at', { ascending: false }),
       admin.from('entitlements').select('highest_tier_key,status,effective_paid_cents,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1),
       admin.from('refund_requests').select('id,status,reason,requested_at,created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
     ]);
@@ -173,7 +173,7 @@ export default async function accountProjects(request) {
       });
     }
 
-    const [intakesResult, workflowsResult, designsResult, deliveriesResult, artifactsResult, updatesResult, feedbackResult] = await Promise.all([
+    const [intakesResult, workflowsResult, designsResult, deliveriesResult, artifactsResult, updatesResult, feedbackResult, findingsResult, sourcesResult] = await Promise.all([
       admin.from('project_intakes').select('id,project_id,selected_pages,style_notes,content_notes,cinematic_notes,project_notes,reference_urls,inspiration_choices,status,created_at,updated_at').in('project_id', projectIds).order('updated_at', { ascending: false }),
       admin.from('project_workflows').select('id,project_id,status,current_stage,revision_round,started_at,completed_at,updated_at').in('project_id', projectIds).order('created_at', { ascending: false }),
       admin.from('project_design_options').select('id,project_id,option_group,option_number,sequence_key,scene_number,revision_round,status,storage_path,external_url,prompt_summary,customer_selected_at,created_at').in('project_id', projectIds).in('status', CUSTOMER_DESIGN_STATUSES).order('created_at', { ascending: false }),
@@ -181,6 +181,8 @@ export default async function accountProjects(request) {
       admin.from('project_artifacts').select('id,project_id,artifact_type,storage_provider,storage_path,external_url,filename,mime_type,size_bytes,status,metadata,created_at').in('project_id', projectIds).in('status', CUSTOMER_ARTIFACT_STATUSES).order('created_at', { ascending: false }),
       admin.from('project_updates').select('id,project_id,title,body,stage,progress_percent,published_at,created_at').in('project_id', projectIds).not('published_at', 'is', null).order('published_at', { ascending: false }),
       admin.from('customer_project_feedback').select('id,project_id,action,option_group,selected_option_ids,notes,revision_round,request_more_count,status,created_at').in('project_id', projectIds).order('created_at', { ascending: false }),
+      admin.from('project_findings').select('id,project_id,research_source_id,audit_type,severity,confidence,title,summary,evidence,remediation,status,created_at').in('project_id', projectIds).eq('customer_visible', true).in('status', ['verified', 'resolved']).order('created_at', { ascending: false }),
+      admin.from('project_research_sources').select('id,project_id,source_url,title,retrieved_at,status').in('project_id', projectIds).order('retrieved_at', { ascending: false }),
     ]);
 
     const intakes = rows(intakesResult, 'briefs', partialFailures);
@@ -190,6 +192,8 @@ export default async function accountProjects(request) {
     const artifacts = rows(artifactsResult, 'files', partialFailures);
     const updates = rows(updatesResult, 'updates', partialFailures);
     const feedback = rows(feedbackResult, 'customer requests', partialFailures);
+    const findings = rows(findingsResult, 'website insights', partialFailures);
+    const sources = rows(sourcesResult, 'insight sources', partialFailures);
 
     const intakeIds = intakes.map((intake) => intake.id);
     const workflowIds = workflows.map((workflow) => workflow.id);
@@ -212,6 +216,8 @@ export default async function accountProjects(request) {
     const artifactsByProject = groupBy(artifacts, 'project_id');
     const updatesByProject = groupBy(updates, 'project_id');
     const feedbackByProject = groupBy(feedback, 'project_id');
+    const findingsByProject = groupBy(findings, 'project_id');
+    const sourcesById = new Map(sources.map((source) => [source.id, source]));
     const intakeAssetsByIntake = groupBy(intakeAssets, 'intake_id');
     const tasksByWorkflow = groupBy(workflowTasks, 'workflow_id');
 
@@ -271,6 +277,11 @@ export default async function accountProjects(request) {
           created_at: delivery.created_at,
         })),
         feedback: feedbackByProject.get(project.id) || [],
+        findings: (findingsByProject.get(project.id) || []).map((finding) => ({
+          ...finding,
+          source_url: safeExternalUrl(sourcesById.get(finding.research_source_id)?.source_url),
+          source_title: sourcesById.get(finding.research_source_id)?.title || null,
+        })),
       };
     }));
 

@@ -52,6 +52,14 @@ const safeHref = (value) => {
   }
 };
 
+const SIGNED_PREVIEW_RENEWAL_BUFFER_SECONDS = 180;
+
+export function signedPreviewRefreshDelay(signedUrlExpiresIn = 900) {
+  const expiresIn = Number(signedUrlExpiresIn);
+  const safeExpiresIn = Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 900;
+  return Math.max(60, safeExpiresIn - SIGNED_PREVIEW_RENEWAL_BUFFER_SECONDS) * 1000;
+}
+
 const renderStatus = (value, extra = '') => `<span class="status-pill ${extra}">${escapeHtml(label(value || 'pending'))}</span>`;
 
 function renderUpdates(updates = []) {
@@ -231,7 +239,17 @@ export function setupAccountProjects(navigate) {
   let workspaceResult = null;
   let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
   let activeWorkspaceTab = 'projects';
-  let activeProjectTab = 'updates';
+  let activeProjectTab = '';
+  let designChooser = { open: false, rankedOptionIds: [] };
+  let signedPreviewRefreshTimer = null;
+  let hasRetriedBrokenPreview = false;
+
+  const scheduleSignedPreviewRefresh = (expiresIn) => {
+    if (signedPreviewRefreshTimer) clearTimeout(signedPreviewRefreshTimer);
+    signedPreviewRefreshTimer = setTimeout(() => {
+      if (!disposed) void load();
+    }, signedPreviewRefreshDelay(expiresIn));
+  };
 
   const renderCurrentWorkspace = () => {
     if (!workspaceResult) return;
@@ -243,6 +261,7 @@ export function setupAccountProjects(navigate) {
       selectedProjectId,
       activeWorkspaceTab,
       activeProjectTab,
+      { designChooser },
     ));
   };
 
@@ -264,9 +283,11 @@ export function setupAccountProjects(navigate) {
       if (!response.ok) throw new Error(result.error || 'Your request could not be saved.');
       if (status) status.textContent = 'Saved. The production team can now review it.';
       await load();
+      return true;
     } catch (error) {
       controls.forEach((control) => { control.disabled = false; });
       if (status) status.textContent = error.message || 'Your request could not be saved.';
+      return false;
     }
   };
 
@@ -310,6 +331,7 @@ export function setupAccountProjects(navigate) {
         email: session.user.email,
       };
       renderCurrentWorkspace();
+      scheduleSignedPreviewRefresh(result.signedUrlExpiresIn);
     } catch (error) {
       show(host, 'unavailable', `<h2>Workspace unavailable</h2><p>${escapeHtml(error.message || 'The workspace could not load.')}</p>`);
     }
@@ -356,7 +378,8 @@ export function setupAccountProjects(navigate) {
     if (projectButton && workspaceResult) {
       selectedProjectId = projectButton.dataset.projectSelect;
       activeWorkspaceTab = 'projects';
-      activeProjectTab = 'updates';
+      activeProjectTab = '';
+      designChooser = { open: false, rankedOptionIds: [] };
       const url = new URL(location.href);
       url.searchParams.set('project', selectedProjectId);
       history.replaceState({}, '', `${url.pathname}${url.search}`);
@@ -367,17 +390,48 @@ export function setupAccountProjects(navigate) {
     const sectionButton = event.target.closest('[data-project-section]');
     if (sectionButton) {
       activeWorkspaceTab = 'projects';
-      activeProjectTab = sectionButton.dataset.projectSection === 'questions'
-        ? 'brief'
-        : sectionButton.dataset.projectSection === 'deliveries'
-          ? 'files'
-          : sectionButton.dataset.projectSection;
+      activeProjectTab = sectionButton.dataset.projectSection === 'audit' ? 'audit' : 'website';
       renderCurrentWorkspace();
       host.querySelector(`[data-project-panel="${activeProjectTab}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (event.target.closest('[data-hub-refresh]')) {
       await load();
+      return;
+    }
+    if (event.target.closest('[data-open-design-chooser]')) {
+      designChooser = { open: true, rankedOptionIds: [] };
+      renderCurrentWorkspace();
+      return;
+    }
+    if (event.target.closest('[data-design-chooser-close]')) {
+      designChooser = { open: false, rankedOptionIds: [] };
+      renderCurrentWorkspace();
+      return;
+    }
+    if (event.target.closest('[data-design-chooser-back]')) {
+      designChooser = {
+        open: true,
+        rankedOptionIds: designChooser.rankedOptionIds.slice(0, -1),
+      };
+      renderCurrentWorkspace();
+      return;
+    }
+    const rankOption = event.target.closest('[data-design-rank-option]');
+    if (rankOption && designChooser.open && !designChooser.rankedOptionIds.includes(rankOption.dataset.designRankOption)) {
+      designChooser = {
+        open: true,
+        rankedOptionIds: [...designChooser.rankedOptionIds, rankOption.dataset.designRankOption].slice(0, 3),
+      };
+      renderCurrentWorkspace();
+      return;
+    }
+    const finishButton = event.target.closest('[data-website-finish]');
+    if (finishButton) {
+      finishButton.disabled = true;
+      finishButton.textContent = 'Saved';
+      const status = finishButton.closest('form')?.querySelector('.form-status');
+      if (status) status.textContent = 'Your rankings are saved. You can add a request anytime from this project.';
       return;
     }
     const requestButton = event.target.closest('[data-request-more-designs]');
@@ -418,6 +472,23 @@ export function setupAccountProjects(navigate) {
       });
       return;
     }
+    if (form.matches('[data-design-chooser-submit]')) {
+      event.preventDefault();
+      if (designChooser.rankedOptionIds.length !== 3) return;
+      const saved = await saveFeedback(form, {
+        action: 'select_designs',
+        projectId: project.dataset.projectId,
+        optionGroup: form.dataset.optionGroup,
+        selectedOptionIds: designChooser.rankedOptionIds,
+        revisionRound: Number(form.dataset.revisionRound || 0),
+        notes: form.elements.notes.value.trim(),
+      });
+      if (saved) {
+        designChooser = { open: false, rankedOptionIds: [] };
+        renderCurrentWorkspace();
+      }
+      return;
+    }
     if (form.matches('[data-special-request-form]')) {
       event.preventDefault();
       await saveFeedback(form, {
@@ -430,12 +501,29 @@ export function setupAccountProjects(navigate) {
     }
   };
 
+  const onPreviewError = (event) => {
+    if (!event.target.matches?.('[data-signed-preview]') || hasRetriedBrokenPreview || disposed) return;
+    hasRetriedBrokenPreview = true;
+    void load();
+  };
+
+  const onHostKeydown = (event) => {
+    if (event.key !== 'Escape' || !designChooser.open) return;
+    designChooser = { open: false, rankedOptionIds: [] };
+    renderCurrentWorkspace();
+  };
+
   host.addEventListener('click', onHostClick);
   host.addEventListener('submit', onHostSubmit);
+  host.addEventListener('error', onPreviewError, true);
+  host.addEventListener('keydown', onHostKeydown);
   load();
   return () => {
     disposed = true;
+    if (signedPreviewRefreshTimer) clearTimeout(signedPreviewRefreshTimer);
     host.removeEventListener('click', onHostClick);
     host.removeEventListener('submit', onHostSubmit);
+    host.removeEventListener('error', onPreviewError, true);
+    host.removeEventListener('keydown', onHostKeydown);
   };
 }
