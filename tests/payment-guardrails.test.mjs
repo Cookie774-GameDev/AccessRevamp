@@ -79,6 +79,8 @@ test('checkout saves a confirmed order draft before creating one idempotent Stri
   assert.match(persistedClient, /Your project request was not saved — no payment started/);
   assert.match(draft, /save_accessrevamp_order_draft/);
   assert.match(draft, /order-draft-assets/);
+  assert.match(draft, /terms_version: CURRENT_POLICY_VERSION/);
+  assert.match(draft, /privacy_version: CURRENT_POLICY_VERSION/);
   assert.match(draft, /requireConfirmedUser/);
   assert.match(checkout, /\.from\('order_drafts'\)/);
   assert.match(checkout, /STRIPE_CHECKOUT_SECRET_KEY/);

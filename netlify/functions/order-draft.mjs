@@ -9,6 +9,7 @@ const BUCKET = 'order-draft-assets';
 const MAX_REQUEST_BYTES = 70 * 1024 * 1024;
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_FILES = 8;
+const CURRENT_POLICY_VERSION = '2026-07-22';
 const REUSABLE_TERMINAL_STATES = new Set(['expired', 'canceled']);
 const MIME_TYPES = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'image/avif',
@@ -156,6 +157,8 @@ export default async function orderDraft(request) {
         cinematic_scene_count: payload.cinematicSceneCount,
         cinematic_direction: payload.cinematicDirection,
         portfolio_consent: payload.portfolioConsent,
+        terms_version: CURRENT_POLICY_VERSION,
+        privacy_version: CURRENT_POLICY_VERSION,
       },
     });
     if (draftError || !draftId) throw new HttpError(503, 'The project request could not be saved.');
