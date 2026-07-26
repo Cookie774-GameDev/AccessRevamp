@@ -86,6 +86,46 @@ test('website review keeps an ordered top-three ranking and advances to the opti
   assert.match(html, /Continue to special requests/);
 });
 
+test('a project with ready design options opens directly on the Website review', () => {
+  const html = renderWorkspace({
+    profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
+    projects: [{
+      id: 'project-1',
+      order_id: null,
+      name: 'UrBeauty evaluation test',
+      plan_key: 'homepage_reveal',
+      status: 'client_review',
+      progress_percent: 60,
+      findings: [{ id: 'finding-1', audit_type: 'conversion', severity: 'serious', confidence: 'verified', title: 'Clarify product proof', summary: 'Proof needs work.', evidence: 'Homepage review.', remediation: 'Add proof.' }],
+      updates: [],
+      feedback: [],
+      artifacts: [],
+      deliveries: [],
+      design_options: [{ id: 'option-1', option_group: 'homepage_normal', option_number: 1, revision_round: 0, preview_url: 'https://example.com/one.png' }],
+    }],
+  }, 'project-1', 'projects');
+
+  assert.match(html, /data-project-tab="website" aria-selected="true"/);
+  assert.match(html, /data-project-panel="audit" hidden/);
+  assert.doesNotMatch(html, /data-project-panel="website" hidden/);
+});
+
+test('Website review shows ready animated posters before the homepage ranking form', () => {
+  const html = renderWorkspace({
+    profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
+    projects: [{
+      id: 'project-1', order_id: null, name: 'UrBeauty evaluation test', plan_key: 'homepage_reveal', status: 'client_review', progress_percent: 60,
+      findings: [], updates: [], feedback: [], artifacts: [], deliveries: [],
+      design_options: [
+        { id: 'option-1', option_group: 'homepage_normal', option_number: 1, revision_round: 0, preview_url: 'https://example.com/one.png' },
+        { id: 'poster-1', option_group: 'poster_animated', option_number: 1, revision_round: 0, preview_url: 'https://example.com/poster.mp4' },
+      ],
+    }],
+  }, 'project-1', 'projects', 'website');
+
+  assert.ok(html.indexOf('Animated poster previews') < html.indexOf('data-website-review-form'));
+});
+
 test('the project workspace reduces the customer journey to Audit and Website, with a full-page pick-and-request flow', () => {
   const html = renderWorkspace({
     profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },

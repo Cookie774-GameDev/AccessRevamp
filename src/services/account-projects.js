@@ -231,7 +231,7 @@ export function setupAccountProjects(navigate) {
   let workspaceResult = null;
   let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
   let activeWorkspaceTab = 'projects';
-  let activeProjectTab = 'audit';
+  let activeProjectTab = '';
 
   const renderCurrentWorkspace = () => {
     if (!workspaceResult) return;
@@ -356,7 +356,7 @@ export function setupAccountProjects(navigate) {
     if (projectButton && workspaceResult) {
       selectedProjectId = projectButton.dataset.projectSelect;
       activeWorkspaceTab = 'projects';
-      activeProjectTab = 'audit';
+      activeProjectTab = '';
       const url = new URL(location.href);
       url.searchParams.set('project', selectedProjectId);
       history.replaceState({}, '', `${url.pathname}${url.search}`);

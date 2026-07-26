@@ -25,6 +25,11 @@ const projectTabs = [
   ['website', 'Website'],
 ];
 
+function resolveProjectTab(project, requestedTab = '') {
+  if (projectTabs.some(([key]) => key === requestedTab)) return requestedTab;
+  return (project.design_options || []).length ? 'website' : 'audit';
+}
+
 function renderUpdates(project) {
   const updates = project.updates || [];
   if (!updates.length) return '<p class="portal-empty">No customer-facing updates have been published yet.</p>';
@@ -69,7 +74,7 @@ function renderWebsite(project) {
     && Number(entry.revision_round || 0) === latestRound);
   const choices = `<option value="">No selection</option>${options.map((option) => `<option value="${escapeHtml(option.id)}">Homepage option ${Number(option.option_number)}</option>`).join('')}`;
   const picker = `<form class="portal-design-feedback website-review__picker" data-design-feedback-form data-website-review-form data-option-group="${escapeHtml(optionGroup)}" data-revision-round="${latestRound}"><div><span class="micro-label">Step 1 of 2</span><h4>Pick your favorite homepage directions.</h4><p>Rank up to three. Your first choice becomes the lead reference for the next round.</p></div><label>First choice<select name="firstChoice" required>${choices}</select></label><label>Second choice<select name="secondChoice">${choices}</select></label><label>Third choice<select name="thirdChoice">${choices}</select></label><label class="portal-feedback-notes">What stood out?<textarea name="notes" maxlength="3000" rows="4" placeholder="Optional: tell us what you want to keep or avoid."></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Continue to special requests</button><span class="form-status" role="status"></span></div></form>`;
-  return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Website direction</span><h3>Pick the visual direction that feels most like your brand.</h3><p>Review each homepage below, rank your top three, then add an optional special request.</p></header><div class="portal-design-grid website-review__grid">${options.map((option) => `<article class="portal-design-card"><div class="portal-design-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Homepage option ${Number(option.option_number)}" loading="lazy">` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Homepage option ${Number(option.option_number)}</span><h4>Direction ${Number(option.option_number)}</h4>${option.prompt_summary ? `<p>${escapeHtml(option.prompt_summary)}</p>` : ''}</div></article>`).join('')}</div>${hasSavedRanking ? renderSpecialRequestStep(project) : picker}${renderPosterOptions(posterOptions)}</div>`;
+  return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Website direction</span><h3>Pick the visual direction that feels most like your brand.</h3><p>Review each homepage below, rank your top three, then add an optional special request.</p></header>${renderPosterOptions(posterOptions)}<div class="portal-design-grid website-review__grid">${options.map((option) => `<article class="portal-design-card"><div class="portal-design-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Homepage option ${Number(option.option_number)}" loading="lazy">` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Homepage option ${Number(option.option_number)}</span><h4>Direction ${Number(option.option_number)}</h4>${option.prompt_summary ? `<p>${escapeHtml(option.prompt_summary)}</p>` : ''}</div></article>`).join('')}</div>${hasSavedRanking ? renderSpecialRequestStep(project) : picker}</div>`;
 }
 
 function renderInsights(project) {
@@ -123,12 +128,13 @@ function renderSettings(result) {
   return `<section class="customer-settings"><div><span class="micro-label">Account</span><h2>Settings</h2><p>Your private project workspace stays tied to this confirmed email.</p></div><dl><div><dt>Name</dt><dd>${escapeHtml(profile.full_name || 'Not provided')}</dd></div><div><dt>Email</dt><dd>${escapeHtml(email || 'Confirmed account email')}</dd></div></dl><div class="customer-settings__actions"><a class="button button--small" href="/forgot-password?email=${encodeURIComponent(email)}" data-nav>Change password with a verification code</a><button class="button button--ghost button--small" type="button" data-settings-signout>Sign out</button></div><p class="customer-settings__note">For security, password changes require a new code sent to your confirmed email.</p><div class="customer-signout-confirm" data-signout-confirm hidden role="group" aria-label="Confirm sign out"><div><strong>Sign out of this device?</strong><p>Your saved projects stay private and unchanged.</p></div><div><button class="button button--ghost button--small" type="button" data-signout-cancel>Cancel</button><button class="button button--small" type="button" data-signout-approve>Yes, sign out</button></div></div></section>`;
 }
 
-export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = 'audit') {
+export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = '') {
   const projects = result.projects || [];
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0] || null;
+  const selectedProjectTab = selectedProject ? resolveProjectTab(selectedProject, activeProjectTab) : 'audit';
   const tabs = [['overview', 'Overview'], ['projects', 'Projects'], ['settings', 'Settings']];
   const projectView = selectedProject
-    ? `<div class="customer-workspace">${renderRail(projects, selectedProject.id)}${renderProject(selectedProject, activeProjectTab)}</div>`
+    ? `<div class="customer-workspace">${renderRail(projects, selectedProject.id)}${renderProject(selectedProject, selectedProjectTab)}</div>`
     : '<div class="empty-state"><h2>No project yet</h2><p>A verified payment creates your private project automatically.</p><a class="button" href="/pricing" data-nav>Review service options</a></div>';
   const panels = {
     overview: renderOverview(result, selectedProject),
