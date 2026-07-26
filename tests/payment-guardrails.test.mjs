@@ -67,12 +67,14 @@ test('payment runtime remains fail closed until a verified catalog and configura
 });
 
 test('checkout saves a confirmed order draft before creating one idempotent Stripe session', async () => {
-  const [client, persistedClient, draft, checkout, component] = await Promise.all([
+  const [client, persistedClient, draft, checkout, component, reservationRpc, expiryFix] = await Promise.all([
     read('src/services/checkout.js'),
     read('src/services/persisted-checkout.js'),
     read('netlify/functions/order-draft.mjs'),
     read('netlify/functions/create-checkout.mjs'),
     read('src/components/order-wizard.js'),
+    read('supabase/migrations/202607180003_add_payment_rpcs.sql'),
+    read('supabase/migrations/20260726222501_qualify_reservation_expiry.sql'),
   ]);
   assert.match(persistedClient, /ORDER_DRAFT_ENDPOINT/);
   assert.ok(persistedClient.indexOf('fetchImpl(ORDER_DRAFT_ENDPOINT') < persistedClient.indexOf('fetchImpl(CHECKOUT_ENDPOINT'));
@@ -81,6 +83,9 @@ test('checkout saves a confirmed order draft before creating one idempotent Stri
   assert.match(draft, /order-draft-assets/);
   assert.match(draft, /terms_version: CURRENT_POLICY_VERSION/);
   assert.match(draft, /privacy_version: CURRENT_POLICY_VERSION/);
+  assert.match(reservationRpc, /public\.upgrade_reservations\.expires_at <= v_now/);
+  assert.match(expiryFix, /pg_get_functiondef/);
+  assert.match(expiryFix, /public\.upgrade_reservations\.expires_at <= v_now/);
   assert.match(draft, /requireConfirmedUser/);
   assert.match(checkout, /\.from\('order_drafts'\)/);
   assert.match(checkout, /STRIPE_CHECKOUT_SECRET_KEY/);

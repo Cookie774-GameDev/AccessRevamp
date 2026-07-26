@@ -55,7 +55,7 @@ begin
          updated_at = v_now
    where user_id = p_user_id
      and status in ('reserved', 'checkout_created')
-     and expires_at <= v_now;
+     and public.upgrade_reservations.expires_at <= v_now;
 
   select reservation.*
     into v_existing
