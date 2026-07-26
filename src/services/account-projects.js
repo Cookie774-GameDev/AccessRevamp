@@ -231,7 +231,7 @@ export function setupAccountProjects(navigate) {
   let workspaceResult = null;
   let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
   let activeWorkspaceTab = 'projects';
-  let activeProjectTab = 'updates';
+  let activeProjectTab = 'audit';
 
   const renderCurrentWorkspace = () => {
     if (!workspaceResult) return;
@@ -356,7 +356,7 @@ export function setupAccountProjects(navigate) {
     if (projectButton && workspaceResult) {
       selectedProjectId = projectButton.dataset.projectSelect;
       activeWorkspaceTab = 'projects';
-      activeProjectTab = 'updates';
+      activeProjectTab = 'audit';
       const url = new URL(location.href);
       url.searchParams.set('project', selectedProjectId);
       history.replaceState({}, '', `${url.pathname}${url.search}`);
@@ -367,17 +367,21 @@ export function setupAccountProjects(navigate) {
     const sectionButton = event.target.closest('[data-project-section]');
     if (sectionButton) {
       activeWorkspaceTab = 'projects';
-      activeProjectTab = sectionButton.dataset.projectSection === 'questions'
-        ? 'brief'
-        : sectionButton.dataset.projectSection === 'deliveries'
-          ? 'files'
-          : sectionButton.dataset.projectSection;
+      activeProjectTab = sectionButton.dataset.projectSection === 'audit' ? 'audit' : 'website';
       renderCurrentWorkspace();
       host.querySelector(`[data-project-panel="${activeProjectTab}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (event.target.closest('[data-hub-refresh]')) {
       await load();
+      return;
+    }
+    const finishButton = event.target.closest('[data-website-finish]');
+    if (finishButton) {
+      finishButton.disabled = true;
+      finishButton.textContent = 'Saved';
+      const status = finishButton.closest('form')?.querySelector('.form-status');
+      if (status) status.textContent = 'Your rankings are saved. You can add a request anytime from this project.';
       return;
     }
     const requestButton = event.target.closest('[data-request-more-designs]');

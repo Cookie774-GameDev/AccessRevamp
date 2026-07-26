@@ -21,13 +21,8 @@ const money = (cents = 0, currency = 'USD') => new Intl.NumberFormat('en-US', {
 }).format(Number(cents || 0) / 100);
 
 const projectTabs = [
-  ['updates', 'Updates'],
-  ['progress', 'Progress'],
-  ['brief', 'Brief'],
-  ['insights', 'Insights'],
-  ['designs', 'Designs'],
-  ['requests', 'Requests'],
-  ['files', 'Files'],
+  ['audit', 'Audit'],
+  ['website', 'Website'],
 ];
 
 function renderUpdates(project) {
@@ -51,11 +46,30 @@ function renderBrief(project) {
   return `<div class="portal-brief-grid"><div><span class="micro-label">Requested pages</span><p>${escapeHtml((brief.selected_pages || []).map(label).join(' · ') || 'Not specified')}</p></div><div><span class="micro-label">Style direction</span><p>${escapeHtml(brief.style_notes || 'Not specified')}</p></div><div><span class="micro-label">Content notes</span><p>${escapeHtml(brief.content_notes || 'Not specified')}</p></div><div><span class="micro-label">Additional requests</span><p>${escapeHtml(brief.project_notes || 'None')}</p></div></div>`;
 }
 
-function renderDesigns(project) {
-  const options = project.design_options || [];
-  if (!options.length) return '<p class="portal-empty">Design directions will appear here after human review.</p>';
-  const choices = `<option value="">No selection</option>${options.map((option) => `<option value="${escapeHtml(option.id)}">${escapeHtml(`${label(option.option_group)} option ${option.option_number}`)}</option>`).join('')}`;
-  return `<div class="portal-design-intro"><div><span class="micro-label">Private concept review</span><h4>Choose the direction that feels most like your brand.</h4></div><p>Rank your favorites in order. Your first choice becomes the lead direction.</p></div><div class="portal-design-grid">${options.map((option) => `<article class="portal-design-card"><div class="portal-design-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Design option ${Number(option.option_number)}" loading="lazy">` : '<span>Preview pending</span>'}</div><div><span class="micro-label">${escapeHtml(label(option.option_group))}</span><h4>Option ${Number(option.option_number)}</h4>${option.prompt_summary ? `<p>${escapeHtml(option.prompt_summary)}</p>` : ''}</div></article>`).join('')}</div><form class="portal-design-feedback" data-design-feedback-form data-option-group="${escapeHtml(options[0].option_group || 'homepage')}" data-revision-round="${Number(options[0].revision_round || 0)}"><div><h4>Rank your favorites</h4><p>Choose up to three directions.</p></div><label>First choice<select name="firstChoice" required>${choices}</select></label><label>Second choice<select name="secondChoice">${choices}</select></label><label>Third choice<select name="thirdChoice">${choices}</select></label><label class="portal-feedback-notes">Notes<textarea name="notes" maxlength="3000" rows="4"></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Save design choices</button><button class="button button--ghost button--small" type="button" data-request-more-designs>Request new directions</button><span class="form-status" role="status"></span></div><aside class="portal-design-next"><span>Next: Canva directions</span><strong>Your selected style carries forward.</strong><p>The next available creative choices will appear in this same private project.</p></aside></form>`;
+function renderPosterOptions(options) {
+  if (!options.length) return '';
+  return `<section class="website-review__posters"><div><span class="micro-label">Animated poster previews</span><h4>Two private motion posters are ready for review.</h4><p>Each vertical video is delivered through an expiring project link and remains inside this account workspace.</p></div><div class="portal-design-grid">${options.map((option) => `<article class="portal-design-card portal-design-card--poster"><div class="portal-design-card__preview">${option.preview_url ? `<video src="${escapeHtml(option.preview_url)}" aria-label="Animated poster option ${Number(option.option_number)}" loop muted playsinline controls preload="metadata"></video>` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Poster option ${Number(option.option_number)}</span><h4>${escapeHtml(option.prompt_summary || 'Motion poster concept')}</h4>${option.preview_url ? `<a class="button button--small" href="${escapeHtml(option.preview_url)}" target="_blank" rel="noopener">Open motion poster</a>` : '<span class="status-pill">Link pending</span>'}</div></article>`).join('')}</div></section>`;
+}
+
+function renderSpecialRequestStep(project) {
+  const requestCount = (project.feedback || []).filter((entry) => entry.action === 'special_request').length;
+  return `<form class="portal-special-request website-review__request" data-special-request-form><div><span class="micro-label">Step 2 of 2</span><h4>Any special requests?</h4><p>Optional. Tell us what to combine, avoid, or explore next. Your note stays with this project only.</p></div><label>Special request<textarea name="notes" minlength="10" maxlength="3000" rows="5" placeholder="Optional: share a detail or direction for the next round."></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Send request</button><button class="button button--ghost button--small" type="button" data-website-finish>Finish for now</button><span class="form-status" role="status">${requestCount ? `${requestCount} request${requestCount === 1 ? '' : 's'} recorded` : ''}</span></div></form>`;
+}
+
+function renderWebsite(project) {
+  const allOptions = project.design_options || [];
+  const homepageOptions = allOptions.filter((option) => String(option.option_group || '').startsWith('homepage_'));
+  const posterOptions = allOptions.filter((option) => option.option_group === 'poster_animated');
+  if (!homepageOptions.length) return '<p class="portal-empty">Website directions will appear here after human review.</p>';
+  const latestRound = Math.max(...homepageOptions.map((option) => Number(option.revision_round || 0)));
+  const options = homepageOptions.filter((option) => Number(option.revision_round || 0) === latestRound);
+  const optionGroup = options[0]?.option_group || 'homepage_normal';
+  const hasSavedRanking = (project.feedback || []).some((entry) => entry.action === 'select_designs'
+    && entry.option_group === optionGroup
+    && Number(entry.revision_round || 0) === latestRound);
+  const choices = `<option value="">No selection</option>${options.map((option) => `<option value="${escapeHtml(option.id)}">Homepage option ${Number(option.option_number)}</option>`).join('')}`;
+  const picker = `<form class="portal-design-feedback website-review__picker" data-design-feedback-form data-website-review-form data-option-group="${escapeHtml(optionGroup)}" data-revision-round="${latestRound}"><div><span class="micro-label">Step 1 of 2</span><h4>Pick your favorite homepage directions.</h4><p>Rank up to three. Your first choice becomes the lead reference for the next round.</p></div><label>First choice<select name="firstChoice" required>${choices}</select></label><label>Second choice<select name="secondChoice">${choices}</select></label><label>Third choice<select name="thirdChoice">${choices}</select></label><label class="portal-feedback-notes">What stood out?<textarea name="notes" maxlength="3000" rows="4" placeholder="Optional: tell us what you want to keep or avoid."></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Continue to special requests</button><span class="form-status" role="status"></span></div></form>`;
+  return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Website direction</span><h3>Pick the visual direction that feels most like your brand.</h3><p>Review each homepage below, rank your top three, then add an optional special request.</p></header><div class="portal-design-grid website-review__grid">${options.map((option) => `<article class="portal-design-card"><div class="portal-design-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Homepage option ${Number(option.option_number)}" loading="lazy">` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Homepage option ${Number(option.option_number)}</span><h4>Direction ${Number(option.option_number)}</h4>${option.prompt_summary ? `<p>${escapeHtml(option.prompt_summary)}</p>` : ''}</div></article>`).join('')}</div>${hasSavedRanking ? renderSpecialRequestStep(project) : picker}${renderPosterOptions(posterOptions)}</div>`;
 }
 
 function renderInsights(project) {
@@ -85,13 +99,8 @@ function renderFiles(project) {
 function renderProject(project, activeProjectTab) {
   const progress = Math.max(0, Math.min(100, Number(project.progress_percent || 0)));
   const panels = {
-    updates: renderUpdates(project),
-    progress: renderProgress(project),
-    brief: renderBrief(project),
-    insights: renderInsights(project),
-    designs: renderDesigns(project),
-    requests: renderRequests(project),
-    files: renderFiles(project),
+    audit: renderInsights(project),
+    website: renderWebsite(project),
   };
   const projectKind = project.order_id ? (planNames[project.plan_key] || label(project.plan_key)) : 'Private evaluation test';
   return `<article class="customer-project customer-workspace__canvas" data-project-id="${escapeHtml(project.id)}" tabindex="-1"><header class="customer-project__header"><div><span class="eyebrow">${escapeHtml(projectKind)}</span><h2>${escapeHtml(project.name || 'Your project')}</h2><p>${escapeHtml(project.scope_summary || 'Questions, designs, progress, and private files stay together here.')}</p></div><div class="customer-project__status"><span class="status-pill">${escapeHtml(label(project.status || 'pending'))}</span>${project.order_id ? '' : '<span class="status-pill status-pill--secondary">No payment attached</span>'}</div></header><div class="portal-progress"><div class="portal-progress__head"><strong>${progress}% complete</strong><span>${escapeHtml(label(project.workflow?.current_stage || project.status || 'pending'))}</span></div><div class="portal-progress__track" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${progress}%"></span></div></div><nav class="customer-project-tabs" aria-label="Project sections">${projectTabs.map(([key, text]) => `<button type="button" data-project-tab="${key}" aria-selected="${activeProjectTab === key}">${text}</button>`).join('')}</nav><div class="customer-project-panels">${projectTabs.map(([key, text]) => `<section data-project-panel="${key}"${activeProjectTab === key ? '' : ' hidden'}><h3 class="sr-only">${text}</h3>${panels[key]}</section>`).join('')}</div></article>`;
@@ -114,7 +123,7 @@ function renderSettings(result) {
   return `<section class="customer-settings"><div><span class="micro-label">Account</span><h2>Settings</h2><p>Your private project workspace stays tied to this confirmed email.</p></div><dl><div><dt>Name</dt><dd>${escapeHtml(profile.full_name || 'Not provided')}</dd></div><div><dt>Email</dt><dd>${escapeHtml(email || 'Confirmed account email')}</dd></div></dl><div class="customer-settings__actions"><a class="button button--small" href="/forgot-password?email=${encodeURIComponent(email)}" data-nav>Change password with a verification code</a><button class="button button--ghost button--small" type="button" data-settings-signout>Sign out</button></div><p class="customer-settings__note">For security, password changes require a new code sent to your confirmed email.</p><div class="customer-signout-confirm" data-signout-confirm hidden role="group" aria-label="Confirm sign out"><div><strong>Sign out of this device?</strong><p>Your saved projects stay private and unchanged.</p></div><div><button class="button button--ghost button--small" type="button" data-signout-cancel>Cancel</button><button class="button button--small" type="button" data-signout-approve>Yes, sign out</button></div></div></section>`;
 }
 
-export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = 'updates') {
+export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = 'audit') {
   const projects = result.projects || [];
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0] || null;
   const tabs = [['overview', 'Overview'], ['projects', 'Projects'], ['settings', 'Settings']];

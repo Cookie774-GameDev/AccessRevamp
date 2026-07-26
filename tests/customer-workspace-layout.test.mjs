@@ -23,15 +23,13 @@ test('the customer hub presents one selected project inside an application works
   assert.match(styles, /\.customer-workspace__canvas/);
 });
 
-test('the focused project keeps questions progress designs requests and delivery together', async () => {
-  const client = await read('src/services/account-projects.js');
+test('the focused project keeps its customer journey in the Audit and Website tabs', async () => {
+  const renderer = await read('src/services/customer-workspace-renderer.js');
 
-  assert.match(client, /Next action/);
-  assert.match(client, /Project questions and references/);
-  assert.match(client, /Production progress/);
-  assert.match(client, /Designs for review/);
-  assert.match(client, /Special requests/);
-  assert.match(client, /Files and website downloads/);
+  assert.match(renderer, /\['audit', 'Audit'\]/);
+  assert.match(renderer, /\['website', 'Website'\]/);
+  assert.match(renderer, /Pick your favorite homepage directions/);
+  assert.match(renderer, /Any special requests\?/);
 });
 
 test('the authenticated workspace renders compact application and project tabs', async () => {
@@ -60,7 +58,7 @@ test('the authenticated workspace renders compact application and project tabs',
   for (const tab of ['overview', 'projects', 'settings']) {
     assert.match(html, new RegExp(`data-workspace-tab="${tab}"`));
   }
-  for (const tab of ['updates', 'progress', 'brief', 'designs', 'requests', 'files']) {
+  for (const tab of ['audit', 'website']) {
     assert.match(html, new RegExp(`data-project-tab="${tab}"`));
   }
   assert.match(html, /Change password with a verification code/);

@@ -276,6 +276,20 @@
 }
 .portal-design-next span { color: #9d6208; font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .portal-design-next p { margin: 0; color: #716a5f; font-size: .78rem; }
+.website-review { display: grid; gap: clamp(1rem, 2.2vw, 1.6rem); min-height: min(70rem, calc(100dvh - 15rem)); }
+.website-review__hero { display: grid; gap: .55rem; max-width: 48rem; padding: clamp(1.1rem, 2.5vw, 1.7rem); border: 1px solid #dfd4c2; border-radius: 1rem; background: linear-gradient(135deg, #fffdf8, #f7e7cf); }
+.website-review__hero h3 { max-width: 17ch; margin: 0; color: #24211c; font-family: var(--display); font-size: clamp(2rem, 4.5vw, 3.8rem); line-height: .92; letter-spacing: -.04em; }
+.website-review__hero p { max-width: 37rem; margin: 0; color: #625a4f; line-height: 1.6; }
+.website-review__grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+.website-review__grid .portal-design-card { box-shadow: 5px 5px 0 rgba(43, 36, 25, .9); }
+.website-review__picker,
+.website-review__request { margin-top: 0; }
+.website-review__posters { display: grid; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid #dfd4c2; }
+.website-review__posters > div:first-child { display: grid; gap: .35rem; max-width: 42rem; }
+.website-review__posters h4 { margin: 0; color: #24211c; font-family: var(--display); font-size: clamp(1.4rem, 2.5vw, 2rem); }
+.website-review__posters p { margin: 0; color: #716a5f; line-height: 1.55; }
+.portal-design-card--poster .portal-design-card__preview { min-height: 18rem; aspect-ratio: 9 / 16; background: linear-gradient(135deg, #22201d, #926216 52%, #e76f5d); color: #fff7e8; font-size: .72rem; font-weight: 900; letter-spacing: .16em; }
+.portal-design-card--poster .portal-design-card__preview video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .portal-insight-groups { display: grid; gap: 1rem; }
 .portal-insight-groups > section { overflow: hidden; border: 1px solid #ded3c2; border-radius: .9rem; background: #fffdf8; }
 .portal-insight-groups > section > header { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px solid #ded3c2; background: #eee4d4; font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
@@ -321,6 +335,7 @@
   .customer-dashboard-tabs button { flex: 1 0 auto; }
   .customer-dashboard-panel { padding: .65rem; }
   .customer-overview-grid, .portal-design-intro, .portal-insight-summary { grid-template-columns: 1fr; }
+  .website-review { min-height: auto; }
   .customer-workspace__rail { display: flex; overflow-x: auto; }
   .customer-workspace__rail-head { display: none; }
   .customer-workspace__rail button { flex: 0 0 13rem; border-right: 1px solid #e8dfcf; border-bottom: 0; }
