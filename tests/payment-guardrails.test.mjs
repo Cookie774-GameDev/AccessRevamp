@@ -5,11 +5,13 @@ import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(path, 'utf8');
 
 test('payment runtime remains fail closed until a verified catalog and configuration are present', async () => {
-  const [core, functions, monitoring, runtime] = await Promise.all([
+  const [core, functions, monitoring, runtime, health, continuous] = await Promise.all([
     read('supabase/migrations/20260720170000_payment_runtime_guardrails.sql'),
     read('supabase/migrations/20260720170100_payment_runtime_functions.sql'),
     read('supabase/migrations/20260720170200_payment_runtime_monitoring.sql'),
     read('netlify/functions/_shared/payment-runtime.mjs'),
+    read('netlify/functions/payment-health.mjs'),
+    read('supabase/migrations/20260726214500_continuous_checkout_readiness.sql'),
   ]);
   assert.match(core, /checkout_enabled boolean not null default false/);
   assert.match(core, /refunds_enabled boolean not null default false/);
@@ -24,6 +26,13 @@ test('payment runtime remains fail closed until a verified catalog and configura
   assert.match(monitoring, /unfulfilled_paid_checkout/);
   assert.match(runtime, /Secure checkout is temporarily paused/);
   assert.match(runtime, /stripe_price_catalog/);
+  assert.match(runtime, /accessrevamp_production_readiness/);
+  assert.match(runtime, /ready_for_live_checkout/);
+  assert.match(health, /checkoutProductionReadiness/);
+  assert.match(health, /productionReadiness\.ready/);
+  assert.match(continuous, /fail_close_accessrevamp_checkout_on_readiness_change/);
+  assert.match(continuous, /checkout_enabled = false/);
+  assert.match(continuous, /refunds_enabled = false/);
 });
 
 test('checkout saves a confirmed order draft before creating one idempotent Stripe session', async () => {

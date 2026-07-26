@@ -84,6 +84,10 @@ export class PaymentHarness {
       configuration_verified_at: new Date().toISOString(),
       maintenance_reason: '',
     };
+    this.readiness = {
+      ready_for_sandbox_checkout: true,
+      ready_for_live_checkout: false,
+    };
     this.catalog = new Map(Object.entries(PRICE).map(([transition, [id, amount]]) => [transition, {
       transition_key: transition, stripe_price_id: id, net_cents: amount, currency: 'usd', livemode: false, active: true,
     }]));
@@ -184,6 +188,9 @@ export class PaymentHarness {
 
   async rpc(name, args) {
     await jitter();
+    if (name === 'accessrevamp_production_readiness') {
+      return { data: structuredClone(this.readiness), error: null };
+    }
     if (name === 'reserve_accessrevamp_upgrade') return this.reservationLock.run(async () => {
       const key = `${args.p_user_id}:${args.p_request_id}`;
       const current = this.reservations.get(key);
