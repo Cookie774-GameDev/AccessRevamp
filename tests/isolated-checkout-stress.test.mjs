@@ -79,7 +79,7 @@ test('350 malformed or hostile requests never reach Stripe', { timeout: 30_000 }
   assert.equal(fixture.harness.reservations.size, 0);
 });
 
-test('runtime kill switches reject 300 attempts before reservation or Stripe', { timeout: 30_000 }, async () => {
+test('runtime and production-readiness kill switches reject 400 attempts before reservation or Stripe', { timeout: 30_000 }, async () => {
   const disabled = setup();
   disabled.harness.settings.checkout_enabled = false;
   const disabledResponses = await Promise.all(Array.from({ length: 100 }, () => disabled.handler(checkoutRequest({
@@ -112,6 +112,17 @@ test('runtime kill switches reject 300 attempts before reservation or Stripe', {
   assert.ok(modeResponses.every((response) => response.status === 503));
   assert.equal(modeMismatch.harness.reservations.size, 0);
   assert.equal(modeMismatch.stripe.checkoutAttempts, 0);
+
+  const readinessRevoked = setup();
+  readinessRevoked.harness.readiness.ready_for_sandbox_checkout = false;
+  const readinessResponses = await Promise.all(Array.from({ length: 100 }, () => readinessRevoked.handler(checkoutRequest({
+    token: readinessRevoked.token,
+    requestId: readinessRevoked.draft.request_id,
+    targetTier: readinessRevoked.draft.plan_key,
+  }))));
+  assert.ok(readinessResponses.every((response) => response.status === 503));
+  assert.equal(readinessRevoked.harness.reservations.size, 0);
+  assert.equal(readinessRevoked.stripe.checkoutAttempts, 0);
 });
 
 test('catalog mismatch never creates Stripe sessions and records one deduplicated incident', { timeout: 30_000 }, async () => {

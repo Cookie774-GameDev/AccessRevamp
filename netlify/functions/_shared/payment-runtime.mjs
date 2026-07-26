@@ -16,6 +16,13 @@ export function expectedLivemode(env = process.env) {
   return env.STRIPE_EXPECT_LIVEMODE === 'true';
 }
 
+export async function checkoutProductionReadiness(admin, livemode) {
+  const { data, error } = await admin.rpc('accessrevamp_production_readiness');
+  const readiness = Array.isArray(data) ? data[0] : data;
+  const gate = livemode ? 'ready_for_live_checkout' : 'ready_for_sandbox_checkout';
+  return Object.freeze({ ready: !error && readiness?.[gate] === true, gate });
+}
+
 export async function requireCheckoutRuntime(admin, env = process.env) {
   const expected = expectedLivemode(env);
   const { data, error } = await admin
@@ -31,6 +38,11 @@ export async function requireCheckoutRuntime(admin, env = process.env) {
     || data.expected_livemode !== expected
     || !recentlyVerified
     || (expected && data.live_payment_approved !== true)) {
+    throw new HttpError(503, 'Secure checkout is temporarily paused.');
+  }
+
+  const readiness = await checkoutProductionReadiness(admin, expected);
+  if (!readiness.ready) {
     throw new HttpError(503, 'Secure checkout is temporarily paused.');
   }
 
