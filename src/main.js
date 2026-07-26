@@ -18,7 +18,6 @@ import { updateDocumentMetadata } from './app/metadata.js';
 import { icon } from './components/icons.js';
 import { shell } from './components/shell.js';
 import { homePage } from './pages/home.js';
-import { setupHomeExperience } from './pages/home-interactions.js';
 import { workDetailPage, workPage } from './pages/work.js';
 import { servicesPage } from './pages/services.js';
 import { pricingPage } from './pages/pricing.js';
@@ -37,22 +36,8 @@ import { projectApprovalPage } from './pages/project-approval.js';
 import { operatorPage } from './pages/operator.js';
 import { notFoundPage, resultPage } from './pages/results.js';
 import { underConstructionPage as underConstructionContent } from './pages/under-construction.js';
-import { setupCinematicExperience } from './cinematic-scroll.js';
-import { setupContactForm } from './services/contact.js';
-import { setupAuthForm } from './services/auth.js';
-import { setupRecoveryForm } from './services/recovery.js';
-import { setupDashboard } from './services/dashboard.js';
 import { setupCheckout } from './services/checkout.js';
-import { setupCheckoutReadiness } from './services/checkout-readiness.js';
-import { setupCheckoutResult } from './services/checkout-result.js';
-import { setupFreeSnapshot } from './services/free-snapshot.js';
-import { setupAccountProjects } from './services/account-projects.js';
-import { setupProjectIntake } from './services/project-intake.js';
-import { setupProjectApproval } from './services/project-approval.js';
-import { setupOperator } from './services/operator.js';
-import { setupPricingContext } from './services/pricing-context.js';
 import { setupSessionNavigation } from './services/session-navigation.js';
-import { setupShowcaseComparisons } from './services/showcase-comparison.js';
 
 function normalizeAuthEmailReturn() {
   if (!location.hash) return;
@@ -180,26 +165,39 @@ function setupMenu() {
 
 let router;
 
+function setupLazy(load) {
+  let active = true;
+  let cleanup;
+  load().then((setup) => {
+    if (!active) return;
+    cleanup = setup?.();
+  }).catch(() => undefined);
+  return () => {
+    active = false;
+    cleanup?.();
+  };
+}
+
 function renderRoute({ pathname, pattern, params, view }) {
   app.innerHTML = view(params);
   updateDocumentMetadata(pathname, pattern);
 
   const cleanups = [setupMenu(), setupSessionNavigation(router.navigate)];
-  if (pathname === '/') cleanups.push(setupHomeExperience(app));
-  if (pathname === '/') cleanups.push(setupCheckoutReadiness(app));
-  if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupShowcaseComparisons(app));
-  if (pathname === '/cinematic-scroll') cleanups.push(setupCinematicExperience());
-  if (pathname === '/contact') cleanups.push(setupContactForm());
-  if (pathname === '/free-snapshot') cleanups.push(setupFreeSnapshot());
-  if (pathname === '/pricing') cleanups.push(setupPricingContext());
-  if (pathname === '/login' || pathname === '/signup') cleanups.push(setupAuthForm(router.navigate));
-  if (pathname === '/forgot-password' || pathname === '/recover-account') cleanups.push(setupRecoveryForm(router.navigate));
-  if (pathname === '/dashboard') cleanups.push(setupDashboard(router.navigate));
-  if (pathname === '/account/projects') cleanups.push(setupAccountProjects(router.navigate));
-  if (pathname === '/project-intake') cleanups.push(setupProjectIntake());
-  if (pattern === '/approve/:token') cleanups.push(setupProjectApproval(app));
-  if (pathname === '/operator') cleanups.push(setupOperator());
-  if (pathname === '/success') cleanups.push(setupCheckoutResult(app));
+  if (pathname === '/') cleanups.push(setupLazy(() => import('./pages/home-interactions.js').then(({ setupHomeExperience }) => () => setupHomeExperience(app))));
+  if (pathname === '/') cleanups.push(setupLazy(() => import('./services/checkout-readiness.js').then(({ setupCheckoutReadiness }) => () => setupCheckoutReadiness(app))));
+  if (pathname === '/work' || pathname === '/portfolio') cleanups.push(setupLazy(() => import('./services/showcase-comparison.js').then(({ setupShowcaseComparisons }) => () => setupShowcaseComparisons(app))));
+  if (pathname === '/cinematic-scroll') cleanups.push(setupLazy(() => import('./cinematic-scroll.js').then(({ setupCinematicExperience }) => setupCinematicExperience)));
+  if (pathname === '/contact') cleanups.push(setupLazy(() => import('./services/contact.js').then(({ setupContactForm }) => setupContactForm)));
+  if (pathname === '/free-snapshot') cleanups.push(setupLazy(() => import('./services/free-snapshot.js').then(({ setupFreeSnapshot }) => setupFreeSnapshot)));
+  if (pathname === '/pricing') cleanups.push(setupLazy(() => import('./services/pricing-context.js').then(({ setupPricingContext }) => setupPricingContext)));
+  if (pathname === '/login' || pathname === '/signup') cleanups.push(setupLazy(() => import('./services/auth.js').then(({ setupAuthForm }) => () => setupAuthForm(router.navigate))));
+  if (pathname === '/forgot-password' || pathname === '/recover-account') cleanups.push(setupLazy(() => import('./services/recovery.js').then(({ setupRecoveryForm }) => () => setupRecoveryForm(router.navigate))));
+  if (pathname === '/dashboard') cleanups.push(setupLazy(() => import('./services/dashboard.js').then(({ setupDashboard }) => () => setupDashboard(router.navigate))));
+  if (pathname === '/account/projects') cleanups.push(setupLazy(() => import('./services/account-projects.js').then(({ setupAccountProjects }) => () => setupAccountProjects(router.navigate))));
+  if (pathname === '/project-intake') cleanups.push(setupLazy(() => import('./services/project-intake.js').then(({ setupProjectIntake }) => setupProjectIntake)));
+  if (pattern === '/approve/:token') cleanups.push(setupLazy(() => import('./services/project-approval.js').then(({ setupProjectApproval }) => () => setupProjectApproval(app))));
+  if (pathname === '/operator') cleanups.push(setupLazy(() => import('./services/operator.js').then(({ setupOperator }) => setupOperator)));
+  if (pathname === '/success') cleanups.push(setupLazy(() => import('./services/checkout-result.js').then(({ setupCheckoutResult }) => () => setupCheckoutResult(app))));
 
   if (pattern === '/portfolio/:slug') {
     let active = true;

@@ -26,8 +26,10 @@ test('portfolio no longer links to the three deleted interactive demo pages', as
 
 test('homepage lifecycle binds and cleans the dedicated experience module', async () => {
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
-  assert.match(main, /import \{ setupHomeExperience \} from '\.\/pages\/home-interactions\.js';/);
-  assert.match(main, /pathname === '\/'\) cleanups\.push\(setupHomeExperience\(app\)\)/);
+  assert.match(main, /import\('\.\/pages\/home-interactions\.js'\)/);
+  assert.match(main, /setupHomeExperience\(app\)/);
+  assert.match(main, /function setupLazy/);
+  assert.match(main, /cleanup\?\.\(\)/);
 });
 
 test('generated imagery ships only optimized web formats', async () => {

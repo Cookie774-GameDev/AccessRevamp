@@ -70,7 +70,7 @@ Plan details are grouped into meaningful customer outcomes rather than displayed
 - **Inclusive delivery:** mobile, static, failed-media, and reduced-motion fallbacks.
 - **Private collaboration:** ranked concepts, special instructions, progress, and final delivery remain together in the customer workspace.
 
-No copy may imply unlimited pages, unlimited revisions, guaranteed revenue, or unbounded cinematic production.
+No copy may imply unlimited pages, unlimited revisions, revenue guarantees, or unbounded cinematic production.
 
 ## Premium review and payment experience
 
@@ -153,4 +153,3 @@ The visual quality must remain suitable for the rendered panel size on desktop a
 - Media inspection proving the deployed scrub derivatives meet width, codec, pixel-format, frame-rate, keyframe, size, and fast-start requirements.
 - Full static checks, all unit tests, production build, dependency audit, and deployment checks.
 - Production verification that `/api/payment-health` returns HTTP `200`, the deployed bundles contain the approved presentation, and an authenticated Checkout Session resolves only to Stripe-hosted Checkout.
-
