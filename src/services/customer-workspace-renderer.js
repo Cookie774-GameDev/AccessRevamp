@@ -53,7 +53,7 @@ function renderBrief(project) {
 
 function renderPosterOptions(options) {
   if (!options.length) return '';
-  return `<section class="website-review__posters"><div><span class="micro-label">Animated poster previews</span><h4>Two private motion posters are ready for review.</h4><p>Each vertical video is delivered through an expiring project link and remains inside this account workspace.</p></div><div class="portal-design-grid">${options.map((option) => `<article class="portal-design-card portal-design-card--poster"><div class="portal-design-card__preview">${option.preview_url ? `<video src="${escapeHtml(option.preview_url)}" aria-label="Animated poster option ${Number(option.option_number)}" loop muted playsinline controls preload="metadata"></video>` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Poster option ${Number(option.option_number)}</span><h4>${escapeHtml(option.prompt_summary || 'Motion poster concept')}</h4>${option.preview_url ? `<a class="button button--small" href="${escapeHtml(option.preview_url)}" target="_blank" rel="noopener">Open motion poster</a>` : '<span class="status-pill">Link pending</span>'}</div></article>`).join('')}</div></section>`;
+  return `<section class="website-review__posters"><div><span class="micro-label">Animated poster previews</span><h4>Two private motion posters are ready for review.</h4><p>Each vertical video is delivered through an expiring project link and remains inside this account workspace.</p></div><div class="portal-design-grid">${options.map((option) => `<article class="portal-design-card portal-design-card--poster"><div class="portal-design-card__preview">${option.preview_url ? `<video data-signed-preview src="${escapeHtml(option.preview_url)}" aria-label="Animated poster option ${Number(option.option_number)}" loop muted playsinline controls preload="metadata"></video>` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Poster option ${Number(option.option_number)}</span><h4>${escapeHtml(option.prompt_summary || 'Motion poster concept')}</h4>${option.preview_url ? `<a class="button button--small" href="${escapeHtml(option.preview_url)}" target="_blank" rel="noopener">Open motion poster</a>` : '<span class="status-pill">Link pending</span>'}</div></article>`).join('')}</div></section>`;
 }
 
 function renderSpecialRequestStep(project) {
@@ -61,7 +61,28 @@ function renderSpecialRequestStep(project) {
   return `<form class="portal-special-request website-review__request" data-special-request-form><div><span class="micro-label">Step 2 of 2</span><h4>Any special requests?</h4><p>Optional. Tell us what to combine, avoid, or explore next. Your note stays with this project only.</p></div><label>Special request<textarea name="notes" minlength="10" maxlength="3000" rows="5" placeholder="Optional: share a detail or direction for the next round."></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Send request</button><button class="button button--ghost button--small" type="button" data-website-finish>Finish for now</button><span class="form-status" role="status">${requestCount ? `${requestCount} request${requestCount === 1 ? '' : 's'} recorded` : ''}</span></div></form>`;
 }
 
-function renderWebsite(project) {
+function renderDesignChooser(options, optionGroup, revisionRound, state = {}) {
+  if (!state.open) return '';
+  const rankedOptionIds = (state.rankedOptionIds || []).filter((id) => options.some((option) => option.id === id)).slice(0, 3);
+  const rankIndex = rankedOptionIds.length;
+  const rankNames = ['favorite', 'second favorite', 'third favorite'];
+  const availableOptions = options.filter((option) => !rankedOptionIds.includes(option.id));
+  const selectedOptions = rankedOptionIds.map((id) => options.find((option) => option.id === id)).filter(Boolean);
+  const stepLabels = ['1 Favorite', '2 Second', '3 Third', '4 Instructions'];
+  const progress = `<ol class="design-chooser__progress" aria-label="Design selection progress">${stepLabels.map((text, index) => `<li${index === Math.min(rankIndex, 3) ? ' aria-current="step"' : ''}${index < rankIndex ? ' data-complete' : ''}>${text}</li>`).join('')}</ol>`;
+  const selectedSummary = selectedOptions.length
+    ? `<ol class="design-chooser__selected">${selectedOptions.map((option, index) => `<li><span>${rankNames[index]}</span><strong>Direction ${Number(option.option_number)}</strong></li>`).join('')}</ol>`
+    : '';
+
+  if (rankIndex < 3) {
+    const choiceName = rankNames[rankIndex];
+    return `<section class="design-chooser" data-design-chooser role="dialog" aria-modal="true" aria-labelledby="design-chooser-title"><div class="design-chooser__frame"><header class="design-chooser__head"><div><span class="micro-label">Website direction</span><p>${rankIndex + 1} of 4</p></div><button class="design-chooser__close" type="button" data-design-chooser-close aria-label="Close design chooser">×</button></header>${progress}<main class="design-chooser__body"><div class="design-chooser__intro"><span class="micro-label">Make your pick</span><h2 id="design-chooser-title">Pick your ${choiceName}</h2><p>${rankIndex === 0 ? 'Choose the homepage direction that should lead the build.' : 'Choose the next-strongest direction. Already ranked choices stay locked in.'}</p></div>${selectedSummary}<div class="design-chooser__cards">${availableOptions.map((option) => `<button class="design-chooser__card" type="button" data-design-rank-option="${escapeHtml(option.id)}"><span class="design-chooser__card-media">${option.preview_url ? `<img data-signed-preview src="${escapeHtml(option.preview_url)}" alt="Homepage direction ${Number(option.option_number)}" loading="eager">` : '<span>Preview pending</span>'}</span><span><small>Direction ${Number(option.option_number)}</small><strong>${escapeHtml(option.prompt_summary || 'Homepage concept')}</strong></span></button>`).join('')}</div></main></div></section>`;
+  }
+
+  return `<section class="design-chooser" data-design-chooser role="dialog" aria-modal="true" aria-labelledby="design-chooser-title"><div class="design-chooser__frame"><header class="design-chooser__head"><div><span class="micro-label">Website direction</span><p>4 of 4</p></div><button class="design-chooser__close" type="button" data-design-chooser-close aria-label="Close design chooser">×</button></header>${progress}<main class="design-chooser__body"><div class="design-chooser__intro"><span class="micro-label">Almost there</span><h2 id="design-chooser-title">Any special instructions?</h2><p>Optional. Tell us what to combine, avoid, or make more prominent before the next design round.</p></div>${selectedSummary}<form class="design-chooser__instructions" data-design-chooser-submit data-option-group="${escapeHtml(optionGroup)}" data-revision-round="${Number(revisionRound || 0)}"><label>Special instructions<textarea name="notes" maxlength="3000" rows="6" placeholder="Optional: describe the details you want us to keep, change, or explore."></textarea></label><div><button class="button button--ghost" type="button" data-design-chooser-back>Back</button><button class="button" type="submit">Submit selections</button><span class="form-status" role="status"></span></div></form></main></div></section>`;
+}
+
+function renderWebsite(project, chooserState = {}) {
   const allOptions = project.design_options || [];
   const homepageOptions = allOptions.filter((option) => String(option.option_group || '').startsWith('homepage_'));
   const posterOptions = allOptions.filter((option) => option.option_group === 'poster_animated');
@@ -69,12 +90,7 @@ function renderWebsite(project) {
   const latestRound = Math.max(...homepageOptions.map((option) => Number(option.revision_round || 0)));
   const options = homepageOptions.filter((option) => Number(option.revision_round || 0) === latestRound);
   const optionGroup = options[0]?.option_group || 'homepage_normal';
-  const hasSavedRanking = (project.feedback || []).some((entry) => entry.action === 'select_designs'
-    && entry.option_group === optionGroup
-    && Number(entry.revision_round || 0) === latestRound);
-  const choices = `<option value="">No selection</option>${options.map((option) => `<option value="${escapeHtml(option.id)}">Homepage option ${Number(option.option_number)}</option>`).join('')}`;
-  const picker = `<form class="portal-design-feedback website-review__picker" data-design-feedback-form data-website-review-form data-option-group="${escapeHtml(optionGroup)}" data-revision-round="${latestRound}"><div><span class="micro-label">Step 1 of 2</span><h4>Pick your favorite homepage directions.</h4><p>Rank up to three. Your first choice becomes the lead reference for the next round.</p></div><label>First choice<select name="firstChoice" required>${choices}</select></label><label>Second choice<select name="secondChoice">${choices}</select></label><label>Third choice<select name="thirdChoice">${choices}</select></label><label class="portal-feedback-notes">What stood out?<textarea name="notes" maxlength="3000" rows="4" placeholder="Optional: tell us what you want to keep or avoid."></textarea></label><div class="portal-feedback-actions"><button class="button button--small" type="submit">Continue to special requests</button><span class="form-status" role="status"></span></div></form>`;
-  return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Website direction</span><h3>Pick the visual direction that feels most like your brand.</h3><p>Review each homepage below, rank your top three, then add an optional special request.</p></header>${renderPosterOptions(posterOptions)}<div class="portal-design-grid website-review__grid">${options.map((option) => `<article class="portal-design-card"><div class="portal-design-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Homepage option ${Number(option.option_number)}" loading="lazy">` : '<span>Preview pending</span>'}</div><div><span class="micro-label">Homepage option ${Number(option.option_number)}</span><h4>Direction ${Number(option.option_number)}</h4>${option.prompt_summary ? `<p>${escapeHtml(option.prompt_summary)}</p>` : ''}</div></article>`).join('')}</div>${hasSavedRanking ? renderSpecialRequestStep(project) : picker}</div>`;
+  return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Website direction</span><h3>Your homepage directions are ready to rank.</h3><p>Open the private selector, choose your first, second, and third favorite, then add any final direction before sending it to the team.</p><button class="button" type="button" data-open-design-chooser>Choose website design</button></header>${renderPosterOptions(posterOptions)}${renderDesignChooser(options, optionGroup, latestRound, chooserState)}</div>`;
 }
 
 function renderInsights(project) {
@@ -101,11 +117,15 @@ function renderFiles(project) {
   return `<div class="portal-file-grid">${files.map((file) => `<article class="portal-file-card"><div class="portal-file-card__body"><span class="micro-label">${escapeHtml(label(file.artifact_type))}</span><h4>${escapeHtml(file.metadata?.title || file.filename || 'Project file')}</h4>${file.download_url ? `<a class="button button--small" href="${escapeHtml(file.download_url)}" target="_blank" rel="noopener" download>Download</a>` : '<span class="status-pill">Link unavailable</span>'}</div></article>`).join('')}${deliveries.map((delivery) => `<article class="portal-file-card"><div class="portal-file-card__body"><span class="micro-label">Delivery</span><h4>${escapeHtml(label(delivery.delivery_type))}</h4>${delivery.drive_url ? `<a class="button button--small" href="${escapeHtml(delivery.drive_url)}" target="_blank" rel="noopener">Open delivery</a>` : ''}</div></article>`).join('')}</div>`;
 }
 
-function renderProject(project, activeProjectTab) {
+function renderProject(project, activeProjectTab, workspaceUi) {
   const progress = Math.max(0, Math.min(100, Number(project.progress_percent || 0)));
+  const chooserState = workspaceUi.designChooser || {
+    open: Boolean(workspaceUi.designChooserOpen),
+    rankedOptionIds: workspaceUi.rankedOptionIds || [],
+  };
   const panels = {
     audit: renderInsights(project),
-    website: renderWebsite(project),
+    website: renderWebsite(project, chooserState),
   };
   const projectKind = project.order_id ? (planNames[project.plan_key] || label(project.plan_key)) : 'Private evaluation test';
   return `<article class="customer-project customer-workspace__canvas" data-project-id="${escapeHtml(project.id)}" tabindex="-1"><header class="customer-project__header"><div><span class="eyebrow">${escapeHtml(projectKind)}</span><h2>${escapeHtml(project.name || 'Your project')}</h2><p>${escapeHtml(project.scope_summary || 'Questions, designs, progress, and private files stay together here.')}</p></div><div class="customer-project__status"><span class="status-pill">${escapeHtml(label(project.status || 'pending'))}</span>${project.order_id ? '' : '<span class="status-pill status-pill--secondary">No payment attached</span>'}</div></header><div class="portal-progress"><div class="portal-progress__head"><strong>${progress}% complete</strong><span>${escapeHtml(label(project.workflow?.current_stage || project.status || 'pending'))}</span></div><div class="portal-progress__track" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${progress}%"></span></div></div><nav class="customer-project-tabs" aria-label="Project sections">${projectTabs.map(([key, text]) => `<button type="button" data-project-tab="${key}" aria-selected="${activeProjectTab === key}">${text}</button>`).join('')}</nav><div class="customer-project-panels">${projectTabs.map(([key, text]) => `<section data-project-panel="${key}"${activeProjectTab === key ? '' : ' hidden'}><h3 class="sr-only">${text}</h3>${panels[key]}</section>`).join('')}</div></article>`;
@@ -128,13 +148,13 @@ function renderSettings(result) {
   return `<section class="customer-settings"><div><span class="micro-label">Account</span><h2>Settings</h2><p>Your private project workspace stays tied to this confirmed email.</p></div><dl><div><dt>Name</dt><dd>${escapeHtml(profile.full_name || 'Not provided')}</dd></div><div><dt>Email</dt><dd>${escapeHtml(email || 'Confirmed account email')}</dd></div></dl><div class="customer-settings__actions"><a class="button button--small" href="/forgot-password?email=${encodeURIComponent(email)}" data-nav>Change password with a verification code</a><button class="button button--ghost button--small" type="button" data-settings-signout>Sign out</button></div><p class="customer-settings__note">For security, password changes require a new code sent to your confirmed email.</p><div class="customer-signout-confirm" data-signout-confirm hidden role="group" aria-label="Confirm sign out"><div><strong>Sign out of this device?</strong><p>Your saved projects stay private and unchanged.</p></div><div><button class="button button--ghost button--small" type="button" data-signout-cancel>Cancel</button><button class="button button--small" type="button" data-signout-approve>Yes, sign out</button></div></div></section>`;
 }
 
-export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = '') {
+export function renderWorkspace(result, selectedProjectId = '', activeWorkspaceTab = 'projects', activeProjectTab = '', workspaceUi = {}) {
   const projects = result.projects || [];
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0] || null;
   const selectedProjectTab = selectedProject ? resolveProjectTab(selectedProject, activeProjectTab) : 'audit';
   const tabs = [['overview', 'Overview'], ['projects', 'Projects'], ['settings', 'Settings']];
   const projectView = selectedProject
-    ? `<div class="customer-workspace">${renderRail(projects, selectedProject.id)}${renderProject(selectedProject, selectedProjectTab)}</div>`
+    ? `<div class="customer-workspace">${renderRail(projects, selectedProject.id)}${renderProject(selectedProject, selectedProjectTab, workspaceUi)}</div>`
     : '<div class="empty-state"><h2>No project yet</h2><p>A verified payment creates your private project automatically.</p><a class="button" href="/pricing" data-nav>Review service options</a></div>';
   const panels = {
     overview: renderOverview(result, selectedProject),

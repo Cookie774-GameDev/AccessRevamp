@@ -57,7 +57,7 @@ test('private test projects render as evaluations and expose customer-visible fi
   assert.match(html, /Recommended move/);
 });
 
-test('website review keeps an ordered top-three ranking and advances to the optional request step', () => {
+test('website review starts the guided ranking experience from one clear action', () => {
   const html = renderWorkspace({
     profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
     projects: [{
@@ -79,11 +79,9 @@ test('website review keeps an ordered top-three ranking and advances to the opti
     }],
   }, 'project-1', 'projects', 'website');
 
-  assert.match(html, /First choice/);
-  assert.match(html, /Second choice/);
-  assert.match(html, /Third choice/);
-  assert.match(html, /data-website-review-form/);
-  assert.match(html, /Continue to special requests/);
+  assert.match(html, /data-open-design-chooser/);
+  assert.match(html, /Choose website design/);
+  assert.doesNotMatch(html, /data-website-review-form/);
 });
 
 test('a project with ready design options opens directly on the Website review', () => {
@@ -110,7 +108,7 @@ test('a project with ready design options opens directly on the Website review',
   assert.doesNotMatch(html, /data-project-panel="website" hidden/);
 });
 
-test('Website review shows ready animated posters before the homepage ranking form', () => {
+test('Website review keeps ready animated posters visible alongside the selector entry point', () => {
   const html = renderWorkspace({
     profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
     projects: [{
@@ -123,7 +121,48 @@ test('Website review shows ready animated posters before the homepage ranking fo
     }],
   }, 'project-1', 'projects', 'website');
 
-  assert.ok(html.indexOf('Animated poster previews') < html.indexOf('data-website-review-form'));
+  assert.match(html, /Animated poster previews/);
+  assert.match(html, /data-open-design-chooser/);
+});
+
+test('private website previews identify themselves for signed-link recovery', () => {
+  const html = renderWorkspace({
+    profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
+    projects: [{
+      id: 'project-1', order_id: null, name: 'UrBeauty evaluation test', plan_key: 'homepage_reveal', status: 'client_review', progress_percent: 60,
+      findings: [], updates: [], feedback: [], artifacts: [], deliveries: [],
+      design_options: [
+        { id: 'option-1', option_group: 'homepage_normal', option_number: 1, revision_round: 0, preview_url: 'https://example.com/one.png' },
+        { id: 'poster-1', option_group: 'poster_animated', option_number: 1, revision_round: 0, preview_url: 'https://example.com/poster.mp4' },
+      ],
+    }],
+  }, 'project-1', 'projects', 'website', { designChooserOpen: true, rankedOptionIds: [] });
+
+  assert.match(html, /<img[^>]+data-signed-preview/);
+  assert.match(html, /<video[^>]+data-signed-preview/);
+});
+
+test('the website chooser presents a full-screen guided ranking sequence', () => {
+  const html = renderWorkspace({
+    profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
+    projects: [{
+      id: 'project-1', order_id: null, name: 'UrBeauty evaluation test', plan_key: 'homepage_reveal', status: 'client_review', progress_percent: 60,
+      findings: [], updates: [], feedback: [], artifacts: [], deliveries: [],
+      design_options: [
+        { id: 'option-1', option_group: 'homepage_normal', option_number: 1, revision_round: 0, preview_url: 'https://example.com/one.png' },
+        { id: 'option-2', option_group: 'homepage_normal', option_number: 2, revision_round: 0, preview_url: 'https://example.com/two.png' },
+        { id: 'option-3', option_group: 'homepage_normal', option_number: 3, revision_round: 0, preview_url: 'https://example.com/three.png' },
+        { id: 'option-4', option_group: 'homepage_normal', option_number: 4, revision_round: 0, preview_url: 'https://example.com/four.png' },
+        { id: 'option-5', option_group: 'homepage_normal', option_number: 5, revision_round: 0, preview_url: 'https://example.com/five.png' },
+      ],
+    }],
+  }, 'project-1', 'projects', 'website', { designChooserOpen: true, rankedOptionIds: ['option-1', 'option-2'] });
+
+  assert.match(html, /data-design-chooser/);
+  assert.match(html, /Pick your third favorite/);
+  assert.match(html, /data-design-rank-option="option-3"/);
+  assert.match(html, /1 Favorite/);
+  assert.match(html, /4 Instructions/);
 });
 
 test('the project workspace reduces the customer journey to Audit and Website, with a full-page pick-and-request flow', () => {
@@ -155,15 +194,15 @@ test('the project workspace reduces the customer journey to Audit and Website, w
   assert.match(html, /data-project-tab="audit"/);
   assert.match(html, /data-project-tab="website"/);
   assert.doesNotMatch(html, /data-project-tab="updates"|data-project-tab="progress"|data-project-tab="brief"|data-project-tab="designs"|data-project-tab="requests"|data-project-tab="files"/);
-  assert.match(html, /data-website-review-form/);
-  assert.match(html, /Continue to special requests/);
+  assert.match(html, /data-open-design-chooser/);
+  assert.match(html, /Choose website design/);
   assert.match(html, /Animated poster previews/);
-  assert.match(html, /<video src="https:\/\/example\.com\/private-poster\.mp4"[^>]*loop muted playsinline controls/);
+  assert.match(html, /<video[^>]*src="https:\/\/example\.com\/private-poster\.mp4"[^>]*loop muted playsinline controls/);
   assert.doesNotMatch(html, /canva\.com/);
-  assert.equal((html.match(/alt="Homepage option/g) || []).length, 5);
+  assert.equal((html.match(/alt="Homepage option/g) || []).length, 0);
 });
 
-test('a saved homepage ranking advances the Website tab to an optional special-request step', () => {
+test('a saved homepage ranking keeps the guided selection entry point available', () => {
   const html = renderWorkspace({
     profile: { full_name: 'Arya Selvaraj', email: 'vibespaceos@vibespaceos.com' },
     projects: [{
@@ -174,7 +213,6 @@ test('a saved homepage ranking advances the Website tab to an optional special-r
     }],
   }, 'project-1', 'projects', 'website');
 
-  assert.match(html, /Any special requests\?/);
-  assert.match(html, /Finish for now/);
-  assert.doesNotMatch(html, /name="notes"[^>]+required/);
+  assert.match(html, /data-open-design-chooser/);
+  assert.match(html, /Choose website design/);
 });

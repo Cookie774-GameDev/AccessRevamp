@@ -28,8 +28,9 @@ test('the focused project keeps its customer journey in the Audit and Website ta
 
   assert.match(renderer, /\['audit', 'Audit'\]/);
   assert.match(renderer, /\['website', 'Website'\]/);
-  assert.match(renderer, /Pick your favorite homepage directions/);
-  assert.match(renderer, /Any special requests\?/);
+  assert.match(renderer, /data-open-design-chooser/);
+  assert.match(renderer, /renderDesignChooser/);
+  assert.match(renderer, /Any special instructions\?/);
 });
 
 test('the authenticated workspace renders compact application and project tabs', async () => {
