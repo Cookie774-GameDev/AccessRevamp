@@ -26,7 +26,7 @@ test('live checkout uses the technical transport gate without erasing broader la
 });
 
 test('payment runtime remains fail closed until a verified catalog and configuration are present', async () => {
-  const [core, functions, monitoring, runtime, health, continuous, transport] = await Promise.all([
+  const [core, functions, monitoring, runtime, health, continuous, transport, activation] = await Promise.all([
     read('supabase/migrations/20260720170000_payment_runtime_guardrails.sql'),
     read('supabase/migrations/20260720170100_payment_runtime_functions.sql'),
     read('supabase/migrations/20260720170200_payment_runtime_monitoring.sql'),
@@ -34,6 +34,7 @@ test('payment runtime remains fail closed until a verified catalog and configura
     read('netlify/functions/payment-health.mjs'),
     read('supabase/migrations/20260726214500_continuous_checkout_readiness.sql'),
     read('supabase/migrations/20260726220401_separate_checkout_transport_readiness.sql'),
+    read('supabase/migrations/20260726221249_separate_checkout_activation_guard.sql'),
   ]);
   assert.match(core, /checkout_enabled boolean not null default false/);
   assert.match(core, /refunds_enabled boolean not null default false/);
@@ -58,6 +59,11 @@ test('payment runtime remains fail closed until a verified catalog and configura
   assert.match(transport, /accessrevamp_checkout_transport_readiness/);
   assert.match(transport, /ready_for_live_checkout_transport/);
   assert.match(transport, /fail_close_accessrevamp_checkout_on_readiness_change/);
+  assert.match(activation, /guard_accessrevamp_payment_activation/);
+  assert.match(
+    activation,
+    /when new\.expected_livemode then coalesce\(\(v_status ->> 'ready_for_live_checkout_transport'\)::boolean, false\)/,
+  );
 });
 
 test('checkout saves a confirmed order draft before creating one idempotent Stripe session', async () => {
