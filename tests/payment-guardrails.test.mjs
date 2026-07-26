@@ -1,17 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { checkoutProductionReadiness } from '../netlify/functions/_shared/payment-runtime.mjs';
 
 const read = (path) => readFile(path, 'utf8');
 
+test('live checkout uses the technical transport gate without erasing broader launch blockers', async () => {
+  const admin = {
+    rpc: async (name) => {
+      assert.equal(name, 'accessrevamp_checkout_transport_readiness');
+      return {
+        data: {
+          ready_for_live_checkout_transport: true,
+          transport_blockers: [],
+        },
+        error: null,
+      };
+    },
+  };
+
+  assert.deepEqual(await checkoutProductionReadiness(admin, true), {
+    ready: true,
+    gate: 'ready_for_live_checkout_transport',
+  });
+});
+
 test('payment runtime remains fail closed until a verified catalog and configuration are present', async () => {
-  const [core, functions, monitoring, runtime, health, continuous] = await Promise.all([
+  const [core, functions, monitoring, runtime, health, continuous, transport] = await Promise.all([
     read('supabase/migrations/20260720170000_payment_runtime_guardrails.sql'),
     read('supabase/migrations/20260720170100_payment_runtime_functions.sql'),
     read('supabase/migrations/20260720170200_payment_runtime_monitoring.sql'),
     read('netlify/functions/_shared/payment-runtime.mjs'),
     read('netlify/functions/payment-health.mjs'),
     read('supabase/migrations/20260726214500_continuous_checkout_readiness.sql'),
+    read('supabase/migrations/20260726220401_separate_checkout_transport_readiness.sql'),
   ]);
   assert.match(core, /checkout_enabled boolean not null default false/);
   assert.match(core, /refunds_enabled boolean not null default false/);
@@ -33,6 +55,9 @@ test('payment runtime remains fail closed until a verified catalog and configura
   assert.match(continuous, /fail_close_accessrevamp_checkout_on_readiness_change/);
   assert.match(continuous, /checkout_enabled = false/);
   assert.match(continuous, /refunds_enabled = false/);
+  assert.match(transport, /accessrevamp_checkout_transport_readiness/);
+  assert.match(transport, /ready_for_live_checkout_transport/);
+  assert.match(transport, /fail_close_accessrevamp_checkout_on_readiness_change/);
 });
 
 test('checkout saves a confirmed order draft before creating one idempotent Stripe session', async () => {

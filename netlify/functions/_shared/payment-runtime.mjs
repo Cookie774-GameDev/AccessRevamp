@@ -17,9 +17,12 @@ export function expectedLivemode(env = process.env) {
 }
 
 export async function checkoutProductionReadiness(admin, livemode) {
-  const { data, error } = await admin.rpc('accessrevamp_production_readiness');
+  const rpc = livemode
+    ? 'accessrevamp_checkout_transport_readiness'
+    : 'accessrevamp_production_readiness';
+  const { data, error } = await admin.rpc(rpc);
   const readiness = Array.isArray(data) ? data[0] : data;
-  const gate = livemode ? 'ready_for_live_checkout' : 'ready_for_sandbox_checkout';
+  const gate = livemode ? 'ready_for_live_checkout_transport' : 'ready_for_sandbox_checkout';
   return Object.freeze({ ready: !error && readiness?.[gate] === true, gate });
 }
 
