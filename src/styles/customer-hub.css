@@ -392,3 +392,85 @@
   .customer-signout-confirm > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .customer-signout-confirm .button { width: 100%; }
 }
+
+/* Project-first customer workspace */
+.customer-hub-page .container-wide { width: min(calc(100% - 2rem), 112rem); }
+.customer-dashboard-tabs { justify-content: flex-start; margin-bottom: .65rem; }
+.customer-dashboard-panel { min-height: calc(100dvh - 13rem); padding: clamp(.65rem, 1.35vw, 1rem); }
+.customer-project__header h2 { font-size: clamp(1.75rem, 2.4vw, 2.75rem); }
+.portal-progress { display: grid; gap: .85rem; margin: 1rem; padding: clamp(1rem, 2.2vw, 1.4rem); overflow: hidden; border: 1px solid #dfd4c2; border-radius: 1rem; background: linear-gradient(115deg, #fffdf8, #f7ebd6); }
+.portal-progress__head { display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
+.portal-progress__head > div { display: grid; gap: .2rem; }
+.portal-progress__head strong { color: #24211c; font-family: var(--display); font-size: clamp(1.35rem, 2.3vw, 2rem); }
+.portal-progress__head > span { color: #795115; font-size: .8rem; font-weight: 900; }
+.portal-progress__track { height: .72rem; overflow: hidden; border-radius: 999px; background: #dfd3c0; box-shadow: inset 0 1px 3px rgba(49, 38, 20, .14); }
+.portal-progress__track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #bc7713, #f5bb3f, #ef6857, #bc7713); background-size: 220% 100%; box-shadow: 0 0 1.2rem rgba(222, 146, 31, .4); animation: customer-progress-flow 3.8s linear infinite; }
+.portal-progress__milestones { display: grid; grid-template-columns: repeat(var(--milestone-count, 6), minmax(0, 1fr)); gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.portal-progress__milestones li { display: grid; gap: .35rem; min-width: 0; color: #918778; font-size: .68rem; font-weight: 850; }
+.portal-progress__milestones i { width: .7rem; height: .7rem; border: 2px solid #cfc1aa; border-radius: 50%; background: #fffdf8; }
+.portal-progress__milestones li[data-complete], .portal-progress__milestones li[aria-current="step"] { color: #4b3520; }
+.portal-progress__milestones li[data-complete] i { border-color: #d89b24; background: #d89b24; }
+.portal-progress__milestones li[aria-current="step"] i { border-color: #ef6857; background: #fffdf8; box-shadow: 0 0 0 .25rem rgba(239, 104, 87, .16); }
+@keyframes customer-progress-flow { to { background-position: -220% 0; } }
+
+.website-review__hero { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(15rem, .5fr); align-items: center; padding: clamp(1.35rem, 3vw, 2.25rem); border-color: #d7bd8d; box-shadow: 0 1rem 2.8rem rgba(90, 62, 22, .11); }
+.website-review__hero .eyebrow, .website-review__hero h3, .website-review__hero p { grid-column: 1; }
+.website-review__start { grid-column: 2; grid-row: 1 / span 3; display: grid; gap: .3rem; min-height: 7rem; align-content: center; padding: 1.25rem; border-color: #24211c; background: #24211c; color: #fffaf1; box-shadow: .45rem .45rem 0 #d89b24; }
+.website-review__start span { font-family: var(--display); font-size: clamp(1.25rem, 2vw, 1.75rem); }
+.website-review__start small { color: #eadfcf; font-weight: 650; }
+.portal-design-card__summary { color: #746b60 !important; font-size: .72rem !important; line-height: 1.45 !important; }
+.portal-design-card--poster h4 { font-size: 1.1rem; }
+
+.has-design-chooser { overflow: hidden; }
+.design-chooser__frame { max-width: 108rem; }
+.design-chooser__body { width: 100%; }
+.design-chooser__cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
+.design-chooser__card { cursor: default; }
+.design-chooser__card:hover { transform: translateY(-.25rem); }
+.design-chooser__card-media { position: relative; display: grid; aspect-ratio: 4 / 5; place-items: start center; background: #201e1a; }
+.design-chooser__card-media img { width: 100%; height: 100%; object-fit: contain; object-position: top center; }
+.design-chooser__enlarge { position: absolute; right: .75rem; bottom: .75rem; padding: .55rem .75rem; border: 1px solid rgba(255,255,255,.65); border-radius: 999px; background: rgba(9,9,8,.86); color: #fff9ef; font: inherit; font-size: .72rem; font-weight: 850; cursor: pointer; backdrop-filter: blur(8px); }
+.design-chooser__enlarge:hover, .design-chooser__enlarge:focus-visible { background: #fff9ef; color: #090908; }
+.design-chooser__card-copy { display: grid; gap: .7rem; padding: 1rem; }
+.design-chooser__card-copy > strong { min-height: 2.2em; font-size: 1.2rem; }
+.design-chooser__step-actions { display: flex; }
+.design-chooser__review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.design-chooser__review-grid li { display: grid; gap: .6rem; padding: .8rem; border: 1px solid rgba(249,242,230,.23); background: #151411; }
+.design-chooser__review-grid li > span { color: #dca52c; font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.design-chooser__review-grid li > div { display: grid; aspect-ratio: 4 / 5; overflow: hidden; place-items: center; background: #24211c; }
+.design-chooser__review-grid img { width: 100%; height: 100%; object-fit: contain; object-position: top; }
+.design-chooser__review-grid button { justify-self: start; padding: 0; border: 0; border-bottom: 1px solid currentColor; background: none; color: #fff9ef; font: inherit; font-size: .75rem; cursor: pointer; }
+.design-preview-overlay { position: fixed; z-index: 140; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: clamp(.75rem, 2vw, 1.5rem); background: rgba(6,6,5,.98); }
+.design-preview-overlay header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: .75rem; }
+.design-preview-overlay header > div { display: grid; gap: .2rem; }
+.design-preview-overlay header button { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid #fff9ef; border-radius: 50%; background: transparent; color: #fff9ef; font-size: 1.6rem; cursor: pointer; }
+.design-preview-overlay > div { overflow: auto; text-align: center; }
+.design-preview-overlay img { width: min(100%, 92rem); height: auto; background: #201e1a; }
+
+.portal-insight-groups > section > header > div { display: flex; gap: .7rem; align-items: center; }
+.portal-insight-group__mark { display: grid; width: 2.25rem; height: 2.25rem; flex: 0 0 auto; place-items: center; border-radius: .65rem; background: #24211c; color: #f5bb3f; }
+.portal-insight-group__mark svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.portal-insight-groups > section > header > div > span:last-child { color: #2d2923; font-size: .9rem; }
+.portal-insight-card h4 { font-size: clamp(1.2rem, 1.8vw, 1.5rem); }
+.portal-insight-card__source { display: grid; gap: .15rem; padding-top: .65rem; border-top: 1px solid #e5dac8; text-decoration: none; }
+.portal-insight-card__source span { font-size: .65rem; letter-spacing: .07em; text-transform: uppercase; }
+.portal-insight-card__source strong { overflow-wrap: anywhere; color: #4d371c; font-size: .78rem; }
+
+@media (max-width: 800px) {
+  .website-review__hero { grid-template-columns: 1fr; }
+  .website-review__start { grid-column: 1; grid-row: auto; min-height: 5.5rem; }
+  .design-chooser__review-grid { grid-template-columns: 1fr; }
+  .design-chooser__review-grid li { grid-template-columns: minmax(7rem, .7fr) 1fr; align-items: center; }
+  .design-chooser__review-grid li > span, .design-chooser__review-grid li > strong, .design-chooser__review-grid li > button { grid-column: 2; }
+  .design-chooser__review-grid li > div { grid-column: 1; grid-row: 1 / span 3; }
+}
+@media (max-width: 560px) {
+  .customer-hub-page .container-wide { width: min(calc(100% - 1rem), 112rem); }
+  .portal-progress__head { align-items: start; }
+  .portal-progress__milestones { grid-template-columns: repeat(3, 1fr); row-gap: .8rem; }
+  .design-chooser__card { grid-template-columns: 1fr; }
+  .design-chooser__card-media { aspect-ratio: 4 / 5; min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-progress__track > span { animation: none; }
+}

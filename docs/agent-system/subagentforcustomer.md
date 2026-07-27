@@ -59,4 +59,4 @@ Describe the approved direction: design tokens, typography, colors, spacing, ima
 
 ## Completion gate
 
-Return work to the main agent only when sources are recorded, claims are labeled, findings have evidence and remediation, security scope is respected, the customer-specific skill/design documents are complete, and all files are below 9,000,000 bytes or split into numbered parts.
+Return work to the main agent only when sources are recorded, claims are labeled, findings have evidence and remediation, security scope is respected, the customer-specific skill/design documents are complete, and all files satisfy their actual destination limits or are split into numbered parts.

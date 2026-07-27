@@ -45,11 +45,6 @@ if ($SkillFiles.Count -lt 11) {
 }
 
 $AllFiles = @(Get-ChildItem -LiteralPath $Root -Recurse -Force -File)
-foreach ($File in $AllFiles) {
-  if ($File.Length -gt 9000000) {
-    $Errors.Add("File exceeds 9,000,000 bytes: $($File.FullName)")
-  }
-}
 
 $SecretPatterns = @(
   'sk_live_[A-Za-z0-9]+',
@@ -58,7 +53,7 @@ $SecretPatterns = @(
   '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
 )
 $TextFiles = $AllFiles | Where-Object {
-  $_.Length -le 9000000 -and $_.Extension -in @('.md','.json','.ps1','.cmd','.txt')
+  $_.Extension -in @('.md','.json','.ps1','.cmd','.txt')
 }
 foreach ($File in $TextFiles) {
   $Text = Get-Content -Raw -LiteralPath $File.FullName -ErrorAction SilentlyContinue

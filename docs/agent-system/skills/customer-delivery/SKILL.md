@@ -19,7 +19,7 @@ Assemble a concise, accurate, usable customer package from verified findings, ap
 - Explain business impact without promising revenue or making legal claims.
 - Include exactly what was delivered, what was not included, and what still requires customer action.
 - Verify every URL and artifact before including it.
-- Keep all files under 9,000,000 bytes or split them into numbered parts with hashes.
+- Respect the actual delivery provider limit; split files into numbered parts with hashes only when required.
 
 ## Customer communication
 

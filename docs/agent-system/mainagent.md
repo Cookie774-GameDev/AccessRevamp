@@ -14,7 +14,7 @@ Run the complete operation without losing payment context, crossing customer dat
 6. Never perform active security testing without a current project-specific authorization and exact scope.
 7. Never publish customer work without separate, affirmative, revocable portfolio consent.
 8. Never expose service-role keys, Stripe secrets, mailbox credentials, raw approval tokens, card data, or customer access credentials.
-9. Never store one artifact larger than 9,000,000 bytes. Split larger packages into numbered parts and record a manifest and hashes.
+9. Enforce the real limit of the destination provider or storage bucket. Split larger packages only when required and record a manifest and hashes.
 10. Never mark a task complete until its database row, external artifact, and customer-facing result are verified.
 
 ## Paid-order start sequence

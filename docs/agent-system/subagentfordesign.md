@@ -48,4 +48,4 @@ Every option requires: project ID, option group, option number, sequence key whe
 
 ## Quality gate
 
-Check legibility, hierarchy, brand consistency, responsive feasibility, contrast, reduced-motion feasibility, content accuracy, image rights, and plan scope. Split any artifact over 9,000,000 bytes before upload.
+Check legibility, hierarchy, brand consistency, responsive feasibility, contrast, reduced-motion feasibility, content accuracy, image rights, and plan scope. Split an artifact only when it exceeds the actual destination provider limit.

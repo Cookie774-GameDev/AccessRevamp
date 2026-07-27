@@ -149,7 +149,7 @@ test('agent contracts require evidence, payment reconciliation, safe security sc
   assert.match(customerAgent, /SKILL\.md/);
   assert.match(customerAgent, /DESIGN\.md/);
   assert.match(websiteAgent, /compare it against the approved reference images/i);
-  assert.match(websiteAgent, /9,000,000 bytes/);
+  assert.match(websiteAgent, /actual deployment, storage, or delivery provider limit/i);
   assert.match(securitySkill, /Active testing is allowed only/);
   assert.match(securitySkill, /No brute force/);
 });

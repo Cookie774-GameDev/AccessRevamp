@@ -11,7 +11,7 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 - Separate optional portfolio permission; purchase alone does not grant publication rights.
 - Hashed, expiring, one-use customer approval links scoped to the intended project option group and revision round.
 - Google Drive customer-folder root, customer template, runbooks, and a Payment and Workflow Ledger.
-- Artifact guardrail of 9,000,000 bytes per file.
+- Artifact guardrails follow the actual destination provider and storage configuration; no universal browser-chat file limit applies to Codex.
 - Mailbox-aware first-touch outreach records with a 150–185-word target and 200-word hard maximum. Reply limits are governed separately by the reply-response guide.
 - Five permanent inbox owners—Avery, Jordan, Kasey, Riley, and Morgan—each own exactly 20 Icemail Azure mailboxes. Assignments do not rotate.
 - This system handles at most five cold-or-reply sends per mailbox per America/Chicago day. Icemail’s own warm-up feature is outside Worker 6 and is not generated, classified, or marked “not spam” by AccessRevamp agents.

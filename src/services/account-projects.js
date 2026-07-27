@@ -240,7 +240,7 @@ export function setupAccountProjects(navigate) {
   let selectedProjectId = new URLSearchParams(location.search).get('project') || '';
   let activeWorkspaceTab = 'projects';
   let activeProjectTab = '';
-  let designChooser = { open: false, rankedOptionIds: [] };
+  let designChooser = { open: false, rankedOptionIds: [], expandedOptionId: '' };
   let signedPreviewRefreshTimer = null;
   let hasRetriedBrokenPreview = false;
 
@@ -263,6 +263,7 @@ export function setupAccountProjects(navigate) {
       activeProjectTab,
       { designChooser },
     ));
+    document.body.classList.toggle('has-design-chooser', designChooser.open);
   };
 
   const saveFeedback = async (form, payload) => {
@@ -379,7 +380,7 @@ export function setupAccountProjects(navigate) {
       selectedProjectId = projectButton.dataset.projectSelect;
       activeWorkspaceTab = 'projects';
       activeProjectTab = '';
-      designChooser = { open: false, rankedOptionIds: [] };
+      designChooser = { open: false, rankedOptionIds: [], expandedOptionId: '' };
       const url = new URL(location.href);
       url.searchParams.set('project', selectedProjectId);
       history.replaceState({}, '', `${url.pathname}${url.search}`);
@@ -400,12 +401,26 @@ export function setupAccountProjects(navigate) {
       return;
     }
     if (event.target.closest('[data-open-design-chooser]')) {
-      designChooser = { open: true, rankedOptionIds: [] };
+      designChooser = { open: true, rankedOptionIds: [], expandedOptionId: '' };
+      renderCurrentWorkspace();
+      return;
+    }
+    const previewOpen = event.target.closest('[data-design-preview-open]');
+    if (previewOpen && designChooser.open) {
+      designChooser = {
+        ...designChooser,
+        expandedOptionId: previewOpen.dataset.designPreviewOpen,
+      };
+      renderCurrentWorkspace();
+      return;
+    }
+    if (event.target.closest('[data-design-preview-close]')) {
+      designChooser = { ...designChooser, expandedOptionId: '' };
       renderCurrentWorkspace();
       return;
     }
     if (event.target.closest('[data-design-chooser-close]')) {
-      designChooser = { open: false, rankedOptionIds: [] };
+      designChooser = { open: false, rankedOptionIds: [], expandedOptionId: '' };
       renderCurrentWorkspace();
       return;
     }
@@ -413,6 +428,7 @@ export function setupAccountProjects(navigate) {
       designChooser = {
         open: true,
         rankedOptionIds: designChooser.rankedOptionIds.slice(0, -1),
+        expandedOptionId: '',
       };
       renderCurrentWorkspace();
       return;
@@ -422,6 +438,7 @@ export function setupAccountProjects(navigate) {
       designChooser = {
         open: true,
         rankedOptionIds: [...designChooser.rankedOptionIds, rankOption.dataset.designRankOption].slice(0, 3),
+        expandedOptionId: '',
       };
       renderCurrentWorkspace();
       return;
@@ -484,7 +501,7 @@ export function setupAccountProjects(navigate) {
         notes: form.elements.notes.value.trim(),
       });
       if (saved) {
-        designChooser = { open: false, rankedOptionIds: [] };
+        designChooser = { open: false, rankedOptionIds: [], expandedOptionId: '' };
         renderCurrentWorkspace();
       }
       return;
@@ -509,7 +526,9 @@ export function setupAccountProjects(navigate) {
 
   const onHostKeydown = (event) => {
     if (event.key !== 'Escape' || !designChooser.open) return;
-    designChooser = { open: false, rankedOptionIds: [] };
+    designChooser = designChooser.expandedOptionId
+      ? { ...designChooser, expandedOptionId: '' }
+      : { open: false, rankedOptionIds: [], expandedOptionId: '' };
     renderCurrentWorkspace();
   };
 
@@ -525,5 +544,6 @@ export function setupAccountProjects(navigate) {
     host.removeEventListener('submit', onHostSubmit);
     host.removeEventListener('error', onPreviewError, true);
     host.removeEventListener('keydown', onHostKeydown);
+    document.body.classList.remove('has-design-chooser');
   };
 }

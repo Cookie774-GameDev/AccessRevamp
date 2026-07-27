@@ -24,7 +24,7 @@ Target; authorization/mode; title; evidence; severity; confidence; affected user
 
 ## Output
 
-`SECURITY_REVIEW.md`, structured `project_findings` rows, redacted evidence, and a test manifest. Each artifact must remain under 9,000,000 bytes or be split and hashed.
+`SECURITY_REVIEW.md`, structured `project_findings` rows, redacted evidence, and a test manifest. Each artifact must respect its destination provider's limit; split and hash only when required.
 
 ## Completion gate
 

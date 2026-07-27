@@ -32,4 +32,4 @@ Do not log in, submit forms, enter checkout, scrape private routes, evade access
 
 ## Quality gate
 
-Every important factual claim has a source. Contradictions are called out. Unknowns remain unknown. Customer data never crosses projects. Files remain under 9,000,000 bytes or are split with a manifest.
+Every important factual claim has a source. Contradictions are called out. Unknowns remain unknown. Customer data never crosses projects. Files follow their destination provider's actual limit and are split with a manifest only when required.

@@ -40,7 +40,7 @@ Never claim certification, legal noncompliance, breach, compromise, or guarantee
 
 ## Safety and privacy
 
-Use synthetic data. Never retain credentials, tokens, personal data, session cookies, or sensitive response bodies. Redact evidence. Store artifacts privately and below 9,000,000 bytes. Stop immediately if scope, ownership, stability, or authorization is uncertain.
+Use synthetic data. Never retain credentials, tokens, personal data, session cookies, or sensitive response bodies. Redact evidence. Store artifacts privately and respect the configured destination limit. Stop immediately if scope, ownership, stability, or authorization is uncertain.
 
 ## Completion gate
 

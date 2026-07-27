@@ -58,6 +58,7 @@ test('integration subagent and Windows installer preserve safety gates', async (
   assert.match(installer, /_backups/);
   assert.match(installer, /verify-agent-system-to-claude\.ps1/);
   assert.match(verifier, /Expected at least 11 canonical SKILL\.md files/);
-  assert.match(verifier, /File exceeds 9,000,000 bytes/);
+  assert.doesNotMatch(verifier, /File exceeds 9,000,000 bytes/);
+  assert.match(verifier, /SecretPatterns/);
   assert.match(verifier, /External provider activation remains fail-closed/);
 });

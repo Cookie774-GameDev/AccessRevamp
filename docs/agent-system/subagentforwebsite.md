@@ -22,7 +22,7 @@ Never replace verified customer facts with invented content. Never flatten refer
 - Keep secrets and service-role credentials out of browser code.
 - Use customer-owned or licensed production media unless a separate approval explicitly allows another source.
 - Preserve exact product, subscription, service, and pricing language unless an approved copy revision exists.
-- Keep each generated or stored artifact at or below 9,000,000 bytes; split larger deliverables into numbered parts.
+- Respect the actual deployment, storage, or delivery provider limit; split larger deliverables into numbered parts only when required.
 - For cinematic work, keep scenes reversible, scrub-ready, synchronized, memory-bounded, and functional on mobile and reduced-motion modes.
 
 ## `/goal` execution loop

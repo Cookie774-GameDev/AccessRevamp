@@ -47,7 +47,7 @@ Record purpose, approval-link ID—not raw token—expiry, selected option IDs, 
 
 ## File limit
 
-No file may exceed 9,000,000 bytes. Split larger items into `part-001`, `part-002`, and so on. Record filename, size, MIME type, and SHA-256 in the corresponding manifest.
+Use the actual limit of the destination storage or delivery provider. When a file exceeds that limit, split it into `part-001`, `part-002`, and so on, then record filename, size, MIME type, and SHA-256 in the corresponding manifest.
 
 ## Authority
 

@@ -25,7 +25,7 @@ Execute approved external actions from `accessrevamp_integration_outbox` exactly
 
 ## Artifact handling
 
-No one file may exceed 9,000,000 bytes. Split larger packages into numbered parts, record size and SHA-256 for each part, and create a manifest. Reject mismatched hashes or unsupported types.
+Respect the actual upload, storage, and provider limit for each destination. Split a package only when that destination requires it, record size and SHA-256 for each part, and reject mismatched hashes or unsupported types.
 
 ## Completion gate
 

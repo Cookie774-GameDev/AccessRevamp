@@ -126,16 +126,20 @@ async function signArtifacts(admin, artifacts) {
   }));
 }
 
-function calculateProgress(project, tasks, updates) {
+export function calculateProgress(project, tasks, updates) {
   const publishedProgress = updates.find((update) => Number.isInteger(update.progress_percent))?.progress_percent;
-  if (Number.isInteger(publishedProgress)) return publishedProgress;
-
   const required = tasks.filter((task) => task.required !== false);
+  let taskProgress = 0;
   if (required.length) {
     const complete = required.filter((task) => COMPLETED_TASK_STATUSES.has(task.status)).length;
-    return Math.max(projectStatusProgress[project.status] || 0, Math.round((complete / required.length) * 100));
+    taskProgress = Math.round((complete / required.length) * 100);
   }
-  return projectStatusProgress[project.status] ?? 0;
+  const bestKnownProgress = Math.max(
+    projectStatusProgress[project.status] || 0,
+    taskProgress,
+    Number.isInteger(publishedProgress) ? publishedProgress : 0,
+  );
+  return Math.max(0, Math.min(100, bestKnownProgress));
 }
 
 export default async function accountProjects(request) {
