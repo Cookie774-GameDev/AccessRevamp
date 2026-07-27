@@ -91,6 +91,7 @@ test('checkout saves a confirmed order draft before creating one idempotent Stri
   assert.match(checkout, /STRIPE_CHECKOUT_SECRET_KEY/);
   assert.match(checkout, /resolveCatalogPrice/);
   assert.match(checkout, /idempotencyKey: `accessrevamp_checkout_/);
+  assert.match(checkout, /consent_collection:\s*\{\s*terms_of_service:\s*'required'\s*\}/);
   assert.doesNotMatch(checkout, /book\.stripe\.com|payment[_-]?link/i);
   assert.match(component, /name="referenceFiles"/);
 });

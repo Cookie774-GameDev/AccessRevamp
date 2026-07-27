@@ -114,6 +114,7 @@ export function createCheckoutHandler({
         customer_email: user.email,
         customer_creation: 'always',
         billing_address_collection: 'required',
+        consent_collection: { terms_of_service: 'required' },
         allow_promotion_codes: false,
         client_reference_id: user.id,
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
