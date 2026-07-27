@@ -34,12 +34,16 @@
 
 ## Content rules
 
+- `SOURCE_ASSET_MANIFEST.md` record and verification time:
 - Copy to preserve exactly:
 - Copy approved for editing:
 - Prohibited invented claims:
 - Customer-owned media:
 - Licensed media:
 - Media that cannot be used:
+- Exact product/logo asset IDs and SHA-256 hashes:
+- Generated elements allowed only as non-product background or decoration:
+- OCR, spelling, rights, and product-fidelity acceptance checks:
 
 ## Implementation rules
 

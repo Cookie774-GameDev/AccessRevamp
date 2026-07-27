@@ -2,9 +2,12 @@
 
 This folder defines the customer-delivery operating system for AccessRevamp.
 
+Open [PROCESS_MAP.html](PROCESS_MAP.html) for the complete interactive system diagram covering the five permanent mailbox owners, Worker 6, payment reconciliation, isolated customer agents, exact-asset creative production, plan branches, website implementation, QA, and private delivery.
+
 ## Implemented foundation
 
-- Stripe sandbox catalog for the $50, $200, and $250 one-time plans.
+- Mode-separated Stripe catalogs for the $50, $200, and $250 one-time plans,
+  with live Checkout guarded by catalog, secret, webhook, and runtime checks.
 - Supabase plan-specific workflows, tasks, research sources, findings, security authorizations, design options, customer approvals, artifacts, deliveries, provider budgets, private storage, and an idempotent integration outbox.
 - Automatic workflow bootstrap after a durable paid order creates a customer project.
 - Cinematic scene choice of three or four during the order brief.
@@ -19,7 +22,10 @@ This folder defines the customer-delivery operating system for AccessRevamp.
 
 ## Safety state
 
-External email transport, automated mailbox warm-up, automated spam-classification actions, active security testing, external creative generation, live Stripe Checkout, and automated refunds remain disabled until their independent readiness gates pass.
+Automated mailbox warm-up, automated spam-classification actions, active
+security testing, unreviewed external creative generation, and automated
+refunds remain disabled. Live Stripe Checkout is enabled only while its
+independent readiness gates pass and fails closed when they do not.
 
 AccessRevamp owns only the cold-or-reply allocation: no more than five combined sends from each mailbox per America/Chicago day, or 500 across 100 fully authorized mailboxes. Icemail separately manages warm-up; AccessRevamp agents do not generate those messages or manipulate spam classifications. The system must not force 500 sends when any mailbox, suppression, consent, reputation, legal, complaint, or operator gate is unavailable.
 
@@ -29,7 +35,8 @@ AccessRevamp owns only the cold-or-reply allocation: no more than five combined 
 - Complete Website Revamp — $200.
 - Cinematic Scroll Site — $250.
 
-The reference to $209 was treated as a typo because the active website and Stripe sandbox catalog use $200.
+The reference to $209 was treated as a typo because the active website and
+canonical Stripe catalogs use $200.
 
 ## Agent files
 
@@ -57,10 +64,16 @@ The reference to $209 was treated as a typo because the active website and Strip
 
 Each skill lives at `skills/<name>/SKILL.md`. The `templates/` folder contains per-customer skill, design, folder, payment, approval, and delivery structures.
 
-## Claude Code installation
+## Codex authority
 
-See [`CLAUDE_INSTALL.md`](./CLAUDE_INSTALL.md), or run `INSTALL_CLAUDE_OPERATIONS.cmd` from the repository root. The installer writes the complete system to the actual Windows Documents known folder at `Claude\AccessRevamp`, backs up any prior installation, and runs local verification before writing an installation receipt.
+This is a Codex operations system. Root `AGENTS.md` is the repository authority;
+the files in this directory are the bounded agent contracts and skills it
+references. `CLAUDE.md`, `.claude/`, and `CLAUDE_INSTALL.md` are retained only
+as legacy compatibility artifacts and do not override `AGENTS.md`, current
+Supabase state, or verified provider evidence.
 
 ## Deployment truth
 
-Source code and database schema are not proof that an external provider is connected. Icemail, Gmail, Canva, Higgsfield, and local-computer file access require their own authenticated connectors. The system must keep the related switches disabled until a real end-to-end test succeeds.
+Source code and database schema are not proof that an external provider is
+connected. Each provider requires current authenticated evidence and a real
+end-to-end test. A provider remains fail-closed when its proof is missing.

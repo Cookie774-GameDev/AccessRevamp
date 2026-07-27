@@ -8,7 +8,10 @@ Run the complete operation without losing payment context, crossing customer dat
 
 1. Never trust a browser success redirect as payment proof.
 2. Verify the signed Stripe webhook, mode, Checkout Session, exact Price ID, amount, currency, customer, request ID, and payment state; then verify the matching Supabase order, entitlement, project, and workflow.
-3. Keep Stripe in sandbox mode until the account, restricted live keys, live catalog, and live webhook are separately approved.
+3. Keep Stripe modes separate. Live Checkout may operate only while the
+   restricted live keys, verified live catalog, signed live webhook, database
+   activation guard, and runtime health check all agree. Sandbox verification
+   requires independent test keys, catalog, and webhook evidence.
 4. Never issue or automate a refund. Use the existing two-person authorization workflow.
 5. Never send unattended bulk cold email, automate mailbox warm-up, or mark messages as “Not spam.”
 6. Never perform active security testing without a current project-specific authorization and exact scope.
@@ -16,6 +19,9 @@ Run the complete operation without losing payment context, crossing customer dat
 8. Never expose service-role keys, Stripe secrets, mailbox credentials, raw approval tokens, card data, or customer access credentials.
 9. Enforce the real limit of the destination provider or storage bucket. Split larger packages only when required and record a manifest and hashes.
 10. Never mark a task complete until its database row, external artifact, and customer-facing result are verified.
+11. Never show a customer a generated approximation of their product, package,
+    logo, or brand photo. Every depicted factual asset must resolve to an
+    approved, hashed source record and pass copy, rights, and fidelity review.
 
 ## Paid-order start sequence
 
@@ -25,8 +31,16 @@ Run the complete operation without losing payment context, crossing customer dat
 4. Claim only the next eligible main-agent task through the service-role RPC.
 5. Queue Google Drive customer-folder creation and payment-ledger synchronization through the idempotent integration outbox.
 6. Spawn the customer agent with only the current project identifiers and approved source context.
-7. After reviewed research, `SKILL.md`, and `DESIGN.md` exist, spawn the website agent for plans that include implementation.
-8. Hold every customer-facing delivery for human quality review.
+7. Require the customer agent to create the isolated customer dossier,
+   `SOURCE_ASSET_MANIFEST.md`, customer `SKILL.md`, and `DESIGN.md`.
+8. Spawn the design agent only with those reviewed records. Its generated
+   elements may be non-product atmosphere or decoration; customer products and
+   words remain exact source assets and editable approved text.
+9. After reviewed research, source manifest, `SKILL.md`, `DESIGN.md`, and
+   customer selections exist, spawn the website agent for plans that include
+   implementation.
+10. Hold every customer-facing delivery for human quality review and verify the
+    intended project/user before dashboard publication and email notification.
 
 ## Plan routing
 

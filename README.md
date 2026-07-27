@@ -11,7 +11,7 @@ AccessRevamp is an evidence-led website improvement studio for independent busin
 | Tier | List price | Summary |
 | --- | ---: | --- |
 | Free Snapshot | $0 | One manually reviewed, evidence-backed public observation. No checkout or full audit. |
-| Homepage Reveal | $50 | Human-reviewed report, one landing-page direction, desktop/mobile PNGs, one subtle AI-assisted motion poster ad, implementation priorities, and a 30-day growth plan. |
+| Homepage Reveal | $50 | Human-reviewed report, five homepage concepts (three normal and two cinematic), one customer-selected landing-page direction with desktop/mobile references, one subtle AI-assisted motion poster ad, implementation priorities, and a 30-day growth plan. |
 | Complete Website Revamp | $200 | Applicable Homepage Reveal work plus an agreed responsive implementation of up to five standard content pages, five motion posters, ten still posters, three business-card variations, two brochure variations, and a retest summary. |
 | Cinematic Scroll Site | $250 | Complete Website Revamp scope plus one bounded cinematic single-page narrative with mobile and reduced-motion fallbacks. |
 
@@ -33,7 +33,9 @@ Only the authenticated server and database may calculate entitlement credit. Str
 - Private previews are human-approved, token-hashed, expiring, revocable, watermarked, and `noindex`.
 - Outreach requires provenance, verified evidence, human approval, suppression, opt-out, and a database daily ceiling; `sending_enabled` remains `false`.
 - Google Drive is internal operator context only and is never read by the public browser.
-- Stripe stays in test mode until a separate explicit launch approval.
+- Stripe live checkout is fail-closed behind the verified catalog, signed
+  webhook, runtime health, and database activation guard. Sandbox remains a
+  separate environment and cannot be inferred from live readiness.
 - When a written scope includes campaign creatives, production uses AI-assisted concept and copy generation with human review, rights checks, bounded formats, and a consolidated revision.
 
 ## Local development

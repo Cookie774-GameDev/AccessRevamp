@@ -10,6 +10,7 @@ Create one isolated folder per paid customer project. Use a neutral name such as
   CUSTOMER_PROFILE.md
 02 Research and Audit/
   WEBSITE_RESEARCH.md
+  SOURCE_ASSET_MANIFEST.md
   AUDIT_REPORT.md
   SECURITY_REVIEW.md
   GROWTH_AND_MONETIZATION.md
@@ -40,6 +41,10 @@ Record non-secret Stripe and Supabase identifiers: order ID, request ID, project
 ## `CUSTOMER_PROFILE.md`
 
 Record confirmed name, business, website, email, plan, products/services, approved instructions, content/media rights, scene count, revision limit, portfolio permission, and important unknowns.
+
+## `SOURCE_ASSET_MANIFEST.md`
+
+Record one row per customer product image, package, logo, brand photo, or factual visual: source-asset ID, exact product/brand role, source URL or upload record, original filename, MIME type, size, SHA-256, retrieval time, rights basis, verification status, reviewer, and every design option that uses it. Missing exact assets block depiction; they never authorize generated substitutes.
 
 ## `APPROVALS.md`
 

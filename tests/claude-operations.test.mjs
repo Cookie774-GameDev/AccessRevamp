@@ -23,7 +23,7 @@ test('CLAUDE.md carries the current 100-inbox task and fail-closed completion ru
   assert.match(memory, /@docs\/agent-system\/README\.md/);
   assert.match(memory, /100 inboxes/);
   assert.match(memory, /500 cold \+ 500 provider-managed warm-up/);
-  assert.match(memory, /Stripe remains sandbox-only/);
+  assert.match(memory, /Treat Stripe live and test modes as separate environments/);
   assert.match(memory, /Do not stop for routine clarification/);
   assert.match(memory, /An agent message alone is never proof/);
 });

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccessRevamp — Agent System Map</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #161513;
+      --muted: #6d655b;
+      --paper: #fffaf1;
+      --surface: #fffdf8;
+      --line: #ded2c0;
+      --gold: #c68013;
+      --coral: #fa5a4f;
+      --plum: #60314d;
+      --sage: #315c4f;
+      --shadow: 0 18px 50px rgba(63, 45, 22, .09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(250, 90, 79, .09), transparent 29rem),
+        radial-gradient(circle at 94% 7%, rgba(198, 128, 19, .15), transparent 28rem),
+        var(--paper);
+      color: var(--ink);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header, main, footer { width: min(1480px, calc(100% - 32px)); margin-inline: auto; }
+    header { padding: 52px 0 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 850; letter-spacing: -.03em; }
+    .mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: white; background: linear-gradient(135deg, var(--gold), var(--coral)); }
+    .eyebrow { color: var(--coral); font-size: 12px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 920px; margin: 20px 0 14px; font: 750 clamp(40px, 7vw, 92px)/.95 Georgia, serif; letter-spacing: -.055em; }
+    .lede { max-width: 830px; color: var(--muted); font-size: clamp(17px, 2vw, 22px); }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0; }
+    button {
+      appearance: none; border: 1px solid var(--line); border-radius: 999px; padding: 10px 15px;
+      background: rgba(255,255,255,.72); color: var(--ink); font: inherit; font-weight: 750; cursor: pointer;
+    }
+    button:hover, button:focus-visible, button[aria-pressed="true"] { color: white; border-color: var(--ink); background: var(--ink); outline: none; }
+    .legend { display: flex; flex-wrap: wrap; gap: 15px; padding: 18px 0 28px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+    .dot.human { background: var(--coral); }
+    .dot.store { background: var(--sage); }
+    .map { display: grid; gap: 24px; padding-bottom: 72px; }
+    .lane {
+      position: relative; display: grid; grid-template-columns: 190px 1fr; gap: 20px;
+      padding: 22px; border: 1px solid var(--line); border-radius: 24px; background: rgba(255,253,248,.88); box-shadow: var(--shadow);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .lane[hidden] { display: none; }
+    .lane__label { position: sticky; top: 18px; align-self: start; }
+    .lane__label h2 { margin: 6px 0; font: 700 27px/1.05 Georgia, serif; letter-spacing: -.025em; }
+    .lane__label p { margin: 0; color: var(--muted); font-size: 13px; }
+    .flow { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+    .node {
+      position: relative; grid-column: span 3; min-height: 146px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+    }
+    .node::after {
+      content: "→"; position: absolute; right: -19px; top: 50%; z-index: 2; color: var(--gold);
+      font-size: 20px; font-weight: 900; transform: translateY(-50%);
+    }
+    .node:last-child::after, .node.no-arrow::after { display: none; }
+    .node h3 { margin: 7px 0 8px; font-size: 16px; line-height: 1.18; }
+    .node p { margin: 0; color: var(--muted); font-size: 13px; }
+    .num { display: inline-grid; place-items: center; min-width: 27px; height: 27px; padding: 0 8px; border-radius: 999px; color: white; background: var(--plum); font-size: 11px; font-weight: 850; }
+    .node.human { border-color: rgba(250,90,79,.48); background: #fff6f2; }
+    .node.store { border-color: rgba(49,92,79,.38); background: #f2faf6; }
+    .agent-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+    .agent { padding: 10px; border-radius: 12px; text-align: center; color: white; background: linear-gradient(145deg, #24221f, #4a4036); font-weight: 800; }
+    .branch { grid-column: span 4; }
+    .wide { grid-column: span 6; }
+    .full { grid-column: 1 / -1; }
+    .callout { border: 1px solid rgba(198,128,19,.42); background: #fff4d8; }
+    code { padding: 2px 5px; border-radius: 5px; background: #eee5d8; font-size: .9em; }
+    footer { padding: 0 0 46px; color: var(--muted); }
+    @media (max-width: 980px) {
+      .lane { grid-template-columns: 1fr; }
+      .lane__label { position: static; }
+      .node, .branch, .wide { grid-column: span 6; }
+      .agent-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      header, main, footer { width: min(100% - 20px, 1480px); }
+      header { padding-top: 28px; }
+      .lane { padding: 14px; border-radius: 18px; }
+      .flow { grid-template-columns: 1fr; }
+      .node, .branch, .wide, .full { grid-column: 1; }
+      .node::after { content: "↓"; right: 50%; top: auto; bottom: -25px; transform: translateX(50%); }
+      .agent-strip { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">AR</span> AccessRevamp Operations</div>
+    <p class="eyebrow">Verified system map · six durable workers · isolated customer projects</p>
+    <h1>One source of truth through every handoff.</h1>
+    <p class="lede">This map shows how prospects, replies, payments, research, exact customer assets, design choices, website builds, quality review, and delivery move through the system without losing identity or context.</p>
+    <div class="controls" role="group" aria-label="Filter process lanes">
+      <button type="button" data-filter="all" aria-pressed="true">Show everything</button>
+      <button type="button" data-filter="mail">Mail and support</button>
+      <button type="button" data-filter="payment">Payment and identity</button>
+      <button type="button" data-filter="creative">Customer and creative</button>
+      <button type="button" data-filter="delivery">Build and delivery</button>
+    </div>
+    <div class="legend" aria-label="Diagram legend">
+      <span><i class="dot"></i> Automated but gated</span>
+      <span><i class="dot human"></i> Human review</span>
+      <span><i class="dot store"></i> Durable system record</span>
+    </div>
+  </header>
+
+  <main class="map">
+    <section class="lane" data-lane="mail">
+      <div class="lane__label"><span class="eyebrow">Lane 01</span><h2>Outbound ownership</h2><p>Permanent assignments; never swapped.</p></div>
+      <div class="flow">
+        <article class="node store wide"><span class="num">1</span><h3>Supabase owner registry</h3><p>Exactly 100 active Icemail Azure mailboxes, five permanent owners, 20 mailboxes each, provider IDs, daily capacity, authorization, suppression, and durable logs.</p><div class="agent-strip"><span class="agent">Avery · 20</span><span class="agent">Jordan · 20</span><span class="agent">Kasey · 20</span><span class="agent">Riley · 20</span><span class="agent">Morgan · 20</span></div></article>
+        <article class="node human"><span class="num">2</span><h3>Research and draft</h3><p>Read the prospect record and public site, cite two or three exact details, use the 200-word hard maximum, and check suppression first.</p></article>
+        <article class="node human no-arrow"><span class="num">3</span><h3>Send gate</h3><p>Sender identity, mailbox health, five combined cold/reply limit, content review, opt-out, jurisdiction, and provider result must all pass.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="mail">
+      <div class="lane__label"><span class="eyebrow">Lane 02</span><h2>Worker 6 routing</h2><p>One reader; two correct send paths.</p></div>
+      <div class="flow">
+        <article class="node"><span class="num">Every 15 minutes</span><h3>Read merged Gmail inbox</h3><p>Worker 6 reads new messages and stores each Gmail message ID exactly once, preventing duplicate routing and duplicate replies.</p></article>
+        <article class="node"><span class="num">Classify</span><h3>Match the thread</h3><p>Direct mail to <code>support@accessrevamp.shop</code> becomes support. A unique prospect/thread match becomes an owner reply. Ambiguous, legal, privacy, payment, security, abuse, or opt-out mail stops.</p></article>
+        <article class="node"><span class="num">Route</span><h3>Wake only the owner</h3><p>The assignment includes the complete durable thread, mailbox ID, provider mailbox ID, customer/prospect context, and owning worker code.</p></article>
+        <article class="node no-arrow"><span class="num">Reply</span><h3>Use the correct sender</h3><p>Support sends as <code>support@accessrevamp.shop</code>. Prospect replies send through the original Icemail mailbox—not the merged Gmail reader.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="payment">
+      <div class="lane__label"><span class="eyebrow">Lane 03</span><h2>Payment proof</h2><p>A redirect is never proof.</p></div>
+      <div class="flow">
+        <article class="node"><span class="num">1</span><h3>Authenticated request</h3><p>The customer confirms email, plan, website, required brief, policy versions, and private project ownership.</p></article>
+        <article class="node"><span class="num">2</span><h3>Server-created Checkout</h3><p>The server chooses the exact Stripe Price ID, amount, currency, mode, upgrade credit, success URL, and idempotency key. Taxes remain disabled until reviewed.</p></article>
+        <article class="node store"><span class="num">3</span><h3>Stripe signed webhook</h3><p>Verify signature, event mode, Checkout Session, PaymentIntent, settled value, customer, metadata, replay state, and exact catalog match.</p></article>
+        <article class="node human no-arrow"><span class="num">4</span><h3>Reconcile and release</h3><p>Supabase creates the paid order, entitlement, project, and workflow. A human approves the first customer-agent handoff.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="creative">
+      <div class="lane__label"><span class="eyebrow">Lane 04</span><h2>Customer intelligence</h2><p>One isolated folder and agent per paid project.</p></div>
+      <div class="flow">
+        <article class="node store"><span class="num">Folder</span><h3>Identity and payment</h3><p>Create the project-only folder with non-secret Stripe/Supabase IDs, confirmed customer details, plan, instructions, approvals, and links.</p></article>
+        <article class="node"><span class="num">Research</span><h3>Evidence-backed dossier</h3><p>Review products, prices, pages, policies, copy, conversion, SEO, performance, accessibility, passive security, growth, and monetization. Every fact gets a source and retrieval time.</p></article>
+        <article class="node store"><span class="num">Assets</span><h3>SOURCE_ASSET_MANIFEST.md</h3><p>Record exact product images, packaging, logos, brand photos, URLs/uploads, product IDs, rights basis, retrieval time, MIME type, size, and SHA-256 hashes.</p></article>
+        <article class="node human no-arrow"><span class="num">Gate</span><h3>Customer-agent review</h3><p>Missing or unverified source assets block depiction. They never authorize invented AI products, altered packaging, or guessed text.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="creative">
+      <div class="lane__label"><span class="eyebrow">Lane 05</span><h2>Design decisions</h2><p>Generated atmosphere; exact customer products.</p></div>
+      <div class="flow">
+        <article class="node"><span class="num">$50 / $200 / $250</span><h3>Five homepage concepts</h3><p>Three normal and two cinematic directions. Product and logo pixels come from verified source assets. Editable approved text is used instead of generated raster lettering.</p></article>
+        <article class="node human"><span class="num">QA</span><h3>Fail-closed review</h3><p>OCR, spellcheck, product-shape/color/label comparison, rights review, responsive feasibility, contrast, and human approval are required before <code>customer_ready</code>.</p></article>
+        <article class="node"><span class="num">Choose</span><h3>Customer ranking</h3><p>The private dashboard collects first, second, and third choices plus special instructions. Eligible plans allow up to two option revision rounds.</p></article>
+        <article class="node store no-arrow"><span class="num">Specify</span><h3>SKILL.md + DESIGN.md</h3><p>The customer agent writes sourced implementation rules and the approved visual system, including exact asset IDs/hashes, page mapping, responsive behavior, motion, and prohibited changes.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="delivery">
+      <div class="lane__label"><span class="eyebrow">Lane 06</span><h2>Plan branches</h2><p>Scope stays bounded to the paid tier.</p></div>
+      <div class="flow">
+        <article class="node branch callout"><span class="num">$50</span><h3>Homepage Reveal stops here</h3><p>Deliver the sourced audit, growth guidance, five homepage options, the selected landing-page direction with desktop/mobile references, and one subtle motion poster. No full website is implied.</p></article>
+        <article class="node branch"><span class="num">$200</span><h3>Complete Website Revamp</h3><p>Create ten page references, implement up to five agreed pages, and prepare five motion posters plus ten still posters and the bounded brand collateral.</p></article>
+        <article class="node branch no-arrow"><span class="num">$250</span><h3>Cinematic Scroll Site</h3><p>Add a chosen three- or four-scene narrative, two complete visual sequences, two references per scene, bounded provider credits, smooth reversible scroll, mobile support, and reduced motion.</p></article>
+      </div>
+    </section>
+
+    <section class="lane" data-lane="delivery">
+      <div class="lane__label"><span class="eyebrow">Lane 07</span><h2>Build and delivery</h2><p>Evidence—not an agent message—closes work.</p></div>
+      <div class="flow">
+        <article class="node"><span class="num">Build</span><h3>Website agent</h3><p>Uses the approved SKILL.md, DESIGN.md, exact customer copy/assets, real controls, secure server boundaries, and a visual-match loop against every approved reference.</p></article>
+        <article class="node"><span class="num">Test</span><h3>Full QA</h3><p>Desktop, tablet, mobile, keyboard, focus, zoom, accessibility, performance, direct routes, APIs, forms, media, reduced motion, failures, headers, and visual fidelity.</p></article>
+        <article class="node human"><span class="num">Review</span><h3>Main-agent approval</h3><p>Verify scope, customer identity, artifact hashes, source-asset links, deployment, delivery manifest, and customer-facing message before release.</p></article>
+        <article class="node store no-arrow"><span class="num">Deliver</span><h3>Private dashboard + email</h3><p>Publish only to the matching project and verified user. Email points to the private dashboard; expiring links and storage paths remain protected. Portfolio use requires separate revocable consent.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Authority:</strong> Supabase is the durable workflow and ownership record; Stripe is payment authority; customer source assets and approvals control creative truth; GitHub and deployment manifests control code delivery.</p>
+  </footer>
+
+  <script>
+    const buttons = [...document.querySelectorAll('[data-filter]')];
+    const lanes = [...document.querySelectorAll('[data-lane]')];
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        const filter = button.dataset.filter;
+        for (const item of buttons) item.setAttribute('aria-pressed', String(item === button));
+        for (const lane of lanes) lane.hidden = filter !== 'all' && lane.dataset.lane !== filter;
+      });
+    }
+  </script>
+</body>
+</html>

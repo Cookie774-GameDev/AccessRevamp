@@ -17,7 +17,7 @@ Primary audiences are small-business owners evaluating the studio, existing cust
 | Rank | Tier | List price | Commercial boundary |
 | ---: | --- | ---: | --- |
 | 0 | Free Snapshot | $0 | One manually reviewed public observation; no checkout or full audit. |
-| 1 | Homepage Reveal | $50 one time | Human-reviewed report, one landing-page direction, desktop/mobile PNGs, one subtle AI-assisted motion poster ad, implementation priorities, and a 30-day growth plan. |
+| 1 | Homepage Reveal | $50 one time | Human-reviewed report, five homepage concepts (three normal and two cinematic), one customer-selected landing-page direction with desktop/mobile references, one subtle AI-assisted motion poster ad, implementation priorities, and a 30-day growth plan. Exact customer product/logo assets are required; generated imagery may supply only disclosed non-product atmosphere or decoration. |
 | 2 | Complete Website Revamp | $200 one time | Applicable Homepage Reveal work plus an agreed responsive implementation of up to five standard content pages, five motion posters, ten still posters, three business-card variations, two brochure variations, and a retest summary. |
 | 3 | Cinematic Scroll Site | $250 one time | Complete Website Revamp scope plus one bounded cinematic single-page narrative with mobile and reduced-motion fallbacks. |
 

@@ -61,6 +61,12 @@ test('Cloudflare production builds preserve required non-secret runtime bindings
   });
 
   assert.equal(configured.name, 'accessrevamp');
+  assert.equal(configured.compatibility_date, '2026-07-27');
+  assert.deepEqual(configured.compatibility_flags, ['nodejs_compat']);
+  assert.deepEqual(configured.observability, {
+    enabled: true,
+    head_sampling_rate: 1,
+  });
   assert.deepEqual(configured.vars, CLOUDFLARE_PRODUCTION_VARS);
   assert.equal(configured.vars.ACCESSREVAMP_LIVE_PAYMENT_APPROVED, 'true');
   assert.equal(configured.vars.STRIPE_EXPECT_LIVEMODE, 'true');

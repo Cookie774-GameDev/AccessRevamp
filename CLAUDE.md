@@ -8,7 +8,7 @@
 
 Maintain and complete the AccessRevamp 100-inbox customer-acquisition and paid-delivery system. The nominal allocation is 100 inboxes × 5 cold + 5 provider-managed warm-up messages per day: 500 cold + 500 provider-managed warm-up = 1,000 total. Capacity metadata never overrides mailbox health, provider rules, suppression, complaints, human approval, or law.
 
-The paid catalog is Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250. Stripe remains sandbox-only until a real website-originated sandbox Checkout, signed webhook, Supabase fulfillment, Drive ledger entry, and customer workflow are verified end to end.
+The paid catalog is Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250. Treat Stripe live and test modes as separate environments. Never infer readiness from a browser redirect; require a verified Checkout Session, signed webhook, matching Supabase fulfillment state, and customer workflow evidence in the same mode.
 
 ## Working style
 
@@ -16,7 +16,7 @@ The paid catalog is Homepage Reveal $50, Complete Website Revamp $200, and Cinem
 - Ask only when a secret, legal identity, irreversible payment/refund, customer authorization, rights decision, or destructive action cannot be safely inferred.
 - Never mix customer context, files, links, prompts, approvals, or messages.
 - Never claim a provider action succeeded without a provider result plus matching durable state.
-- Keep every artifact below 9,000,000 bytes; split larger outputs and record SHA-256 hashes.
+- Enforce the actual limit of the destination provider or storage bucket. Split only when that real limit requires it, and record SHA-256 hashes.
 - Preserve existing UI unless the task explicitly requires a UI change.
 
 ## Agent routing

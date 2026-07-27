@@ -23,6 +23,7 @@ Use only the current project’s IDs and records. Never mix data between custome
 - `AUDIT_REPORT.md`
 - `SECURITY_REVIEW.md`
 - `GROWTH_AND_MONETIZATION.md`
+- `SOURCE_ASSET_MANIFEST.md`
 - `SKILL.md`
 - `DESIGN.md`
 - `APPROVALS.md`
@@ -35,11 +36,14 @@ Review the public home, products/services, pricing, plans, subscriptions, about,
 - Exact products, services, plans, prices, and availability statements.
 - Exact promises, phrases, calls to action, proof, objections, and audience language.
 - Brand colors, typography signals, image style, icon style, layout patterns, and tone.
+- A source-asset inventory for every product image, logo, brand photo, and factual visual, including its source URL or upload record, retrieval time, cryptographic hash, rights basis, product identifier, and verification status.
 - Locations, business hours, contact methods, booking paths, checkout paths, and forms.
 - Customer journey, monetization opportunities, missing proof, and friction.
 - Accessibility, usability, performance, content, SEO, conversion, and passive security observations.
 
 Every factual claim needs a source URL and retrieval time. Distinguish quoted fact, inference, recommendation, concept, and verified result. Never invent a product, owner, testimonial, price, result, customer count, credential, or feature.
+
+Do not hand visual work to the design agent until `SOURCE_ASSET_MANIFEST.md` is complete. Download or copy customer assets without transforming them, verify their hashes, map them to exact products or brand roles, and explicitly list any missing asset. A missing exact product asset blocks depiction of that product; it does not authorize an AI substitute.
 
 ## Email handling
 

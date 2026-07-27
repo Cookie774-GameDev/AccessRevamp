@@ -18,10 +18,21 @@ Execute approved external actions from `accessrevamp_integration_outbox` exactly
 
 - **Google Drive:** create one customer folder from the template; never duplicate it. Store only identifiers and non-secret links.
 - **Google Sheets:** append one payment/workflow ledger row after Stripe and Supabase agree. The ledger is secondary evidence, not the payment authority.
-- **Gmail/Icemail:** disabled until a lawful sender, authenticated domains, real mailboxes, reply handling, suppression, bounce/complaint processing, and explicit launch approval exist. Do not automate warm-up or “Not spam.”
-- **Stripe:** sandbox only until live activation. Never create a refund outside the two-person authorization workflow.
-- **Canva/Higgsfield:** disabled until connected, rights-reviewed, and budget-approved. Never exceed the project provider budget.
-- **Netlify/GitHub:** deploy the exact verified commit, retain rollback evidence, and smoke-test the public result.
+- **Gmail/Icemail:** Worker 6 may read the merged Gmail mailbox only through its
+  dedicated reader credentials. Direct support replies must use the verified
+  `support@accessrevamp.shop` sender; prospect replies must return through the
+  original authorized Icemail mailbox. Keep message-ID deduplication,
+  suppression, complaint, bounce, privacy, legal, and ambiguity gates. Do not
+  automate warm-up or "Not spam."
+- **Stripe:** keep live and test objects separate. Create Checkout only through
+  the active mode's verified server catalog. Never create a refund outside the
+  two-person authorization workflow.
+- **Canva/Higgsfield:** require connection, approved source-asset manifest,
+  rights review, fidelity review, and budget approval. Never substitute a
+  generated product for the customer's exact product or exceed the project
+  provider budget.
+- **Cloudflare Worker/GitHub:** deploy the exact verified commit, retain rollback
+  evidence, and smoke-test the public result.
 
 ## Artifact handling
 

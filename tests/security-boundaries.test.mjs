@@ -37,11 +37,12 @@ test('payment results and private account routes are never search indexed', asyn
   assert.doesNotMatch(metadata, /Payment received|checkout was completed/i);
 });
 
-test('missing terminal Stripe webhooks automatically pause new Checkout attempts', async () => {
-  const migration = await read('supabase/migrations/20260720170500_webhook_liveness_fail_closed.sql');
+test('provider-expired unpaid Checkout attempts reconcile without granting payment or pausing everyone', async () => {
+  const migration = await read('supabase/migrations/20260727101500_reconcile_stale_unpaid_checkouts.sql');
   assert.match(migration, /status = 'checkout_created'/);
   assert.match(migration, /expires_at < timezone\('utc', now\(\)\) - interval '60 minutes'/);
-  assert.match(migration, /stripe-webhook-liveness-failed/);
-  assert.match(migration, /set checkout_enabled = false/);
-  assert.match(migration, /accessrevamp-webhook-liveness/);
+  assert.match(migration, /not exists \([\s\S]*from public\.orders/);
+  assert.match(migration, /set status = 'expired'/);
+  assert.match(migration, /stale_checkout_reconciled/);
+  assert.doesNotMatch(migration, /set checkout_enabled = false/);
 });

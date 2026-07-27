@@ -18,6 +18,13 @@ export function configureCloudflareWorker(manifest) {
   return {
     ...manifest,
     name: 'accessrevamp',
+    compatibility_date: '2026-07-27',
+    compatibility_flags: ['nodejs_compat'],
+    observability: {
+      ...(manifest.observability || {}),
+      enabled: true,
+      head_sampling_rate: 1,
+    },
     vars: {
       ...(manifest.vars || {}),
       ...CLOUDFLARE_PRODUCTION_VARS,

@@ -25,7 +25,10 @@ Never present sample businesses, observations, reviews, credentials, screenshots
 - Vite 8 and native ES modules.
 - Netlify Functions.
 - Supabase Auth/Postgres/RLS.
-- Stripe Checkout in test mode until separately approved for launch.
+- Stripe Checkout with strictly separated test and live configurations. Live
+  checkout is allowed only while the database activation guard, verified live
+  catalog, restricted server secrets, signed webhook, and runtime health check
+  all agree. Sandbox tests require separate test credentials and test catalog.
 - Node test runner, Playwright, axe-core, and Lighthouse.
 
 Do not migrate frameworks, add a CMS, component framework, or WebGL dependency, switch infrastructure, or make an irreversible data change without an approved ADR.
@@ -64,7 +67,8 @@ Document names only, never values:
 - public site URL and public contact address;
 - Supabase project URL and publishable browser key;
 - Supabase server URL and service-role credential;
-- Stripe test secret, webhook secret, expected mode, and server-only Price IDs;
+- Stripe mode-specific checkout secret, read secret, webhook secret, expected
+  mode, and server-only Price IDs;
 - operator allowlist/claim configuration;
 - preview signing/hash configuration;
 - authorized staging URL and explicit active-testing switch;
@@ -89,10 +93,12 @@ WCAG 2.2 AA is the target, never a certification claim. The complete product mus
 
 - Canonical prices are Free Snapshot $0, Homepage Reveal $50, Complete Website Revamp $200, and Cinematic Scroll Site $250, all one time.
 - Verified upgrade paths are $50→$200 for $150, $50→$250 for $200, and $200→$250 for $50.
-- The browser sends only target tier and random request ID. The server verifies confirmed identity, locks entitlement credit, calculates due amount, selects the exact server-only test Price ID, and creates a reservation.
+- The browser sends only target tier and random request ID. The server verifies confirmed identity, locks entitlement credit, calculates due amount, selects the exact server-only Price ID for the active mode, and creates a reservation.
 - Webhooks—not redirect pages—grant or change entitlements.
 - Full and partial refunds must recompute effective paid value and record dependent-upgrade review.
-- Never switch Stripe live mode or create a live transaction without separate explicit approval.
+- Never switch payment mode, submit a charge, or mix live and test objects
+  without explicit authorization and mode-specific verification. Opening a
+  hosted live Checkout page for a no-charge redirect test is not payment proof.
 
 ## Security and authorization
 

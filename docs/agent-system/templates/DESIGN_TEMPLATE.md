@@ -4,6 +4,7 @@
 
 ## Approved direction
 
+- Verified `SOURCE_ASSET_MANIFEST.md`:
 - Project ID:
 - Approval record:
 - Selected homepage option:
@@ -19,6 +20,9 @@
 - Radius, border, shadow, and icon rules:
 - Logo use and clear space:
 - Imagery style and rights basis:
+- Exact product/logo source-asset IDs and SHA-256 hashes:
+- Disclosed generated background/decorative elements:
+- Copy review, OCR, spelling, rights, and product-fidelity status:
 
 ## Content hierarchy
 

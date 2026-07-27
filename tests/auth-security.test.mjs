@@ -424,8 +424,10 @@ test('official AccessRevamp email assets use manual codes instead of verificatio
   assert.equal(packageJson.scripts['auth:branding:verify'], 'node scripts/supabase/apply-auth-branding.mjs --verify');
 });
 
-test('Stripe remains the single payment provider and Shopify is not introduced', () => {
+test('Stripe remains the single payment provider and Shopify catalog reading cannot become payment code', () => {
   assert.match(checkout, /import Stripe from 'stripe'/);
   assert.match(checkout, /stripe\.checkout\.sessions\.create/);
-  assert.doesNotMatch(`${main}\n${authClient}\n${authStart}\n${packageText}`, /shopify/i);
+  assert.doesNotMatch(`${main}\n${authClient}\n${authStart}`, /shopify/i);
+  assert.ok(!Object.keys(packageJson.dependencies || {}).some((name) => /shopify/i.test(name)));
+  assert.ok(!Object.keys(packageJson.devDependencies || {}).some((name) => /shopify/i.test(name)));
 });
