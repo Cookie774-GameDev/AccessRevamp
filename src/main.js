@@ -39,6 +39,11 @@ import { underConstructionPage as underConstructionContent } from './pages/under
 import { setupCheckout } from './services/checkout.js';
 import { setupSessionNavigation } from './services/session-navigation.js';
 
+// Keep the entry chunk release-specific so browsers cannot retain a stale
+// lazy-import map after a production deployment changes route-level assets.
+const ACCESSREVAMP_RELEASE = import.meta.env.VITE_RELEASE_SHA || 'local';
+document.documentElement.dataset.release = ACCESSREVAMP_RELEASE.slice(0, 12);
+
 function normalizeAuthEmailReturn() {
   if (!location.hash) return;
   const authFragment = new URLSearchParams(location.hash.replace(/^#/, ''));

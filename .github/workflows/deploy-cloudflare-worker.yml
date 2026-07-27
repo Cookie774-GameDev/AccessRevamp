@@ -37,6 +37,7 @@ jobs:
           VITE_PAYMENT_MODE: "live"
           VITE_SITE_URL: "https://accessrevamp.com"
           VITE_SUPABASE_URL: "https://vbkkimvedmklebghtkzs.supabase.co"
+          VITE_RELEASE_SHA: ${{ github.sha }}
         run: npm run build
       - name: Deploy production Worker
         uses: cloudflare/wrangler-action@v3

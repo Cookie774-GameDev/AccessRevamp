@@ -52,6 +52,8 @@ jobs:
         env:
           REQUIRE_FFMPEG_OPTIMIZATION: "true"
           MAX_SHOWCASE_VIDEO_BYTES: "9500000"
+        env:
+          VITE_RELEASE_SHA: ${{ github.sha }}
         run: npm run build
       - name: Production dependency audit
         id: production_audit
