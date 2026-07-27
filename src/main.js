@@ -38,10 +38,10 @@ import { notFoundPage, resultPage } from './pages/results.js';
 import { underConstructionPage as underConstructionContent } from './pages/under-construction.js';
 import { setupCheckout } from './services/checkout.js';
 import { setupSessionNavigation } from './services/session-navigation.js';
+import { ACCESSREVAMP_RELEASE } from './release-marker.js';
 
 // Keep the entry chunk release-specific so browsers cannot retain a stale
 // lazy-import map after a production deployment changes route-level assets.
-const ACCESSREVAMP_RELEASE = import.meta.env.VITE_RELEASE_SHA || 'local';
 document.documentElement.dataset.release = ACCESSREVAMP_RELEASE.slice(0, 12);
 
 function normalizeAuthEmailReturn() {
