@@ -5,12 +5,29 @@
 ## Approved direction
 
 - Verified `SOURCE_ASSET_MANIFEST.md`:
+- Reviewed reference: `design-references/AXIA_CREDIT_REFERENCE.md`
 - Project ID:
 - Approval record:
 - Selected homepage option:
 - Selected cinematic sequence, if applicable:
 - Customer notes:
 - Revision round:
+
+## Reference translation matrix
+
+| Reference principle | Customer evidence | Customer-specific translation | Required divergence | Approval evidence |
+|---|---|---|---|---|
+
+- Reference principles selected:
+- Reference principles intentionally rejected:
+- Customer evidence supporting the choices:
+- Divergence across at least four areas:
+- Copied elements rejected:
+- Private owner command center review item:
+
+The reference is inspiration, not a template. Do not copy reference copy,
+branding, assets, composition, typography, palette, section order, or motion.
+Every translation must remain traceable to customer evidence.
 
 ## Brand system
 
