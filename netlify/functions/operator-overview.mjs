@@ -98,6 +98,9 @@ async function loadOverview(admin) {
     ['projects', 'customer_projects', 'id,user_id,name,website_url,status,delivery_status,delivery_due_at,delivered_at,plan_key,scope_summary,created_at,updated_at'],
     ['recentUpdates', 'project_updates', 'id,project_id,title,body,stage,progress_percent,published_at,created_at'],
     ['recentArtifacts', 'project_artifacts', 'id,project_id,artifact_type,filename,mime_type,size_bytes,status,metadata,created_at'],
+    ['creativeOptions', 'project_design_options', 'id,project_id,parent_option_id,option_group,option_number,revision_round,status,storage_path,external_url,prompt_summary,submitted_by_agent,submission_note,design_review_status,delivery_review_status,copy_review_status,product_fidelity_status,rights_review_status,source_manifest_verified_at,design_approved_at,delivery_approved_at,created_at,updated_at'],
+    ['creativeFeedback', 'project_creative_feedback', 'id,project_id,design_option_id,assigned_agent,note,status,routed_task_id,created_at,resolved_at'],
+    ['creativeEvents', 'project_creative_review_events', 'id,project_id,design_option_id,event_type,details,created_at'],
   ];
 
   const results = await Promise.all(queries.map(([, table, select]) => admin
@@ -119,6 +122,32 @@ async function loadOverview(admin) {
     customer: profiles.get(project.user_id) || null,
   }));
 
+  const optionIds = data.creativeOptions.map((option) => option.id);
+  const linksResult = optionIds.length
+    ? await admin.from('project_design_option_assets').select('design_option_id,asset_role,source_asset_id').in('design_option_id', optionIds)
+    : { data: [], error: null };
+  if (linksResult.error) partialFailures.push('creative source links');
+  const sourceIds = [...new Set((linksResult.data || []).map((link) => link.source_asset_id))];
+  const assetsResult = sourceIds.length
+    ? await admin.from('project_source_assets').select('id,project_id,asset_type,product_identifier,source_url,storage_path,original_filename,sha256,rights_status,verification_status,metadata').in('id', sourceIds)
+    : { data: [], error: null };
+  if (assetsResult.error) partialFailures.push('creative source assets');
+  const assetMap = new Map((assetsResult.data || []).map((asset) => [asset.id, asset]));
+  const linksByOption = new Map();
+  for (const link of linksResult.data || []) {
+    const list = linksByOption.get(link.design_option_id) || [];
+    list.push({ ...link, asset: assetMap.get(link.source_asset_id) || null });
+    linksByOption.set(link.design_option_id, list);
+  }
+  data.creativeOptions = await Promise.all(data.creativeOptions.map(async (option) => {
+    let previewUrl = option.external_url || '';
+    if (!previewUrl && option.storage_path) {
+      const signed = await admin.storage.from(BUCKET).createSignedUrl(option.storage_path, 15 * 60);
+      previewUrl = signed.data?.signedUrl || '';
+    }
+    return { ...option, preview_url: previewUrl, source_assets: linksByOption.get(option.id) || [] };
+  }));
+
   const settings = await admin.from('outreach_settings').select('sending_enabled').eq('singleton', true).single();
   if (settings.error) partialFailures.push('outreach settings');
   return {
@@ -127,6 +156,73 @@ async function loadOverview(admin) {
     uploadLimits: { maximumBytes: MAX_FILE_BYTES, bucket: BUCKET },
     partialFailures: [...new Set(partialFailures)],
   };
+}
+
+async function registerCreativeVersion(admin, operator, payload) {
+  const projectId = boundedText(payload.projectId, 80, { required: true });
+  const optionGroup = boundedText(payload.optionGroup, 80, { required: true });
+  const submittedByAgent = boundedText(payload.submittedByAgent, 80, { required: true });
+  const externalUrl = boundedText(payload.externalUrl, 2000);
+  const storagePath = boundedText(payload.storagePath, 1000);
+  const promptSummary = boundedText(payload.promptSummary, 4000);
+  const submissionNote = boundedText(payload.submissionNote, 2000);
+  const parentOptionId = payload.parentOptionId ? boundedText(payload.parentOptionId, 80) : null;
+  if (!externalUrl && !storagePath) throw new HttpError(422, 'A preview source is required.');
+  await getProject(admin, projectId);
+  let parent = null;
+  if (parentOptionId) {
+    const result = await admin.from('project_design_options').select('id,project_id,option_group,option_number,revision_round').eq('id', parentOptionId).maybeSingle();
+    if (result.error) throw result.error;
+    if (!result.data || result.data.project_id !== projectId) throw new HttpError(422, 'Parent version is invalid.');
+    parent = result.data;
+  }
+  const optionNumber = parent ? parent.option_number : exactInteger(payload.optionNumber, 1, 50, 'Option number');
+  const revisionRound = parent ? Math.min(parent.revision_round + 1, 2) : exactInteger(payload.revisionRound ?? 0, 0, 2, 'Revision round');
+  const inserted = await admin.from('project_design_options').insert({
+    project_id: projectId,
+    parent_option_id: parentOptionId,
+    option_group: parent?.option_group || optionGroup,
+    option_number: optionNumber,
+    revision_round: revisionRound,
+    status: 'human_review',
+    storage_path: storagePath || null,
+    external_url: externalUrl || null,
+    prompt_summary: promptSummary || null,
+    submitted_by_agent: submittedByAgent,
+    submission_note: submissionNote || null,
+  }).select('id').single();
+  if (inserted.error) throw inserted.error;
+  await admin.from('project_creative_review_events').insert({
+    project_id: projectId,
+    design_option_id: inserted.data.id,
+    actor_id: operator.id,
+    event_type: 'submitted',
+    details: { submitted_by_agent: submittedByAgent, parent_option_id: parentOptionId },
+  });
+  if (parentOptionId) {
+    await admin.from('project_creative_feedback').update({ status: 'resolved', resolved_at: new Date().toISOString() }).eq('design_option_id', parentOptionId).eq('status', 'open');
+  }
+  return json({ ok: true, optionId: inserted.data.id }, 201);
+}
+
+async function creativeDecision(admin, operator, payload, action) {
+  const optionId = boundedText(payload.optionId, 80, { required: true });
+  if (action === 'request_creative_changes') {
+    const note = boundedText(payload.note, 4000, { required: true });
+    if (note.length < 8) throw new HttpError(422, 'Critique must be actionable.');
+    const idempotencyKey = boundedText(payload.idempotencyKey, 180, { required: true });
+    const result = await admin.rpc('request_accessrevamp_creative_changes', {
+      p_option_id: optionId, p_operator_id: operator.id, p_note: note, p_idempotency_key: idempotencyKey,
+    });
+    if (result.error) throw result.error;
+    return json({ ok: true, feedbackId: result.data }, 201);
+  }
+  const rpc = action === 'approve_creative_design'
+    ? 'approve_accessrevamp_creative_design'
+    : 'approve_accessrevamp_creative_delivery';
+  const result = await admin.rpc(rpc, { p_option_id: optionId, p_operator_id: operator.id });
+  if (result.error) throw result.error;
+  return json({ ok: true });
 }
 
 async function createArtifactUpload(admin, operator, payload) {
@@ -294,6 +390,12 @@ export default async function operatorOverview(request) {
         return cancelArtifactUpload(admin, payload);
       case 'publish_update':
         return publishUpdate(admin, operator, payload);
+      case 'register_creative_version':
+        return registerCreativeVersion(admin, operator, payload);
+      case 'request_creative_changes':
+      case 'approve_creative_design':
+      case 'approve_creative_delivery':
+        return creativeDecision(admin, operator, payload, payload.action);
       default:
         throw new HttpError(422, 'Unknown operator action.');
     }

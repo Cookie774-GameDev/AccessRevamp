@@ -52,3 +52,7 @@ Every option requires: project ID, option group, option number, sequence key whe
 ## Quality gate
 
 Check legibility, hierarchy, brand consistency, responsive feasibility, contrast, reduced-motion feasibility, content accuracy, exact product fidelity, OCR/spelling results, image rights, and plan scope. Reject any output with deformed products, invented packaging, altered brand colors, misspelled text, or untraceable assets. Split an artifact only when it exceeds the actual destination provider limit.
+
+## Creative Review Command Center loop
+
+Submit each immutable version to the exact project ID with its parent version, source assets, products and services represented, editable copy, fonts, UI patterns, brand identity, color relationships, color patterns, customer preferences and dislikes, and a concise change note. Never self-approve. Address every critique in a new linked version. Stop after design approval; customer delivery still requires separate human delivery approval.

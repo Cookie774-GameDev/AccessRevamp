@@ -94,12 +94,26 @@ function renderProjects(projects = []) {
   return `<div class="operator-project-list">${projects.map((project) => `<article><div><strong>${escapeHtml(project.name)}</strong><span>${escapeHtml(project.customer?.email || project.customer?.full_name || 'Customer not linked')}</span></div><div><span class="status-pill">${escapeHtml(label(project.status))}</span><span>${escapeHtml(label(project.delivery_status))}</span></div></article>`).join('')}</div>`;
 }
 
+function renderCreativeReview(data) {
+  const projects = new Map((data.projects || []).map((project) => [project.id, project]));
+  const feedback = data.creativeFeedback || [];
+  const events = data.creativeEvents || [];
+  const options = data.creativeOptions || [];
+  if (!options.length) return '<section class="creative-command-center"><div class="creative-empty"><span class="micro-label">Creative review</span><h2>No submitted versions</h2><p>Agent submissions will appear here before anything can reach a customer.</p></div></section>';
+  return `<section class="creative-command-center" data-creative-review-stage><header class="creative-command-center__head"><div><span class="micro-label">Human quality gate</span><h2>Creative review queue</h2><p>${options.filter((item) => item.design_review_status !== 'approved').length} version(s) awaiting a design decision.</p></div><span class="status-pill">Delivery is a separate approval</span></header><div class="creative-review-grid">${options.map((option) => {
+    const project = projects.get(option.project_id);
+    const notes = feedback.filter((item) => item.design_option_id === option.id);
+    const history = events.filter((item) => item.design_option_id === option.id);
+    return `<article class="creative-review-card" data-creative-option="${escapeHtml(option.id)}"><div class="creative-review-card__identity"><div><span class="micro-label">${escapeHtml(label(option.option_group))} · V${Number(option.revision_round) + 1}</span><h3>${escapeHtml(project?.name || 'Unknown project')}</h3><a href="${escapeHtml(project?.website_url || '#')}" target="_blank" rel="noreferrer">${escapeHtml(project?.website_url || 'No website')}</a></div><div><span class="status-pill">${escapeHtml(label(option.design_review_status))}</span><span class="status-pill">${escapeHtml(label(option.delivery_review_status))}</span></div></div><div class="creative-review-card__preview">${option.preview_url ? `<img src="${escapeHtml(option.preview_url)}" alt="Review preview for ${escapeHtml(project?.name || 'project')}" loading="lazy" />` : '<p>Preview unavailable.</p>'}</div><div class="creative-review-card__evidence"><section><h4>Source evidence</h4>${option.source_assets?.length ? `<ul>${option.source_assets.map((link) => `<li><strong>${escapeHtml(label(link.asset_role))}</strong> · ${escapeHtml(link.asset?.product_identifier || link.asset?.original_filename || 'source asset')} · ${escapeHtml(link.asset?.sha256?.slice(0, 12) || '')}</li>`).join('')}</ul>` : '<p>No exact source asset is linked yet; delivery remains blocked.</p>'}</section><section><h4>Version history</h4><p>Submitted by ${escapeHtml(option.submitted_by_agent || 'unrecorded agent')}${option.parent_option_id ? ' as a revision' : ' as the first version'}.</p><p>${escapeHtml(option.submission_note || option.prompt_summary || 'No submission note.')}</p></section></div>${notes.length ? `<div class="creative-review-card__notes"><h4>Critique</h4>${notes.map((item) => `<p><strong>${escapeHtml(label(item.status))}:</strong> ${escapeHtml(item.note)}</p>`).join('')}</div>` : ''}<form class="creative-critique-form" data-creative-critique-form><input type="hidden" name="optionId" value="${escapeHtml(option.id)}" /><label>Actionable critique<textarea name="note" minlength="8" maxlength="4000" required placeholder="Name the exact issue, why it matters, and what must change in the next version."></textarea></label><div class="operator-form__actions"><button class="button button--small" type="submit">Request changes</button><button class="button button--ghost button--small" type="button" data-approve-design="${escapeHtml(option.id)}">Approve design</button><button class="button button--small" type="button" data-approve-delivery="${escapeHtml(option.id)}" ${option.design_review_status === 'approved' ? '' : 'disabled'}>Approve for customer delivery</button><span class="form-status" role="status"></span></div></form><details><summary>Review event log (${history.length})</summary>${history.map((item) => `<p>${escapeHtml(label(item.event_type))} · ${escapeHtml(formatDate(item.created_at))}</p>`).join('')}</details></article>`;
+  }).join('')}</div></section>`;
+}
+
 function renderOverview(data) {
   const projects = data.projects || [];
   const partial = data.partialFailures?.length
     ? `<div class="notice"><strong>Partial operator data:</strong> ${data.partialFailures.map(escapeHtml).join(', ')}.</div>`
     : '';
-  return `${partial}<div class="operator-hub-actions"><button class="button button--ghost button--small" type="button" data-operator-refresh>Refresh control room</button></div>
+  return `${partial}${renderCreativeReview(data)}<div class="operator-hub-actions"><button class="button button--ghost button--small" type="button" data-operator-refresh>Refresh control room</button></div>
     <div class="operator-publish-grid">${renderUpdateForm(projects)}${renderArtifactForm(projects, data.uploadLimits)}</div>
     <div class="dashboard-grid operator-dashboard-grid">
       <section class="dashboard-card"><div class="card-head"><div><span class="micro-label">Delivery</span><h2>Customer projects</h2></div><span class="count-pill">${projects.length}</span></div>${renderProjects(projects)}</section>
@@ -265,14 +279,26 @@ export function setupOperator() {
   const onSubmit = (event) => {
     const updateForm = event.target.closest('[data-operator-update-form]');
     const artifactForm = event.target.closest('[data-operator-artifact-form]');
-    if (!updateForm && !artifactForm) return;
+    const critiqueForm = event.target.closest('[data-creative-critique-form]');
+    if (!updateForm && !artifactForm && !critiqueForm) return;
     event.preventDefault();
-    if (updateForm) submitUpdate(updateForm);
+    if (critiqueForm) {
+      const values = new FormData(critiqueForm);
+      const status = critiqueForm.querySelector('.form-status');
+      status.textContent = 'Routing critique…';
+      api({ action: 'request_creative_changes', optionId: values.get('optionId'), note: values.get('note'), idempotencyKey: crypto.randomUUID() })
+        .then(() => load('Critique routed to the assigned agent as a durable revision task.'))
+        .catch((error) => { status.textContent = error.message; });
+    } else if (updateForm) submitUpdate(updateForm);
     else submitArtifact(artifactForm);
   };
 
   const onClick = (event) => {
     if (event.target.closest('[data-operator-refresh]')) load();
+    const design = event.target.closest('[data-approve-design]');
+    const delivery = event.target.closest('[data-approve-delivery]');
+    if (design) api({ action: 'approve_creative_design', optionId: design.dataset.approveDesign }).then(() => load('Design approved; customer delivery remains blocked.')).catch((error) => window.alert(error.message));
+    if (delivery) api({ action: 'approve_creative_delivery', optionId: delivery.dataset.approveDelivery }).then(() => load('Creative approved for customer delivery.')).catch((error) => window.alert(error.message));
   };
 
   host.addEventListener('submit', onSubmit);

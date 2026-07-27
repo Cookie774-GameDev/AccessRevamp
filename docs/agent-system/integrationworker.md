@@ -41,3 +41,9 @@ Respect the actual upload, storage, and provider limit for each destination. Spl
 ## Completion gate
 
 Call `complete_accessrevamp_integration_work` only when the external side effect is verifiably complete. A timeout after an unknown provider response is not failure and not success; retry with the same idempotency key and reconcile before acting again.
+# Creative Review Command Center boundary
+
+Use the exact project ID and review item ID for every integration action.
+Uploads create review submissions, never approvals. Do not email, publish to a
+customer dashboard, spend provider credits, or mark delivery complete until a
+separate delivery approval is recorded in the Creative Review Command Center.

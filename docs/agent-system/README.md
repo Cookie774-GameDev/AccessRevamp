@@ -29,6 +29,16 @@ independent readiness gates pass and fails closed when they do not.
 
 AccessRevamp owns only the cold-or-reply allocation: no more than five combined sends from each mailbox per America/Chicago day, or 500 across 100 fully authorized mailboxes. Icemail separately manages warm-up; AccessRevamp agents do not generate those messages or manipulate spam classifications. The system must not force 500 sends when any mailbox, suppression, consent, reputation, legal, complaint, or operator gate is unavailable.
 
+## Creative Review Command Center protocol
+
+All customer creative work is registered against one exact project ID. Agents
+submit immutable versions with parent lineage, source evidence, products and
+services represented, exact copy, fonts, UI patterns, brand identity, color
+relationships and patterns, customer preferences/dislikes, and QA evidence.
+Owner critique creates a durable assigned task. Agents never self-approve.
+Design approval and customer delivery approval are separate; no email,
+dashboard publication, or customer-ready status is allowed before the latter.
+
 ## Canonical plans
 
 - Homepage Reveal — $50.

@@ -474,3 +474,18 @@
 @media (prefers-reduced-motion: reduce) {
   .portal-progress__track > span { animation: none; }
 }
+.creative-command-center { margin:1.5rem 0; padding:clamp(1rem,3vw,2rem); border-radius:1.6rem; color:#fff8ea; background:#111214; box-shadow:0 24px 70px #1116; }
+.creative-command-center__head,.creative-review-card__identity { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.creative-command-center h2,.creative-command-center h3,.creative-command-center h4 { color:#fff8ea; }
+.creative-review-grid { display:grid; gap:1.25rem; margin-top:1.25rem; }
+.creative-review-card { padding:1rem; border:1px solid #d89b354d; border-radius:1.2rem; background:#191a1e; }
+.creative-review-card__preview { min-height:18rem; margin:1rem 0; overflow:auto; border-radius:.9rem; background:#0d0e10; }
+.creative-review-card__preview img { display:block; width:100%; height:auto; }
+.creative-review-card__evidence { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.creative-review-card__evidence section,.creative-review-card__notes { padding:1rem; border:1px solid #ffffff1d; border-radius:.8rem; background:#ffffff08; }
+.creative-critique-form { display:grid; gap:.8rem; margin-top:1rem; }
+.creative-critique-form textarea { min-height:7rem; background:#fffaf0; color:#17130f; }
+.creative-command-center .button--ghost { color:#fff8ea; border-color:#f5c96d; }
+.creative-command-center .status-pill { background:#f4cb7330; color:#ffe4a8; border-color:#f4cb7360; }
+@media (max-width:760px) { .creative-command-center__head,.creative-review-card__identity { display:grid; } .creative-review-card__evidence { grid-template-columns:1fr; } }
+@media (prefers-reduced-motion: reduce) { .creative-command-center *, .creative-command-center *::before, .creative-command-center *::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; } }

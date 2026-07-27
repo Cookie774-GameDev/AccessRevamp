@@ -67,3 +67,7 @@ Run the $200 process plus a customer-selected three- or four-scene story, two co
 ## Completion proof
 
 A project is complete only when the final delivery manifest lists every promised artifact, all required tasks are succeeded or explicitly skipped, external links resolve, automated tests pass, human review is recorded, and the customer notification is confirmed.
+
+## Creative Review Command Center
+
+Every homepage, poster, cinematic scene, and page reference must be registered under the exact project ID in the Creative Review Command Center. A critique creates a durable task for the assigned agent. Design approval and delivery approval are separate human actions; only delivery approval can unlock customer visibility. Never infer approval from silence, a successful upload, or a design agent's own judgment.

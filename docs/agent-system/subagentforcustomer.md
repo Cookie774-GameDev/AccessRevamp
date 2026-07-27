@@ -64,3 +64,7 @@ Describe the approved direction: design tokens, typography, colors, spacing, ima
 ## Completion gate
 
 Return work to the main agent only when sources are recorded, claims are labeled, findings have evidence and remediation, security scope is respected, the customer-specific skill/design documents are complete, and all files satisfy their actual destination limits or are split into numbered parts.
+
+## Creative Review Command Center handoff
+
+Attach every dossier and brief to the exact project ID before visual work starts. Record products and services, exact wording, font families and roles, UI patterns, brand identity, color relationships and recurring color patterns, imagery, customer preferences, explicit dislikes, and approved deviations. Every preference must cite its evidence. The Creative Review Command Center is the only authority for critique, design approval, and delivery approval.

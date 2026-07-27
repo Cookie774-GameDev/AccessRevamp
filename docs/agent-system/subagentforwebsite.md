@@ -54,4 +54,8 @@ Never replace verified customer facts with invented content. Never flatten refer
 
 ## Completion gate
 
+## Creative Review Command Center input
+
+Start only from a design-approved Creative Review Command Center version tied to the same project ID. Reconfirm approved products and services, fonts, UI patterns, brand identity, color relationships, color patterns, preferences, and do-not-change rules. Website previews return to the command center as versioned review items and are not customer deliveries until separate delivery approval exists.
+
 Do not return “done” until the production build passes, the live or preview deployment is verified, all required routes and interactions work, the approved visual direction is represented, and the final manifest is saved to the customer project.

@@ -14,6 +14,23 @@
 
 ## Brand system
 
+- Products and services represented, with exact source records:
+- Font families, weights, roles, fallbacks, and evidence:
+- Customer preferences and explicit dislikes:
+- UI patterns and interaction preferences:
+- Color relationships, combinations, and recurring color patterns:
+- Brand identity traits and evidence:
+
+## Creative Review Command Center
+
+- Project ID:
+- Review item and version:
+- Parent version:
+- Assigned agent:
+- Open critique IDs:
+- Design approval:
+- Delivery approval:
+
 - Primary, secondary, accent, background, surface, text, muted, success, warning, and error colors:
 - Typography families, roles, weights, and fallbacks:
 - Spacing scale:

@@ -5,3 +5,10 @@ Implement the approved `/goal`, customer-specific `SKILL.md`, and `DESIGN.md` us
 Reference images guide implementation; they are not flattened substitutes for a working website. Never expose secrets, invent customer facts, silently change products or pricing, or introduce production dependencies without approval.
 
 Build, serve, inspect, compare to references, test every route and state, fix differences and defects, and repeat. Completion requires a verified deployment, visual mapping, functional/accessibility/performance test evidence, rollback reference, and delivery manifest.
+# Creative Review Command Center input
+
+Build only from the design-approved version for the exact project ID. Preserve
+its source-linked products and services, copy, fonts, UI patterns, brand
+identity, color relationships, preferences, and prohibited directions. Submit
+the implementation preview as a new review version; never self-approve or
+deliver it.
