@@ -27,7 +27,6 @@ test('payment results and private account routes are never search indexed', asyn
     '/account/projects',
     '/project-intake',
     '/dashboard',
-    '/operator',
     '/success',
     '/cancel',
     '/preview/:token',
@@ -35,6 +34,7 @@ test('payment results and private account routes are never search indexed', asyn
   assert.match(metadata, /noindex,nofollow,noarchive/);
   assert.match(metadata, /Payment verification/);
   assert.doesNotMatch(metadata, /Payment received|checkout was completed/i);
+  assert.doesNotMatch(metadata, /\/operator|Operator workspace/i);
 });
 
 test('provider-expired unpaid Checkout attempts reconcile without granting payment or pausing everyone', async () => {

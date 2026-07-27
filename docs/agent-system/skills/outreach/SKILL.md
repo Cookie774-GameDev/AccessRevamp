@@ -1,5 +1,7 @@
 # Skill: Evidence-Based Outreach and Replies
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 ## Goal
 
 Prepare restrained, relevant, human-approved business messages based on current, sourced public-site observations while preserving suppression, sender identity, mailbox health, and legal requirements.

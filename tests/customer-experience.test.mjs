@@ -39,13 +39,12 @@ test('checkout saves one stable request and uses only a server-created Stripe UR
 });
 
 test('auth and both dashboard routes use AccessRevamp-only customer wording', async () => {
-  const [auth, authPage, dashboardPage, dashboardService, accountService, operatorService] = await Promise.all([
+  const [auth, authPage, dashboardPage, dashboardService, accountService] = await Promise.all([
     read('src/services/auth.js'),
     read('src/pages/auth.js'),
     read('src/pages/dashboard.js'),
     read('src/services/dashboard.js'),
     read('src/services/account-projects.js'),
-    read('src/services/operator.js'),
   ]);
   assert.match(auth, /Account access is temporarily unavailable/);
   assert.match(auth, /Open the newest AccessRevamp email/);
@@ -55,11 +54,8 @@ test('auth and both dashboard routes use AccessRevamp-only customer wording', as
   assert.match(dashboardPage, /accountProjectsPage/);
   assert.match(dashboardService, /setupAccountProjects as setupDashboard/);
   assert.match(accountService, /<video[^>]+controls[^>]+playsinline/);
-  assert.match(operatorService, /prepareEmail/);
-  assert.match(operatorService, /mailto:/);
-  assert.match(operatorService, /Email customer/);
   assert.doesNotMatch(
-    `${auth}\n${authPage}\n${accountService}\n${operatorService}`,
+    `${auth}\n${authPage}\n${accountService}`,
     /Supabase is not connected|connected Supabase project|Supabase public configuration|private Supabase bucket|Supabase environment values/i,
   );
 });

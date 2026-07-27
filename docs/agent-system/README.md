@@ -2,6 +2,9 @@
 
 This folder defines the customer-delivery operating system for AccessRevamp.
 
+Every agent and skill must read and obey [APPROVAL_PROTOCOL.md](APPROVAL_PROTOCOL.md)
+before starting customer work.
+
 Open [PROCESS_MAP.html](PROCESS_MAP.html) for the complete interactive system diagram covering the five permanent mailbox owners, Worker 6, payment reconciliation, isolated customer agents, exact-asset creative production, plan branches, website implementation, QA, and private delivery.
 
 ## Implemented foundation
@@ -29,9 +32,11 @@ independent readiness gates pass and fails closed when they do not.
 
 AccessRevamp owns only the cold-or-reply allocation: no more than five combined sends from each mailbox per America/Chicago day, or 500 across 100 fully authorized mailboxes. Icemail separately manages warm-up; AccessRevamp agents do not generate those messages or manipulate spam classifications. The system must not force 500 sends when any mailbox, suppression, consent, reputation, legal, complaint, or operator gate is unavailable.
 
-## Creative Review Command Center protocol
+## Private Owner Command Center protocol
 
-All customer creative work is registered against one exact project ID. Agents
+The command center is a private owner command center running only on the
+owner's computer; it is not a route on the customer website. All customer
+creative work is registered against one exact project ID. Agents
 submit immutable versions with parent lineage, source evidence, products and
 services represented, exact copy, fonts, UI patterns, brand identity, color
 relationships and patterns, customer preferences/dislikes, and QA evidence.

@@ -29,7 +29,7 @@ Baseline findings are color contrast on home/pricing and heading order on pricin
 
 ## Browser and viewport matrix
 
-Playwright covers Chromium, Firefox, and WebKit. Required visual/functional sizes are 1440×900, 1280×800, 1024×768, 768×1024, 390×844, and 375×667, plus 320-pixel reflow and 200% zoom. Test standard pages, all three demos, account/operator/private preview, cinematic static/reduced/full paths, and error states.
+Playwright covers Chromium, Firefox, and WebKit. Required visual/functional sizes are 1440×900, 1280×800, 1024×768, 768×1024, 390×844, and 375×667, plus 320-pixel reflow and 200% zoom. Test standard pages, all three demos, account/private preview, cinematic static/reduced/full paths, and error states. Test the private owner command center separately on loopback; it is not a production website route.
 
 ## Performance budgets
 

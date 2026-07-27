@@ -15,6 +15,7 @@
     "stripe:test-catalog:sync": "node scripts/stripe/sync-test-catalog.mjs",
     "stripe:test-catalog:verify": "node scripts/stripe/verify-test-catalog.mjs",
     "operator:grant": "node scripts/grant-operator.mjs",
+    "command-center": "node scripts/owner-command-center/server.mjs",
     "auth:branding:apply": "node scripts/supabase/apply-auth-branding.mjs",
     "auth:branding:verify": "node scripts/supabase/apply-auth-branding.mjs --verify",
     "email:worker6": "node scripts/worker6/index.mjs",

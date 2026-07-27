@@ -6,10 +6,8 @@ const read = (path) => readFile(path, 'utf8');
 
 const [
   migration,
-  operatorFunction,
-  operatorClient,
-  operatorPage,
-  styles,
+  ownerServer,
+  ownerUi,
   mainAgent,
   customerAgent,
   designAgent,
@@ -18,10 +16,8 @@ const [
   designTemplate,
 ] = await Promise.all([
   read('supabase/migrations/20260727120000_creative_review_command_center.sql'),
-  read('netlify/functions/operator-overview.mjs'),
-  read('src/services/operator.js'),
-  read('src/pages/operator.js'),
-  read('src/styles/customer-hub.css'),
+  read('scripts/owner-command-center/server.mjs'),
+  read('scripts/owner-command-center/ui.mjs'),
   read('docs/agent-system/mainagent.md'),
   read('docs/agent-system/subagentforcustomer.md'),
   read('docs/agent-system/subagentfordesign.md'),
@@ -47,30 +43,26 @@ test('creative review data is versioned, append-only, private, and independently
   assert.match(migration, /delivery_review_status <> 'approved'/i);
 });
 
-test('operator command center loads customer-isolated evidence and exposes separate review actions', () => {
-  assert.match(operatorPage, /Creative review command center/i);
-  assert.match(operatorFunction, /project_creative_feedback/);
-  assert.match(operatorFunction, /project_creative_review_events/);
-  assert.match(operatorFunction, /project_design_option_assets/);
-  assert.match(operatorFunction, /project_source_assets/);
-  assert.match(operatorFunction, /request_creative_changes/);
-  assert.match(operatorFunction, /approve_creative_design/);
-  assert.match(operatorFunction, /approve_creative_delivery/);
-  assert.match(operatorFunction, /register_creative_version/);
-  assert.match(operatorClient, /data-creative-review-stage/);
-  assert.match(operatorClient, /Request changes/);
-  assert.match(operatorClient, /Approve design/);
-  assert.match(operatorClient, /Approve for customer delivery/);
-  assert.match(operatorClient, /Version history/);
-  assert.match(operatorClient, /Source evidence/);
-  assert.match(styles, /\.creative-command-center/);
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.doesNotMatch(operatorClient, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+test('private owner command center loads customer-isolated evidence and exposes separate review actions', () => {
+  assert.match(ownerServer, /project_creative_feedback/);
+  assert.match(ownerServer, /project_creative_review_events/);
+  assert.match(ownerServer, /project_design_option_assets/);
+  assert.match(ownerServer, /project_source_assets/);
+  assert.match(ownerServer, /request_accessrevamp_creative_changes/);
+  assert.match(ownerServer, /approve_accessrevamp_creative_design/);
+  assert.match(ownerServer, /approve_accessrevamp_creative_delivery/);
+  assert.match(ownerUi, /Request changes/);
+  assert.match(ownerUi, /Approve design/);
+  assert.match(ownerUi, /Approve for customer delivery/);
+  assert.match(ownerUi, /Version history/);
+  assert.match(ownerUi, /Source evidence/);
+  assert.match(ownerUi, /prefers-reduced-motion/);
+  assert.doesNotMatch(ownerUi, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
 });
 
 test('agent contracts require command-center submission and rich sourced brand preference notes', () => {
   for (const contract of [mainAgent, customerAgent, designAgent, websiteAgent, designSkill, designTemplate]) {
-    assert.match(contract, /Creative Review Command Center/i);
+    assert.match(contract, /private owner command center/i);
     assert.match(contract, /project ID/i);
   }
   for (const contract of [customerAgent, designAgent, designSkill, designTemplate]) {
@@ -83,4 +75,3 @@ test('agent contracts require command-center submission and rich sourced brand p
   assert.match(designAgent, /Never self-approve/i);
   assert.match(mainAgent, /delivery approval/i);
 });
-

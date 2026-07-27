@@ -1,5 +1,7 @@
 # Skill: Payment Reconciliation
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 ## Goal
 
 Create exactly one durable customer project for one verified Stripe payment and preserve enough evidence to recover safely from retries, browser failures, duplicate webhooks, and provider timeouts.

@@ -1,5 +1,7 @@
 # Skill: Sourced Website Research
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 ## Goal
 
 Produce a customer-specific evidence base that accurately describes the public website, offer, brand, audience, content, conversion path, and improvement opportunities.

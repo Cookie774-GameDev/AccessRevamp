@@ -9,7 +9,6 @@ import checkoutStatus from "../netlify/functions/checkout-status.mjs";
 import contact from "../netlify/functions/contact.mjs";
 import createCheckout from "../netlify/functions/create-checkout.mjs";
 import freeSnapshot from "../netlify/functions/free-snapshot.mjs";
-import operatorOverview from "../netlify/functions/operator-overview.mjs";
 import operatorPricingContext from "../netlify/functions/operator-pricing-context.mjs";
 import orderDraft from "../netlify/functions/order-draft.mjs";
 import paymentHealth from "../netlify/functions/payment-health.mjs";
@@ -37,7 +36,6 @@ const routes = new Map<string, (request: Request) => Promise<Response>>([
   ["/api/contact", contact],
   ["/api/create-checkout", createCheckout],
   ["/api/free-snapshot", freeSnapshot],
-  ["/api/operator-overview", operatorOverview],
   ["/api/order-draft", orderDraft],
   ["/api/payment-health", paymentHealth],
   ["/api/pricing-context", pricingContext],

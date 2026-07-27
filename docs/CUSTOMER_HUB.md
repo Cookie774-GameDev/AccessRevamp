@@ -24,7 +24,10 @@ The script refuses unknown or unconfirmed users and never prints a credential.
 
 ## Operator workflow
 
-An active `accessrevamp_operators` user opens `/operator` and can publish a timeline update or a project file.
+An active `accessrevamp_operators` owner uses the loopback-only private owner
+command center for creative critique and approval. It is not exposed through a
+public or customer route. Customer publication remains a separate service-side
+workflow after explicit delivery approval.
 
 1. The operator API validates the project, file metadata, MIME type, and size.
 2. It creates a draft artifact and a path-scoped Supabase signed upload token.

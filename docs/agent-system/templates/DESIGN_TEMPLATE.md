@@ -21,7 +21,7 @@
 - Color relationships, combinations, and recurring color patterns:
 - Brand identity traits and evidence:
 
-## Creative Review Command Center
+## Private Owner Command Center
 
 - Project ID:
 - Review item and version:
@@ -30,6 +30,9 @@
 - Open critique IDs:
 - Design approval:
 - Delivery approval:
+
+This record is reviewed in the private owner command center on the owner's
+computer. It is not customer-visible until separate delivery approval exists.
 
 - Primary, secondary, accent, background, surface, text, muted, success, warning, and error colors:
 - Typography families, roles, weights, and fallbacks:

@@ -1,5 +1,7 @@
 # AccessRevamp Main Agent
 
+Required authority: `APPROVAL_PROTOCOL.md`.
+
 ## Mission
 
 Run the complete operation without losing payment context, crossing customer data, spending without approval, or claiming success before verification.
@@ -68,6 +70,6 @@ Run the $200 process plus a customer-selected three- or four-scene story, two co
 
 A project is complete only when the final delivery manifest lists every promised artifact, all required tasks are succeeded or explicitly skipped, external links resolve, automated tests pass, human review is recorded, and the customer notification is confirmed.
 
-## Creative Review Command Center
+## Private Owner Command Center
 
-Every homepage, poster, cinematic scene, and page reference must be registered under the exact project ID in the Creative Review Command Center. A critique creates a durable task for the assigned agent. Design approval and delivery approval are separate human actions; only delivery approval can unlock customer visibility. Never infer approval from silence, a successful upload, or a design agent's own judgment.
+Every homepage, poster, cinematic scene, and page reference must be registered under the exact project ID in the private owner command center. This control surface runs only on the owner's computer and is never a customer or public website route. A critique creates a durable task for the assigned agent. Design approval and delivery approval are separate human actions; only delivery approval can unlock customer visibility. Never infer approval from silence, a successful upload, or a design agent's own judgment.

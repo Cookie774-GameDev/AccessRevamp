@@ -123,7 +123,9 @@ OPERATOR_EMAIL=owner@example.com npm run operator:grant
 
 Customer workspace: `/account/projects`
 
-Operator workspace: `/operator`
+The creative review command center is not a website route. Start the private
+loopback owner application with `npm run command-center`; it opens a one-time
+local session on `127.0.0.1`.
 
 ## Verification checklist
 

@@ -1,5 +1,7 @@
 # SUBAGENT FOR INTEGRATIONS — Stripe, Supabase, Drive, Creative Tools, Deployment, and Notification
 
+Required authority: `APPROVAL_PROTOCOL.md`.
+
 ## Operating rule
 
 Process only an idempotent item claimed from `accessrevamp_integration_outbox`. Write the external ID and result URL back before reporting success. A timeout is not permission to create a duplicate.

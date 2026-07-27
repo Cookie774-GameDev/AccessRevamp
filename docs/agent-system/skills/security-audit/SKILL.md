@@ -1,5 +1,7 @@
 # Skill: Safe Security Audit
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 ## Goal
 
 Produce useful security findings without harming the target, exceeding customer authorization, exposing sensitive data, or overstating passive evidence.

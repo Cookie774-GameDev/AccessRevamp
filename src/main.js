@@ -33,7 +33,6 @@ import { freeSnapshotPage } from './pages/free-snapshot.js';
 import { accountProjectsPage } from './pages/account-projects.js';
 import { projectIntakePage } from './pages/project-intake.js';
 import { projectApprovalPage } from './pages/project-approval.js';
-import { operatorPage } from './pages/operator.js';
 import { notFoundPage, resultPage } from './pages/results.js';
 import { underConstructionPage as underConstructionContent } from './pages/under-construction.js';
 import { setupCheckout } from './services/checkout.js';
@@ -94,7 +93,6 @@ const routes = {
   '/project-intake': projectIntakePage,
   '/approve/:token': projectApprovalPage,
   '/dashboard': dashboardPage,
-  '/operator': operatorPage,
   '/privacy': () => legalPage('privacy', '/privacy'),
   '/policy': () => legalPage('policy', '/policy'),
   '/terms': () => legalPage('terms', '/terms'),
@@ -201,7 +199,6 @@ function renderRoute({ pathname, pattern, params, view }) {
   if (pathname === '/account/projects') cleanups.push(setupLazy(() => import('./services/account-projects.js').then(({ setupAccountProjects }) => () => setupAccountProjects(router.navigate))));
   if (pathname === '/project-intake') cleanups.push(setupLazy(() => import('./services/project-intake.js').then(({ setupProjectIntake }) => setupProjectIntake)));
   if (pattern === '/approve/:token') cleanups.push(setupLazy(() => import('./services/project-approval.js').then(({ setupProjectApproval }) => () => setupProjectApproval(app))));
-  if (pathname === '/operator') cleanups.push(setupLazy(() => import('./services/operator.js').then(({ setupOperator }) => setupOperator)));
   if (pathname === '/success') cleanups.push(setupLazy(() => import('./services/checkout-result.js').then(({ setupCheckoutResult }) => () => setupCheckoutResult(app))));
 
   if (pattern === '/portfolio/:slug') {

@@ -37,7 +37,6 @@ test('Cloudflare Worker routes customer APIs before the browser catch-all', asyn
     '/api/contact',
     '/api/create-checkout',
     '/api/free-snapshot',
-    '/api/operator-overview',
     '/api/order-draft',
     '/api/payment-health',
     '/api/pricing-context',
@@ -51,6 +50,7 @@ test('Cloudflare Worker routes customer APIs before the browser catch-all', asyn
   }
   assert.match(worker, /routes\.get\(pathname\)/);
   assert.match(worker, /return handler\.fetch/);
+  assert.doesNotMatch(worker, /operatorOverview|\/api\/operator-overview/);
 });
 
 test('Cloudflare production builds preserve required non-secret runtime bindings', async () => {

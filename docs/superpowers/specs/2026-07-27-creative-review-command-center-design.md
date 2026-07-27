@@ -1,5 +1,9 @@
 # Creative Review Command Center
 
+> Superseded on 2026-07-27 by
+> `2026-07-27-private-owner-command-center-design.md`. The public `/operator`
+> approach described below was removed and must not be restored.
+
 ## Outcome
 
 Give the AccessRevamp owner one private operator workspace for reviewing every
@@ -109,4 +113,3 @@ preferences, dislikes, and approved deviations with sources.
 5. No delivery record, customer-ready status, email, or external send occurs.
 6. Targeted tests, full checks, security scan, build, and browser interaction
    pass.
-

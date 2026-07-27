@@ -1,5 +1,7 @@
 # Skill: Cinematic Scroll Production
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 1. Confirm three or four scenes and their exact order.
 2. Create two coherent sequence options with two reference images per scene.
 3. Obtain the customer’s selection through an expiring hashed link scoped to the correct project, option group, and revision round.

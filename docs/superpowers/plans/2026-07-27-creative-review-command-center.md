@@ -1,5 +1,9 @@
 # Creative Review Command Center Implementation Plan
 
+> Historical plan only. The public route was removed and replaced by the
+> loopback-only private owner command center in
+> `2026-07-27-private-owner-command-center.md`.
+
 1. Add contract tests for version lineage, append-only feedback/events,
    operator-only APIs, separate delivery approval, durable revision routing,
    complete-address validation, responsive UI, and agent prompt requirements.
@@ -19,4 +23,3 @@
 7. Apply the migration, run targeted and full verification, execute the
    authenticated browser loop, verify no customer delivery, commit, push, and
    verify the Cloudflare production deployment.
-

@@ -7,17 +7,17 @@ import {
 
 test('the owner supplied candidate is recorded without pretending it is complete', () => {
   assert.equal(
-    normalizePostalAddressCandidate('  Creek Hollow Ave   Zachary  '),
-    'Creek Hollow Ave Zachary',
+    normalizePostalAddressCandidate('  Creek Hollow Ave, Zachary, Louisiana 70791  '),
+    'Creek Hollow Ave, Zachary, Louisiana 70791',
   );
   const result = validateCompleteUsPostalAddress({
     streetLine1: 'Creek Hollow Ave',
     city: 'Zachary',
-    region: '',
-    postalCode: '',
+    region: 'LA',
+    postalCode: '70791',
   });
   assert.equal(result.valid, false);
-  assert.deepEqual(result.missing, ['street number', 'state', 'ZIP code']);
+  assert.deepEqual(result.missing, ['street number']);
 });
 
 test('a complete structured US postal address passes without exposing unrelated data', () => {
@@ -31,4 +31,3 @@ test('a complete structured US postal address passes without exposing unrelated 
   assert.deepEqual(result.missing, []);
   assert.equal(result.formatted, '123 Creek Hollow Ave, Zachary, LA 70791');
 });
-

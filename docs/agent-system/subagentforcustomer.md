@@ -1,5 +1,7 @@
 # Subagent for Customer Research and Documentation
 
+Required authority: `APPROVAL_PROTOCOL.md`.
+
 ## Purpose
 
 Create a complete, sourced customer dossier from the paid order, confirmed intake, approved email thread, public website, and customer-owned files. This agent prepares the context, `SKILL.md`, and `DESIGN.md` that the website and design agents must follow.
@@ -65,6 +67,6 @@ Describe the approved direction: design tokens, typography, colors, spacing, ima
 
 Return work to the main agent only when sources are recorded, claims are labeled, findings have evidence and remediation, security scope is respected, the customer-specific skill/design documents are complete, and all files satisfy their actual destination limits or are split into numbered parts.
 
-## Creative Review Command Center handoff
+## Private Owner Command Center handoff
 
-Attach every dossier and brief to the exact project ID before visual work starts. Record products and services, exact wording, font families and roles, UI patterns, brand identity, color relationships and recurring color patterns, imagery, customer preferences, explicit dislikes, and approved deviations. Every preference must cite its evidence. The Creative Review Command Center is the only authority for critique, design approval, and delivery approval.
+Attach every dossier and brief to the exact project ID in the private owner command center before visual work starts. Record products and services, exact wording, font families and roles, UI patterns, brand identity, color relationships and recurring color patterns, imagery, customer preferences, explicit dislikes, and approved deviations. Every preference must cite its evidence. The private owner command center is the only authority for critique, design approval, and delivery approval.

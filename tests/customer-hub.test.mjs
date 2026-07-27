@@ -9,9 +9,8 @@ const [
   accountPage,
   accountClient,
   accountFunction,
-  operatorClient,
-  operatorFunction,
-  operatorRoute,
+  ownerServer,
+  ownerUi,
   migration,
   styles,
   packageText,
@@ -21,9 +20,8 @@ const [
   read('src/pages/account-projects.js'),
   read('src/services/account-projects.js'),
   read('netlify/functions/account-projects.mjs'),
-  read('src/services/operator.js'),
-  read('netlify/functions/operator-overview.mjs'),
-  read('app/api/operator-overview/route.ts'),
+  read('scripts/owner-command-center/server.mjs'),
+  read('scripts/owner-command-center/ui.mjs'),
   read('supabase/migrations/20260722190000_customer_delivery_hub.sql'),
   read('src/styles/customer-hub.css'),
   read('package.json'),
@@ -58,19 +56,13 @@ test('customer workspace aggregates only owned records and returns expiring priv
   assert.doesNotMatch(accountFunction, /storage_path:\s*artifact\.storage_path/);
 });
 
-test('operator publishing uses direct signed uploads and atomic database publication', () => {
-  assert.match(operatorFunction, /requireOperator/);
-  assert.match(operatorFunction, /assertSameOrigin/);
-  assert.match(operatorFunction, /createSignedUploadUrl/);
-  assert.match(operatorFunction, /operator_finalize_project_artifact/);
-  assert.match(operatorFunction, /operator_publish_project_update/);
-  assert.match(operatorFunction, /cancel_artifact_upload/);
-  assert.match(operatorFunction, /MAX_FILE_BYTES\s*=\s*50\s*\*\s*1024\s*\*\s*1024/);
-  assert.match(operatorClient, /uploadToSignedUrl/);
-  assert.match(operatorClient, /Creating a private upload slot/);
-  assert.match(operatorClient, /Upload and publish/);
-  assert.match(operatorRoute, /export const POST/);
-  assert.doesNotMatch(operatorClient, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+test('owner creative review stays local and keeps delivery approval separate', () => {
+  assert.match(ownerServer, /127\.0\.0\.1/);
+  assert.match(ownerServer, /request_accessrevamp_creative_changes/);
+  assert.match(ownerServer, /approve_accessrevamp_creative_design/);
+  assert.match(ownerServer, /approve_accessrevamp_creative_delivery/);
+  assert.match(ownerUi, /Customer delivery requires its own explicit approval/);
+  assert.doesNotMatch(ownerUi, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
 });
 
 test('operator bootstrap requires an existing confirmed owner and server credentials', () => {
@@ -94,5 +86,5 @@ test('customer hub migration keeps storage private and browser access owner-scop
   assert.match(migration, /security definer/);
   assert.match(migration, /grant execute on function public\.operator_finalize_project_artifact/);
   assert.match(styles, /\.customer-project/);
-  assert.match(styles, /\.operator-publish-grid/);
+  assert.match(styles, /\.customer-project/);
 });

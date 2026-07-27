@@ -1,5 +1,7 @@
 # Skill: Customer Delivery and Quality
 
+Required authority: `../../APPROVAL_PROTOCOL.md`.
+
 ## Goal
 
 Assemble a concise, accurate, usable customer package from verified findings, approved design options, implementation results, creative assets, and project records.
@@ -32,8 +34,8 @@ Do not include a project in the public portfolio unless `project_portfolio_conse
 ## Completion gate
 
 The delivery manifest matches the purchased plan and written scope; required workflow tasks are succeeded or explicitly skipped; tests and human review are recorded; all links resolve; customer notification is confirmed; and the main agent can reconcile the package to the order and project IDs.
-# Creative Review Command Center gate
+# Private Owner Command Center gate
 
-Resolve the exact project ID and version first. Require current design approval,
+Resolve the exact project ID and version in the private owner command center first. Require current design approval,
 delivery approval, rights approval, copy approval, product-fidelity approval,
 and verified source manifest. A successful upload is not delivery authority.
