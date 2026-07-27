@@ -12,7 +12,11 @@ test('creative command center is absent from the production website and Worker A
   ]);
   assert.doesNotMatch(main, /operatorPage|\/operator|services\/operator/);
   assert.doesNotMatch(metadata, /\/operator|Operator workspace/);
-  assert.doesNotMatch(worker, /operatorOverview|\/api\/operator-overview/);
+  assert.doesNotMatch(worker, /operatorOverview|operator-overview\.mjs/);
+  assert.match(worker, /retiredPrivatePaths/);
+  assert.match(worker, /"\/operator"/);
+  assert.match(worker, /"\/api\/operator-overview"/);
+  assert.match(worker, /status:\s*404/);
 });
 
 test('owner command center is loopback-only with local session and mutation protection', async () => {

@@ -49,11 +49,18 @@ const routes = new Map<string, (request: Request) => Promise<Response>>([
 ]);
 
 const isShowcaseVideo = (pathname: string) => pathname.startsWith("/media/showcases/") && pathname.endsWith(".mp4");
+const retiredPrivatePaths = new Set(["/operator", "/api/operator-overview"]);
 
 const worker = {
   async fetch(request: Request, env: WorkerEnvironment, context: ExecutionContext) {
     installWorkerEnvironment(env, process.env);
     const pathname = new URL(request.url).pathname;
+    if (retiredPrivatePaths.has(pathname)) {
+      return Response.json({ error: "Not found." }, {
+        status: 404,
+        headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
+      });
+    }
     if (isShowcaseVideo(pathname)) {
       if (request.method === "GET" && request.headers.has("Range")) {
         const asset = await env.ASSETS.fetch(request);
