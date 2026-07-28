@@ -92,6 +92,7 @@ while (Date.now() < deadline) {
     break;
   } catch (error) {
     lastError = String(error?.message || error);
+    console.warn(`Production authentication smoke retry: ${lastError}`);
   }
   await sleep(10_000);
 }

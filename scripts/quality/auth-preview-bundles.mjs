@@ -9,7 +9,10 @@ export function extractJavaScriptBundleUrls(html, baseUrl) {
     ...[...String(html).matchAll(/["'`]((?:\.{0,2}\/|\/|assets\/)[^"'`]+\.js(?:\?[^"'`]*)?)["'`]/gi)]
       .map((match) => match[1]),
   ];
-  return [...new Set(candidates.map((candidate) => new URL(candidate, baseUrl).toString()))];
+  return [...new Set(candidates.map((candidate) => {
+    const normalized = candidate.startsWith('assets/') ? `/${candidate}` : candidate;
+    return new URL(normalized, baseUrl).toString();
+  }))];
 }
 
 export async function fetchJavaScriptBundleGraph(startUrls, fetchBundle, maxBundles = 64) {

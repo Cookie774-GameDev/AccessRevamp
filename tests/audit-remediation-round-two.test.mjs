@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
+import { extractJavaScriptBundleUrls } from '../scripts/quality/auth-preview-bundles.mjs';
 
 const read = (path) => readFile(path, 'utf8');
 
@@ -84,4 +85,12 @@ test('refund copy consistently promises a full refund before final digital deliv
   assert.match(policy, /full refund before final digital delivery/i);
   assert.match(legal, /valid request made before final digital delivery is eligible for a full refund/i);
   assert.doesNotMatch(legal, /Before final delivery[^]*incurred costs/i);
+});
+
+test('production auth smoke resolves root asset references without duplicating the assets path', () => {
+  const urls = extractJavaScriptBundleUrls(
+    'const chunk = "assets/auth-runtime-123.js";',
+    'https://accessrevamp.com/assets/index-456.js',
+  );
+  assert.deepEqual(urls, ['https://accessrevamp.com/assets/auth-runtime-123.js']);
 });
