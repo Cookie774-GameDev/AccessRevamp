@@ -107,7 +107,7 @@ assert.doesNotMatch(bundleText, /Sandbox checkout|Test-mode notice|Stripe test m
 assert.match(securityHeaders['Content-Security-Policy'], /default-src 'self'/);
 assert.match(securityHeaders['Content-Security-Policy'], /frame-ancestors 'none'/);
 assert.match(securityHeaders['Strict-Transport-Security'], /max-age=31536000/);
-assert.equal(securityHeaders['Referrer-Policy'], 'strict-origin-when-cross-origin');
+assert.equal(securityHeaders['Referrer-Policy'], 'no-referrer');
 assert.equal(securityHeaders['X-Content-Type-Options'], 'nosniff');
 assert.equal(securityHeaders['X-Frame-Options'], 'DENY');
 assert.match(securityHeaders['Permissions-Policy'], /camera=\(\)/);

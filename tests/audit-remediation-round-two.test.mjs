@@ -13,15 +13,17 @@ test('public trust copy contains no unsupported customer-count claim', async () 
 });
 
 test('password challenge secrets never enter login URLs or browser query parsing', async () => {
-  const [start, client, proxy] = await Promise.all([
+  const [start, client, proxy, productionAuthVerifier] = await Promise.all([
     read('netlify/functions/auth-login-start.mjs'),
     read('src/services/auth.js'),
     read('proxy.ts'),
+    read('scripts/quality/verify-netlify-auth-preview.mjs'),
   ]);
   assert.doesNotMatch(start, /searchParams\.set\(['"]verification['"],\s*challengeToken\)/);
   assert.doesNotMatch(client, /params\.get\(['"]verification['"]\)/);
   assert.match(proxy, /"\/login"/);
   assert.match(proxy, /"Referrer-Policy":\s*"no-referrer"/);
+  assert.match(productionAuthVerifier, /Referrer-Policy'\], 'no-referrer'/);
 });
 
 test('order drafts are short-lived session data rather than indefinite local data', async () => {
