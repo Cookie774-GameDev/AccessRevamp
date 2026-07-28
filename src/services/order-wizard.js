@@ -1,6 +1,8 @@
 import { plans } from '../config.js';
 import { escapeHtml } from '../components/icons.js';
 import { planValueGroups } from '../components/plan-value-groups.js';
+import { getSupabase } from '../lib/supabase.js';
+import { bindConfirmedCheckoutEmail } from './checkout-identity.js';
 import { validationStatusForControl } from './order-wizard-validation.js';
 
 const STORAGE_KEY = 'accessrevamp-order-draft-v1';
@@ -176,11 +178,25 @@ export function setupOrderWizard(root = document) {
     save();
   };
   const onSubmit = (event) => event.preventDefault();
+  const syncConfirmedEmail = async () => {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      const { data, error } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (error || !bindConfirmedCheckoutEmail(form, session?.user?.email)) return;
+      save();
+      if (current >= 3) renderSummary();
+    } catch {
+      // Checkout performs the same identity binding before any request leaves the browser.
+    }
+  };
 
   restore();
   updatePlanFields();
   renderQuestionPlan();
   show(current);
+  void syncConfirmedEmail();
   next.addEventListener('click', onNext);
   previous.addEventListener('click', onPrevious);
   form.addEventListener('click', onStep);

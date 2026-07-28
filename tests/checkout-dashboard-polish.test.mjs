@@ -79,12 +79,14 @@ test('Complete Website Revamp title styling is shared by homepage and pricing ca
   );
 });
 
-test('paid plans present grouped customer outcomes instead of one undifferentiated list', async () => {
-  const [catalog, cards, wizard, service] = await Promise.all([
+test('paid plans present every included feature as a semantic bullet point', async () => {
+  const [catalog, cards, wizard, service, groups, styles] = await Promise.all([
     readFile('src/config/tier-catalog.js', 'utf8'),
     readFile('src/components/cards.js', 'utf8'),
     readFile('src/components/order-wizard.js', 'utf8'),
     readFile('src/services/order-wizard.js', 'utf8'),
+    readFile('src/components/plan-value-groups.js', 'utf8'),
+    readFile('src/styles/components.css', 'utf8'),
   ]);
 
   for (const label of [
@@ -107,4 +109,35 @@ test('paid plans present grouped customer outcomes instead of one undifferentiat
   assert.match(cards, /plan-value-groups/);
   assert.match(wizard, /order-plan__value-groups/);
   assert.match(service, /order-review__value-groups/);
+  assert.match(groups, /<ul/);
+  assert.match(groups, /<li/);
+  assert.doesNotMatch(groups, /role="listitem"/);
+  assert.match(styles, /\.plan-card \.plan-value-groups\s*\{[^}]*list-style:\s*disc/s);
+});
+
+test('checkout binds the order email to the confirmed signed-in account', async () => {
+  const identity = await import('../src/services/checkout-identity.js').catch(() => ({}));
+  assert.equal(typeof identity.bindConfirmedCheckoutEmail, 'function');
+  const attributes = new Map();
+  const emailControl = {
+    value: 'different@example.com',
+    readOnly: false,
+    setAttribute(name, value) { attributes.set(name, value); },
+  };
+  const form = { elements: { email: emailControl } };
+
+  assert.equal(
+    identity.bindConfirmedCheckoutEmail(form, 'Confirmed@Example.com'),
+    'confirmed@example.com',
+  );
+  assert.equal(emailControl.value, 'confirmed@example.com');
+  assert.equal(emailControl.readOnly, true);
+  assert.equal(attributes.get('aria-readonly'), 'true');
+
+  const [checkout, wizard] = await Promise.all([
+    readFile('src/services/checkout.js', 'utf8'),
+    readFile('src/services/order-wizard.js', 'utf8'),
+  ]);
+  assert.match(checkout, /bindConfirmedCheckoutEmail\(form,\s*session\.user\.email\)/);
+  assert.match(wizard, /bindConfirmedCheckoutEmail\(form,\s*session\?\.user\?\.email\)/);
 });

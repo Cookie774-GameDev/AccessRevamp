@@ -1,4 +1,5 @@
 import { getSupabase } from '../lib/supabase.js';
+import { bindConfirmedCheckoutEmail } from './checkout-identity.js';
 import { persistDraftThenCreateCheckout } from './persisted-checkout.js';
 
 const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
@@ -67,6 +68,10 @@ export function setupCheckout() {
       const session = data?.session;
       if (error || !session?.access_token) {
         setCheckoutFailure(control, 'Sign in to continue');
+        return;
+      }
+      if (!bindConfirmedCheckoutEmail(form, session.user.email)) {
+        setCheckoutFailure(control, 'Your confirmed account email is unavailable');
         return;
       }
 
