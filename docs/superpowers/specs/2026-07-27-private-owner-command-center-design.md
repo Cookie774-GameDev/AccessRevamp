@@ -39,14 +39,14 @@ inspection, refresh, and clear fail-closed states.
 
 ## Postal record
 
-The supplied candidate is recorded as `Creek Hollow Ave, Zachary, LA 70791`.
-It is not a complete deliverable postal address because no street number was
-provided. Outreach sending therefore remains disabled.
+The postal address is intentionally unset at the owner's request. No candidate
+address may be published or used for outreach. Outreach sending remains
+disabled until the owner later supplies and approves a complete address.
 
 ## Verification
 
 Automated contracts prove the public route and API are absent, the server is
 loopback-only, secrets stay server-side, critique creates a durable agent task,
-approval gates remain separate, the expanded postal candidate is retained
-without being treated as valid, and all agent/skill/design contracts require
+approval gates remain separate, the postal address remains unset, and all
+agent/skill/design contracts require
 owner approval before customer visibility.

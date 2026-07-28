@@ -69,10 +69,9 @@ high contrast, clear keyboard focus, and reduced-motion-safe transitions.
 
 ## Postal identity
 
-Record `Creek Hollow Ave Zachary` as an owner-supplied candidate, not a verified
-postal address. Activation requires structured street number, street, city,
-state, and ZIP fields. The current value is missing a street number, state, and
-ZIP, so outreach stays fail-closed.
+The postal address is intentionally unset at the owner's request. Do not retain,
+publish, or use a candidate address. Outreach stays fail-closed until a complete
+address is supplied and approved later.
 
 ## Agent prompt contract
 
