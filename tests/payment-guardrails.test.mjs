@@ -104,7 +104,8 @@ test('webhook fulfillment is signature verified, mode locked and database author
   assert.match(webhook, /fulfill_accessrevamp_checkout/);
   assert.match(webhook, /close_accessrevamp_checkout/);
   assert.match(webhook, /recordPaymentIncident/);
-  assert.match(webhook, /last_successful_webhook_at/);
+  assert.match(webhook, /record_accessrevamp_webhook_outcome/);
+  assert.match(webhook, /reconcile_accessrevamp_dispute/);
 });
 
 test('refunds require one request, a distinct approver and an idempotent restricted executor', async () => {

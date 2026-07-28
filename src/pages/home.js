@@ -67,7 +67,7 @@ export function homePage() {
       <a class="reveal-hero__scroll" href="#promise">Scroll to enter <span aria-hidden="true">↓</span></a>
     </section>
 
-    <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid"><article><strong><span data-customer-count>87</span></strong><p>happy customers</p><small>Published count, not a live feed.</small></article><article><strong>3 days</strong><p>first website delivery</p><small>After payment and receipt of required assets.</small></article><article><strong>Desktop → mobile</strong><p>one connected system</p><small>Carefully ported to touch.</small></article></div></section>
+    <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid"><article><strong>Human reviewed</strong><p>before customer delivery</p><small>Concepts and findings pass an owner checkpoint.</small></article><article><strong>Scoped timeline</strong><p>shown before work begins</p><small>Timing starts after payment, required assets, and confirmed scope.</small></article><article><strong>Desktop → mobile</strong><p>one connected system</p><small>Carefully ported to touch.</small></article></div></section>
 
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
       <div><span class="eyebrow">A guided customer journey</span><h2>Your website should feel like a clear conversation—not a maze.</h2></div>

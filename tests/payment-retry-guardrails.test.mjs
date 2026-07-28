@@ -57,7 +57,7 @@ test('the success page never treats a browser redirect as proof of payment', asy
   assert.match(service, /\/api\/checkout-status\?session_id=/);
   assert.match(service, /Do not pay again/);
   assert.match(service, /payload\.status === 'paid' && payload\.projectId/);
-  assert.match(service, /localStorage\.removeItem\(STORAGE_KEY\)/);
+  assert.match(service, /sessionStorage\.removeItem\(STORAGE_KEY\)/);
   assert.match(statusFunction, /requireConfirmedUser/);
   assert.match(statusFunction, /\.from\('orders'\)/);
   assert.match(statusFunction, /\.from\('entitlements'\)/);

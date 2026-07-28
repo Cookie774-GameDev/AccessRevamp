@@ -18,7 +18,7 @@ const CONTENT_SECURITY_POLICY = [
 const SECURITY_HEADERS = Object.freeze({
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Referrer-Policy": "no-referrer",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
@@ -27,6 +27,10 @@ const SECURITY_HEADERS = Object.freeze({
 });
 
 const PRIVATE_PREFIXES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/recover-account",
   "/account/",
   "/dashboard",
   "/operator",

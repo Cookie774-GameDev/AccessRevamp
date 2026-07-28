@@ -175,26 +175,6 @@ export function setupHomeExperience(root = document) {
     }
   }
 
-  const customerCount = root.querySelector('[data-customer-count]');
-  let countObserver;
-  if (customerCount && !reducedMotion && 'IntersectionObserver' in globalThis) {
-    customerCount.textContent = '0';
-    countObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      countObserver.disconnect();
-      const started = performance.now();
-      const tick = (time) => {
-        const progress = Math.min(1, (time - started) / 900);
-        customerCount.textContent = String(Math.round(87 * (1 - ((1 - progress) ** 3))));
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }), { threshold: 0.45 });
-    countObserver.observe(customerCount);
-  } else if (customerCount) {
-    customerCount.textContent = '87';
-  }
-
   const reveals = [...root.querySelectorAll('[data-reveal]')];
   let revealObserver;
   if (!reducedMotion && 'IntersectionObserver' in globalThis) {
@@ -213,7 +193,6 @@ export function setupHomeExperience(root = document) {
   return () => {
     cleanups.forEach((cleanup) => cleanup?.());
     revealObserver?.disconnect();
-    countObserver?.disconnect();
     heroObserver?.disconnect();
     clearTimeout(navTimer);
     clearTimeout(revealTimer);

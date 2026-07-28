@@ -43,6 +43,15 @@ export class FakeStripe {
     } };
     this.refunds = { create: (params, options) => this.createRefund(params, options) };
     this.charges = { retrieve: async (id) => ({ id, payment_intent: 'pi_charge_test', amount_refunded: 5_000 }) };
+    this.disputes = { retrieve: async (id) => ({
+      id,
+      charge: 'ch_dispute_test',
+      amount: 5_000,
+      currency: 'usd',
+      status: 'needs_response',
+      reason: 'fraudulent',
+      evidence_details: { due_by: Math.floor(Date.now() / 1000) + 86_400 },
+    }) };
   }
 
   async createSession(params, options = {}) {
@@ -56,8 +65,8 @@ export class FakeStripe {
         id, url: `https://checkout.stripe.com/c/pay/${id}`, livemode: false, mode: 'payment', payment_status: 'unpaid',
         amount_total: price?.net_cents, currency: 'usd', client_reference_id: params.client_reference_id,
         automatic_tax: { enabled: false }, total_details: { amount_tax: 0 },
-        customer_email: params.customer_email, customer_details: { email: params.customer_email },
-        customer: `cus_${id}`, payment_intent: null, metadata: structuredClone(params.metadata),
+        customer_email: params.customer_email, customer_details: { email: params.customer_email || this.harness.users.values().next().value?.email },
+        customer: params.customer || `cus_${id}`, payment_intent: null, metadata: structuredClone(params.metadata),
         line_items: { data: [{ quantity: 1, price: params.line_items[0].price }] }, created: Math.floor(Date.now() / 1000),
       };
       this.sessionsByKey.set(options.idempotencyKey, session);

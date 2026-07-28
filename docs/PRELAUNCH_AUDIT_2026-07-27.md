@@ -83,3 +83,22 @@ It is not a claim that every external operation is launched.
   recorded before launch.
 - Higgsfield production generation remains blocked until authenticated provider
   access and project-specific budget evidence exist.
+
+## 2026-07-28 strict-audit remediation, round two
+
+- Unsupported customer-count copy, URL-carried authentication secrets,
+  indefinite browser order drafts, origin-derived Stripe return URLs, forced
+  Stripe Customer duplication, MIME-only uploads, false webhook liveness,
+  missing dispute reconciliation, conflicting refund copy, obsolete deployment
+  workflows, and the missing deployed-route smoke gate were corrected.
+- The connected Supabase project now has event-specific payment telemetry, a
+  service-role-only dispute ledger/reconciliation path, and an explicit
+  restrictive browser-deny policy. Its security advisor reports only the
+  externally controlled leaked-password-protection warning.
+- Local evidence now passes 407 tests, lint across 359 files, the production
+  build, 10/10 requirement checks, a zero-finding secret scan, and a production
+  dependency audit with zero vulnerabilities.
+- No payment, refund, dispute, entitlement, or customer record was fabricated
+  during remediation. No successful live purchase is claimed.
+- Full finding classification and evidence are recorded in
+  `docs/evidence/AUDIT_REMEDIATION_2026-07-28.md`.

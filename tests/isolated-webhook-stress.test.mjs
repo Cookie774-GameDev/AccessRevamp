@@ -133,3 +133,45 @@ test('webhook reports a sanitized failure stage without exposing the error messa
     status: 503,
   }]);
 });
+
+test('an irrelevant signed event does not refresh successful webhook health', async () => {
+  const harness = new PaymentHarness();
+  const stripe = new FakeStripe(harness);
+  const webhook = createWebhookHandler({ getAdmin: () => harness.admin, createStripe: () => stripe });
+  const before = harness.settings.last_successful_webhook_at;
+  const response = await webhook(webhookRequest({
+    id: 'evt_irrelevant_product_update',
+    type: 'product.updated',
+    livemode: false,
+    data: { object: { id: 'prod_irrelevant' } },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(harness.settings.last_successful_webhook_at, before);
+  assert.ok(harness.settings.last_event_received_at);
+});
+
+test('a dispute event marks the matched order disputed', async () => {
+  const fixture = await paidFixture('homepage_reveal');
+  const paidEvent = {
+    id: 'evt_paid_before_dispute',
+    type: 'checkout.session.completed',
+    livemode: false,
+    data: { object: { id: fixture.session.id } },
+  };
+  assert.equal((await fixture.webhook(webhookRequest(paidEvent))).status, 200);
+  const order = [...fixture.harness.orders.values()][0];
+  fixture.stripe.charges.retrieve = async (id) => ({
+    id,
+    payment_intent: order.stripe_payment_intent_id,
+    amount_refunded: 0,
+  });
+  const response = await fixture.webhook(webhookRequest({
+    id: 'evt_dispute_created',
+    type: 'charge.dispute.created',
+    livemode: false,
+    data: { object: { id: 'dp_test_accessrevamp' } },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(order.status, 'disputed');
+  assert.equal(fixture.harness.disputeEvents.size, 1);
+});

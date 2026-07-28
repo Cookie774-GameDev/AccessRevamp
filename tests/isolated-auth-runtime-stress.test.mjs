@@ -125,7 +125,7 @@ test('password-first login rate-limits locally before credential work without a 
     assert.deepEqual(sequence, ['rate-limit', 'password']);
     assert.equal(challengeAccessToken, 'password-session-access-token');
     assert.equal(emailPayload.options.shouldCreateUser, false);
-    assert.match(emailPayload.options.emailRedirectTo, /^https:\/\/accessrevamp\.test\/login\?verification=/);
+    assert.equal(emailPayload.options.emailRedirectTo, 'https://accessrevamp.test/login');
     assert.match(response.headers.get('set-cookie') || '', /HttpOnly; SameSite=Strict/);
     assert.doesNotMatch(JSON.stringify(body), new RegExp(CHALLENGE));
   });

@@ -50,3 +50,7 @@ jobs:
           NETLIFY_AUTH_TARGET: "https://accessrevamp.com"
           REQUIRE_SERVER_AUTH: "true"
         run: npm run verify:production-auth
+      - name: Verify deployed production routes and security boundaries
+        env:
+          PRODUCTION_SMOKE_TARGET: "https://accessrevamp.com"
+        run: npm run verify:production-smoke

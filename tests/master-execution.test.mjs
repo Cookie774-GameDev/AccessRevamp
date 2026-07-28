@@ -14,7 +14,7 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   assert.match(home, /Normal Websites vs\. Cinematic Scroll Experiences/);
   assert.match(home, /showcasePairs\.map\(showcaseChapter\)/);
   assert.match(showcaseMarkup, /data-showcase-chapter/);
-  assert.match(home, /data-customer-count/);
+  assert.match(home, /Human reviewed/);
   assert.match(media, /local-brew-house\.webp/);
   assert.match(media, /blueline-plumbing\.webp/);
   assert.match(media, /spread-the-fire\.webp/);
@@ -77,7 +77,7 @@ test('homepage order wizard persists progress and hands the selected tier to che
   assert.match(component, /Current website URL/);
   assert.match(component, /Reference files/);
   assert.match(component, /Review your order/);
-  assert.match(service, /localStorage/);
+  assert.match(service, /sessionStorage/);
   assert.match(service, /data-checkout/);
   assert.match(service, /reportValidity/);
 });

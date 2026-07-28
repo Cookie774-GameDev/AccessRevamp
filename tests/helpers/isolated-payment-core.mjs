@@ -49,12 +49,20 @@ class Query {
     this.op = 'select';
     this.value = null;
     this.filters = [];
+    this.sort = null;
+    this.maximum = null;
   }
   select() { return this; }
   update(value) { this.op = 'update'; this.value = value; return this; }
   upsert(value) { this.op = 'upsert'; this.value = value; return this; }
   eq(key, value) { this.filters.push((row) => row?.[key] === value); return this; }
+  not(key, operator, value) {
+    if (operator === 'is' && value === null) this.filters.push((row) => row?.[key] != null);
+    return this;
+  }
   in(key, values) { this.filters.push((row) => values.includes(row?.[key])); return this; }
+  order(key, { ascending = true } = {}) { this.sort = { key, ascending }; return this; }
+  limit(value) { this.maximum = value; return this; }
   maybeSingle() { return this.harness.query(this, true); }
   then(resolve, reject) { return this.harness.query(this, false).then(resolve, reject); }
   matches(row) { return this.filters.every((filter) => filter(row)); }
@@ -73,6 +81,7 @@ export class PaymentHarness {
     this.authorizations = new Map();
     this.events = new Set();
     this.refundEvents = new Set();
+    this.disputeEvents = new Set();
     this.incidents = new Map();
     this.settings = {
       singleton: true,
@@ -149,7 +158,12 @@ export class PaymentHarness {
 
   async query(query, single) {
     await jitter();
-    const rows = this.rows(query.table).filter((row) => query.matches(row));
+    let rows = this.rows(query.table).filter((row) => query.matches(row));
+    if (query.sort) {
+      const { key, ascending } = query.sort;
+      rows = rows.toSorted((left, right) => String(left?.[key] || '').localeCompare(String(right?.[key] || '')) * (ascending ? 1 : -1));
+    }
+    if (Number.isInteger(query.maximum)) rows = rows.slice(0, query.maximum);
     if (query.op === 'select') return { data: single ? rows[0] || null : rows, error: null };
     if (query.op === 'upsert' && query.table === 'payment_security_incidents') {
       this.incidents.set(query.value.dedupe_key, { ...(this.incidents.get(query.value.dedupe_key) || {}), ...query.value });
@@ -215,8 +229,9 @@ export class PaymentHarness {
       const order = {
         id: randomUUID(), user_id: p.user_id, reservation_id: p.reservation_id,
         checkout_request_id: p.checkout_request_id, stripe_checkout_session_id: p.checkout_session_id,
-        stripe_payment_intent_id: p.payment_intent_id, plan_key: p.to_tier, amount_total: p.net_cents,
-        currency: 'usd', status: 'paid',
+        stripe_payment_intent_id: p.payment_intent_id, stripe_customer_id: p.customer_id,
+        plan_key: p.to_tier, amount_total: p.net_cents, refunded_cents: 0,
+        currency: 'usd', status: 'paid', created_at: new Date().toISOString(),
       };
       this.orders.set(order.id, order);
       this.entitlements.set(order.user_id, { id: randomUUID(), user_id: order.user_id, source_order_id: order.id, status: 'active' });
@@ -268,6 +283,22 @@ export class PaymentHarness {
       if (row && p.refund_status === 'succeeded') row.status = 'executed';
       return { data: true, error: null };
     });
+
+    if (name === 'reconcile_accessrevamp_dispute') return this.eventLock.run(async () => {
+      const p = args.p_payload;
+      if (this.disputeEvents.has(p.event_id)) return { data: true, error: null };
+      this.disputeEvents.add(p.event_id);
+      const order = [...this.orders.values()].find((item) => item.stripe_payment_intent_id === p.payment_intent_id);
+      if (!order) return { data: null, error: new Error('Unknown disputed payment') };
+      order.status = p.status === 'won' ? (order.refunded_cents ? 'partially_refunded' : 'paid') : 'disputed';
+      return { data: true, error: null };
+    });
+
+    if (name === 'record_accessrevamp_webhook_outcome') {
+      this.settings.last_event_received_at = new Date().toISOString();
+      if (args.p_outcome !== 'ignored') this.settings.last_successful_webhook_at = new Date().toISOString();
+      return { data: true, error: null };
+    }
 
     return { data: null, error: new Error(`Unsupported RPC ${name}`) };
   }

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { assertVerifiedImage, VERIFIED_IMAGE_MIME_TYPES } from './_shared/file-signatures.mjs';
 import { requireConfirmedUser } from './_shared/auth.mjs';
 import { assertMethod, assertSameOrigin, handleError, HttpError, json } from './_shared/http.mjs';
 import { recordPaymentIncident } from './_shared/payment-runtime.mjs';
@@ -11,12 +12,7 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_FILES = 8;
 const CURRENT_POLICY_VERSION = '2026-07-22';
 const REUSABLE_TERMINAL_STATES = new Set(['expired', 'canceled']);
-const MIME_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/webp', 'image/avif',
-  'video/mp4', 'video/webm', 'application/pdf', 'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/plain', 'application/zip', 'application/x-zip-compressed',
-]);
+const MIME_TYPES = VERIFIED_IMAGE_MIME_TYPES;
 
 const cleanName = (value) => String(value || 'reference-file')
   .normalize('NFKD')
@@ -102,10 +98,14 @@ export default async function orderDraft(request) {
     const files = form.getAll('referenceFiles')
       .filter((value) => typeof value === 'object' && 'arrayBuffer' in value && value.size > 0);
     if (files.length > MAX_FILES) throw new HttpError(422, `Upload no more than ${MAX_FILES} files.`);
+    const verifiedFiles = [];
     for (const file of files) {
       if (!MIME_TYPES.has(file.type) || file.size > MAX_FILE_BYTES) {
-        throw new HttpError(422, 'Each reference file must be a supported type no larger than 8MB.');
+        throw new HttpError(422, 'Each reference file must be a JPEG, PNG, WebP, or AVIF image no larger than 8MB.');
       }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      assertVerifiedImage(file, bytes);
+      verifiedFiles.push({ file, bytes });
     }
 
     const { data: existing, error: existingError } = await admin
@@ -184,11 +184,11 @@ export default async function orderDraft(request) {
       ...await assetPaths(admin, rotatedFromDraftId),
     ];
     const nextAssets = [];
-    for (const file of files) {
+    for (const { file, bytes } of verifiedFiles) {
       const path = `${user.id}/${draftId}/${randomUUID()}-${cleanName(file.name)}`;
       const upload = await admin.storage.from(BUCKET).upload(
         path,
-        new Uint8Array(await file.arrayBuffer()),
+        bytes,
         { contentType: file.type, upsert: false },
       );
       if (upload.error) throw upload.error;

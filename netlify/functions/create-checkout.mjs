@@ -27,6 +27,19 @@ import { checkoutSchema } from './_shared/validation.mjs';
 
 const STRIPE_API_VERSION = '2026-06-24.dahlia';
 
+function canonicalCheckoutOrigin(environment, expectedLivemode) {
+  const configured = String(environment.ACCESSREVAMP_SITE_URL || environment.VITE_SITE_URL || '').trim();
+  if (!configured && expectedLivemode) throw new HttpError(503, 'Checkout return URL is not configured.');
+  const origin = new URL(configured || 'https://accessrevamp.test');
+  if (origin.protocol !== 'https:' || origin.username || origin.password || origin.pathname !== '/') {
+    throw new HttpError(503, 'Checkout return URL is not configured.');
+  }
+  if (expectedLivemode && origin.hostname !== 'accessrevamp.com') {
+    throw new HttpError(503, 'Checkout return URL is not configured.');
+  }
+  return origin.origin;
+}
+
 function reservationError(error) {
   if (['22023', '55000', '23505'].includes(String(error?.code || ''))) {
     return new HttpError(409, 'The requested checkout is not currently eligible.');
@@ -104,15 +117,25 @@ export function createCheckoutHandler({
       };
       const key = assertStripePaymentMode(process.env.STRIPE_CHECKOUT_SECRET_KEY, modeEnvironment);
       const stripe = createStripe(key);
-      const origin = new URL(request.url).origin;
+      const origin = canonicalCheckoutOrigin(process.env, runtime.expectedLivemode);
       const integrationSuffix = payload.requestId.replaceAll('-', '').slice(0, 8);
+      const { data: priorOrder, error: priorOrderError } = await admin
+        .from('orders')
+        .select('stripe_customer_id')
+        .eq('user_id', user.id)
+        .not('stripe_customer_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (priorOrderError) throw new HttpError(503, 'Customer payment history is unavailable.');
+      const stripeCustomerId = /^cus_[A-Za-z0-9_]+$/.test(priorOrder?.stripe_customer_id || '')
+        ? priorOrder.stripe_customer_id
+        : '';
 
-      const session = await stripe.checkout.sessions.create({
+      const sessionParameters = {
         integration_identifier: `accessrevamp_checkout_${integrationSuffix}`,
         mode: 'payment',
         line_items: [{ price: priceId, quantity: 1 }],
-        customer_email: user.email,
-        customer_creation: 'always',
         billing_address_collection: 'required',
         consent_collection: { terms_of_service: 'required' },
         allow_promotion_codes: false,
@@ -122,7 +145,14 @@ export function createCheckoutHandler({
         cancel_url: `${origin}/cancel`,
         metadata,
         payment_intent_data: { metadata },
-      }, {
+      };
+      if (stripeCustomerId) sessionParameters.customer = stripeCustomerId;
+      else {
+        sessionParameters.customer_email = user.email;
+        sessionParameters.customer_creation = 'if_required';
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParameters, {
         idempotencyKey: `accessrevamp_checkout_${user.id}_${payload.requestId}`,
       });
 

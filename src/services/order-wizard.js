@@ -4,11 +4,12 @@ import { planValueGroups } from '../components/plan-value-groups.js';
 import { validationStatusForControl } from './order-wizard-validation.js';
 
 const STORAGE_KEY = 'accessrevamp-order-draft-v1';
+const DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
 const PENDING_PLAN_KEY = 'accessrevamp:pending-plan';
 const MAX_FILES = 8;
 const MAX_BYTES = 8 * 1024 * 1024;
 const PAID_PLANS = new Set(['homepage_reveal', 'complete_revamp', 'cinematic_scroll']);
-const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip', 'application/x-zip-compressed']);
+const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function setupOrderWizard(root = document) {
@@ -42,11 +43,22 @@ export function setupOrderWizard(root = document) {
   const save = () => {
     const draft = {};
     new FormData(form).forEach((value, key) => { if (typeof value === 'string') draft[key] = value; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ current, draft, requestId })); } catch { /* Draft persistence is optional when storage is unavailable. */ }
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        current,
+        draft,
+        requestId,
+        savedAt: Date.now(),
+      }));
+    } catch { /* Draft persistence is optional when storage is unavailable. */ }
   };
   const restore = () => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      let saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      if (!Number.isFinite(saved.savedAt) || Date.now() - saved.savedAt > DRAFT_TTL_MS) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        saved = {};
+      }
       Object.entries(saved.draft || {}).forEach(([name, value]) => {
         const controls = [...form.elements].filter((control) => control.name === name);
         controls.forEach((control) => {
@@ -56,7 +68,7 @@ export function setupOrderWizard(root = document) {
       });
       current = Math.min(3, Math.max(0, Number(saved.current) || 0));
       if (UUID_PATTERN.test(saved.requestId || '')) requestId = saved.requestId;
-    } catch { localStorage.removeItem(STORAGE_KEY); }
+    } catch { sessionStorage.removeItem(STORAGE_KEY); }
 
     try {
       const pendingPlan = sessionStorage.getItem(PENDING_PLAN_KEY);

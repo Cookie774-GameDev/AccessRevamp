@@ -63,7 +63,7 @@ export function setupCheckoutResult(root = document) {
         });
         const payload = await response.json().catch(() => ({}));
         if (response.ok && payload.status === 'paid' && payload.projectId) {
-          try { localStorage.removeItem(STORAGE_KEY); } catch { /* The durable server copy already exists. */ }
+          try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* The durable server copy already exists. */ }
           render({
             title: 'Payment verified. Your project is ready.',
             body: 'The signed Stripe webhook created the order, entitlement, and project. Continue to your private workspace.',

@@ -29,7 +29,6 @@ function setStatus(status, message, tone = '') {
 
 function cleanAuthUrl() {
   const clean = new URL(location.href);
-  clean.searchParams.delete('verification');
   clean.searchParams.delete('confirmed');
   clean.searchParams.delete('account');
   clean.hash = '';
@@ -287,8 +286,7 @@ export function setupAuthForm(navigate) {
     return result;
   };
 
-  const completeLogin = async (session, legacyChallengeToken = '') => {
-    const body = legacyChallengeToken ? { challengeToken: legacyChallengeToken } : {};
+  const completeLogin = async (session) => {
     const response = await fetch(LOGIN_COMPLETE_ENDPOINT, {
       method: 'POST',
       credentials: 'same-origin',
@@ -296,7 +294,7 @@ export function setupAuthForm(navigate) {
         authorization: `Bearer ${session.access_token}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: '{}',
     });
     const result = await readJson(response);
     if (!response.ok) throw new Error(result.error || 'Email verification could not be completed.');
@@ -330,26 +328,6 @@ export function setupAuthForm(navigate) {
     removePending();
     saveLoginHint(email);
     navigate('/login?account=existing', { replace: true });
-  };
-
-  const handleLegacyEmailLink = async (challengeToken) => {
-    show('completing');
-    try {
-      const session = await waitForSession(supabase);
-      if (!session.user?.email_confirmed_at) throw new Error('Confirm your email before signing in.');
-      await completeLogin(session, challengeToken);
-      if (disposed) return;
-      removePending();
-      cleanAuthUrl();
-      navigate('/account/projects', { replace: true });
-    } catch (error) {
-      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-      if (disposed) return;
-      cleanAuthUrl();
-      show('form');
-      setStatus(status, error.message || 'The verification email is invalid or expired. Start again.', 'error');
-      passwordInput?.focus();
-    }
   };
 
   const handleLegacySignupConfirmation = async () => {
@@ -557,13 +535,8 @@ export function setupAuthForm(navigate) {
   } else {
     const initializeAuthView = async () => {
       const params = new URLSearchParams(location.search);
-      const verification = params.get('verification');
       const confirmed = params.get('confirmed');
       const existingAccount = params.get('account') === 'existing';
-      if (verification && mode === 'login') {
-        handleLegacyEmailLink(verification);
-        return;
-      }
       if (confirmed === '1' && mode === 'login') {
         handleLegacySignupConfirmation();
         return;

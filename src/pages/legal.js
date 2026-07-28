@@ -440,7 +440,7 @@ function refundPage() {
     title: refundPolicy.title,
     intro: refundPolicy.summary,
     summary: [
-      ['Before final delivery', 'Eligible cancellation and refund requests are reviewed against the order, work completed, incurred costs, and written scope.'],
+      ['Before final delivery', 'A customer may request a full refund before final digital delivery. AccessRevamp verifies the order and account ownership before approving the request.'],
       ['After final delivery', 'Digital delivery and completed custom work may limit cancellation rights to the extent permitted by law.'],
       ['Mandatory rights', 'Nothing in this policy removes non-waivable consumer protections.'],
     ],
@@ -449,7 +449,7 @@ function refundPage() {
       { id: 'cinematic-timing', title: '2. Cinematic timing and reserved production', paragraphs: [refundPolicy.timing] },
       { id: 'rights', title: '3. Rights preserved', paragraphs: [refundPolicy.rights] },
       { id: 'request', title: '4. Requesting cancellation or a refund', paragraphs: [`Email <a href="${mailto}">${SUPPORT_EMAIL}</a> from the account or order email. Include the plan, purchase date, order reference if available, and the reason for the request. Do not include full card details.`] },
-      { id: 'review', title: '5. Review and outcome', paragraphs: ['AccessRevamp will review the verified payment record, project status, delivered files, approved scope, completed work, non-recoverable third-party costs, and applicable law before confirming the outcome. Refunds, when approved, are returned through the original payment method where reasonably possible. Processing time may depend on the payment provider and bank.'] },
+      { id: 'review', title: '5. Review and outcome', paragraphs: ['AccessRevamp will verify the payment record, account ownership, project status, delivered files, and applicable law before confirming the outcome. A valid request made before final digital delivery is eligible for a full refund. After final delivery, any available remedy depends on the delivered scope and rights that cannot legally be excluded. Approved refunds are returned through the original payment method where reasonably possible; processing time may depend on the payment provider and bank.'] },
     ],
   };
 }

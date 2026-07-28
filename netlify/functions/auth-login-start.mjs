@@ -264,7 +264,6 @@ export function createAuthLoginStartHandler({
       await passwordClient.auth.signOut({ scope: 'local' }).catch(() => undefined);
 
       const verificationUrl = new URL('/login', request.headers.get('origin'));
-      verificationUrl.searchParams.set('verification', challengeToken);
       const emailClient = createPublicClient();
       const emailResult = await emailClient.auth.signInWithOtp({
         email: authenticatedEmail,

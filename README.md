@@ -104,6 +104,7 @@ Never commit values, copy them into Google Drive/Sheets, expose them through `VI
 - [Third-party inventory](docs/THIRD_PARTY.md)
 - [Approved rebuild specification](docs/superpowers/specs/2026-07-18-accessrevamp-production-rebuild-design.md)
 - [Pre-rebuild baseline](docs/baseline/2026-07-18.md)
+- [July 28 strict-audit remediation evidence](docs/evidence/AUDIT_REMEDIATION_2026-07-28.md)
 
 Six detailed plans under `docs/superpowers/plans/` execute the rebuild in dependency order: foundation/catalog, entitlements/payments, account/operations, public experience/reports, portfolio demos, and cinematic/quality/deployment.
 

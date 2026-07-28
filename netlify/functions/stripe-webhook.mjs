@@ -13,6 +13,11 @@ const CHECKOUT_EVENTS = new Set([
   'checkout.session.expired',
 ]);
 const REFUND_EVENTS = new Set(['charge.refunded', 'refund.updated']);
+const DISPUTE_EVENTS = new Set([
+  'charge.dispute.created',
+  'charge.dispute.updated',
+  'charge.dispute.closed',
+]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function assertExpectedMode(livemode, expected) {
@@ -154,16 +159,17 @@ async function handleCheckoutEvent(event, stripe, supabase, expectedMode) {
       },
     });
     if (error) throw error;
-    return;
+    return 'checkout_closed';
   }
 
   const shouldFulfill = event.type === 'checkout.session.async_payment_succeeded'
     || (event.type === 'checkout.session.completed' && session.payment_status === 'paid');
-  if (!shouldFulfill) return;
+  if (!shouldFulfill) return 'checkout_observed';
   if (session.payment_status !== 'paid') throw new Error('Successful Checkout event was not paid.');
 
   const { error } = await supabase.rpc('fulfill_accessrevamp_checkout', { p_payload: normalized });
   if (error) throw error;
+  return 'fulfillment';
 }
 
 async function normalizedRefund(event, stripe) {
@@ -200,6 +206,31 @@ async function normalizedRefund(event, stripe) {
     refund_status: refund.status,
     reason: String(refund.reason || ''),
     operator_id: '',
+  };
+}
+
+async function normalizedDispute(event, stripe) {
+  const eventDispute = event.data.object;
+  const dispute = await stripe.disputes.retrieve(eventDispute.id);
+  const chargeId = identifier(dispute.charge);
+  if (!chargeId) throw new Error('Dispute did not include a charge.');
+  const charge = await stripe.charges.retrieve(chargeId);
+  const paymentIntentId = identifier(charge.payment_intent);
+  if (!paymentIntentId) throw new Error('Dispute charge did not include a payment intent.');
+  return {
+    event_id: event.id,
+    event_type: event.type,
+    livemode: event.livemode,
+    stripe_dispute_id: dispute.id,
+    stripe_charge_id: chargeId,
+    payment_intent_id: paymentIntentId,
+    amount_cents: Number(dispute.amount),
+    currency: String(dispute.currency || '').toLowerCase(),
+    status: String(dispute.status || ''),
+    reason: String(dispute.reason || ''),
+    evidence_due_at: Number(dispute.evidence_details?.due_by) > 0
+      ? new Date(Number(dispute.evidence_details.due_by) * 1000).toISOString()
+      : '',
   };
 }
 
@@ -259,19 +290,28 @@ export function createWebhookHandler({
       }
 
       failureStage = 'event_processing';
+      let outcome = 'ignored';
       if (CHECKOUT_EVENTS.has(event.type)) {
-        await handleCheckoutEvent(event, stripe, supabase, expected);
+        outcome = await handleCheckoutEvent(event, stripe, supabase, expected);
       } else if (REFUND_EVENTS.has(event.type)) {
         const normalized = await normalizedRefund(event, stripe);
         if (normalized) {
           const { error } = await supabase.rpc('reconcile_accessrevamp_refund', { p_payload: normalized });
           if (error) throw error;
+          outcome = 'refund';
         }
+      } else if (DISPUTE_EVENTS.has(event.type)) {
+        const normalized = await normalizedDispute(event, stripe);
+        const { error } = await supabase.rpc('reconcile_accessrevamp_dispute', { p_payload: normalized });
+        if (error) throw error;
+        outcome = 'dispute';
       }
-      failureStage = 'liveness_update';
-      await supabase.from('payment_runtime_settings')
-        .update({ last_successful_webhook_at: new Date().toISOString() })
-        .eq('singleton', true);
+      failureStage = 'outcome_recording';
+      const { error: outcomeError } = await supabase.rpc('record_accessrevamp_webhook_outcome', {
+        p_event_type: event.type,
+        p_outcome: outcome,
+      });
+      if (outcomeError) throw outcomeError;
       return json({ received: true });
     } catch (error) {
       logFailure(failureStage, error);

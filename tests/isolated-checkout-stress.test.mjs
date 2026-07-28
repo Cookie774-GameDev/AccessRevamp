@@ -61,6 +61,27 @@ test('40-customer burst keeps every user, request, plan and session isolated', {
   }
 });
 
+test('a returning customer reuses the prior Stripe customer identifier', async () => {
+  const fixture = setup('homepage_reveal');
+  fixture.harness.orders.set('prior-order', {
+    id: 'prior-order',
+    user_id: fixture.user.id,
+    stripe_customer_id: 'cus_returning_customer',
+    created_at: '2026-07-28T00:00:00.000Z',
+  });
+
+  const response = await fixture.handler(checkoutRequest({
+    token: fixture.token,
+    requestId: fixture.draft.request_id,
+    targetTier: fixture.draft.plan_key,
+  }));
+
+  assert.equal(response.status, 201);
+  const session = [...fixture.stripe.sessions.values()][0];
+  assert.equal(session.customer, 'cus_returning_customer');
+  assert.equal(session.customer_email, undefined);
+});
+
 test('350 malformed or hostile requests never reach Stripe', { timeout: 30_000 }, async () => {
   const fixture = setup();
   const cases = [

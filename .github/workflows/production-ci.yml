@@ -47,7 +47,7 @@ jobs:
           name: test-output
           path: test-output.txt
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 30
       - name: Production build
         env:
           REQUIRE_FFMPEG_OPTIMIZATION: "true"
@@ -68,7 +68,7 @@ jobs:
           name: dependency-audit-output
           path: audit-output.json
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 30
       - name: Enforce production dependency audit
         if: steps.production_audit.outcome != 'success'
         run: exit 1

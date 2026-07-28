@@ -26,6 +26,7 @@
     "verify:supabase-public": "node scripts/quality/verify-supabase-public.mjs",
     "verify:netlify-auth-preview": "node scripts/quality/verify-netlify-auth-preview.mjs",
     "verify:production-auth": "node scripts/quality/verify-netlify-auth-preview.mjs",
+    "verify:production-smoke": "node scripts/quality/verify-production-smoke.mjs",
     "optimize:showcases": "node scripts/optimize-showcase-videos.mjs",
     "export:sample-report": "node scripts/export-report-png.mjs",
     "quality:budgets": "node scripts/quality/check-budgets.mjs",
