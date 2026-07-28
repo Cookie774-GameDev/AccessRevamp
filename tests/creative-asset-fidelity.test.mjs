@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(path, 'utf8');
+const approvalMigration = await read(
+  'supabase/migrations/20260728020000_fix_owner_approval_gates.sql',
+).catch((error) => {
+  if (error.code === 'ENOENT') return '';
+  throw error;
+});
+
+const functionBody = (sql, name) => {
+  const match = sql.match(new RegExp(
+    `create or replace function public\\.${name}\\b[\\s\\S]*?\\$\\$;`,
+    'i',
+  ));
+  return match?.[0] || '';
+};
 
 const [
   fidelityMigration,
@@ -58,4 +72,44 @@ test('agent contracts prohibit regenerated products and generated raster text', 
   assert.match(designAgent, /OCR/i);
   assert.match(customerAgent, /cryptographic hash/i);
   assert.match(customerTemplate, /SOURCE_ASSET_MANIFEST\.md/);
+});
+
+test('artifact finalization fails closed for approval-sensitive customer outputs', () => {
+  const sql = functionBody(approvalMigration, 'operator_finalize_project_artifact');
+  assert.match(sql, /accessrevamp_operators[\s\S]*user_id\s*=\s*p_created_by[\s\S]*active/i);
+  for (const artifactType of ['design_image', 'poster', 'video', 'website_build', 'skill_md', 'design_md']) {
+    assert.match(sql, new RegExp(`'${artifactType}'`));
+  }
+  assert.match(sql, /metadata\s*->>\s*'design_option_id'/i);
+  assert.match(sql, /option\.project_id\s*=\s*v_artifact\.project_id/i);
+  assert.match(sql, /design_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /delivery_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /design_approved_by\s+is\s+null/i);
+  assert.match(sql, /delivery_approved_by\s+is\s+null/i);
+  assert.match(sql, /rights_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /copy_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /product_fidelity_status\s*<>\s*'approved'/i);
+  assert.match(sql, /source_manifest_verified_at\s+is\s+null/i);
+  assert.match(sql, /project_design_option_assets/i);
+  assert.match(sql, /project_source_assets/i);
+});
+
+test('specification artifacts require durable project selection and finalizer stays service-only', () => {
+  const sql = functionBody(approvalMigration, 'operator_finalize_project_artifact');
+  assert.match(sql, /artifact_type\s+in\s*\(\s*'skill_md'\s*,\s*'design_md'\s*\)/i);
+  assert.match(sql, /project_approval_selections/i);
+  assert.match(sql, /project_approval_links/i);
+  assert.match(sql, /v_design_option_id\s*=\s*any\s*\(\s*selection\.selected_option_ids\s*\)/i);
+  assert.match(approvalMigration, /revoke all on function public\.operator_finalize_project_artifact\(uuid,\s*uuid,\s*boolean\)\s+from public,\s*anon,\s*authenticated/i);
+  assert.match(approvalMigration, /grant execute on function public\.operator_finalize_project_artifact\(uuid,\s*uuid,\s*boolean\)\s+to service_role/i);
+  assert.match(sql, /security definer[\s\S]*set search_path\s*=\s*pg_catalog,\s*public/i);
+});
+
+test('specification artifacts also accept an exact non-rejected dashboard design selection', () => {
+  const sql = functionBody(approvalMigration, 'operator_finalize_project_artifact');
+  assert.match(sql, /customer_project_feedback\s+feedback/i);
+  assert.match(sql, /feedback\.project_id\s*=\s*v_artifact\.project_id/i);
+  assert.match(sql, /feedback\.action\s*=\s*'select_designs'/i);
+  assert.match(sql, /feedback\.status\s*<>\s*'rejected'/i);
+  assert.match(sql, /v_design_option_id\s*=\s*any\s*\(\s*feedback\.selected_option_ids\s*\)/i);
 });

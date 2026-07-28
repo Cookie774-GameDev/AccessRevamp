@@ -3,6 +3,20 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const read = (path) => readFile(path, 'utf8');
+const approvalMigration = await read(
+  'supabase/migrations/20260728020000_fix_owner_approval_gates.sql',
+).catch((error) => {
+  if (error.code === 'ENOENT') return '';
+  throw error;
+});
+
+const functionBody = (sql, name) => {
+  const match = sql.match(new RegExp(
+    `create or replace function public\\.${name}\\b[\\s\\S]*?\\$\\$;`,
+    'i',
+  ));
+  return match?.[0] || '';
+};
 
 const [
   migration,
@@ -74,4 +88,38 @@ test('agent contracts require command-center submission and rich sourced brand p
   }
   assert.match(designAgent, /Never self-approve/i);
   assert.match(mainAgent, /delivery approval/i);
+});
+
+test('owner design approval atomically records current and legacy approval fields', () => {
+  const sql = functionBody(approvalMigration, 'approve_accessrevamp_creative_design');
+  assert.match(sql, /v_now timestamptz\s*:=\s*timezone\('utc',\s*now\(\)\)/i);
+  assert.match(sql, /design_review_status\s*=\s*'approved'/i);
+  assert.match(sql, /design_approved_by\s*=\s*p_operator_id/i);
+  assert.match(sql, /design_approved_at\s*=\s*v_now/i);
+  assert.match(sql, /human_approved_by\s*=\s*p_operator_id/i);
+  assert.match(sql, /human_approved_at\s*=\s*v_now/i);
+});
+
+test('a fresh design approval invalidates every earlier delivery approval', () => {
+  const sql = functionBody(approvalMigration, 'approve_accessrevamp_creative_design');
+  assert.match(sql, /delivery_review_status\s*=\s*'pending'/i);
+  assert.match(sql, /delivery_approved_by\s*=\s*null/i);
+  assert.match(sql, /delivery_approved_at\s*=\s*null/i);
+  assert.match(sql, /status\s*=\s*case[\s\S]*'human_review'/i);
+});
+
+test('owner delivery approval enforces current review and exact-source prerequisites', () => {
+  const sql = functionBody(approvalMigration, 'approve_accessrevamp_creative_delivery');
+  assert.match(sql, /design_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /design_approved_by\s+is\s+null/i);
+  assert.match(sql, /human_approved_by\s+is\s+null/i);
+  assert.match(sql, /rights_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /copy_review_status\s*<>\s*'approved'/i);
+  assert.match(sql, /product_fidelity_status\s*<>\s*'approved'/i);
+  assert.match(sql, /source_manifest_verified_at\s+is\s+null/i);
+  assert.match(sql, /project_design_option_assets/i);
+  assert.match(sql, /project_source_assets/i);
+  assert.match(sql, /asset\.project_id\s*=\s*o\.project_id/i);
+  assert.match(sql, /asset\.verification_status\s*=\s*'verified'/i);
+  assert.match(sql, /delivery_review_status\s*=\s*'approved'[\s\S]*status\s*=\s*'customer_ready'/i);
 });

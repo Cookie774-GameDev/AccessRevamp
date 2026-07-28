@@ -13,6 +13,14 @@ Open [PROCESS_MAP.html](PROCESS_MAP.html) for the complete interactive system di
   with live Checkout guarded by catalog, secret, webhook, and runtime checks.
 - Supabase plan-specific workflows, tasks, research sources, findings, security authorizations, design options, customer approvals, artifacts, deliveries, provider budgets, private storage, and an idempotent integration outbox.
 - Automatic workflow bootstrap after a durable paid order creates a customer project.
+- The paid Homepage Reveal workflow requires owner-reviewed options, one to
+  three unique choices ranked in customer preference order, customer-specific
+  `SKILL.md` and `DESIGN.md` artifacts based on rank one with separate owner
+  reviews, and a final delivery-manifest handoff/stop gate. Every ranked option
+  must be customer-visible, owner-reviewed, and scoped to the same project and
+  revision. Those documents are internal handoff evidence; customer-facing
+  outputs remain the sourced audit and five concepts. The plan does not include
+  website, page-reference, or poster implementation.
 - Cinematic scene choice of three or four during the order brief.
 - Separate optional portfolio permission; purchase alone does not grant publication rights.
 - Hashed, expiring, one-use customer approval links scoped to the intended project option group and revision round.
@@ -46,7 +54,10 @@ dashboard publication, or customer-ready status is allowed before the latter.
 
 ## Canonical plans
 
-- Homepage Reveal — $50.
+- Homepage Reveal — $50: sourced audit and five homepage concepts, followed
+  internally by a safe rank-ordered selection of one to three concepts,
+  reviewed customer `SKILL.md` and `DESIGN.md` based on rank one, then delivery
+  handoff and stop.
 - Complete Website Revamp — $200.
 - Cinematic Scroll Site — $250.
 

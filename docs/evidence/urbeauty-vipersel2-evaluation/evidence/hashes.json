@@ -1,0 +1,124 @@
+{
+  "generated_utc": "2026-07-28T02:03:55.409Z",
+  "algorithm": "SHA-256",
+  "asset_hash_checks": [
+    {
+      "file": "assets/logo.jpg",
+      "expected_sha256": "676da9c0916355e915b480f786102e947e58fe373e71c09a5e58c2b8e0f327a5",
+      "actual_sha256": "676da9c0916355e915b480f786102e947e58fe373e71c09a5e58c2b8e0f327a5",
+      "match": true
+    },
+    {
+      "file": "assets/face-lifting-device.jpg",
+      "expected_sha256": "397e1195049683745db779ba964292581653334ddbfc9eb80f5fb046d31f9f8c",
+      "actual_sha256": "397e1195049683745db779ba964292581653334ddbfc9eb80f5fb046d31f9f8c",
+      "match": true
+    },
+    {
+      "file": "assets/brush-cleaner.jpg",
+      "expected_sha256": "2a9dd98b060742c1e775e15c7dda39d471210d5e0b7d8f82f868a47034950ada",
+      "actual_sha256": "2a9dd98b060742c1e775e15c7dda39d471210d5e0b7d8f82f868a47034950ada",
+      "match": true
+    },
+    {
+      "file": "assets/pimple-patches.jpg",
+      "expected_sha256": "48d3802be1f2f268f65bbfb712d46bcaf1273cc8edc8abfcb29481008126b671",
+      "actual_sha256": "48d3802be1f2f268f65bbfb712d46bcaf1273cc8edc8abfcb29481008126b671",
+      "match": true
+    },
+    {
+      "file": "assets/neck-lifting-device.jpg",
+      "expected_sha256": "3ffd58c28de4bd76725659a21e55c3dda8fa84240a727bc95bdfff117179dc7a",
+      "actual_sha256": "3ffd58c28de4bd76725659a21e55c3dda8fa84240a727bc95bdfff117179dc7a",
+      "match": true
+    },
+    {
+      "file": "assets/scalp-brush.jpg",
+      "expected_sha256": "8fe60f82cb608e75aa8bed861be9bdea5f61a668e3592707b1940b1e96acbdf8",
+      "actual_sha256": "8fe60f82cb608e75aa8bed861be9bdea5f61a668e3592707b1940b1e96acbdf8",
+      "match": true
+    },
+    {
+      "file": "assets/self-cleaning-brush.jpg",
+      "expected_sha256": "cd166da5ebdb19db01b926c942c80c4d85bd05fd2f251d78f7378bd202fdbbb0",
+      "actual_sha256": "cd166da5ebdb19db01b926c942c80c4d85bd05fd2f251d78f7378bd202fdbbb0",
+      "match": true
+    },
+    {
+      "file": "assets/ice-roller-bundle.jpg",
+      "expected_sha256": "5489c766ee5dbe833112860bc6b329518380195c9f061663710bbc9d9dc36b30",
+      "actual_sha256": "5489c766ee5dbe833112860bc6b329518380195c9f061663710bbc9d9dc36b30",
+      "match": true
+    },
+    {
+      "file": "assets/ice-roller.jpg",
+      "expected_sha256": "bb836302173e12ab8450487cafd3df335ffb5c6dd978474a7c87c1ebcb57c9c7",
+      "actual_sha256": "bb836302173e12ab8450487cafd3df335ffb5c6dd978474a7c87c1ebcb57c9c7",
+      "match": true
+    }
+  ],
+  "html_hashes": [
+    {
+      "file": "concept-01-ritual-shelf.html",
+      "sha256": "034a0d697b2e2e32fa853dbb4c35deb8ef132e0fe3c0b8349462078832e20455"
+    },
+    {
+      "file": "concept-02-color-cabinet.html",
+      "sha256": "3c6505dc5ddf9e43acac67efd15ab7b7ca231a0e1ae527dd6ab33382a891d813"
+    },
+    {
+      "file": "concept-03-quiet-utility.html",
+      "sha256": "3f5d64061013ba02a40594ddb17ee8f9d6aa66c2c74ed8890c0453ebf15ffb14"
+    },
+    {
+      "file": "concept-04-orbit.html",
+      "sha256": "b12ed0f76cb9c798cf3a0b5481d2b2e7d0de11240904cd12f57ce56272369e2b"
+    },
+    {
+      "file": "concept-05-ribbon.html",
+      "sha256": "3cbbf74a7338067f38c52a67c41747241eadbecf5bc35c116b7063eeb1c65c8a"
+    }
+  ],
+  "screenshot_hashes": [
+    {
+      "file": "screenshots/concept-01-ritual-shelf-desktop-1440x1200.png",
+      "sha256": "2197e805f50daca696039548ad0bcfc225361d1558f4efa6af6ea2738043c91a"
+    },
+    {
+      "file": "screenshots/concept-01-ritual-shelf-mobile-390x844.png",
+      "sha256": "490ed9a5c897a80d86bc90fc70aaa69ee1791debf74e8c3065f850e3ab7a0e2b"
+    },
+    {
+      "file": "screenshots/concept-02-color-cabinet-desktop-1440x1200.png",
+      "sha256": "218a3ada32ed5671d09eb90aac01ac7ad384527f34a079fb8abd4650d82f7f3c"
+    },
+    {
+      "file": "screenshots/concept-02-color-cabinet-mobile-390x844.png",
+      "sha256": "5a001c119d70d43d813bce264913a77a827358bd7bbd25797ce055c778c2e56a"
+    },
+    {
+      "file": "screenshots/concept-03-quiet-utility-desktop-1440x1200.png",
+      "sha256": "df23c654ba9ffa2776244f9dbaa7ce97e953c57a381c68ced2b8f79d1df4bfb0"
+    },
+    {
+      "file": "screenshots/concept-03-quiet-utility-mobile-390x844.png",
+      "sha256": "3ce61b7a465174383a16d2b3a0bc5f3f1dd9c1f87cf8f4fec3814ea3f32f4ae9"
+    },
+    {
+      "file": "screenshots/concept-04-orbit-desktop-1440x1200.png",
+      "sha256": "15418b77184338239f0e4d5c88b48fdd4bd546f0b7dad56f1cf6008236331a3d"
+    },
+    {
+      "file": "screenshots/concept-04-orbit-mobile-390x844.png",
+      "sha256": "a024bf5c92dfc415ba7c9024b7144dab373ada8e1d92c46556fa9a7b425a7e03"
+    },
+    {
+      "file": "screenshots/concept-05-ribbon-desktop-1440x1200.png",
+      "sha256": "fc437f9eec0a5d33856b91719e623a6de496581e30ccf87f7ea6f95f0103626c"
+    },
+    {
+      "file": "screenshots/concept-05-ribbon-mobile-390x844.png",
+      "sha256": "3b96b6058052e0fc124191a29d87776478250ed0a4032afa1318eb81e587701c"
+    }
+  ]
+}

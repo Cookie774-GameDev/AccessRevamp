@@ -1,0 +1,19 @@
+{
+  "method": "DOM/OCR-like visible-text inventory tokenized and compared against exact public-store source vocabulary plus clearly separated evaluation labels.",
+  "inventory_file": "evidence/text-inventory.txt",
+  "checked_word_count": 691,
+  "unique_checked_word_count": 156,
+  "unknown_tokens": [],
+  "accepted_brand_and_catalog_exceptions": [
+    "7-in-1",
+    "EMS",
+    "Hydrocolloid",
+    "Microcurrent",
+    "Pcs",
+    "Self-Cleaning",
+    "URBEAUTYPROMO15",
+    "UrBeauty"
+  ],
+  "pass": true,
+  "limitation": "This validates editable visible text against the approved source vocabulary. It does not OCR lettering already embedded in exact, unaltered product photographs."
+}

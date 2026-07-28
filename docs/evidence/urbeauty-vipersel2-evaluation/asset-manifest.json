@@ -1,0 +1,89 @@
+{
+  "task_id": "URBEAUTY-VIPERSEL2-DESIGNS-FOLLOWUP",
+  "retrieved_utc": "2026-07-27",
+  "rights_basis": "Passive review and download from the customer's public storefront; evaluation use only; no publication.",
+  "transformations": "None. Files are byte-identical to the responses received from the listed URLs.",
+  "assets": [
+    {
+      "file": "assets/logo.jpg",
+      "role": "UrBeauty public storefront logo",
+      "source_url": "https://urbeauty.store/cdn/shop/files/urbeauty_logo_custom_d3aa8982-074f-4f82-9664-fc5ea6605dcb.jpg?v=1781231313&width=500",
+      "width": 500,
+      "height": 500,
+      "bytes": 26144,
+      "sha256": "676da9c0916355e915b480f786102e947e58fe373e71c09a5e58c2b8e0f327a5"
+    },
+    {
+      "file": "assets/face-lifting-device.jpg",
+      "role": "7-in-1 Face Lifting & EMS Microcurrent Device",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/40a5ce61565a3b8d02740f17de6b9682.jpg?v=1779761007",
+      "width": 1000,
+      "height": 1000,
+      "bytes": 77503,
+      "sha256": "397e1195049683745db779ba964292581653334ddbfc9eb80f5fb046d31f9f8c"
+    },
+    {
+      "file": "assets/brush-cleaner.jpg",
+      "role": "Electric Makeup Brush Cleaner Machine",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/3ad28682e81f55c875dc4cc96937e356.jpg?v=1779760813",
+      "width": 2000,
+      "height": 2000,
+      "bytes": 263916,
+      "sha256": "2a9dd98b060742c1e775e15c7dda39d471210d5e0b7d8f82f868a47034950ada"
+    },
+    {
+      "file": "assets/pimple-patches.jpg",
+      "role": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/8dccced17267041fca81c71245e70aee.jpg?v=1779760550",
+      "width": 1728,
+      "height": 1728,
+      "bytes": 112184,
+      "sha256": "48d3802be1f2f268f65bbfb712d46bcaf1273cc8edc8abfcb29481008126b671"
+    },
+    {
+      "file": "assets/neck-lifting-device.jpg",
+      "role": "Microcurrent Facial and Neck Lifting Device for Skin Care Massage",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/f0e1f8ad8c80ee8c5d5d1447e2b6c1fb.jpg?v=1779816341",
+      "width": 1000,
+      "height": 1000,
+      "bytes": 221603,
+      "sha256": "3ffd58c28de4bd76725659a21e55c3dda8fa84240a727bc95bdfff117179dc7a"
+    },
+    {
+      "file": "assets/scalp-brush.jpg",
+      "role": "Octopus Head Massager & Scalp Brush",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/24ce5647f89805d88280a2d386842481.jpg?v=1779760279",
+      "width": 800,
+      "height": 800,
+      "bytes": 23233,
+      "sha256": "8fe60f82cb608e75aa8bed861be9bdea5f61a668e3592707b1940b1e96acbdf8"
+    },
+    {
+      "file": "assets/self-cleaning-brush.jpg",
+      "role": "Self-Cleaning Retractable Massage Hair Brush",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/b882f872f21418900fc315e59bd3c088.jpg?v=1779760752",
+      "width": 1340,
+      "height": 1785,
+      "bytes": 91383,
+      "sha256": "cd166da5ebdb19db01b926c942c80c4d85bd05fd2f251d78f7378bd202fdbbb0"
+    },
+    {
+      "file": "assets/ice-roller-bundle.jpg",
+      "role": "Silicone Ice Face Roller 3pc Set (Bundle)",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/5af923bdefc42853e5cedea47397b97d_a4e98878-4808-477c-8d88-6dcf5bf6ce01.jpg?v=1779917684",
+      "width": 900,
+      "height": 900,
+      "bytes": 61231,
+      "sha256": "5489c766ee5dbe833112860bc6b329518380195c9f061663710bbc9d9dc36b30"
+    },
+    {
+      "file": "assets/ice-roller.jpg",
+      "role": "Silicone Ice Face Roller Mold",
+      "source_url": "https://cdn.shopify.com/s/files/1/0954/1314/1805/files/fee4843d489cd55f5b36932f0090edb9.jpg?v=1779760742",
+      "width": 900,
+      "height": 900,
+      "bytes": 14594,
+      "sha256": "bb836302173e12ab8450487cafd3df335ffb5c6dd978474a7c87c1ebcb57c9c7"
+    }
+  ]
+}
