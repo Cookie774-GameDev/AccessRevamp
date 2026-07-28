@@ -27,9 +27,13 @@ Only `verified` findings may appear in outreach. Do not describe passive observa
 - Concise option descriptions: Homepage Reveal ($50), a focused homepage redesign; Complete Website Revamp ($200), a cohesive refresh across the website; and Cinematic Scroll Site ($250), an immersive scroll-led experience. Explain server-verified cumulative credit separately when applicable.
 - Working reply path.
 - Verified mailing identity, configured only after the owner provides it; do not place a mailing address in test copy.
-- Exact opt-out sentence: Reply “no thanks” and I won’t contact you again. Include a one-click suppression link.
+- Exact ASCII-safe opt-out sentence: Reply "no thanks" and I won't contact you again. Include a one-click suppression link.
 - Natural invitation for questions.
 - Disclosure that the review is AI-assisted and human-verified, not a legal certification.
+- Normalize smart punctuation to plain ASCII punctuation before approval and
+  transport. Reject replacement characters, mojibake, and likely encoding
+  substitution such as `I?m`, `won?t`, `7?13`, or `?no thanks?`. Verify that
+  the approved, transported, and received bodies match after normalization.
 
 ## Subject and tracking rules
 

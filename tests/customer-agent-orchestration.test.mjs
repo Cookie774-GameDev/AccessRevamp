@@ -170,7 +170,9 @@ test('outreach documentation defines the approved first-touch offer contract', (
   assert.match(outreachSkill, /Cinematic Scroll Site \(\$250\):/);
   assert.match(outreachSkill, /https:\/\/accessrevamp\.com\//);
   assert.match(outreachSkill, /If you have questions, feel free to ask\./);
-  assert.match(outreachSkill, /Reply \u201cno thanks\u201d and I won\u2019t contact you again\./);
+  assert.match(outreachSkill, /Reply "no thanks" and I won't contact you again\./);
+  assert.match(outreachSkill, /normalize smart punctuation to\s+plain ASCII punctuation/i);
+  assert.match(outreachSkill, /stored approved body, SMTP body, and received-body verification must\s+match/i);
   assert.match(customerAgent, /Portfolio invitations are allowed only after confirming public, permissioned examples exist\./);
   assert.match(outreachStandard, /one-click suppression link/i);
 });

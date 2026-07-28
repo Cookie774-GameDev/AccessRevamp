@@ -27,8 +27,13 @@ With 100 inboxes, AccessRevamp may send at most five cold-or-reply messages per 
 - Describe the available options concisely: Homepage Reveal ($50): a focused homepage redesign; Complete Website Revamp ($200): a cohesive refresh across the website; Cinematic Scroll Site ($250): an immersive, scroll-led experience.
 - Include `https://accessrevamp.com/` without a URL shortener.
 - Include a working reply path, valid postal identity where required, and a clear opt-out.
-- Use this exact opt-out sentence: Reply “no thanks” and I won’t contact you again.
+- Use this exact ASCII-safe opt-out sentence: Reply "no thanks" and I won't contact you again.
 - End naturally: “If you have questions, feel free to ask.”
+- Before approval and again before transport, normalize smart punctuation to
+  plain ASCII punctuation. Reject replacement characters, mojibake, or likely
+  substitution damage such as `I?m`, `won?t`, `7?13`, or `?no thanks?`.
+  The stored approved body, SMTP body, and received-body verification must
+  match after this normalization.
 
 ## Prohibited practices
 

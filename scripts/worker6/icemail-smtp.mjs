@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { normalizeOutboundText } from './outbound-text.mjs';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const READER_ADDRESS = 'combatonline02@gmail.com';
@@ -56,12 +57,27 @@ export function createIcemailSmtp({
       const result = await transport.sendMail({
         from: mailboxAddress,
         to: cleanHeader(message.to, 'Recipient'),
-        subject: cleanHeader(message.subject, 'Subject'),
-        text: String(message.body || '').trim(),
+        subject: cleanHeader(normalizeOutboundText(message.subject, 'Subject'), 'Subject'),
+        text: normalizeOutboundText(message.body, 'Message body'),
         ...(message.inReplyTo ? {
           inReplyTo: cleanHeader(message.inReplyTo, 'In-Reply-To'),
           references: cleanHeader(message.inReplyTo, 'References'),
         } : {}),
+      });
+      return String(result.messageId || '');
+    },
+    async sendFirstTouch(message) {
+      const mailboxAddress = cleanHeader(message.mailboxAddress, 'Mailbox address').toLowerCase();
+      const replyTo = cleanHeader(message.replyTo, 'Reply-To').toLowerCase();
+      if (!EMAIL.test(replyTo)) throw new Error('Reply-To is invalid.');
+      const transport = await getTransport(message);
+      await transport.verify();
+      const result = await transport.sendMail({
+        from: `AccessRevamp <${mailboxAddress}>`,
+        replyTo,
+        to: cleanHeader(message.to, 'Recipient'),
+        subject: cleanHeader(normalizeOutboundText(message.subject, 'Subject'), 'Subject'),
+        text: normalizeOutboundText(message.body, 'Message body'),
       });
       return String(result.messageId || '');
     },

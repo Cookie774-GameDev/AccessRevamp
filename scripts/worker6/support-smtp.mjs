@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { normalizeOutboundText } from './outbound-text.mjs';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const cleanHeader = (value, name) => {
@@ -31,8 +32,8 @@ export function createSupportSmtp(config, transportFactory = nodemailer) {
       const result = await transport.sendMail({
         from: `AccessRevamp Support <${fromAddress}>`,
         to: cleanHeader(message.to, 'Recipient'),
-        subject: cleanHeader(message.subject, 'Subject'),
-        text: String(message.body || '').trim(),
+        subject: cleanHeader(normalizeOutboundText(message.subject, 'Subject'), 'Subject'),
+        text: normalizeOutboundText(message.body, 'Message body'),
         ...(message.inReplyTo ? {
           inReplyTo: cleanHeader(message.inReplyTo, 'In-Reply-To'),
           references: cleanHeader(message.inReplyTo, 'References'),
