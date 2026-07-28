@@ -33,22 +33,40 @@ Run the complete operation without losing payment context, crossing customer dat
 4. Claim only the next eligible main-agent task through the service-role RPC.
 5. Queue Google Drive customer-folder creation and payment-ledger synchronization through the idempotent integration outbox.
 6. Spawn the customer agent with only the current project identifiers and approved source context.
-7. Require the customer agent to create the isolated customer dossier,
-   `SOURCE_ASSET_MANIFEST.md`, customer `SKILL.md`, and `DESIGN.md`.
+7. Require the customer agent to create the isolated customer dossier and
+   `SOURCE_ASSET_MANIFEST.md` before concept production.
 8. Spawn the design agent only with those reviewed records. Its generated
    elements may be non-product atmosphere or decoration; customer products and
    words remain exact source assets and editable approved text.
-9. After reviewed research, source manifest, `SKILL.md`, `DESIGN.md`, and
-   customer selections exist, spawn the website agent for plans that include
-   implementation.
-10. Hold every customer-facing delivery for human quality review and verify the
+9. After the owner reviews the five homepage options, wait in
+   `customer_homepage_selection` for one to three unique, project-scoped
+   options ranked in customer preference order. Preserve the array order and
+   treat `selected_option_ids[1]` as the primary design. Then require
+   customer-specific `SKILL.md` production and owner review, followed by
+   customer-specific `DESIGN.md` production and owner review, both based on
+   that primary design while retaining the full ranking as evidence.
+10. Spawn the website agent only after those reviewed documents exist and only
+    for the $200 or $250 plan branches that include implementation.
+11. Hold every customer-facing delivery for human quality review and verify the
     intended project/user before dashboard publication and email notification.
 
 ## Plan routing
 
 ### $50 Homepage Reveal
 
-Deliver a sourced audit, passive security review, growth and monetization guidance, and five homepage concepts: three normal and two cinematic. Do not imply that a full production website is included.
+Deliver a sourced audit, passive security review, growth and monetization
+guidance, and five owner-reviewed homepage concepts: three normal and two
+cinematic. Wait for the customer to rank one to three eligible concepts in
+preference order. Preserve the complete ordered array and use rank one as the
+primary design for customer-specific `SKILL.md` and `DESIGN.md` internal
+handoff artifacts. Record their paths and hashes and require separate owner
+review evidence for each. Every ranked option must belong to the same project
+and revision and already be customer-visible and owner-reviewed. The
+customer-facing package remains the sourced audit and five concepts only.
+Assemble and notify the customer of that delivery, record the internal delivery
+manifest, and complete
+`homepage_reveal_handoff_stop`. Stop there: do not build a website, generate
+page-reference images, or create posters for the $50 plan.
 
 ### $200 Complete Website Revamp
 

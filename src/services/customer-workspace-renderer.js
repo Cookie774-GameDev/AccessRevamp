@@ -126,7 +126,7 @@ function renderWebsite(project, chooserState = {}) {
   }
   const latestRound = Math.max(...homepageOptions.map((option) => Number(option.revision_round || 0)));
   const options = homepageOptions.filter((option) => Number(option.revision_round || 0) === latestRound);
-  const optionGroup = options[0]?.option_group || 'homepage_normal';
+  const optionGroup = 'homepage';
   return `<div class="website-review"><header class="website-review__hero"><span class="eyebrow">Action ready</span><h3>Your homepage directions are ready.</h3><p>Open the full-screen review, enlarge each concept, rank your top three, and send one clear decision to the team.</p><button class="button website-review__start" type="button" data-open-design-chooser><span>Choose website design</span><small>Start the guided design review</small></button></header>${renderPosterOptions(posterOptions)}${renderDesignChooserV2(options, optionGroup, latestRound, chooserState)}</div>`;
 }
 

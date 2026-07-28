@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { requireConfirmedUser } from './_shared/auth.mjs';
+import { bearerAccessToken, requireConfirmedUser } from './_shared/auth.mjs';
 import {
   assertJsonSize,
   assertMethod,
@@ -10,6 +10,7 @@ import {
   readJsonBody,
 } from './_shared/http.mjs';
 import { getSupabaseAdmin } from './_shared/supabase-admin.mjs';
+import { createSupabaseAccessTokenClient } from './_shared/supabase-public.mjs';
 
 const UUID = z.string().uuid();
 const feedbackSchema = z.discriminatedUnion('action', [
@@ -53,16 +54,19 @@ function feedbackError(error) {
 
 export function createAccountProjectFeedbackHandler({
   getClient = getSupabaseAdmin,
+  createCallerClient = createSupabaseAccessTokenClient,
 } = {}) {
   return async function accountProjectFeedback(request) {
     try {
       assertMethod(request, 'POST');
       assertSameOrigin(request);
       assertJsonSize(request);
-      const client = getClient();
-      await requireConfirmedUser(request, client);
+      const accessToken = bearerAccessToken(request);
+      const authClient = getClient();
+      await requireConfirmedUser(request, authClient);
       const input = feedbackSchema.parse(await readJsonBody(request));
-      const result = await client.rpc('submit_accessrevamp_dashboard_feedback', {
+      const callerClient = createCallerClient(accessToken);
+      const result = await callerClient.rpc('submit_accessrevamp_dashboard_feedback', {
         p_project_id: input.projectId,
         p_request_id: input.requestId,
         p_action: input.action,

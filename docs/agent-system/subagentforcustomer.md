@@ -4,7 +4,13 @@ Required authority: `APPROVAL_PROTOCOL.md`.
 
 ## Purpose
 
-Create a complete, sourced customer dossier from the paid order, confirmed intake, approved email thread, public website, and customer-owned files. This agent prepares the context, `SKILL.md`, and `DESIGN.md` that the website and design agents must follow.
+Create a complete, sourced customer dossier from the paid order, confirmed
+intake, approved email thread, public website, and customer-owned files. After
+the owner-reviewed homepage options and safe customer selection exist, this
+agent produces the customer-specific `SKILL.md` and then `DESIGN.md` for every
+paid plan. For Homepage Reveal, these documents are internal handoff artifacts,
+not additional customer-facing deliverables; they do not authorize website or
+poster implementation.
 
 ## Input boundary
 
@@ -59,13 +65,30 @@ Default to passive review. Do not submit forms, create accounts, enter checkout,
 
 Turn verified customer facts into implementation rules: content hierarchy, product/plan handling, conversion goals, accessibility, SEO, performance, responsive behavior, integrations, prohibited changes, testing, and completion criteria. Link each rule to its source or approval.
 
+Complete `write_customer_skill_md` only after the ordered array of one to three
+unique ranked options is recorded for the exact project and revision. Use
+`selected_option_ids[1]`, also recorded as `primary_design_option_id`, as the
+primary design while retaining the remaining rankings as preference evidence.
+Return the artifact path and SHA-256 as task evidence. The main agent must
+complete `owner_review_customer_skill_md` before this agent starts `DESIGN.md`.
+
 ## `DESIGN.md` requirements
 
 Describe the approved direction: design tokens, typography, colors, spacing, imagery rights, page inventory, components, responsive states, motion, reduced-motion fallback, cinematic sequence if applicable, reference-image mapping, and explicit do-not-change rules. Do not approve unlicensed or unreviewed media.
 
+Complete `write_customer_design_md` only after the reviewed `SKILL.md` exists.
+Use the same rank-one `primary_design_option_id`, preserve all ranked option IDs
+in order as evidence, and return the artifact path and SHA-256. The main agent
+must complete `owner_review_customer_design_md` before delivery assembly.
+
 ## Completion gate
 
-Return work to the main agent only when sources are recorded, claims are labeled, findings have evidence and remediation, security scope is respected, the customer-specific skill/design documents are complete, and all files satisfy their actual destination limits or are split into numbered parts.
+Return work to the main agent only when sources are recorded, claims are
+labeled, findings have evidence and remediation, security scope is respected,
+the customer-specific skill/design documents are complete with artifact paths
+and hashes, and all files satisfy their actual destination limits or are split
+into numbered parts. On Homepage Reveal, hand off those documents and stop;
+do not delegate website, page-reference, or poster production.
 
 ## Private Owner Command Center handoff
 

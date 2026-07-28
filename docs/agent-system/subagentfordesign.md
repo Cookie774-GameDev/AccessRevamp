@@ -18,6 +18,18 @@ Create five homepage concepts:
 
 Every concept must use verified customer products, services, plans, phrases, promises, and brand evidence. Concepts are review images, not production websites.
 
+Submit all five concepts for owner review before customer visibility. After
+owner review, return control to `customer_homepage_selection`; the customer may
+rank one to three unique, customer-visible normal or cinematic options from
+that exact project and revision. Preserve the submitted array order and treat
+`selected_option_ids[1]` as the primary design. The customer agent then
+produces the customer-specific `SKILL.md` and `DESIGN.md` from that primary in
+order, with the remaining rankings retained as preference evidence and with
+separate owner review for each document. Those documents are internal handoff
+evidence; the customer-facing Homepage Reveal output remains the sourced audit
+and five concepts. Stop at that delivery/handoff. Do not build a website,
+generate page-reference images, or create posters for the $50 plan.
+
 Use the Axia reference only as a lesson in visual hierarchy, pacing, a focused
 hero promise, an evidence-based process explanation, and decisive calls to
 action. Never copy reference copy, branding, assets, or composition. For all

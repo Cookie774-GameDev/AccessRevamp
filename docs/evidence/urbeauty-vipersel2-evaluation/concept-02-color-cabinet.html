@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UrBeauty — Color Cabinet Evaluation Concept</title>
+  <style>
+    :root{--blue:#253f8f;--ice:#dceeff;--coral:#ff785f;--butter:#ffe88a;--ink:#11182d;--white:#fff}
+    *{box-sizing:border-box}body{margin:0;background:var(--ice);color:var(--ink);font:16px/1.45 Arial,sans-serif}img{display:block;width:100%}a{color:inherit}.eval{padding:8px 20px;background:var(--ink);color:#fff;text-align:center;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+    .ticker{overflow:hidden;padding:10px;background:var(--butter);border-bottom:2px solid var(--ink);font:700 12px Arial,sans-serif;letter-spacing:.08em;text-align:center}
+    header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 28px;border-bottom:2px solid var(--ink)}header a{text-decoration:none;font-size:13px;font-weight:700;text-transform:uppercase}.logo{display:flex;align-items:center;gap:10px;font:700 22px Trebuchet MS,sans-serif;text-transform:none}.logo img{width:48px;height:48px;border:2px solid var(--ink);border-radius:50%;object-fit:cover}.cart{text-align:right}
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;min-height:650px;border-bottom:2px solid var(--ink)}.hero-copy{display:flex;flex-direction:column;justify-content:space-between;padding:clamp(40px,6vw,88px)}.kicker{font:700 12px Arial Narrow,Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase}.hero h1{max-width:820px;margin:24px 0;font:700 clamp(64px,8vw,124px)/.82 Trebuchet MS,sans-serif;letter-spacing:-.075em}.hero p{max-width:550px;margin:0;font-size:19px}.hero-link{display:inline-flex;width:max-content;margin-top:30px;padding:15px 20px;background:var(--ink);color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;box-shadow:7px 7px 0 var(--coral)}
+    .hero-cabinet{display:grid;grid-template-columns:1fr 1fr;border-left:2px solid var(--ink)}.hero-cabinet div{position:relative;overflow:hidden;border-bottom:2px solid var(--ink)}.hero-cabinet div:nth-child(odd){border-right:2px solid var(--ink)}.hero-cabinet .big{grid-column:1/-1}.hero-cabinet img{height:100%;object-fit:cover}.cab-label{position:absolute;left:12px;bottom:12px;padding:7px 9px;background:var(--white);border:2px solid var(--ink);font:700 10px Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+    .collection{padding:70px 28px 90px;background:#fff}.section-title{display:flex;justify-content:space-between;align-items:end;margin:0 0 24px}.section-title h2{margin:0;font:700 clamp(44px,6vw,84px)/.9 Trebuchet MS,sans-serif;letter-spacing:-.055em}.section-title span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+    .grid{display:grid;grid-template-columns:1.3fr .7fr 1fr;grid-template-rows:repeat(2,390px);border:2px solid var(--ink)}.product{position:relative;overflow:hidden;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink)}.product:nth-child(3n){border-right:0}.product:nth-child(n+4){border-bottom:0}.product:nth-child(1){grid-row:span 2}.product img{height:calc(100% - 96px);object-fit:cover;background:#f2f2f2}.product-info{position:absolute;left:0;right:0;bottom:0;min-height:96px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:15px;background:var(--white);border-top:2px solid var(--ink)}.product:nth-child(2) .product-info{background:var(--coral)}.product:nth-child(4) .product-info{background:var(--butter)}.product:nth-child(5) .product-info{background:var(--ice)}.product h3{margin:0;font:700 15px/1.2 Trebuchet MS,sans-serif}.price{font-weight:700}
+    .offer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--blue);color:#fff;border-top:2px solid var(--ink)}.offer div{min-width:0;padding:70px clamp(28px,7vw,100px)}.offer div+div{display:flex;align-items:center;justify-content:center;background:var(--coral);color:var(--ink);border-left:2px solid var(--ink)}.offer h2{margin:0;font:700 clamp(48px,7vw,92px)/.9 Trebuchet MS,sans-serif;letter-spacing:-.06em;overflow-wrap:anywhere}.offer p{margin:20px 0 0;font-size:19px}.offer a{padding:18px 24px;background:var(--butter);border:2px solid var(--ink);text-decoration:none;font-weight:700;text-transform:uppercase;box-shadow:9px 9px 0 var(--ink)}
+    footer{display:flex;justify-content:space-between;padding:25px 28px;background:var(--butter);border-top:2px solid var(--ink);font-size:12px;font-weight:700}
+    :focus-visible{outline:4px solid var(--coral);outline-offset:4px}
+    @media(max-width:760px){header{grid-template-columns:1fr auto;padding:12px 16px}header>a:first-child{display:none}.logo{justify-self:start}.hero{grid-template-columns:1fr}.hero-copy{min-height:560px;padding:60px 22px}.hero h1{font-size:68px}.hero-cabinet{min-height:500px;border-left:0;border-top:2px solid var(--ink)}.collection{padding:60px 14px}.section-title{display:block}.section-title span{display:block;margin-top:14px}.grid{display:block}.product{height:430px;border-right:0;border-bottom:2px solid var(--ink)!important}.product:last-child{border-bottom:0!important}.product img{height:334px}.offer{grid-template-columns:1fr}.offer div{padding:55px 24px}.offer div+div{min-height:180px;border-left:0;border-top:2px solid var(--ink)}footer{display:block}footer span{display:block;margin:4px 0}}
+  </style>
+</head>
+<body>
+  <div class="eval">Homepage Reveal evaluation · Concept 02 · Color Cabinet</div>
+  <div class="ticker">50% OFF - Self-Cleaning Hair Brush + Microcurrent Device</div>
+  <header><a href="#collection">Catalog</a><a class="logo" href="https://urbeauty.store/"><img src="assets/logo.jpg" alt="UrBeauty logo">Ur Beauty</a><a class="cart" href="#collection">Shop Collection</a></header>
+  <main>
+    <section class="hero">
+      <div class="hero-copy"><div><span class="kicker">Curated for you</span><h1>Glow<br>Naturally,<br>Feel<br>Beautiful</h1></div><div><p>Curated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.</p><a class="hero-link" href="#collection">Shop Collection</a></div></div>
+      <div class="hero-cabinet">
+        <div class="big"><img src="assets/brush-cleaner.jpg" alt="Electric Makeup Brush Cleaner Machine"><span class="cab-label">Tools</span></div>
+        <div><img src="assets/pimple-patches.jpg" alt="Invisible Hydrocolloid Pimple Patches (36 Pcs)"><span class="cab-label">Skincare</span></div>
+        <div><img src="assets/scalp-brush.jpg" alt="Octopus Head Massager & Scalp Brush"><span class="cab-label">Hair Care</span></div>
+      </div>
+    </section>
+    <section class="collection" id="collection">
+      <div class="section-title"><h2>Our Collection</h2><span>Shipping At Checkout · Clear Return Policy</span></div>
+      <div class="grid">
+        <article class="product"><img src="assets/neck-lifting-device.jpg" alt="Microcurrent Facial and Neck Lifting Device for Skin Care Massage"><div class="product-info"><h3>Microcurrent Facial and Neck Lifting Device for Skin Care Massage</h3><span class="price">$19.99</span></div></article>
+        <article class="product"><img src="assets/ice-roller-bundle.jpg" alt="Silicone Ice Face Roller 3pc Set (Bundle)"><div class="product-info"><h3>Silicone Ice Face Roller 3pc Set (Bundle)</h3><span class="price">$12.99</span></div></article>
+        <article class="product"><img src="assets/face-lifting-device.jpg" alt="7-in-1 Face Lifting & EMS Microcurrent Device"><div class="product-info"><h3>7-in-1 Face Lifting &amp; EMS Microcurrent Device</h3><span class="price">$34.99</span></div></article>
+        <article class="product"><img src="assets/self-cleaning-brush.jpg" alt="Self-Cleaning Retractable Massage Hair Brush"><div class="product-info"><h3>Self-Cleaning Retractable Massage Hair Brush</h3><span class="price">$10.99</span></div></article>
+        <article class="product"><img src="assets/ice-roller.jpg" alt="Silicone Ice Face Roller Mold"><div class="product-info"><h3>Silicone Ice Face Roller Mold</h3><span class="price">$7.99</span></div></article>
+      </div>
+    </section>
+    <section class="offer"><div><span class="kicker">Limited Time Offer</span><h2>Use Code<br>URBEAUTYPROMO15</h2><p>for 15% off your entire order</p></div><div><a href="#collection">Shop Now</a></div></section>
+  </main>
+  <footer><span>© 2026 UrBeauty. All rights reserved.</span><span>support@urbeauty.store</span></footer>
+</body>
+</html>

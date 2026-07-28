@@ -1,0 +1,820 @@
+{
+  "generated_utc": "2026-07-28T02:03:55.387Z",
+  "protocol": "local HTTP",
+  "results": [
+    {
+      "concept": "concept-01-ritual-shelf.html",
+      "url": "http://127.0.0.1:63170/concept-01-ritual-shelf.html",
+      "viewport": {
+        "name": "desktop-1440x1200",
+        "width": 1440,
+        "height": 1200
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-01-ritual-shelf-desktop-1440x1200.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Ritual Shelf Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 01 · RITUAL SHELF\nEnjoy 15% off your first order with code: URBEAUTYPROMO15\nUr Beauty\nCATALOG\nOUR PROMISE\nCONTACT\n\nYOUR BEAUTY RITUAL STARTS HERE\n\nGlow Naturally,\nFeel Beautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nOUR PROMISE\nCurated for you\nSHIPPING AT CHECKOUT\nCLEAR RETURN POLICY\nSUPPORT FIRST\n\nCURATED FOR YOU\n\nOur Collection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nSKINCARE\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\nTOOLS\nElectric Makeup Brush Cleaner Machine\n$17.99\nSKINCARE\nInvisible Hydrocolloid Pimple Patches (36 Pcs)\n$11.99\nHAIR CARE\nSelf-Cleaning Retractable Massage Hair Brush\n$10.99\nTOOLS\nSilicone Ice Face Roller Mold\n$7.99\n\nOUR PROMISE\n\nBeauty Essentials, Chosen With Care\nCurated Selection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nClear Store Policies\n\nShipping, returns, privacy, and terms are linked in the footer so shoppers can review the details before ordering.\n\nSupport First\n\nQuestions about an order or product? Contact us before checkout or after delivery and we will help you find the right next step.\n\n© 2026 UrBeauty. All rights reserved.\nsupport@urbeauty.store",
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-01-ritual-shelf.html",
+      "url": "http://127.0.0.1:63170/concept-01-ritual-shelf.html",
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-01-ritual-shelf-mobile-390x844.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Ritual Shelf Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 01 · RITUAL SHELF\nEnjoy 15% off your first order with code: URBEAUTYPROMO15\nUr Beauty\nCATALOG\n\nYOUR BEAUTY RITUAL STARTS HERE\n\nGlow Naturally,\nFeel Beautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nOUR PROMISE\nSHIPPING AT CHECKOUT\nCLEAR RETURN POLICY\nSUPPORT FIRST\n\nCURATED FOR YOU\n\nOur Collection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nSKINCARE\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\nTOOLS\nElectric Makeup Brush Cleaner Machine\n$17.99\nSKINCARE\nInvisible Hydrocolloid Pimple Patches (36 Pcs)\n$11.99\nHAIR CARE\nSelf-Cleaning Retractable Massage Hair Brush\n$10.99\nTOOLS\nSilicone Ice Face Roller Mold\n$7.99\n\nOUR PROMISE\n\nBeauty Essentials, Chosen With Care\nCurated Selection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nClear Store Policies\n\nShipping, returns, privacy, and terms are linked in the footer so shoppers can review the details before ordering.\n\nSupport First\n\nQuestions about an order or product? Contact us before checkout or after delivery and we will help you find the right next step.\n\n© 2026 UrBeauty. All rights reserved.support@urbeauty.store",
+        "documentWidth": 390,
+        "viewportWidth": 390,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-02-color-cabinet.html",
+      "url": "http://127.0.0.1:63170/concept-02-color-cabinet.html",
+      "viewport": {
+        "name": "desktop-1440x1200",
+        "width": 1440,
+        "height": 1200
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-02-color-cabinet-desktop-1440x1200.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        },
+        {
+          "src": "assets/neck-lifting-device.jpg",
+          "alt": "Microcurrent Facial and Neck Lifting Device for Skin Care Massage",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Color Cabinet Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 02 · COLOR CABINET\n50% OFF - Self-Cleaning Hair Brush + Microcurrent Device\nCATALOG\nUr Beauty\nSHOP COLLECTION\nCURATED FOR YOU\nGlow\nNaturally,\nFeel\nBeautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nTOOLS\nSKINCARE\nHAIR CARE\nOur Collection\nSHIPPING AT CHECKOUT · CLEAR RETURN POLICY\nMicrocurrent Facial and Neck Lifting Device for Skin Care Massage\n$19.99\nSilicone Ice Face Roller 3pc Set (Bundle)\n$12.99\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\nSelf-Cleaning Retractable Massage Hair Brush\n$10.99\nSilicone Ice Face Roller Mold\n$7.99\nLIMITED TIME OFFER\nUse Code\nURBEAUTYPROMO15\n\nfor 15% off your entire order\n\nSHOP NOW\n© 2026 UrBeauty. All rights reserved.\nsupport@urbeauty.store",
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-02-color-cabinet.html",
+      "url": "http://127.0.0.1:63170/concept-02-color-cabinet.html",
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-02-color-cabinet-mobile-390x844.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        },
+        {
+          "src": "assets/neck-lifting-device.jpg",
+          "alt": "Microcurrent Facial and Neck Lifting Device for Skin Care Massage",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Color Cabinet Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 02 · COLOR CABINET\n50% OFF - Self-Cleaning Hair Brush + Microcurrent Device\nUr Beauty\nSHOP COLLECTION\nCURATED FOR YOU\nGlow\nNaturally,\nFeel\nBeautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nTOOLS\nSKINCARE\nHAIR CARE\nOur Collection\nSHIPPING AT CHECKOUT · CLEAR RETURN POLICY\nMicrocurrent Facial and Neck Lifting Device for Skin Care Massage\n$19.99\nSilicone Ice Face Roller 3pc Set (Bundle)\n$12.99\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\nSelf-Cleaning Retractable Massage Hair Brush\n$10.99\nSilicone Ice Face Roller Mold\n$7.99\nLIMITED TIME OFFER\nUse Code\nURBEAUTYPROMO15\n\nfor 15% off your entire order\n\nSHOP NOW\n© 2026 UrBeauty. All rights reserved.\nsupport@urbeauty.store",
+        "documentWidth": 390,
+        "viewportWidth": 390,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-03-quiet-utility.html",
+      "url": "http://127.0.0.1:63170/concept-03-quiet-utility.html",
+      "viewport": {
+        "name": "desktop-1440x1200",
+        "width": 1440,
+        "height": 1200
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-03-quiet-utility-desktop-1440x1200.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/neck-lifting-device.jpg",
+          "alt": "Microcurrent Facial and Neck Lifting Device for Skin Care Massage",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Quiet Utility Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 03 · QUIET UTILITY\nCATALOG\nOUR PROMISE\nUr Beauty\nsupport@urbeauty.store\n\nOUR COLLECTION\n\nSkincare\nTools\nHair Care\nClear Store Policies\n\nYOUR BEAUTY RITUAL STARTS HERE\n\nBeauty Essentials,\nChosen With Care\n\nCurated beauty essentials for your daily glow ritual. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nMicrocurrent Facial and Neck Lifting Device for Skin Care Massage · $19.99\nCurated Selection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nClear Store Policies\n\nShipping, returns, privacy, and terms are linked in the footer so shoppers can review the details before ordering.\n\nSupport First\n\nQuestions about an order or product? Contact us before checkout or after delivery and we will help you find the right next step.\n\nCURATED FOR YOU\nOur Collection\nSHIPPING AT CHECKOUT\n01\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\n02\nElectric Makeup Brush Cleaner Machine\n$17.99\n03\nInvisible Hydrocolloid Pimple Patches (36 Pcs)\n$11.99\n04\nOctopus Head Massager & Scalp Brush\n$7.99\n05\nSilicone Ice Face Roller 3pc Set (Bundle)\n$12.99\nJoin the UrBeauty Family\n\nBe the first to know about new arrivals, exclusive deals, and beauty tips. No spam, ever.\n\nSTAY CONNECTED\n© 2026 UrBeauty. All rights reserved.\nShipping At Checkout · Clear Return Policy",
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-03-quiet-utility.html",
+      "url": "http://127.0.0.1:63170/concept-03-quiet-utility.html",
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-03-quiet-utility-mobile-390x844.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/neck-lifting-device.jpg",
+          "alt": "Microcurrent Facial and Neck Lifting Device for Skin Care Massage",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Quiet Utility Evaluation Concept",
+        "h1Count": 1,
+        "text": "HOMEPAGE REVEAL EVALUATION · CONCEPT 03 · QUIET UTILITY\nUr Beauty\nsupport@urbeauty.store\n\nYOUR BEAUTY RITUAL STARTS HERE\n\nBeauty Essentials,\nChosen With Care\n\nCurated beauty essentials for your daily glow ritual. Simple. Effective. Beautiful.\n\nSHOP COLLECTION\nMicrocurrent Facial and Neck Lifting Device for Skin Care Massage · $19.99\nCurated Selection\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nClear Store Policies\n\nShipping, returns, privacy, and terms are linked in the footer so shoppers can review the details before ordering.\n\nSupport First\n\nQuestions about an order or product? Contact us before checkout or after delivery and we will help you find the right next step.\n\nCURATED FOR YOU\nOur Collection\nSHIPPING AT CHECKOUT\n01\n7-in-1 Face Lifting & EMS Microcurrent Device\n$34.99\n02\nElectric Makeup Brush Cleaner Machine\n$17.99\n03\nInvisible Hydrocolloid Pimple Patches (36 Pcs)\n$11.99\n04\nOctopus Head Massager & Scalp Brush\n$7.99\n05\nSilicone Ice Face Roller 3pc Set (Bundle)\n$12.99\nJoin the UrBeauty Family\n\nBe the first to know about new arrivals, exclusive deals, and beauty tips. No spam, ever.\n\nSTAY CONNECTED\n© 2026 UrBeauty. All rights reserved.Shipping At Checkout · Clear Return Policy",
+        "documentWidth": 390,
+        "viewportWidth": 390,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-04-orbit.html",
+      "url": "http://127.0.0.1:63170/concept-04-orbit.html",
+      "viewport": {
+        "name": "desktop-1440x1200",
+        "width": 1440,
+        "height": 1200
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-04-orbit-desktop-1440x1200.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Orbit Cinematic Evaluation Concept",
+        "h1Count": 1,
+        "text": "CINEMATIC SCROLL EVALUATION · CONCEPT 04 · ORBIT\nUr Beauty\nOUR COLLECTION\nOUR PROMISE\nYOUR BEAUTY RITUAL STARTS HERE\nGlow Naturally,\nFeel Beautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nCURATED FOR YOU\nSKINCARE\n7-in-1 Face Lifting & EMS Microcurrent Device\n\nBeauty Essentials, Chosen With Care\n\n$34.99\nTOOLS\nElectric Makeup Brush Cleaner Machine\n\nSimple. Effective. Beautiful.\n\n$17.99\nHAIR CARE\nSelf-Cleaning Retractable Massage Hair Brush\n\nCurated beauty essentials for your daily glow ritual.\n\n$10.99\nOUR PROMISE\nBeauty Essentials, Chosen With Care\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nSHOP COLLECTION\n© 2026 UrBeauty. All rights reserved.\nShipping At Checkout · Clear Return Policy",
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-04-orbit.html",
+      "url": "http://127.0.0.1:63170/concept-04-orbit.html",
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-04-orbit-mobile-390x844.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/ice-roller.jpg",
+          "alt": "Silicone Ice Face Roller Mold",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/scalp-brush.jpg",
+          "alt": "Octopus Head Massager & Scalp Brush",
+          "complete": true,
+          "naturalWidth": 800,
+          "naturalHeight": 800
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Orbit Cinematic Evaluation Concept",
+        "h1Count": 1,
+        "text": "CINEMATIC SCROLL EVALUATION · CONCEPT 04 · ORBIT\nUr Beauty\nOUR COLLECTION\nYOUR BEAUTY RITUAL STARTS HERE\nGlow Naturally,\nFeel Beautiful\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nCURATED FOR YOU\nSKINCARE\n7-in-1 Face Lifting & EMS Microcurrent Device\n\nBeauty Essentials, Chosen With Care\n\n$34.99\nTOOLS\nElectric Makeup Brush Cleaner Machine\n\nSimple. Effective. Beautiful.\n\n$17.99\nHAIR CARE\nSelf-Cleaning Retractable Massage Hair Brush\n\nCurated beauty essentials for your daily glow ritual.\n\n$10.99\nOUR PROMISE\nBeauty Essentials, Chosen With Care\n\nWe focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.\n\nSHOP COLLECTION\n© 2026 UrBeauty. All rights reserved.\nShipping At Checkout · Clear Return Policy",
+        "documentWidth": 390,
+        "viewportWidth": 390,
+        "horizontalOverflow": false,
+        "overflowingElements": [],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-05-ribbon.html",
+      "url": "http://127.0.0.1:63170/concept-05-ribbon.html",
+      "viewport": {
+        "name": "desktop-1440x1200",
+        "width": 1440,
+        "height": 1200
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-05-ribbon-desktop-1440x1200.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Ribbon Cinematic Evaluation Concept",
+        "h1Count": 1,
+        "text": "CINEMATIC SCROLL EVALUATION · CONCEPT 05 · RIBBON\nUr Beauty\nOUR COLLECTION\nYOUR BEAUTY RITUAL STARTS HERE\nGLOW\nNATURALLY,\nFEEL\nBEAUTIFUL\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nHAIR CARE · $10.99\nCURATED FOR YOU · OUR COLLECTION · SIMPLE. EFFECTIVE. BEAUTIFUL. · CURATED FOR YOU · OUR COLLECTION · SIMPLE. EFFECTIVE. BEAUTIFUL. ·\nSKINCARE\n7-IN-1 FACE LIFTING & EMS MICROCURRENT DEVICE\n\nBeauty Essentials, Chosen With Care\n\n$34.99\nTOOLS\nELECTRIC MAKEUP BRUSH CLEANER MACHINE\n\nCurated beauty essentials for your daily glow ritual.\n\n$17.99\nSKINCARE\nINVISIBLE HYDROCOLLOID PIMPLE PATCHES (36 PCS)\n\nSimple. Effective. Beautiful.\n\n$11.99\nLIMITED TIME OFFER\nUSE CODE\nURBEAUTYPROMO15\n\nfor 15% off your entire order\n\nSHOP NOW\n© 2026 UrBeauty. All rights reserved.\nsupport@urbeauty.store",
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowingElements": [
+          {
+            "tag": "span",
+            "className": "",
+            "left": 0,
+            "right": 3312,
+            "width": 3312
+          }
+        ],
+        "rasterizedTextCandidates": 0
+      }
+    },
+    {
+      "concept": "concept-05-ribbon.html",
+      "url": "http://127.0.0.1:63170/concept-05-ribbon.html",
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "screenshot": "screenshots/concept-05-ribbon-mobile-390x844.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badResponses": [],
+      "brokenImages": [],
+      "images": [
+        {
+          "src": "assets/logo.jpg",
+          "alt": "UrBeauty logo",
+          "complete": true,
+          "naturalWidth": 500,
+          "naturalHeight": 500
+        },
+        {
+          "src": "assets/self-cleaning-brush.jpg",
+          "alt": "Self-Cleaning Retractable Massage Hair Brush",
+          "complete": true,
+          "naturalWidth": 1340,
+          "naturalHeight": 1785
+        },
+        {
+          "src": "assets/face-lifting-device.jpg",
+          "alt": "7-in-1 Face Lifting & EMS Microcurrent Device",
+          "complete": true,
+          "naturalWidth": 1000,
+          "naturalHeight": 1000
+        },
+        {
+          "src": "assets/brush-cleaner.jpg",
+          "alt": "Electric Makeup Brush Cleaner Machine",
+          "complete": true,
+          "naturalWidth": 2000,
+          "naturalHeight": 2000
+        },
+        {
+          "src": "assets/pimple-patches.jpg",
+          "alt": "Invisible Hydrocolloid Pimple Patches (36 Pcs)",
+          "complete": true,
+          "naturalWidth": 1728,
+          "naturalHeight": 1728
+        },
+        {
+          "src": "assets/ice-roller-bundle.jpg",
+          "alt": "Silicone Ice Face Roller 3pc Set (Bundle)",
+          "complete": true,
+          "naturalWidth": 900,
+          "naturalHeight": 900
+        }
+      ],
+      "metrics": {
+        "title": "UrBeauty — Ribbon Cinematic Evaluation Concept",
+        "h1Count": 1,
+        "text": "CINEMATIC SCROLL EVALUATION · CONCEPT 05 · RIBBON\nUr Beauty\nOUR COLLECTION\nYOUR BEAUTY RITUAL STARTS HERE\nGLOW\nNATURALLY,\nFEEL\nBEAUTIFUL\n\nCurated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.\n\nHAIR CARE · $10.99\nCURATED FOR YOU · OUR COLLECTION · SIMPLE. EFFECTIVE. BEAUTIFUL. · CURATED FOR YOU · OUR COLLECTION · SIMPLE. EFFECTIVE. BEAUTIFUL. ·\nSKINCARE\n7-IN-1 FACE LIFTING & EMS MICROCURRENT DEVICE\n\nBeauty Essentials, Chosen With Care\n\n$34.99\nTOOLS\nELECTRIC MAKEUP BRUSH CLEANER MACHINE\n\nCurated beauty essentials for your daily glow ritual.\n\n$17.99\nSKINCARE\nINVISIBLE HYDROCOLLOID PIMPLE PATCHES (36 PCS)\n\nSimple. Effective. Beautiful.\n\n$11.99\nLIMITED TIME OFFER\nUSE CODE\nURBEAUTYPROMO15\n\nfor 15% off your entire order\n\nSHOP NOW\n© 2026 UrBeauty. All rights reserved.\nsupport@urbeauty.store",
+        "documentWidth": 390,
+        "viewportWidth": 390,
+        "horizontalOverflow": false,
+        "overflowingElements": [
+          {
+            "tag": "span",
+            "className": "",
+            "left": 0,
+            "right": 1955,
+            "width": 1955
+          }
+        ],
+        "rasterizedTextCandidates": 0
+      }
+    }
+  ]
+}

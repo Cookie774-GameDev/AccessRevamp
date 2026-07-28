@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UrBeauty — Ritual Shelf Evaluation Concept</title>
+  <style>
+    :root{--petal:#f8e8eb;--porcelain:#fffaf8;--plum:#3d2532;--berry:#9c526d;--moss:#5d6b57;--line:#dbc5cb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--porcelain);color:var(--plum);font:16px/1.55 Arial,sans-serif}
+    img{display:block;max-width:100%}a{color:inherit}.eval{position:relative;z-index:5;padding:8px 24px;background:var(--plum);color:#fff;text-align:center;font:700 11px/1.4 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+    .announcement{padding:9px 24px;background:var(--petal);text-align:center;font-size:12px;letter-spacing:.04em}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(24px,5vw,76px);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:Georgia,serif;font-size:22px}.brand img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+    nav{display:flex;gap:28px;font-size:13px;text-transform:uppercase;letter-spacing:.12em}nav a{text-decoration:none;border-bottom:1px solid transparent}nav a:hover,nav a:focus-visible{border-color:currentColor}
+    .hero{min-height:700px;display:grid;grid-template-columns:minmax(310px,.82fr) 1.18fr;align-items:stretch;padding-left:clamp(24px,8vw,120px);overflow:hidden}
+    .hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:80px 50px 80px 0}.eyebrow{margin:0 0 20px;color:var(--berry);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+    h1{max-width:650px;margin:0;font:400 clamp(58px,7vw,112px)/.88 Georgia,serif;letter-spacing:-.055em}.hero-copy p:not(.eyebrow){max-width:500px;margin:30px 0;color:#674e59;font-size:18px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}.button{display:inline-block;padding:14px 22px;border:1px solid var(--plum);text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.button.primary{background:var(--plum);color:#fff}
+    .hero-stage{position:relative;background:linear-gradient(145deg,var(--petal),#eedde3)}.hero-stage:before{content:"";position:absolute;inset:7% 12%;border:1px solid rgba(61,37,50,.25);border-radius:50%}
+    .hero-stage img{position:absolute;object-fit:cover;box-shadow:0 30px 70px rgba(61,37,50,.13)}.hero-main{width:50%;aspect-ratio:1;right:12%;top:13%;border-radius:50%}.hero-small{width:29%;aspect-ratio:1;left:4%;bottom:8%;border:12px solid var(--porcelain)}
+    .rail{position:absolute;left:7%;top:12%;bottom:12%;writing-mode:vertical-rl;transform:rotate(180deg);font:italic 18px Georgia,serif;letter-spacing:.18em;color:rgba(61,37,50,.52)}
+    .promise-strip{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--line);background:#fff}.promise-strip span{padding:18px;text-align:center;font:12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}.promise-strip span+span{border-left:1px solid var(--line)}
+    .collection{padding:100px clamp(24px,6vw,88px)}.section-head{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:40px}.section-head h2{margin:0;font:400 clamp(42px,5vw,74px)/1 Georgia,serif;letter-spacing:-.04em}.section-head p{max-width:420px;margin:0;color:#745c66}
+    .shelf{display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:18px}.card{display:flex;flex-direction:column;min-width:0}.card:first-child{grid-row:span 2}.picture{position:relative;overflow:hidden;background:var(--petal);aspect-ratio:1}.card:first-child .picture{aspect-ratio:.88}.picture img{width:100%;height:100%;object-fit:cover;transition:transform .5s}.card:hover img{transform:scale(1.025)}.tag{position:absolute;left:12px;top:12px;padding:7px 9px;background:rgba(255,250,248,.92);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+    .meta{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 2px 24px;border-bottom:1px solid var(--line)}.meta h3{margin:0;font:400 18px/1.25 Georgia,serif}.price{font-size:13px;font-weight:700}
+    .promise{display:grid;grid-template-columns:.7fr 1.3fr;gap:10vw;padding:100px clamp(24px,8vw,120px);background:var(--plum);color:#fff}.promise h2{margin:0;font:400 clamp(42px,5vw,78px)/.98 Georgia,serif}.promise-list{display:grid;gap:28px}.promise-list div{padding-top:18px;border-top:1px solid rgba(255,255,255,.3)}.promise-list h3{margin:0 0 8px;font:400 24px Georgia,serif}.promise-list p{margin:0;color:#eedee5}
+    footer{display:flex;justify-content:space-between;gap:24px;padding:30px clamp(24px,6vw,88px);font-size:12px}
+    :focus-visible{outline:3px solid var(--berry);outline-offset:4px}
+    @media(max-width:760px){.eval{padding-inline:12px}.announcement{font-size:10px}header{padding:12px 18px}nav a:not(:first-child){display:none}.hero{display:block;min-height:0;padding:0}.hero-copy{padding:64px 24px 42px}.hero-copy h1{font-size:58px}.hero-stage{height:430px}.hero-main{width:70%;right:8%;top:10%}.hero-small{width:39%;left:4%;bottom:5%;border-width:7px}.rail{display:none}.promise-strip{grid-template-columns:1fr}.promise-strip span+span{border-left:0;border-top:1px solid var(--line)}.collection{padding:70px 20px}.section-head{display:block}.section-head p{margin-top:16px}.shelf{grid-template-columns:1fr 1fr}.card:first-child{grid-column:1/-1;grid-row:auto}.card:first-child .picture{aspect-ratio:1}.meta{display:block}.price{display:block;margin-top:6px}.promise{grid-template-columns:1fr;padding:70px 24px}.promise-list{margin-top:30px}footer{display:block}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.picture img{transition:none}}
+  </style>
+</head>
+<body>
+  <div class="eval">Homepage Reveal evaluation · Concept 01 · Ritual Shelf</div>
+  <div class="announcement">Enjoy 15% off your first order with code: URBEAUTYPROMO15</div>
+  <header>
+    <a class="brand" href="https://urbeauty.store/"><img src="assets/logo.jpg" alt="UrBeauty logo"><span>Ur Beauty</span></a>
+    <nav aria-label="Primary"><a href="#collection">Catalog</a><a href="#promise">Our Promise</a><a href="mailto:support@urbeauty.store">Contact</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Your beauty ritual starts here</p>
+        <h1>Glow Naturally,<br>Feel Beautiful</h1>
+        <p>Curated beauty tools and skincare essentials to elevate your daily self-care. Simple. Effective. Beautiful.</p>
+        <div class="actions"><a class="button primary" href="#collection">Shop Collection</a><a class="button" href="#promise">Our Promise</a></div>
+      </div>
+      <div class="hero-stage" aria-label="UrBeauty product selection">
+        <span class="rail">Curated for you</span>
+        <img class="hero-main" src="assets/face-lifting-device.jpg" alt="7-in-1 Face Lifting & EMS Microcurrent Device">
+        <img class="hero-small" src="assets/ice-roller-bundle.jpg" alt="Silicone Ice Face Roller 3pc Set (Bundle)">
+      </div>
+    </section>
+    <div class="promise-strip"><span>Shipping At Checkout</span><span>Clear Return Policy</span><span>Support First</span></div>
+    <section class="collection" id="collection">
+      <div class="section-head"><div><p class="eyebrow">Curated for you</p><h2>Our Collection</h2></div><p>We focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.</p></div>
+      <div class="shelf">
+        <article class="card"><div class="picture"><span class="tag">Skincare</span><img src="assets/face-lifting-device.jpg" alt="7-in-1 Face Lifting & EMS Microcurrent Device"></div><div class="meta"><h3>7-in-1 Face Lifting &amp; EMS Microcurrent Device</h3><span class="price">$34.99</span></div></article>
+        <article class="card"><div class="picture"><span class="tag">Tools</span><img src="assets/brush-cleaner.jpg" alt="Electric Makeup Brush Cleaner Machine"></div><div class="meta"><h3>Electric Makeup Brush Cleaner Machine</h3><span class="price">$17.99</span></div></article>
+        <article class="card"><div class="picture"><span class="tag">Skincare</span><img src="assets/pimple-patches.jpg" alt="Invisible Hydrocolloid Pimple Patches (36 Pcs)"></div><div class="meta"><h3>Invisible Hydrocolloid Pimple Patches (36 Pcs)</h3><span class="price">$11.99</span></div></article>
+        <article class="card"><div class="picture"><span class="tag">Hair Care</span><img src="assets/self-cleaning-brush.jpg" alt="Self-Cleaning Retractable Massage Hair Brush"></div><div class="meta"><h3>Self-Cleaning Retractable Massage Hair Brush</h3><span class="price">$10.99</span></div></article>
+        <article class="card"><div class="picture"><span class="tag">Tools</span><img src="assets/ice-roller.jpg" alt="Silicone Ice Face Roller Mold"></div><div class="meta"><h3>Silicone Ice Face Roller Mold</h3><span class="price">$7.99</span></div></article>
+      </div>
+    </section>
+    <section class="promise" id="promise">
+      <div><p class="eyebrow">Our Promise</p><h2>Beauty Essentials, Chosen With Care</h2></div>
+      <div class="promise-list">
+        <div><h3>Curated Selection</h3><p>We focus on simple beauty tools and self-care essentials that fit naturally into everyday routines.</p></div>
+        <div><h3>Clear Store Policies</h3><p>Shipping, returns, privacy, and terms are linked in the footer so shoppers can review the details before ordering.</p></div>
+        <div><h3>Support First</h3><p>Questions about an order or product? Contact us before checkout or after delivery and we will help you find the right next step.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer><span>© 2026 UrBeauty. All rights reserved.</span><span>support@urbeauty.store</span></footer>
+</body>
+</html>
+
