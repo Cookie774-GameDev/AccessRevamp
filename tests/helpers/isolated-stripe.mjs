@@ -55,6 +55,7 @@ export class FakeStripe {
       const session = {
         id, url: `https://checkout.stripe.com/c/pay/${id}`, livemode: false, mode: 'payment', payment_status: 'unpaid',
         amount_total: price?.net_cents, currency: 'usd', client_reference_id: params.client_reference_id,
+        automatic_tax: { enabled: false }, total_details: { amount_tax: 0 },
         customer_email: params.customer_email, customer_details: { email: params.customer_email },
         customer: `cus_${id}`, payment_intent: null, metadata: structuredClone(params.metadata),
         line_items: { data: [{ quantity: 1, price: params.line_items[0].price }] }, created: Math.floor(Date.now() / 1000),

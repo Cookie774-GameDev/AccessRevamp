@@ -50,8 +50,13 @@ const noIndexPatterns = new Set([
 
 export function updateDocumentMetadata(pathname, pattern = pathname) {
   const [title, description] = routeMetadata[pattern] || ['Page not found', 'AccessRevamp'];
+  const canonicalPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
   document.title = `${title} | AccessRevamp`;
   document.querySelector('meta[name="description"]')?.setAttribute('content', description);
+  document.querySelector('link[rel="canonical"]')?.setAttribute(
+    'href',
+    `https://accessrevamp.com${canonicalPath}`,
+  );
   document.querySelector('meta[name="robots"]')?.setAttribute(
     'content',
     noIndexPatterns.has(pattern) ? 'noindex,nofollow,noarchive' : 'index,follow,max-image-preview:large',

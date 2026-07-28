@@ -88,12 +88,21 @@ async function normalizeCheckout(event, session, supabase, expectedMode) {
   const lineItems = session.line_items?.data || [];
   const lineItem = lineItems[0];
   const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
+  const taxCents = Number(session.total_details?.amount_tax ?? 0);
+  const amountTotalCents = Number(session.amount_total);
+  const taxCollectionMode = session.automatic_tax?.enabled
+    ? 'stripe_automatic_tax'
+    : 'not_required';
   if (session.livemode !== event.livemode
     || session.mode !== 'payment'
     || lineItems.length !== 1
     || lineItem?.quantity !== 1
     || identifier(lineItem.price) !== expectedPriceId
-    || Number(session.amount_total) !== metadata.netCents
+    || !Number.isSafeInteger(taxCents)
+    || taxCents < 0
+    || !Number.isSafeInteger(amountTotalCents)
+    || amountTotalCents !== metadata.netCents + taxCents
+    || (taxCollectionMode !== 'stripe_automatic_tax' && taxCents !== 0)
     || String(session.currency || '').toLowerCase() !== 'usd'
     || session.client_reference_id !== metadata.userId
     || (!isTerminal && !email)
@@ -117,6 +126,9 @@ async function normalizeCheckout(event, session, supabase, expectedMode) {
     gross_cents: metadata.grossCents,
     credit_cents: metadata.creditCents,
     net_cents: metadata.netCents,
+    tax_cents: taxCents,
+    amount_total_cents: amountTotalCents,
+    tax_collection_mode: taxCollectionMode,
     source_entitlement_id: metadata.sourceEntitlementId,
     session_created: session.created,
   };

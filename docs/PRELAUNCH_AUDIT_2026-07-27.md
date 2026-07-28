@@ -3,6 +3,31 @@
 This record distinguishes implemented controls from evidence still required.
 It is not a claim that every external operation is launched.
 
+## 2026-07-28 audit remediation
+
+- The Stripe webhook payload now matches the connected production
+  `fulfill_accessrevamp_checkout(jsonb)` tax-aware contract:
+  `tax_cents`, `amount_total_cents`, and `tax_collection_mode` are derived from
+  the re-retrieved signed Checkout Session and validated before fulfillment.
+- Homepage Reveal reconciliation is now a deferred constraint trigger, so a
+  pre-recorded customer ranking cannot recursively complete and then be
+  overwritten by the outer workflow advancement.
+- Homepage feedback is accepted while its task is still blocked before
+  activation, rejected feedback is excluded, and only terminal task states
+  reject later rankings.
+- Webhook liveness now compares `last_checkout_created_at` with
+  `last_successful_webhook_at` after stale-session reconciliation. It records a
+  focused incident without treating one abandoned Checkout Session as a global
+  transport outage.
+- Public sitemap URLs now use `https://accessrevamp.com`, public routes emit
+  canonical metadata, private routes remain noindex, and unknown Cloudflare
+  application routes return an actual HTTP 404.
+- The connected Supabase migration was applied and its deferred trigger was
+  verified. Supabase security advisors report only the externally controlled
+  leaked-password-protection warning.
+- Local verification passes: 394 tests, lint, production build, secret scan,
+  and production dependency audit.
+
 ## Verified and repaired
 
 - Five permanent mailbox owners exist: Avery, Jordan, Kasey, Riley, and Morgan.

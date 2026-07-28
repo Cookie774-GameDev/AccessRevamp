@@ -2,9 +2,9 @@
 
 **See the barrier. Preview the fix.**
 
-AccessRevamp is an evidence-led website improvement studio for independent businesses. This repository contains the public portfolio and one-time service website, customer and operator foundations, private previews, Supabase data model, Stripe test-mode payment flow, and three original working demo sites.
+AccessRevamp is an evidence-led website improvement studio for independent businesses. This repository contains the public portfolio and one-time service website, customer and owner-review foundations, private previews, Supabase data model, Stripe-hosted one-time payment flow, and original working demo sites.
 
-**Current status:** The complete redesign, exact catalog, entitlements, public routes, three working demos, reporting workflow, account/operator foundations, and local verification are implemented on a feature branch. Connected Supabase/Stripe/Netlify evidence remains `EXTERNALLY BLOCKED`; production data changes, live payments, outreach sending, and custom-domain activation remain `LAUNCH-ONLY`.
+**Current status (2026-07-28):** The production application is packaged as a Cloudflare Worker with server-authoritative API routes. The connected Supabase project has the current workflow and webhook-liveness hardening migration. The Stripe webhook now supplies the production tax-aware fulfillment contract. Local lint, tests, build, secret scanning, dependency audit, canonical metadata, and true server 404 checks pass. A successful controlled payment-to-webhook-to-project transaction is still required before claiming end-to-end payment fulfillment. Automatic refunds and outreach remain separately gated.
 
 ## Canonical one-time catalog
 
@@ -61,7 +61,7 @@ npm run build
 npm run preview -- --port 4173
 ```
 
-The preview intentionally has no deployment secrets. Contact submission, authentication, customer data, operator data, and server-created Checkout require the documented Netlify/Supabase/Stripe environment categories.
+The preview intentionally has no deployment secrets. Contact submission, authentication, customer data, owner-review data, and server-created Checkout require the documented Cloudflare/Supabase/Stripe environment categories.
 
 ## Repository map
 
@@ -69,7 +69,8 @@ The preview intentionally has no deployment secrets. Contact submission, authent
 - `src/components/` — reusable semantic UI.
 - `src/pages/` — public, customer, operator, policy, result, and preview routes.
 - `src/demos/` — route-isolated Greenline, Firejar, and Clearflow working demos.
-- `netlify/functions/` — server-authoritative validation and orchestration.
+- `netlify/functions/` — shared server-authoritative handlers retained behind Cloudflare Worker API adapters.
+- `worker/` and `app/` — Cloudflare Worker routing, server metadata, API adapters, and browser shell.
 - `supabase/migrations/` — forward migrations, RLS, grants, constraints, and RPCs.
 - `tests/` — unit, contract, integration, policy, browser, accessibility, and payment checks.
 - `scripts/` — safe local tooling for evidence, export, catalog sync, and verification.
@@ -81,8 +82,8 @@ Use `.env.example` as the name-only inventory. Values belong in local or deploym
 
 - Public site URL and monitored public contact address.
 - Supabase URL and publishable browser key.
-- Supabase server URL/service-role credential for Netlify Functions only.
-- Stripe test secret, webhook secret, expected mode, and server-only catalog mapping.
+- Supabase server URL/service-role credential for the Cloudflare Worker only.
+- Stripe restricted server secrets, webhook secret, expected mode, and server-only catalog mapping.
 - Operator authorization and private-preview configuration.
 - Owned staging URL and explicit active-test authorization.
 - Optional consent-aware analytics transport.
@@ -110,4 +111,4 @@ Six detailed plans under `docs/superpowers/plans/` execute the rebuild in depend
 
 The pre-rebuild browser baseline is retained under `docs/evidence/baseline/2026-07-18/`. Post-rebuild evidence uses a different dated directory and must cover routes, responsive screenshots, accessibility, Chromium/Firefox/WebKit, performance budgets, database/RLS, payment/refund matrices, secrets, headers, authorized security/load testing, recovery, deployment, and rollback.
 
-Source code is not proof that a remote integration is configured. Missing Netlify, Supabase, Stripe, analytics, security, load, or production evidence remains incomplete and must be reported as such.
+Source code is not proof that a remote integration is configured. Missing Cloudflare, Supabase, Stripe, analytics, security, load, or production evidence remains incomplete and must be reported as such.
