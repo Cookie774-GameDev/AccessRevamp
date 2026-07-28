@@ -6,6 +6,10 @@ const migrationUrl = new URL(
   '../supabase/migrations/20260728030000_fix_homepage_reveal_workflow.sql',
   import.meta.url,
 );
+const reconciliationMigrationUrl = new URL(
+  '../supabase/migrations/20260728040000_reconcile_homepage_reveal_selections.sql',
+  import.meta.url,
+);
 
 async function readHomepageManifest() {
   const sql = await readFile(migrationUrl, 'utf8');
@@ -106,4 +110,49 @@ test('Homepage Reveal backfill is paid-order-only and never creates workflows fo
   assert.match(sql, /join public\.orders paid_order[\s\S]*paid_order\.status = 'paid'/i);
   assert.doesNotMatch(sql, /insert into public\.project_workflows/i);
   assert.doesNotMatch(sql, /bootstrap_accessrevamp_project_workflow\s*\(/i);
+});
+
+test('existing paid Homepage Reveal feedback is reconciled when its selection task becomes ready', async () => {
+  const sql = await readFile(reconciliationMigrationUrl, 'utf8');
+
+  assert.match(
+    sql,
+    /create or replace function accessrevamp_private\.complete_accessrevamp_homepage_selection_from_feedback/i,
+  );
+  assert.match(sql, /feedback\.action = 'select_designs'/i);
+  assert.match(sql, /cardinality\(feedback\.selected_option_ids\) between 1 and 3/i);
+  assert.match(sql, /workflow\.plan_key = 'homepage_reveal'/i);
+  assert.match(sql, /paid_order\.status = 'paid'/i);
+  assert.match(sql, /selection_task\.status = 'waiting_customer'/i);
+  assert.match(
+    sql,
+    /create trigger reconcile_accessrevamp_homepage_selection_task_trigger[\s\S]*after update of status[\s\S]*on public\.project_workflow_tasks/i,
+  );
+  assert.match(sql, /new\.status = 'waiting_customer'/i);
+  assert.match(
+    sql,
+    /select distinct on \(workflow\.project_id\)[\s\S]*order by workflow\.project_id, feedback\.created_at desc/i,
+  );
+  assert.match(
+    sql,
+    /perform accessrevamp_private\.complete_accessrevamp_homepage_selection_from_feedback\(feedback_id\)/i,
+  );
+  assert.doesNotMatch(sql, /insert into public\.project_workflows/i);
+});
+
+test('a finalized Homepage Reveal selection rejects later rankings before changing design state', async () => {
+  const sql = await readFile(reconciliationMigrationUrl, 'utf8');
+
+  assert.match(
+    sql,
+    /create or replace function public\.guard_accessrevamp_feedback_against_finalized_selection/i,
+  );
+  assert.match(sql, /new\.action = 'select_designs'/i);
+  assert.match(sql, /selection_task\.task_key = 'customer_homepage_selection'/i);
+  assert.match(sql, /selection_task\.status <> 'waiting_customer'/i);
+  assert.match(sql, /raise exception 'Homepage selection is already finalized\.'/i);
+  assert.match(
+    sql,
+    /create trigger guard_accessrevamp_feedback_against_finalized_selection_trigger[\s\S]*before insert[\s\S]*on public\.customer_project_feedback/i,
+  );
 });
