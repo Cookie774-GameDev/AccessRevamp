@@ -37,7 +37,7 @@ export function setupProjectIntake() {
     event.preventDefault();
     if (!form.reportValidity()) { status.textContent = 'Complete the highlighted fields before sending.'; return; }
     const pages = new FormData(form).getAll('pages');
-    if (!pages.length || pages.length > 5) { status.textContent = 'Choose between one and five pages.'; return; }
+    if (!pages.length || pages.length > 7) { status.textContent = 'Choose between one and seven pages.'; return; }
     const supabase = getSupabase();
     if (!supabase) { status.textContent = 'Customer sign-in is not configured in this deployment. Your brief was not sent.'; return; }
     const sessionResult = await supabase.auth.getSession();

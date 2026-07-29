@@ -14,7 +14,8 @@ test('homepage includes the supplied example gallery and all paired media', asyn
   assert.match(home, /Normal Websites vs\. Cinematic Scroll Experiences/);
   assert.match(home, /showcasePairs\.map\(showcaseChapter\)/);
   assert.match(showcaseMarkup, /data-showcase-chapter/);
-  assert.match(home, /Human reviewed/);
+  assert.match(home, /data-customer-count="87"/);
+  assert.match(home, /Customers served/);
   assert.match(media, /local-brew-house\.webp/);
   assert.match(media, /blueline-plumbing\.webp/);
   assert.match(media, /spread-the-fire\.webp/);
@@ -63,7 +64,8 @@ test('showcase controller keeps both videos locked to the current scroll positio
   assert.match(performanceCss, /\.showcase-chapter[\s\S]*background:#121315/);
   assert.match(performanceCss, /\.showcase-chapter__sticky[\s\S]*contain:paint/);
   assert.match(performanceCss, /\.showcase-panel__media[\s\S]*contain:layout paint style/);
-  assert.match(homeInteractions, /HERO_SETTLE_EPSILON/);
+  assert.match(homeInteractions, /const localX = Math\.max\(0, Math\.min\(rect\.width, mouse\.x - rect\.left\)\)/);
+  assert.doesNotMatch(homeInteractions, /HERO_SETTLE_EPSILON|smooth\.x|smooth\.y/);
   assert.doesNotMatch(homeInteractions, /data-lens-grid|queueIntent|has-expanded-lens/);
 });
 

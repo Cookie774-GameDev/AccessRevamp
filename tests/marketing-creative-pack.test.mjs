@@ -14,7 +14,7 @@ test('Complete Website Revamp is the canonical $200 one-time implementation tier
   assert.match(catalog, /complete_revamp[\s\S]*name:\s*'Complete Website Revamp'/);
   assert.match(catalog, /complete_revamp[\s\S]*listPriceCents:\s*20000\b/);
   assert.match(catalog, /complete_revamp[\s\S]*cadence:\s*'one-time'/);
-  assert.match(catalog, /Up to five agreed standard pages/);
+  assert.match(catalog, /Up to seven agreed individual pages/);
   assert.match(cards, /planValueGroups\(plan\)/);
 });
 

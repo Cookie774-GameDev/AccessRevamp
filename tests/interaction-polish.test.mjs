@@ -29,14 +29,15 @@ test('selected complete and cinematic plans have distinct premium moving borders
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.order-plan input:checked \+ span[\s\S]*outline:/s);
 });
 
-test('hero reveal uses current geometry and does not capture touch scrolling or reveal navigation under the pointer', async () => {
+test('hero reveal caches geometry, responds directly, and preserves vertical touch scrolling', async () => {
   const source = await read('src/pages/home-interactions.js');
 
-  assert.doesNotMatch(source, /let heroRect/);
-  assert.match(source, /const rect = hero\.getBoundingClientRect\(\)/);
+  assert.match(source, /let heroRect = hero\?\.getBoundingClientRect\(\)/);
+  assert.match(source, /const rect = heroRect \|\| hero\.getBoundingClientRect\(\)/);
   assert.doesNotMatch(source, /event\.clientY\s*<=\s*104/);
-  assert.doesNotMatch(source, /event\.pointerType !== 'touch' && event\.pointerType !== 'pen'/);
-  assert.match(source, /if \(event\.pointerType !== 'pen'\) return/);
-  assert.match(source, /const handleHomeScroll = \(\) => \{[\s\S]*scheduleNavVisibility\(\);[\s\S]*startHeroLoop\(\);[\s\S]*\}/);
+  assert.match(source, /event\.pointerType !== 'touch' && event\.pointerType !== 'pen'/);
+  assert.doesNotMatch(source, /hero\.style\.touchAction\s*=\s*'none'/);
+  assert.match(source, /deltaX > 8 && deltaX > deltaY \* 1\.1/);
+  assert.doesNotMatch(source, /const handleHomeScroll = \(\) => \{[^}]*startHeroLoop\(\)/);
   assert.match(source, /listen\(globalThis, 'scroll', handleHomeScroll/);
 });

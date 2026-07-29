@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T02:11:07.981Z",
+  "generatedAt": "2026-07-29T18:09:00.000Z",
   "assets": [
     {
       "id": "signal-field-01",
@@ -575,6 +575,110 @@
           "height": 1000,
           "bytes": 95590,
           "sha256": "e4c3bdd80dbcb14fd2169f4a5d2e570aa0120031c335b2aa9b67342b6a7b43c2"
+        }
+      }
+    },
+    {
+      "id": "leaking-sink-before",
+      "purpose": "Raw leaking-sink transformation before state",
+      "sourceType": "original-generated",
+      "tool": "OpenAI built-in image generation, locally optimized with Sharp",
+      "createdAt": "2026-07-29",
+      "promptSummary": "Natural editorial photograph of a visibly leaking residential kitchen faucet and wet counter without people, branding, interface, text, or split-screen treatment.",
+      "manualEdits": "Centered resize to 2048 by 1152; encoded as local WebP and AVIF derivatives.",
+      "rights": "AccessRevamp original generated artwork",
+      "variants": {
+        "avif": {
+          "file": "leaking-sink-before.avif",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 83159,
+          "sha256": "14b9e230cbd3626183801c61b6880cd17a4485486071a1c521dacb64b62d5115"
+        },
+        "webp": {
+          "file": "leaking-sink-before.webp",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 137818,
+          "sha256": "78c2040c5b230963eb0000a531996214f0eab8725712e8dd574c5dde017d91ed"
+        }
+      }
+    },
+    {
+      "id": "spicy-peanut-butter-homepage",
+      "purpose": "Spicy peanut-butter storefront transformation homepage",
+      "sourceType": "original-generated",
+      "tool": "OpenAI built-in image generation, locally optimized with Sharp",
+      "createdAt": "2026-07-29",
+      "promptSummary": "Premium fictional Ember and Jar spicy peanut-butter homepage with editorial product photography, chili, peanuts, and restrained interface text.",
+      "manualEdits": "Centered resize to 2048 by 1152; encoded as local WebP and AVIF derivatives.",
+      "rights": "AccessRevamp original generated artwork",
+      "variants": {
+        "avif": {
+          "file": "spicy-peanut-butter-homepage.avif",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 174640,
+          "sha256": "66dd359fe751467e28bacc429f7d75d84a074d6a3bee51650d92c38116a36d1c"
+        },
+        "webp": {
+          "file": "spicy-peanut-butter-homepage.webp",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 269716,
+          "sha256": "baf574502dd6e465053ae834f29abf88d0718a0c68b8b0429ddf35bdbd69c311"
+        }
+      }
+    },
+    {
+      "id": "plumbing-homepage",
+      "purpose": "Residential plumbing storefront transformation homepage",
+      "sourceType": "original-generated",
+      "tool": "OpenAI built-in image generation, locally optimized with Sharp",
+      "createdAt": "2026-07-29",
+      "promptSummary": "Premium fictional Clearline Plumbing homepage with a repaired modern sink, professional tools, clear service modules, and a calm contact path.",
+      "manualEdits": "Centered resize to 2048 by 1152; encoded as local WebP and AVIF derivatives.",
+      "rights": "AccessRevamp original generated artwork",
+      "variants": {
+        "avif": {
+          "file": "plumbing-homepage.avif",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 89015,
+          "sha256": "0d8b7136e869eb272aa28bfd034b4143cb1eecdca95f8000dc8cff21a5df35e5"
+        },
+        "webp": {
+          "file": "plumbing-homepage.webp",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 147866,
+          "sha256": "abb5ee416ee7d0f05d35fffcb8a4e63bace83fe18bb3305e10f20351d71422c7"
+        }
+      }
+    },
+    {
+      "id": "lawn-care-homepage",
+      "purpose": "Lawn-care storefront transformation homepage",
+      "sourceType": "original-generated",
+      "tool": "OpenAI built-in image generation, locally optimized with Sharp",
+      "createdAt": "2026-07-29",
+      "promptSummary": "Premium fictional Verdant Edge lawn-care homepage with a mower, precise grass tools, service modules, and a simple quote path.",
+      "manualEdits": "Centered resize to 2048 by 1152; encoded as local WebP and AVIF derivatives.",
+      "rights": "AccessRevamp original generated artwork",
+      "variants": {
+        "avif": {
+          "file": "lawn-care-homepage.avif",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 236628,
+          "sha256": "59420a13a3c87614fac5d2b4431913d3780308bf3127e08f9ea0c91493fecb79"
+        },
+        "webp": {
+          "file": "lawn-care-homepage.webp",
+          "width": 2048,
+          "height": 1152,
+          "bytes": 398272,
+          "sha256": "259734cb9a6d1577384d2095d2aeafb0a66b2df310cdc6b01fda611f6bf53a7b"
         }
       }
     }

@@ -53,7 +53,7 @@ const pages = {
         bullets: [
           '<strong>Contact information:</strong> name, email address, company, website URL, and the details included in a contact or support request.',
           '<strong>Account information:</strong> account identifier, confirmed email status, session and security records, and profile information you provide.',
-          '<strong>Project information:</strong> briefs, selected pages, goals, written requests, reference URLs, uploaded images, design choices, approvals, revisions, progress updates, and delivery files.',
+          '<strong>Project information:</strong> briefs, up to seven selected page requests for applicable plans, goals, written requests, reference URLs, uploaded images, design choices, approvals, revisions, progress updates, and delivery files.',
           '<strong>Order information:</strong> plan, amount, currency, order status, processor references, refunds, and delivery entitlement. AccessRevamp does not receive or store your full card number or card security code.',
           '<strong>Technical and security information:</strong> IP-derived security signals, browser or device information supplied in requests, timestamps, authentication events, rate-limit records, and server logs used to protect the service.',
           '<strong>Communications:</strong> messages sent to support, responses, and records needed to resolve an account, project, privacy, accessibility, or billing request.',
@@ -170,6 +170,7 @@ const pages = {
         title: '2. Scope and change requests',
         paragraphs: [
           'The service scope is the plan purchased together with the accepted project brief, written clarifications, and documented approvals. Work outside that scope may require a separate quote, revised timeline, or new order.',
+          'Complete Website Revamp and Cinematic Scroll Site include up to seven agreed individual pages unless a project-specific written scope states otherwise.',
           'A request is not accepted merely because it was mentioned in a message. Material additions are accepted only after AccessRevamp confirms the scope, cost, and timing in writing.',
         ],
       },

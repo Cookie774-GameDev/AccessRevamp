@@ -94,7 +94,7 @@ const projectReferenceUrl = publicHttpUrl.refine(Boolean, 'Reference links must 
 export const projectIntakeTextSchema = z.object({
   projectId: z.string().uuid(),
   plan: z.enum(['complete_revamp', 'cinematic_scroll']),
-  pages: z.array(z.enum(['home', 'about', 'services', 'shop', 'portfolio', 'faq', 'contact', 'custom'])).min(1).max(5),
+  pages: z.array(z.enum(['home', 'about', 'services', 'shop', 'portfolio', 'faq', 'contact', 'custom'])).min(1).max(7),
   styleNotes: z.string().trim().min(20).max(2000),
   contentNotes: z.string().trim().max(4000).default(''),
   cinematicNotes: z.string().trim().max(2000).default(''),
