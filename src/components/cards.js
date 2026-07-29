@@ -2,6 +2,17 @@ import { sandboxBadge } from './shell.js';
 import { escapeHtml, icon } from './icons.js';
 import { planValueGroups } from './plan-value-groups.js';
 
+const compactArtifactMap = Object.freeze({
+  free_snapshot: [['01', 'Finding'], ['01', 'Next step']],
+  homepage_reveal: [['01', 'Report'], ['02', 'Screen exports'], ['01', 'Motion poster']],
+  complete_revamp: [['05', 'Pages'], ['15', 'Campaign assets'], ['05', 'Brand pieces']],
+  cinematic_scroll: [['05', 'Pages'], ['04', 'Story beats'], ['03', 'Fallback modes']],
+});
+
+const compactArtifacts = (plan) => `<div class="plan-artifacts" aria-label="${escapeHtml(plan.name)} deliverable overview">${compactArtifactMap[plan.key]
+  .map(([count, label]) => `<span><b>${escapeHtml(count)}</b>${escapeHtml(label)}</span>`)
+  .join('')}</div>`;
+
 export function planCard(plan, { featured = false, compact = false } = {}) {
   const action = plan.key === 'free_snapshot'
     ? `<a class="button button--full" href="/contact?interest=free_snapshot" data-nav>Request ${escapeHtml(plan.name)} ${icon('arrow')}</a>`
@@ -11,6 +22,7 @@ export function planCard(plan, { featured = false, compact = false } = {}) {
     <h3>${escapeHtml(plan.name)}</h3>
     <p>${escapeHtml(plan.summary)}</p>
     <div class="plan-price"><strong>${escapeHtml(plan.displayPrice)}</strong><span>one time</span></div>
+    ${compact ? compactArtifacts(plan) : ''}
     ${planValueGroups(plan)}
     ${action}
     ${plan.key === 'free_snapshot' ? '' : sandboxBadge()}

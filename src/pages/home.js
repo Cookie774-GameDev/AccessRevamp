@@ -19,9 +19,9 @@ const processSteps = [
 ];
 
 const customerJourney = [
-  ['01', 'Tell us what you need', 'Share your current website, business goal, preferred direction, and useful references.', 'A clear written brief tied to the right business goal.'],
-  ['02', 'Choose your plan and designs', 'Select the service, complete secure checkout, then rank your visual directions in the private workspace.', 'A protected project, concepts to compare, and one agreed direction.'],
-  ['03', 'Receive, review, and launch', 'Follow progress, review the finished work, and receive the website and launch materials together.', 'A tested desktop-and-mobile delivery ready to publish.'],
+  ['01', 'Tell us what you need', 'Share your current website, business goal, preferred direction, and useful references.', 'Brief', 'A clear written brief tied to the right business goal.'],
+  ['02', 'Choose the right depth and direction', 'Select the service, complete secure checkout, then rank your visual directions in the private workspace.', 'Direction', 'A protected project, concepts to compare, and one agreed direction.'],
+  ['03', 'Review, receive, and launch', 'Follow progress, review the finished work, and receive the website and launch materials together.', 'Delivery', 'A tested desktop-and-mobile delivery ready to publish.'],
 ];
 
 const outcomes = [
@@ -43,12 +43,18 @@ const transformationPanel = ([from, to, problem, change, before, after], index) 
 
 const faq = (question, answer) => `<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`;
 
-const exampleWebsite = (example) => `<figure class="example-website" data-reveal><img src="${example.src}" alt="${example.alt}" width="${example.width}" height="${example.height}" loading="lazy" decoding="async" draggable="false"></figure>`;
+const examplePixels = '<span class="example-website__pixels" aria-hidden="true">' + '<i></i>'.repeat(18) + '</span>';
+const exampleWebsite = (example, index) => `<figure class="example-website" data-example-card data-reveal>
+  <img src="${example.src}" alt="${example.alt}" width="${example.width}" height="${example.height}" loading="lazy" decoding="async" draggable="false">
+  ${examplePixels}
+  <figcaption><span>${String(index + 1).padStart(2, '0')}</span><strong>${example.alt.replace(/ homepage concept\.$/, '')}</strong></figcaption>
+  <button type="button" data-example-preview aria-expanded="false" aria-label="Expand ${example.alt.replace(/\.$/, '')}">Preview full website</button>
+</figure>`;
 
 export function homePage() {
   const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');
   const process = processSteps.map(([number, title, copy]) => `<li><span>${number}</span><strong>${title}</strong><p>${copy}</p></li>`).join('');
-  const journey = customerJourney.map(([number, title, copy, receive]) => `<article><span>${number}</span><div><h3>${title}</h3><p>${copy}</p><small><b>You receive</b>${receive}</small></div></article>`).join('');
+  const journey = customerJourney.map(([number, title, copy, artifact, receive]) => `<article><span>${number}</span><div><h3>${title}</h3><p>${copy}</p><small class="journey-artifact"><b>${artifact}</b>${receive}</small></div></article>`).join('');
 
   return shell(`
     <section class="reveal-hero" data-reveal-hero aria-label="AccessRevamp transforms an unfinished storefront into a refined growth system">
@@ -67,7 +73,11 @@ export function homePage() {
       <a class="reveal-hero__scroll" href="#promise">Scroll to enter <span aria-hidden="true">↓</span></a>
     </section>
 
-    <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid"><article><strong>Human reviewed</strong><p>before customer delivery</p><small>Concepts and findings pass an owner checkpoint.</small></article><article><strong>Scoped timeline</strong><p>shown before work begins</p><small>Timing starts after payment, required assets, and confirmed scope.</small></article><article><strong>Desktop → mobile</strong><p>one connected system</p><small>Carefully ported to touch.</small></article></div></section>
+    <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid">
+      <article class="proof-counter"><span class="proof-status" aria-hidden="true"></span><strong><span data-customer-count="87">87</span></strong><p>Customers served</p><small>Owner-verified historical total.</small></article>
+      <article class="proof-delivery"><strong>3 days</strong><p>first website delivery</p><div class="proof-timeline" aria-label="Brief, build, and first delivery timeline"><span class="proof-timeline__node"><i>01</i>Brief</span><span class="proof-timeline__node"><i>02</i>Build</span><span class="proof-timeline__node"><i>03</i>Deliver</span></div><small>After payment and receipt of required assets.</small></article>
+      <article class="proof-responsive"><strong>Desktop → mobile</strong><p>one responsive system</p><div class="responsive-system" aria-hidden="true"><span class="responsive-system__desktop"><i></i><i></i><i></i></span><span class="responsive-system__flow">→</span><span class="responsive-system__phone"><i></i><i></i><i></i></span></div><small>Desktop and mobile, carefully adapted for touch.</small></article>
+    </div></section>
 
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
       <div><span class="eyebrow">A guided customer journey</span><h2>Your website should feel like a clear conversation—not a maze.</h2></div>
@@ -75,7 +85,7 @@ export function homePage() {
       <div class="customer-journey" aria-label="How an AccessRevamp project works">${journey}</div>
     </div></section>
 
-    <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid">${exampleWebsites.map(exampleWebsite).join('')}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>
+    <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid" data-example-grid>${exampleWebsites.map(exampleWebsite).join('')}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>
 
     <section class="showcase-section" aria-labelledby="showcase-title"><div class="container-wide showcase-intro"><span class="eyebrow">Two production depths</span><h2 id="showcase-title">Normal Websites vs. Cinematic Scroll Experiences</h2><p>Scroll down to advance and up to reverse. Each pair shares one progress value.</p></div>${showcasePairs.map(showcaseChapter).join('')}</section>
 
