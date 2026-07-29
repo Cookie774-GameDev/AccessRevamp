@@ -35,6 +35,21 @@ test('example website preview opens from keyboard focus and Escape restores the 
   await expect(grid).not.toHaveClass(/is-previewing/);
 });
 
+test('active example website becomes a viewport-scale editorial preview', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  const firstCard = page.locator('[data-example-card]').first();
+  await firstCard.locator('[data-example-preview]').focus();
+  await expect(firstCard).toHaveClass(/is-example-active/);
+
+  const box = await firstCard.boundingBox();
+  expect(box?.width).toBeGreaterThan(1080);
+  expect(box?.height).toBeGreaterThan(540);
+  await expect(firstCard.locator('.example-website__pixels')).toHaveCSS('opacity', '0');
+  await expect(page.locator('[data-example-card]').nth(1)).toHaveCSS('opacity', '0.18');
+});
+
 test('touch users can open and dismiss an example website preview', async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
