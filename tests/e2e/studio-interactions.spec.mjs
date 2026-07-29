@@ -1,24 +1,54 @@
 import { test, expect } from 'playwright/test';
 
-test('homepage proof stays compact and counts only after its scroll trigger', async ({ page }) => {
+test('proof strip stages customer peak, delivery countdown, alphabet build, and compact devices', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 600 });
   await page.goto('/', { waitUntil: 'networkidle' });
 
+  const strip = page.locator('[data-proof-strip]');
   const count = page.locator('[data-customer-count="87"]');
+  const delivery = page.locator('[data-delivery-days="3"]');
+  const responsiveCopy = page.locator('[data-responsive-copy]');
   await expect(count).toHaveAttribute('data-count-state', 'idle');
   await expect(count).toHaveText('0');
-  await count.scrollIntoViewIfNeeded();
+  await expect(delivery).toHaveText('30 days');
+  await expect(responsiveCopy).toHaveText('');
+  await expect(strip).toHaveAttribute('data-proof-state', 'idle');
+  await strip.scrollIntoViewIfNeeded();
+  await expect(count).toHaveAttribute('data-count-phase', 'peak');
+  await expect(count).toHaveText('127');
   await expect(count).toHaveAttribute('data-count-state', 'complete');
   await expect(count).toHaveText('87');
+  await expect(delivery).toHaveText('3 days');
+  await expect(delivery).toHaveAttribute('data-delivery-state', 'complete');
+  await expect(responsiveCopy).toHaveText('Desktop + mobile');
+  await expect(responsiveCopy).toHaveAttribute('data-copy-state', 'complete');
+  await expect(strip).toHaveAttribute('data-proof-state', 'complete');
   await expect(count.locator('xpath=../..')).toContainText('Customers served');
   expect((await page.locator('.trust-strip').boundingBox())?.height).toBeLessThan(250);
   await expect(page.locator('.proof-timeline__node')).toHaveCount(3);
-  await expect(page.locator('.responsive-device--laptop')).toHaveCount(1);
+  const laptop = page.locator('.responsive-device--laptop .responsive-device__screen');
+  const laptopBox = await laptop.boundingBox();
+  const responsiveCardBox = await page.locator('.proof-responsive').boundingBox();
+  expect(laptopBox.width / laptopBox.height).toBeGreaterThan(1.55);
+  expect(laptopBox.width / laptopBox.height).toBeLessThan(1.7);
+  expect(laptopBox.width).toBeLessThan(responsiveCardBox.width * 0.45);
   await expect(page.locator('.responsive-device--phone')).toHaveCount(1);
   await expect(page.locator('.journey-artifact')).toHaveCount(3);
   await expect(page.locator('[data-example-preview]')).toHaveCount(4);
   await expect(page.locator('.services-renaissance .plan-artifacts')).toHaveCount(4);
   await expect(page.locator('.services-renaissance [data-checkout]')).toHaveCount(3);
+});
+
+test('proof strip resolves immediately and stays contained for reduced-motion mobile users', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  await expect(page.locator('[data-customer-count="87"]')).toHaveText('87');
+  await expect(page.locator('[data-delivery-days="3"]')).toHaveText('3 days');
+  await expect(page.locator('[data-responsive-copy]')).toHaveText('Desktop + mobile');
+  await expect(page.locator('[data-proof-strip]')).toHaveAttribute('data-proof-state', 'complete');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
 test('example website preview opens from keyboard focus and Escape restores the grid', async ({ page }) => {
