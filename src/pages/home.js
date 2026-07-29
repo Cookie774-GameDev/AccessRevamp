@@ -26,7 +26,7 @@ const customerJourney = [
 
 const outcomes = [
   ['Raw product', 'a story worth tasting', 'A good product without a clear flavor story or buying path', 'A bold spicy-peanut-butter homepage with product hierarchy and one clear next step', visualAssets.firejarHero, visualAssets.spicyPeanutButterHomepage],
-  ['A leaking sink', 'a clear service path', 'Urgent service information competing without useful order', 'A calm plumbing homepage that makes services and contact easy to understand', visualAssets.clearflowHero, visualAssets.plumbingHomepage],
+  ['A leaking sink', 'a clear service path', 'Urgent service information competing without useful order', 'A calm plumbing homepage that makes services and contact easy to understand', visualAssets.leakingSinkBefore, visualAssets.plumbingHomepage],
   ['Uneven curb appeal', 'a cleaner cut', 'Equipment, seasons, and services presented without a clear route', 'A lawn-care homepage that turns visual proof into a simple quote path', visualAssets.greenlineHero, visualAssets.lawnCareHomepage],
 ];
 
@@ -34,7 +34,7 @@ const transformationPanel = ([from, to, problem, change, before, after], index) 
   <div class="transformation-panel__media">
     <span class="transformation-panel__before">${picture(before, { alt: `${from} interface state`, sizes: '(max-width: 760px) 100vw, 30vw' })}</span>
     <span class="transformation-panel__after">${picture(after, { alt: `${to} interface direction`, sizes: '(max-width: 760px) 100vw, 30vw' })}</span>
-    <span class="transformation-panel__line" aria-hidden="true"></span>
+    <button type="button" data-transformation-toggle aria-expanded="false" aria-label="Reveal the ${to} website direction"></button>
   </div>
   <span class="micro-label">Transformation ${String(index + 1).padStart(2, '0')}</span>
   <h3>${from} <em>→ ${to}</em></h3>
@@ -48,13 +48,13 @@ const exampleWebsite = (example, index) => `<figure class="example-website" data
   <img src="${example.src}" alt="${example.alt}" width="${example.width}" height="${example.height}" loading="lazy" decoding="async" draggable="false">
   ${examplePixels}
   <figcaption><span>${String(index + 1).padStart(2, '0')}</span><strong>${example.alt.replace(/ homepage concept\.$/, '')}</strong></figcaption>
-  <button type="button" data-example-preview aria-expanded="false" aria-label="Expand ${example.alt.replace(/\.$/, '')}">Preview full website</button>
+  <button type="button" data-example-preview aria-expanded="false" aria-label="Enlarge ${example.alt.replace(/\.$/, '')}"></button>
 </figure>`;
 
 export function homePage() {
   const pricing = Object.values(plans).map((plan) => planCard(plan, { featured: plan.key === 'complete_revamp', compact: true })).join('');
   const process = processSteps.map(([number, title, copy]) => `<li><span>${number}</span><strong>${title}</strong><p>${copy}</p></li>`).join('');
-  const journey = customerJourney.map(([number, title, copy, artifact, receive]) => `<article><span>${number}</span><div><h3>${title}</h3><p>${copy}</p><small class="journey-artifact"><b>${artifact}</b>${receive}</small></div></article>`).join('');
+  const journey = customerJourney.map(([number, title, copy, artifact, receive], index) => `<article class="journey-step journey-step--${index + 1}" data-reveal><span>${number}</span><div><h3>${title}</h3><p>${copy}</p><small class="journey-artifact"><b>${artifact}</b>${receive}</small></div></article>`).join('');
 
   return shell(`
     <section class="reveal-hero" data-reveal-hero aria-label="AccessRevamp transforms an unfinished storefront into a refined growth system">
@@ -74,15 +74,15 @@ export function homePage() {
     </section>
 
     <section class="trust-strip" aria-label="AccessRevamp service indicators"><div class="container-wide trust-strip__grid">
-      <article class="proof-counter"><span class="proof-status" aria-hidden="true"></span><strong><span data-customer-count="87">87</span></strong><p>Customers served</p><small>Owner-verified historical total.</small></article>
+      <article class="proof-counter" data-count-state="idle"><span class="proof-status" aria-hidden="true"></span><strong><span data-customer-count="87" data-count-state="idle">0</span></strong><p>Customers served</p><small>Owner-verified historical total.</small></article>
       <article class="proof-delivery"><strong>3 days</strong><p>first website delivery</p><div class="proof-timeline" aria-label="Brief, build, and first delivery timeline"><span class="proof-timeline__node"><i>01</i>Brief</span><span class="proof-timeline__node"><i>02</i>Build</span><span class="proof-timeline__node"><i>03</i>Deliver</span></div><small>After payment and receipt of required assets.</small></article>
-      <article class="proof-responsive"><strong>Desktop → mobile</strong><p>one responsive system</p><div class="responsive-system" aria-hidden="true"><span class="responsive-system__desktop"><i></i><i></i><i></i></span><span class="responsive-system__flow">→</span><span class="responsive-system__phone"><i></i><i></i><i></i></span></div><small>Desktop and mobile, carefully adapted for touch.</small></article>
+      <article class="proof-responsive"><strong>Desktop + mobile</strong><p>one responsive system</p><div class="responsive-system" aria-hidden="true"><span class="responsive-device responsive-device--laptop"><i class="responsive-device__screen"></i><i class="responsive-device__base"></i></span><span class="responsive-system__flow">→</span><span class="responsive-device responsive-device--phone"><i class="responsive-device__screen"></i></span></div><small>Desktop and mobile, carefully adapted for touch.</small></article>
     </div></section>
 
     <section class="renaissance-promise" id="promise"><div class="container-wide promise-grid">
       <div><span class="eyebrow">A guided customer journey</span><h2>Your website should feel like a clear conversation—not a maze.</h2></div>
       <p class="promise-lede">AccessRevamp rebuilds the message, page order, mobile experience, and launch material together so every screen answers the next question and leads to one useful action.</p>
-      <div class="customer-journey" aria-label="How an AccessRevamp project works">${journey}</div>
+      <div class="customer-journey customer-journey--ledger" aria-label="How an AccessRevamp project works">${journey}</div>
     </div></section>
 
     <section class="section example-websites-section"><div class="container-wide"><div class="chapter-head" data-reveal><span class="chapter-index">Selected concept directions</span><div><h2>Example Websites</h2><p>Complete homepage compositions shown without cropping or simulated browser controls.</p></div></div><div class="example-websites-grid" data-example-grid>${exampleWebsites.map(exampleWebsite).join('')}</div><p class="concept-disclosure">Original working demo — not a client engagement.</p></div></section>

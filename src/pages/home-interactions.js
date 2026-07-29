@@ -1,8 +1,6 @@
 import { setupShowcaseComparisons } from '../services/showcase-comparison.js';
 import { setupOrderWizard } from '../services/order-wizard.js';
 
-const HERO_SETTLE_EPSILON = 0.08;
-
 export function setupHomeExperience(root = document) {
   root.classList.add('home-is-enhanced');
   const hero = root.querySelector('[data-reveal-hero]');
@@ -18,15 +16,15 @@ export function setupHomeExperience(root = document) {
   let heroVisible = true;
   let heroObserver;
   let pointerCaptured = false;
+  let activePointerId;
+  let pointerStart;
+  let heroRect = hero?.getBoundingClientRect();
   let navTimer;
   let revealTimer;
   let pageVisible = !document.hidden;
   let navVisible;
 
   const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
-  const smooth = { ...mouse };
-  const gridOffset = { x: 0, y: 0 };
-
   const listen = (target, type, handler, options) => {
     target?.addEventListener(type, handler, options);
     cleanups.push(() => target?.removeEventListener(type, handler, options));
@@ -104,6 +102,24 @@ export function setupHomeExperience(root = document) {
     };
   };
 
+  const setupExpandableDetails = () => {
+    const controls = [...root.querySelectorAll('[data-transformation-toggle], .plan-artifact')];
+    controls.forEach((control) => {
+      listen(control, 'click', () => {
+        const expanded = control.getAttribute('aria-expanded') !== 'true';
+        control.setAttribute('aria-expanded', String(expanded));
+        control.closest('.transformation-panel')?.classList.toggle('is-transformation-active', expanded);
+      });
+      listen(control, 'blur', () => {
+        if (control.matches('.plan-artifact')) control.setAttribute('aria-expanded', 'false');
+      });
+    });
+    return () => controls.forEach((control) => {
+      control.setAttribute('aria-expanded', 'false');
+      control.closest('.transformation-panel')?.classList.remove('is-transformation-active');
+    });
+  };
+
   const commitNavVisibility = () => {
     navFrame = 0;
     const next = true;
@@ -126,31 +142,16 @@ export function setupHomeExperience(root = document) {
     heroFrame = 0;
     if (!pageVisible || !heroVisible || !hero) return;
 
-    const deltaX = mouse.x - smooth.x;
-    const deltaY = mouse.y - smooth.y;
-    smooth.x += deltaX * 0.12;
-    smooth.y += deltaY * 0.12;
-
-    const rect = hero.getBoundingClientRect();
-    const localX = Math.max(0, Math.min(rect.width, smooth.x - rect.left));
-    const localY = Math.max(0, Math.min(rect.height, smooth.y - rect.top));
+    const rect = heroRect || hero.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, mouse.x - rect.left));
+    const localY = Math.max(0, Math.min(rect.height, mouse.y - rect.top));
     const cx = localX / Math.max(rect.width, 1) - 0.5;
     const cy = localY / Math.max(rect.height, 1) - 0.5;
-    const targetGridX = cx * 16;
-    const targetGridY = cy * 16;
-    gridOffset.x += (targetGridX - gridOffset.x) * 0.08;
-    gridOffset.y += (targetGridY - gridOffset.y) * 0.08;
 
     hero.style.setProperty('--reveal-x', `${localX}px`);
     hero.style.setProperty('--reveal-y', `${localY}px`);
-    hero.style.setProperty('--grid-x', `${gridOffset.x.toFixed(2)}px`);
-    hero.style.setProperty('--grid-y', `${gridOffset.y.toFixed(2)}px`);
-
-    const moving = Math.abs(deltaX) > HERO_SETTLE_EPSILON
-      || Math.abs(deltaY) > HERO_SETTLE_EPSILON
-      || Math.abs(targetGridX - gridOffset.x) > HERO_SETTLE_EPSILON
-      || Math.abs(targetGridY - gridOffset.y) > HERO_SETTLE_EPSILON;
-    if (moving) heroFrame = requestAnimationFrame(paintHero);
+    hero.style.setProperty('--grid-x', `${(cx * 12).toFixed(2)}px`);
+    hero.style.setProperty('--grid-y', `${(cy * 12).toFixed(2)}px`);
   };
 
   const startHeroLoop = () => {
@@ -160,6 +161,7 @@ export function setupHomeExperience(root = document) {
   };
 
   const setHeroPointer = (event) => {
+    heroRect ||= hero?.getBoundingClientRect();
     mouse.x = event.clientX;
     mouse.y = event.clientY;
     heroActive = true;
@@ -182,8 +184,16 @@ export function setupHomeExperience(root = document) {
 
     listen(hero, 'pointerenter', setHeroPointer);
     listen(hero, 'pointermove', (event) => {
-      if (event.pointerType === 'touch' && !pointerCaptured) return;
-      if (pointerCaptured) event.preventDefault();
+      if (event.pointerType === 'touch' && activePointerId !== event.pointerId) return;
+      if (event.pointerType === 'touch' && pointerStart && !pointerCaptured) {
+        const deltaX = Math.abs(event.clientX - pointerStart.x);
+        const deltaY = Math.abs(event.clientY - pointerStart.y);
+        if (deltaX > 8 && deltaX > deltaY * 1.1) {
+          pointerCaptured = true;
+          try { hero.setPointerCapture(event.pointerId); } catch { /* Best-effort pointer capture. */ }
+        }
+      }
+      if (pointerCaptured && event.cancelable) event.preventDefault();
       setHeroPointer(event);
     });
     listen(hero, 'pointerleave', () => {
@@ -194,21 +204,26 @@ export function setupHomeExperience(root = document) {
       navTimer = setTimeout(scheduleNavVisibility, 520);
     });
     listen(hero, 'pointerdown', (event) => {
-      if (event.pointerType !== 'pen') return;
-      event.preventDefault();
-      pointerCaptured = true;
-      try { hero.setPointerCapture(event.pointerId); } catch { /* Best-effort pointer capture. */ }
-      hero.style.touchAction = 'none';
+      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      activePointerId = event.pointerId;
+      pointerStart = { x: event.clientX, y: event.clientY };
+      if (event.pointerType === 'pen') {
+        pointerCaptured = true;
+        try { hero.setPointerCapture(event.pointerId); } catch { /* Best-effort pointer capture. */ }
+      }
       setHeroPointer(event);
     });
 
     const releasePointer = (event) => {
-      if (!pointerCaptured) return;
-      pointerCaptured = false;
-      try {
-        if (hero.hasPointerCapture?.(event.pointerId)) hero.releasePointerCapture(event.pointerId);
-      } catch { /* The browser may already have released the pointer. */ }
-      hero.style.touchAction = '';
+      if (event.pointerId !== activePointerId && activePointerId !== undefined) return;
+      if (pointerCaptured) {
+        pointerCaptured = false;
+        try {
+          if (hero.hasPointerCapture?.(event.pointerId)) hero.releasePointerCapture(event.pointerId);
+        } catch { /* The browser may already have released the pointer. */ }
+      }
+      activePointerId = undefined;
+      pointerStart = undefined;
     };
 
     listen(hero, 'pointerup', releasePointer);
@@ -221,11 +236,12 @@ export function setupHomeExperience(root = document) {
       hero.classList.add('is-revealing');
     });
     listen(globalThis, 'resize', () => {
+      heroRect = hero.getBoundingClientRect();
       startHeroLoop();
     }, { passive: true });
     const handleHomeScroll = () => {
       scheduleNavVisibility();
-      startHeroLoop();
+      heroRect = hero.getBoundingClientRect();
     };
     listen(globalThis, 'scroll', handleHomeScroll, { passive: true });
     listen(document, 'visibilitychange', () => {
@@ -248,29 +264,41 @@ export function setupHomeExperience(root = document) {
   }
 
   const customerCount = root.querySelector('[data-customer-count]');
+  const customerProof = customerCount?.closest('.proof-counter');
   let countObserver;
   let countFrame = 0;
   if (customerCount && !reducedMotion && 'IntersectionObserver' in globalThis) {
     const countTarget = Number.parseInt(customerCount.getAttribute('data-customer-count') || '0', 10);
     customerCount.textContent = '0';
+    customerCount.setAttribute('data-count-state', 'idle');
+    customerProof?.setAttribute('data-count-state', 'idle');
     countObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       countObserver.disconnect();
+      customerCount.setAttribute('data-count-state', 'running');
+      customerProof?.setAttribute('data-count-state', 'running');
       const started = performance.now();
       const tick = (time) => {
         const progress = Math.min(1, (time - started) / 900);
         customerCount.textContent = String(Math.round(countTarget * (1 - ((1 - progress) ** 3))));
         if (progress < 1) countFrame = requestAnimationFrame(tick);
-        else countFrame = 0;
+        else {
+          countFrame = 0;
+          customerCount.setAttribute('data-count-state', 'complete');
+          customerProof?.setAttribute('data-count-state', 'complete');
+        }
       };
       countFrame = requestAnimationFrame(tick);
-    }), { threshold: 0.45 });
-    countObserver.observe(customerCount);
+    }), { rootMargin: '0px 0px -40% 0px', threshold: 0.15 });
+    countObserver.observe(customerProof || customerCount);
   } else if (customerCount) {
     customerCount.textContent = customerCount.getAttribute('data-customer-count') || customerCount.textContent;
+    customerCount.setAttribute('data-count-state', 'complete');
+    customerProof?.setAttribute('data-count-state', 'complete');
   }
 
   cleanups.push(setupExamplePreviews());
+  cleanups.push(setupExpandableDetails());
   const reveals = [...root.querySelectorAll('[data-reveal]')];
   let revealObserver;
   if (!reducedMotion && 'IntersectionObserver' in globalThis) {

@@ -29,7 +29,7 @@ test('entitlement quote accepts only one paid target tier and never identity inp
   assert.throws(() => entitlementQuoteSchema.parse({ targetTier: 'complete_revamp', email: 'owner@example.com' }));
 });
 
-test('project intake accepts one to five pages and public design references', () => {
+test('project intake accepts one to seven pages and rejects an eighth', () => {
   const base = {
     projectId: 'b5fbc325-2b18-44ae-9554-0a8c5b62b245',
     plan: 'complete_revamp',
@@ -42,7 +42,8 @@ test('project intake accepts one to five pages and public design references', ()
     inspirationChoices: ['https://www.aesop.com/'],
     rightsConfirmed: true,
   };
-  assert.equal(projectIntakeTextSchema.parse(base).pages.length, 2);
-  assert.throws(() => projectIntakeTextSchema.parse({ ...base, pages: ['home', 'about', 'services', 'shop', 'portfolio', 'faq'] }));
+  const sevenPages = ['home', 'about', 'services', 'shop', 'portfolio', 'faq', 'contact'];
+  assert.equal(projectIntakeTextSchema.parse({ ...base, pages: sevenPages }).pages.length, 7);
+  assert.throws(() => projectIntakeTextSchema.parse({ ...base, pages: [...sevenPages, 'custom'] }));
   assert.throws(() => projectIntakeTextSchema.parse({ ...base, referenceUrls: ['http://localhost:3000/private'] }));
 });

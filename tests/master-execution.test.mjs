@@ -63,7 +63,8 @@ test('showcase controller keeps both videos locked to the current scroll positio
   assert.match(performanceCss, /\.showcase-chapter[\s\S]*background:#121315/);
   assert.match(performanceCss, /\.showcase-chapter__sticky[\s\S]*contain:paint/);
   assert.match(performanceCss, /\.showcase-panel__media[\s\S]*contain:layout paint style/);
-  assert.match(homeInteractions, /HERO_SETTLE_EPSILON/);
+  assert.match(homeInteractions, /const localX = Math\.max\(0, Math\.min\(rect\.width, mouse\.x - rect\.left\)\)/);
+  assert.doesNotMatch(homeInteractions, /HERO_SETTLE_EPSILON|smooth\.x|smooth\.y/);
   assert.doesNotMatch(homeInteractions, /data-lens-grid|queueIntent|has-expanded-lens/);
 });
 
