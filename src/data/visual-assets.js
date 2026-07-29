@@ -24,6 +24,9 @@ export const visualAssets = {
   clearflowInterface: asset('clearflow-interface-01', 1440, 1000),
   auditBefore: asset('audit-before-01', 1440, 1000),
   auditAfter: asset('audit-after-01', 1440, 1000),
+  spicyPeanutButterHomepage: asset('spicy-peanut-butter-homepage', 2048, 1152),
+  plumbingHomepage: asset('plumbing-homepage', 2048, 1152),
+  lawnCareHomepage: asset('lawn-care-homepage', 2048, 1152),
 };
 
 export const demoBrands = {

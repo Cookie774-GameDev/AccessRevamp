@@ -48,6 +48,17 @@ test('touch users can open and dismiss an example website preview', async ({ bro
   await context.close();
 });
 
+test('transformation studies and final montage use the three original homepage visuals', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  const transformations = page.locator('.transformation-panel__after img');
+  await expect(transformations).toHaveCount(3);
+  await expect(transformations.nth(0)).toHaveAttribute('src', /spicy-peanut-butter-homepage\.webp/);
+  await expect(transformations.nth(1)).toHaveAttribute('src', /plumbing-homepage\.webp/);
+  await expect(transformations.nth(2)).toHaveAttribute('src', /lawn-care-homepage\.webp/);
+  await expect(page.locator('.final-cta__image img[src*="-homepage.webp"]')).toHaveCount(3);
+});
+
 test('desktop customer journey presents all three connected project stages', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/', { waitUntil: 'networkidle' });
