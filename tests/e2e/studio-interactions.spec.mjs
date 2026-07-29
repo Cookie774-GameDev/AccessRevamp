@@ -16,6 +16,38 @@ test('homepage renders verified proof, responsive delivery, expandable examples,
   await expect(page.locator('.services-renaissance [data-checkout]')).toHaveCount(3);
 });
 
+test('example website preview opens from keyboard focus and Escape restores the grid', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  const grid = page.locator('[data-example-grid]');
+  const firstCard = page.locator('[data-example-card]').first();
+  const firstPreview = firstCard.locator('[data-example-preview]');
+  await firstPreview.focus();
+
+  await expect(firstPreview).toHaveAttribute('aria-expanded', 'true');
+  await expect(firstCard).toHaveClass(/is-example-active/);
+  await expect(grid).toHaveClass(/is-previewing/);
+
+  await page.keyboard.press('Escape');
+  await expect(firstPreview).toHaveAttribute('aria-expanded', 'false');
+  await expect(firstCard).not.toHaveClass(/is-example-active/);
+  await expect(grid).not.toHaveClass(/is-previewing/);
+});
+
+test('touch users can open and dismiss an example website preview', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  const firstPreview = page.locator('[data-example-preview]').first();
+  await firstPreview.tap();
+  await expect(firstPreview).toHaveAttribute('aria-expanded', 'true');
+  await firstPreview.tap();
+  await expect(firstPreview).toHaveAttribute('aria-expanded', 'false');
+  await context.close();
+});
+
 test('desktop customer journey presents all three connected project stages', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/', { waitUntil: 'networkidle' });

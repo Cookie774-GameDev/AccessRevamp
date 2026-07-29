@@ -32,6 +32,78 @@ export function setupHomeExperience(root = document) {
     cleanups.push(() => target?.removeEventListener(type, handler, options));
   };
 
+  const setupExamplePreviews = () => {
+    const grid = root.querySelector('[data-example-grid]');
+    const cards = [...root.querySelectorAll('[data-example-card]')];
+    if (!grid || cards.length === 0) return () => {};
+    let activeCard;
+    let focusFrame = 0;
+    let coarsePointerDown = false;
+
+    const close = (card = activeCard) => {
+      if (!card) return;
+      card.classList.remove('is-example-active');
+      card.querySelector('[data-example-preview]')?.setAttribute('aria-expanded', 'false');
+      if (card === activeCard) activeCard = undefined;
+      grid.classList.toggle('is-previewing', Boolean(activeCard));
+    };
+
+    const open = (card) => {
+      if (!card || card === activeCard) return;
+      close();
+      activeCard = card;
+      card.classList.add('is-example-active');
+      card.querySelector('[data-example-preview]')?.setAttribute('aria-expanded', 'true');
+      grid.classList.add('is-previewing');
+    };
+
+    cards.forEach((card) => {
+      const preview = card.querySelector('[data-example-preview]');
+      listen(card, 'pointerenter', () => {
+        if (finePointer?.matches) open(card);
+      });
+      listen(card, 'pointerleave', () => {
+        if (finePointer?.matches && !card.contains(document.activeElement)) close(card);
+      });
+      listen(preview, 'pointerdown', (event) => {
+        coarsePointerDown = event.pointerType === 'touch';
+      });
+      listen(card, 'focusin', () => {
+        if (!coarsePointerDown) open(card);
+      });
+      listen(card, 'focusout', () => {
+        if (focusFrame) cancelAnimationFrame(focusFrame);
+        focusFrame = requestAnimationFrame(() => {
+          focusFrame = 0;
+          if (!card.contains(document.activeElement)) close(card);
+        });
+      });
+      listen(preview, 'click', () => {
+        if (finePointer?.matches) {
+          open(card);
+        } else if (card === activeCard) {
+          close(card);
+        } else {
+          open(card);
+        }
+        coarsePointerDown = false;
+      });
+    });
+
+    listen(document, 'keydown', (event) => {
+      if (event.key !== 'Escape' || !activeCard) return;
+      const preview = activeCard.querySelector('[data-example-preview]');
+      close();
+      preview?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      if (focusFrame) cancelAnimationFrame(focusFrame);
+      close();
+      grid.classList.remove('is-previewing');
+    };
+  };
+
   const commitNavVisibility = () => {
     navFrame = 0;
     const next = true;
@@ -175,6 +247,30 @@ export function setupHomeExperience(root = document) {
     }
   }
 
+  const customerCount = root.querySelector('[data-customer-count]');
+  let countObserver;
+  let countFrame = 0;
+  if (customerCount && !reducedMotion && 'IntersectionObserver' in globalThis) {
+    const countTarget = Number.parseInt(customerCount.getAttribute('data-customer-count') || '0', 10);
+    customerCount.textContent = '0';
+    countObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      countObserver.disconnect();
+      const started = performance.now();
+      const tick = (time) => {
+        const progress = Math.min(1, (time - started) / 900);
+        customerCount.textContent = String(Math.round(countTarget * (1 - ((1 - progress) ** 3))));
+        if (progress < 1) countFrame = requestAnimationFrame(tick);
+        else countFrame = 0;
+      };
+      countFrame = requestAnimationFrame(tick);
+    }), { threshold: 0.45 });
+    countObserver.observe(customerCount);
+  } else if (customerCount) {
+    customerCount.textContent = customerCount.getAttribute('data-customer-count') || customerCount.textContent;
+  }
+
+  cleanups.push(setupExamplePreviews());
   const reveals = [...root.querySelectorAll('[data-reveal]')];
   let revealObserver;
   if (!reducedMotion && 'IntersectionObserver' in globalThis) {
@@ -193,6 +289,8 @@ export function setupHomeExperience(root = document) {
   return () => {
     cleanups.forEach((cleanup) => cleanup?.());
     revealObserver?.disconnect();
+    countObserver?.disconnect();
+    if (countFrame) cancelAnimationFrame(countFrame);
     heroObserver?.disconnect();
     clearTimeout(navTimer);
     clearTimeout(revealTimer);
