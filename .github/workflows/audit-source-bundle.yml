@@ -1,0 +1,36 @@
+name: Audit source bundle
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-source-bundle.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create source archive
+        shell: bash
+        run: |
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.accessrevamp-bootstrap \
+            --exclude='docs/evidence/baseline/**/*.png' \
+            -czf /tmp/accessrevamp-audit-source.tgz .
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessrevamp-audit-source
+          path: /tmp/accessrevamp-audit-source.tgz
+          retention-days: 1
+          if-no-files-found: error
