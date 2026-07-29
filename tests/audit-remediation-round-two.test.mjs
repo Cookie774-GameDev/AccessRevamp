@@ -5,12 +5,14 @@ import { extractJavaScriptBundleUrls } from '../scripts/quality/auth-preview-bun
 
 const read = (path) => readFile(path, 'utf8');
 
-test('public trust copy contains no unsupported customer-count claim', async () => {
+test('public customer-count proof stays explicitly owner-verified', async () => {
   const [home, interactions] = await Promise.all([
     read('src/pages/home.js'),
     read('src/pages/home-interactions.js'),
   ]);
-  assert.doesNotMatch(`${home}\n${interactions}`, /\b87\b|happy customers|data-customer-count/i);
+  assert.match(home, /data-customer-count="87"/);
+  assert.match(home, /Owner-verified historical total\./);
+  assert.match(interactions, /data-customer-peak/);
 });
 
 test('password challenge secrets never enter login URLs or browser query parsing', async () => {
