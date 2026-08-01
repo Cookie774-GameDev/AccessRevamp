@@ -126,7 +126,7 @@ jobs:
           node scripts/supabase/apply-auth-branding.mjs --verify 2>&1 | tee supabase-auth-branding-verify.log
       - name: Upload safe Auth diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: accessrevamp-auth-email-diagnostics
           path: |
