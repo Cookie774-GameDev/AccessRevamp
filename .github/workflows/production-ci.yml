@@ -42,7 +42,7 @@ jobs:
         run: npm run verify:supabase-public
       - name: Upload test output
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-output
           path: test-output.txt
@@ -63,7 +63,7 @@ jobs:
           npm audit --omit=dev --audit-level=high --json 2>&1 | tee audit-output.json
       - name: Upload dependency audit evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-audit-output
           path: audit-output.json

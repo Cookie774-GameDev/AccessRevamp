@@ -38,7 +38,7 @@ jobs:
           node --test tests/isolated-*-stress.test.mjs 2>&1 | tee isolated-payment-stress.txt
       - name: Upload payment stress evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: isolated-payment-stress
           path: isolated-payment-stress.txt
@@ -87,7 +87,7 @@ jobs:
           node scripts/quality/run-isolated-auth-stress.mjs 2>&1 | tee artifacts/isolated-stress/auth-browser-stress.log
       - name: Upload local stress measurements
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: isolated-http-browser-stress
           path: artifacts/isolated-stress
