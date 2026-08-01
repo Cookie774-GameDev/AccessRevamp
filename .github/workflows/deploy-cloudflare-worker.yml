@@ -40,7 +40,7 @@ jobs:
           VITE_RELEASE_SHA: ${{ github.sha }}
         run: npm run build
       - name: Deploy production Worker
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: 0aaf188d9d8184defe86953e9191d3aa
